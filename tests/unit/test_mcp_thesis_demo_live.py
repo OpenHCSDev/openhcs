@@ -184,7 +184,7 @@ def test_unrelated_runtime_processes_do_not_claim_requested_endpoints(
         "matching_pids",
         lambda sequence: (
             [4321]
-            if sequence == ("-m", "openhcs.runtime.zmq_execution_server_launcher")
+            if sequence == ("-m", "openhcs.runtime.zmq.zmq_execution_server_launcher")
             else []
         ),
     )
@@ -1340,7 +1340,7 @@ def test_final_workflow_state_revision_uses_last_typed_state_event() -> None:
 
 def test_execution_config_comes_from_active_ui_document() -> None:
     source = """from openhcs.pyqt_gui.config import UIConfig
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 config = UIConfig(
     zmq=OpenHCSZMQConfig(

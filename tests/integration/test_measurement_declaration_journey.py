@@ -65,7 +65,7 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureObjectIntensityModule,
     measure_object_intensity,
 )
@@ -80,7 +80,7 @@ from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryMethod,
     identify_secondary_objects,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdMethod,
 )
 from openhcs.core.callable.processing_contracts import (
@@ -304,7 +304,7 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(
     tmp_path, image_names, current_scale, registered_current_transform,
 ):
     """A stored label cohort must not substitute label IDs for measured images."""
-    from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity, RescaleMethod
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import rescale_intensity, RescaleMethod
     dna = np.zeros((16, 16), dtype=np.float32)
     dna[6:8, 6:8] = ((0.6, 0.7), (0.8, 0.9))
     actin = (0.1 + np.arange(256).reshape(16, 16) * 0.001).astype(np.float32)

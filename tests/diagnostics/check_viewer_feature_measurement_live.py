@@ -193,11 +193,11 @@ def main() -> None:
             "Exact source dependency checkout not established; no MCP startup."
         )
     from openhcs.mcp.dev_client import McpDevClient
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import (
         ViewerRuntimeEndpoint,
         ViewerTransportEndpoint,
     )
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
     from openhcs.core.config.streaming_config_declarations import NapariViewer
     from zmqruntime.config import TransportMode
     from python_introspect import to_jsonable

@@ -49,7 +49,7 @@ from openhcs.pyqt_gui.widgets.shared.server_browser.progress_projection import (
 from openhcs.pyqt_gui.widgets.shared.server_browser.progress_tree_builder import (
     ProgressTreeBuilder,
 )
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 logger = logging.getLogger(__name__)
 

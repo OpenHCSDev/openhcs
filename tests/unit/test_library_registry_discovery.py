@@ -258,7 +258,7 @@ def test_cpu_only_inventory_resolves_memory_decorator_import_aliases() -> None:
 
     numpy_only = frozenset({"numpy"})
     assert _module_declares_allowed_memory_type(
-        "openhcs.processing.backends.cellprofiler.object_images",
+        "openhcs.processing.backends.cellprofiler.object_analysis.object_images",
         numpy_only,
     )
     assert _module_declares_allowed_memory_type(
@@ -650,12 +650,12 @@ def test_registry_preparation_uses_background_process_policy(monkeypatch) -> Non
 
     registry_service.RegistryService.prepare_persistent_catalog()
 
-    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+    from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
     assert calls[0][0][:4] == (
         "pythonw.exe",
         *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-            "openhcs.runtime.zmq_execution_server_launcher"
+            "openhcs.runtime.zmq.zmq_execution_server_launcher"
         ),
         "--prepare-capabilities",
     )
@@ -780,7 +780,7 @@ def test_serving_readiness_completes_the_measurement_registry_before_lookup(
 
         from openhcs.core.callable.processing_preparation import CallablePreparation, PreparationCacheBatch
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-        from openhcs.processing.backends.cellprofiler.thresholding import threshold
+        from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import threshold
         from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
         assert not CellProfilerModule.__registry__._discovered
@@ -919,8 +919,8 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
         from openhcs.processing.backends.lib_registry.unified_registry import (
             LibraryRegistryBase,
         )
-        from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-        from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+        from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
+        from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
 
         with socket.socket() as candidate:
             candidate.bind(("127.0.0.1", 0))

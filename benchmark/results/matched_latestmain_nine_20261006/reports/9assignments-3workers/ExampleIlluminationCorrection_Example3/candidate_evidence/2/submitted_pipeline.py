@@ -54,16 +54,16 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     RescaleOption,
     SmoothingMethod,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import MaskSource
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
-from openhcs.processing.backends.cellprofiler.morphology import ExpandShrinkMode
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import MaskSource
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import ExpandShrinkMode
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod
 from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesBitDepth,
     SaveImagesFileFormat,
     SaveImagesFilenameMethod,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdMethod,
 )

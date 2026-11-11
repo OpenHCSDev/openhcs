@@ -14,9 +14,9 @@ from zmqruntime.messages import (
 )
 from zmqruntime.timeouts import OperationDeadline
 
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_execution_client import (
     ExecutionSubmissionPreparationTimeoutError,
     ZMQExecutionClient,
 )

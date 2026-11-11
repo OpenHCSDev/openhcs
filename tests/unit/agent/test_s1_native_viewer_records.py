@@ -29,12 +29,12 @@ from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity, McpDevToolBatchResponse, McpDevToolResult,
 )
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer, ViewerImageSampleRenderOptions
-from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerAddress, NapariStreamLayerItem
-from openhcs.runtime.napari_viewer_server import (
+from openhcs.runtime.napari.napari_streaming_handlers import NapariStreamLayerAddress, NapariStreamLayerItem
+from openhcs.runtime.napari.napari_viewer_server import (
     NapariViewerStateProjection, NapariViewerPayloadProjection, _NapariShapePayloadBudget,
 )
-from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_component_system import ViewerComponentValueDomainPayload
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerArrayValueSummary, ViewerPayloadSummary, ViewerProjectionRecord,
     ViewerPayloadControlOptions, ViewerPayloadProjectionOptions,
 )

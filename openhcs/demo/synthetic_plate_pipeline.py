@@ -13,7 +13,7 @@ from openhcs.core.config.pipeline_config import (
     LazyProcessingConfig,
     PipelineConfig,
 )
-from openhcs.runtime.viewer_display import PadToMaxSize
+from openhcs.runtime.viewer.viewer_display import PadToMaxSize
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     DetectionMethod,

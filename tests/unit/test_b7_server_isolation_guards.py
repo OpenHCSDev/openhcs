@@ -19,16 +19,16 @@ from zmqruntime.client import ZMQClient
 from zmqruntime.config import ZMQConfig
 
 import openhcs
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.runtime.zmq_config import (
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.zmq.zmq_config import (
     OPENHCS_ZMQ_CONFIG,
     SOCKET_ROOT_ENV,
     SocketPathTooLongError,
     checkout_socket_root,
     require_bindable_address,
 )
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
 
 REPOSITORY_ROOT = Path(openhcs.__file__).resolve().parents[1]
 LAUNCH_CHECKS = {"_require_started_endpoint", "_require_usable_endpoint"}
@@ -130,7 +130,7 @@ def test_this_test_run_has_a_private_socket_root():
 
 _CHILD_REPORT = """
 import json
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 client = ZMQExecutionClient(port=65000, persistent=False)
 print(json.dumps({
@@ -173,7 +173,7 @@ def test_a_private_socket_root_can_be_bound_whatever_tmpdir_is(tmp_path):
     deep_tmpdir = tmp_path / ("d" * 120)
     deep_tmpdir.mkdir()
     child = (
-        "from openhcs.runtime.zmq_config import use_private_socket_root\n"
+        "from openhcs.runtime.zmq.zmq_config import use_private_socket_root\n"
         "use_private_socket_root()\n" + _CHILD_REPORT
     )
     completed = subprocess.run(

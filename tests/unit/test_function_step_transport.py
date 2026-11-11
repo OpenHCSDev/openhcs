@@ -40,7 +40,7 @@ from openhcs.processing.backends.lib_registry.registry_service import RegistrySe
 from openhcs.processing.backends.cellprofiler.illumination import (
     IlluminationCorrectionMethod,
 )
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
     ZMQExecutionRequestBuilder,

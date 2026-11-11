@@ -40,8 +40,8 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
-from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity
-from openhcs.processing.backends.cellprofiler.morphology import remove_holes, remove_holes_3d
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import rescale_intensity
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import remove_holes, remove_holes_3d
 from openhcs.core.callable.processing_contracts import (
     ProcessingContract,
     Pure3DContract,

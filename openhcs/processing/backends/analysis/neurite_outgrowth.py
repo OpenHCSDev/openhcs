@@ -79,7 +79,7 @@ from ..cellprofiler.secondary import (
     identify_secondary_objects,
     secondary_propagation_backend,
 )
-from ..cellprofiler.thresholding import (
+from ..cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdMethod,
     CellProfilerThresholdScope,
     threshold,

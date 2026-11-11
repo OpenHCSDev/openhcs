@@ -10,9 +10,9 @@ from openhcs.core.config.pipeline_config import (PipelineConfig, LazyProcessingC
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 
 pipeline_config = PipelineConfig(
     microscope=Microscope.SOURCE_BINDINGS,

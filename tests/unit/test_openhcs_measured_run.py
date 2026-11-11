@@ -24,11 +24,11 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionSucceeded,
 )
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
-from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
-from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
+from openhcs.runtime.zmq.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
+from openhcs.runtime.runtime_util.observation_export_scope import ExportRuntimeOutcomes
+from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
 @pytest.mark.parametrize("valid_observation", (True, False))

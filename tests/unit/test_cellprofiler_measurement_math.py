@@ -17,7 +17,7 @@ from openhcs.processing.backends.cellprofiler.measurement_math import (
     MathOperand,
     calculate_math,
 )
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
 
 
 def test_calculate_math_aligned_vector_rows_preserve_slice_index() -> None:

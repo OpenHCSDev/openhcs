@@ -47,7 +47,7 @@ from openhcs.core.materialization.options import PointROIOptions
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     DetachedViewerLaunchFailure,
     ViewerGraphicalSessionUnavailableError,
     ViewerLaunchContext,

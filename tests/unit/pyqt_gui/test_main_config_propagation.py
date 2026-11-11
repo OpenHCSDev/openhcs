@@ -21,7 +21,7 @@ from openhcs.pyqt_gui.services.main_window_workflows import (
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 
 def _visible_leaf_paths(value: object, prefix: str = "") -> tuple[str, ...]:

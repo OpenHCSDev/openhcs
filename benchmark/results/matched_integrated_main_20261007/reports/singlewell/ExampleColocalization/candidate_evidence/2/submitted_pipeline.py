@@ -51,12 +51,12 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_scope import CellProfilerMeasurementTargetScope
 from openhcs.processing.backends.cellprofiler.area_occupied import OperandChoice
 from openhcs.processing.backends.cellprofiler.classification import ClassificationBinChoice
-from openhcs.processing.backends.cellprofiler.colocalization import CostesMethod
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
-from openhcs.processing.backends.cellprofiler.morphology import ExpandShrinkMode
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import CostesMethod
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import ExpandShrinkMode
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsDistanceMethod
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import SpreadsheetFileSelection
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
     CellProfilerThresholdMethod,

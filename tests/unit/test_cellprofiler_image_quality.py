@@ -8,7 +8,7 @@ from typing import get_type_hints
 
 import numpy as np
 import pytest
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_weighted import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_otsu_weighted import (
     running_variance_numba,
 )
 
@@ -57,7 +57,7 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
-from openhcs.processing.backends.cellprofiler.image_quality import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
     ImageQualityBlurMetrics,
     ImageQualityBlurSummaryMetrics,
     ImageQualityIntensityMetrics,
@@ -72,7 +72,7 @@ from openhcs.processing.backends.cellprofiler.image_quality import (
     image_quality_threshold,
     measure_image_quality,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
 )

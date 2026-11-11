@@ -71,7 +71,7 @@ def test_new_display_leaf_uses_existing_admission_without_consumer_edits(stand_i
 
 
 def test_channel_carrier_title_describes_identity_not_rgb_cardinality():
-    from openhcs.runtime.napari_viewer_server import NapariImagePayloadLayoutRole
+    from openhcs.runtime.napari.napari_viewer_server import NapariImagePayloadLayoutRole
 
     role = NapariImagePayloadLayoutRole.COLOR_PLANE
     assert role.title("selected_images") == "selected_images source channels"
@@ -84,15 +84,15 @@ def test_two_physical_channel_layers_share_spatial_view_without_remapping_pixels
     from napari.components import ViewerModel
     from polystore.streaming.identity import StreamProducerIdentity
     from polystore.streaming_constants import StreamingDataType
-    from openhcs.runtime.napari_streaming_handlers import NapariLayerRouteStateStore
+    from openhcs.runtime.napari.napari_streaming_handlers import NapariLayerRouteStateStore
     from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.source.source_metadata import SourceVoxelSpacing
     from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-    from openhcs.runtime.napari_viewer_server import (
+    from openhcs.runtime.napari.napari_viewer_server import (
         NapariLayerDisplayPipeline,
         NapariPendingLayerUpdate,
     )
-    from openhcs.runtime.viewer_component_system import (
+    from openhcs.runtime.viewer.viewer_component_system import (
         ViewerComponentAxisSemantics,
         ViewerComponentNameMetadata,
         ViewerObjectDisplayConfigInput,
@@ -232,7 +232,7 @@ class NativeWindowFixture:
 def native_server():
     import numpy as np
     from napari.components import ViewerModel
-    from openhcs.runtime.napari_streaming_handlers import NapariLayerRouteStateStore
+    from openhcs.runtime.napari.napari_streaming_handlers import NapariLayerRouteStateStore
 
     viewer = ViewerModel()
     routes = NapariLayerRouteStateStore.empty()
@@ -253,12 +253,12 @@ def native_server():
 
 def test_color_native_action_preserves_units_and_has_one_reply_and_route_owner():
     import numpy as np
-    from openhcs.runtime.napari_viewer_server import (
+    from openhcs.runtime.napari.napari_viewer_server import (
         NapariControlAction,
         NapariMountedRouteControlAction,
         NapariPresentationControlAction,
     )
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import (
         OpenHCSViewerControlMessageType,
         ViewerImageColorControlOptions,
         ViewerNativeImageColorPresentation,
@@ -343,8 +343,8 @@ def test_color_native_action_preserves_units_and_has_one_reply_and_route_owner()
 
 
 def test_window_action_reads_actual_state_focuses_only_its_window_and_bounds_geometry():
-    from openhcs.runtime.napari_viewer_server import NapariControlAction
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.napari.napari_viewer_server import NapariControlAction
+    from openhcs.runtime.viewer.viewer_protocol import (
         OpenHCSViewerControlMessageType,
         ViewerNativeWindowControlOptions,
         ViewerNativeWindowGeometry,
@@ -379,18 +379,18 @@ def test_window_action_reads_actual_state_focuses_only_its_window_and_bounds_geo
 
 @pytest.mark.parametrize("width", (True, 0, -1, 16777216))
 def test_geometry_rejects_invalid_declarations(width):
-    from openhcs.runtime.viewer_protocol import ViewerNativeWindowGeometry
+    from openhcs.runtime.viewer.viewer_protocol import ViewerNativeWindowGeometry
 
     with pytest.raises((TypeError, ValueError)):
         ViewerNativeWindowGeometry(0, 0, width, 100)
 
 
 def test_independent_new_native_capability_composes_real_cooperative_mro():
-    from openhcs.runtime.napari_viewer_server import (
+    from openhcs.runtime.napari.napari_viewer_server import (
         NapariControlAction,
         NapariImageColorControlAction,
     )
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import (
         ViewerImageColorControlOptions,
         ViewerNativeImageColorPresentation,
     )

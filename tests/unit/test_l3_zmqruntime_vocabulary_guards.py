@@ -10,7 +10,7 @@ from pathlib import Path
 import zmqruntime.messages as messages
 from zmqruntime.execution.config import ExecutionTransportConfig
 
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 REPO = Path(__file__).resolve().parents[2]
 ZMQRUNTIME_SRC = REPO / "external" / "zmqruntime" / "src" / "zmqruntime"

@@ -132,7 +132,7 @@ from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.processing.backends.cellprofiler.distance_propagation_numba import (
     _propagate_labels_and_distances_zero_image_numba,
 )
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ColorImageModeRenderer,
 )
 from openhcs.processing.backends.cellprofiler.worm_geometry import (

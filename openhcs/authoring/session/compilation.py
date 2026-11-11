@@ -16,14 +16,14 @@ from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineCo
 from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
-from openhcs.runtime.zmq_execution_signature import (
+from openhcs.runtime.zmq.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq.zmq_execution_signature import (
     TransportValue,
     ZMQAuxiliaryExecutionParams,
 )
 
 if TYPE_CHECKING:
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")

@@ -132,7 +132,7 @@ from openhcs.constants.constants import VariableComponents, GroupBy
 from openhcs.constants.input_source import InputSource
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.func_registry import get_function
-from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import RescaleMethod
 from zmqruntime.config import TransportMode
 source_bindings_config = replace(source_bindings_config,
     bindings=tuple(replace(b,load_as_monochrome=True) for b in source_bindings_config.bindings),
@@ -149,10 +149,10 @@ pipeline_steps=[FunctionStep(name='AnalyticalNormalization',func={
     napari_streaming_config=LazyNapariStreamingConfig(enabled=False,port=6017,host='127.0.0.1',transport_mode=TransportMode.TCP,persistent=True,channel_mode=NapariDimensionMode.LAYER,variable_size_handling=NapariVariableSizeHandling.SEPARATE_LAYERS))]
 
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
 from openhcs.processing.backends.cellprofiler.secondary import SecondaryMethod
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 from openhcs.processing.backends.cellprofiler.outlines import LineMode, OutlineSourceKind
 view_config=LazyNapariStreamingConfig(enabled=False,port=6017,host='127.0.0.1',transport_mode=TransportMode.TCP,persistent=True,channel_mode=NapariDimensionMode.LAYER,variable_size_handling=NapariVariableSizeHandling.SEPARATE_LAYERS)
 pipeline_steps += [

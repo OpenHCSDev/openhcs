@@ -667,7 +667,7 @@ def test_reference_batch_family_preserves_wrapper_precedence_and_raw_inheritance
 
 
 def test_registry_reference_preserves_real_intensity_batch_declarations() -> None:
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 

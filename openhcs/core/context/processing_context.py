@@ -41,7 +41,7 @@ from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.config.streaming_config_declarations import ViewerFamily
 from openhcs.core.axes.axis_filter import StepAxisFilterMap
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 _RuntimeStepValue = TypeVar("_RuntimeStepValue")
 

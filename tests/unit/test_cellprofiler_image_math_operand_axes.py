@@ -3,7 +3,7 @@ import numpy as np
 
 from openhcs.core.payload.aligned_image_payload import ImagePayloadBundleContext
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.processing.backends.cellprofiler.image_math import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import (
     ImageMathOperation,
     image_math,
 )

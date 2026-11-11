@@ -28,7 +28,7 @@ from openhcs.core.config.pipeline_config import (
 )
 from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 FIELD = "dtype_config.default_dtype_conversion"
 BEFORE = DtypeConversion.UINT8

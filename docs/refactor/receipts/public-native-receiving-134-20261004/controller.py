@@ -58,7 +58,7 @@ from openhcs.mcp.dev_client_core import McpDevServerSpec,McpDevStdioSession,McpD
 from python_introspect import to_jsonable
 from zmqruntime.config import TransportMode
 from zmqruntime.transport import TransportEndpoint
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 conn=ExecutionConnectionSpec(host='127.0.0.1',port=PORT,transport_mode=TransportMode.TCP,persistent=True)
 receipt={'accepted':False,'scope':'Synthetic native receiving only; no biological processing or native CP rerun','source_head':subprocess.check_output(['git','-C',str(SOURCE),'rev-parse','HEAD'],text=True).strip(),'source':str(SOURCE),'controller_sha256':sha(__file__),'calls':[],'failure':None,'children':[],'installed_dependencies':receipt_dependencies}
 def save(): (OUT/'journey-live12.json').write_text(json.dumps(receipt,indent=2)+'\n')

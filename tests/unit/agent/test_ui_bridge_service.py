@@ -126,8 +126,8 @@ from formbridge.bridge.service import (
 )
 from openhcs.agent.services.ui_bridge_service import UiBridgeSelectedPlateWorkflowOperation
 from formbridge.bridge.transport import UiBridgeControlClient
-from openhcs.runtime.viewer_protocol import HeadlessSession, ProjectedGraphicalSession
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.viewer.viewer_protocol import HeadlessSession, ProjectedGraphicalSession
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from python_introspect import to_jsonable
 from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 from openhcs.agent.ui_bridge_identities import (

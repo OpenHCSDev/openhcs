@@ -33,7 +33,7 @@ from openhcs.agent.services.viewer_window_service import (
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAxisPresentation,
     NapariComponentGroupStore,
     NapariDimensionLayerState,
@@ -41,20 +41,20 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.runtime.napari_viewer_server import NapariControlAction
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.napari.napari_viewer_server import NapariControlAction
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerPolylineControlOptions,
     ViewerRegionControlOptions,
 )
-from openhcs.runtime.viewer_measurements import NativeImageMeasurement
-from openhcs.runtime.viewer_protocol import OpenHCSViewerControlMessageType
-from openhcs.runtime.viewer_display import NapariSlots
+from openhcs.runtime.viewer.viewer_measurements import NativeImageMeasurement
+from openhcs.runtime.viewer.viewer_protocol import OpenHCSViewerControlMessageType
+from openhcs.runtime.viewer.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
@@ -384,7 +384,7 @@ def test_invalid_coordinates_and_bounds_fail_at_control_boundary(changes):
     ],
 )
 def test_failure_limits_before_pixel_read_or_interpolation(monkeypatch, changes):
-    import openhcs.runtime.viewer_measurements as math
+    import openhcs.runtime.viewer.viewer_measurements as math
 
     def forbidden(*args, **kwargs):
         raise AssertionError("Array/interpolation started before admission")
@@ -406,7 +406,7 @@ def test_failure_limits_before_pixel_read_or_interpolation(monkeypatch, changes)
     ],
 )
 def test_region_rejection_precedes_mask_allocation(monkeypatch, vertices, budget):
-    import openhcs.runtime.viewer_measurements as math
+    import openhcs.runtime.viewer.viewer_measurements as math
 
     monkeypatch.setattr(
         math,
@@ -556,7 +556,7 @@ def test_automatic_registry_and_mcp_projection_are_readonly_and_strict():
     ],
 )
 def test_invalid_world_geometry_rejected_before_pixel_reads(monkeypatch, transform):
-    from openhcs.runtime.viewer_measurements import NativeMeasurementWindow
+    from openhcs.runtime.viewer.viewer_measurements import NativeMeasurementWindow
 
     def forbidden(*args):
         pytest.fail("world admission must precede reading source pixels")

@@ -21,17 +21,17 @@ from openhcs.core.config.pipeline_config import (
     NapariDimensionMode,
     NapariDisplayConfig,
 )
-from openhcs.runtime.viewer_display import PadToMaxSize
+from openhcs.runtime.viewer.viewer_display import PadToMaxSize
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariBatchProcessorStore,
     NapariComponentGroupStore,
     NapariLayerBatchDebouncePolicy,
     NapariLayerRouteStateStore,
     NapariStreamLayerAddress,
 )
-from openhcs.runtime.napari_viewer_server import (
+from openhcs.runtime.napari.napari_viewer_server import (
     NapariAcceptedControlRequest,
     NapariControlAction,
     NapariComponentAwareDisplayCoordinator,
@@ -48,22 +48,22 @@ from openhcs.runtime.napari_viewer_server import (
     NapariStreamLayerContext,
     NapariViewerServer,
 )
-from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerItem
+from openhcs.runtime.napari.napari_streaming_handlers import NapariStreamLayerItem
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.agent.dto.viewer import ViewerWindowLayerRetirementRequest
 from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService, ZMQViewerWindowGateway,
 )
-from openhcs.runtime.viewer_controls import (
+from openhcs.runtime.viewer.viewer_controls import (
     ViewerLayerRetirementControlOptions, ViewerNavigationControlOptions,
     ViewerPointCoordinates,
 )
 from openhcs.core.io.roi_point_metadata import ROIFractionalZ
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     OpenHCSViewerControlMessageType, SettlementComplete, SettlementFailed, SettlementRunning,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
@@ -208,8 +208,8 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
     receiver, result_first, data_type, replace_layers,
 ):
     """Four earlier 5D raw routes promote as one nonrecursive native batch."""
-    from openhcs.runtime.napari_viewer_server import NapariNavigationControlAction
-    from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
+    from openhcs.runtime.napari.napari_viewer_server import NapariNavigationControlAction
+    from openhcs.runtime.viewer.viewer_controls import ViewerNavigationControlOptions
 
     receiver.replace_layers = replace_layers
     wells = [f"{row}{column:02}" for row in "ABCDEFGH" for column in range(1, 13)]

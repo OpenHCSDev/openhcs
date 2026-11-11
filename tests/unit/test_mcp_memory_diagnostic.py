@@ -22,7 +22,7 @@ from scripts.mcp_memory_diagnostic import (
     read_request_sequence,
 )
 from scripts.mcp_memory_diagnostic_launch import DiagnosticServerSpec
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
 
 def test_process_receipt_uses_current_process_and_reports_gc_boundary():

@@ -92,12 +92,12 @@ from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.pyqt_gui.widgets.artifact_plan_view import ArtifactPlanViewWidget
 from openhcs.pyqt_gui.widgets.image_browser import ImageBrowserWidget
 from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementsWindow
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageRequest,
     ViewerRuntimeEndpoint,
     ViewerTransportEndpoint,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.domains.microscopy.axes import Microscopy
 from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 
@@ -1230,7 +1230,7 @@ from openhcs.core.config.pipeline_config import (
     LazyStepPartitionFilterConfig,
     PipelineConfig,
 )
-from openhcs.runtime.viewer_display import PadToMaxSize
+from openhcs.runtime.viewer.viewer_display import PadToMaxSize
 from openhcs.core.source.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,

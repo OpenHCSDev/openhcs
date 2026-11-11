@@ -26,17 +26,17 @@ from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelS
 from openhcs.core.steps.function_outputs import StreamOutputBatch
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.stream_component_semantics import StreamImagePayloadMetadataProjector
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     AutomaticHigh, AutomaticLow, RescaleIntensityModule, RescaleMethod, rescale_intensity,
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.module_execution import CellProfilerModuleExecutor
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAggregateAxisBindingBuilder, NapariStreamLayerAddress, NapariStreamLayerItem,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory, ViewerComponentValueDomainPayload,
 )
 

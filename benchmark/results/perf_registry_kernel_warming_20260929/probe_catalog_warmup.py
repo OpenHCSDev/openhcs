@@ -6,7 +6,7 @@ from numba import config
 
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
 
 service = FunctionCatalogService()
 # Establish the actual metadata hit before asking the production Future to warm kernels.

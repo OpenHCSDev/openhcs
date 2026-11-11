@@ -26,7 +26,7 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
 from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
     object_measurement_runtime_inputs,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     measure_object_intensity,
 )
 

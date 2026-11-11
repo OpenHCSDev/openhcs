@@ -61,8 +61,8 @@ from openhcs.core.io.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
-from openhcs.runtime.observation_export_scope import ExportRuntimeOutcomes
+from openhcs.runtime.zmq.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
+from openhcs.runtime.runtime_util.observation_export_scope import ExportRuntimeOutcomes
 from openhcs.domains.microscopy.axes import Microscopy
 
 

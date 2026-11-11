@@ -53,10 +53,10 @@ server maintaining its own string/marker/bidirectional logic.
 ```bash
 .venv/bin/python -m pytest tests/unit/test_napari_streaming_handlers.py -q
 .venv/bin/python - <<'PY'
-import openhcs.runtime.napari_stream_visualizer
-import openhcs.runtime.napari_viewer_server
-import openhcs.runtime.fiji_stream_visualizer
-import openhcs.runtime.fiji_viewer_server
+import openhcs.runtime.napari.napari_stream_visualizer
+import openhcs.runtime.napari.napari_viewer_server
+import openhcs.runtime.fiji.fiji_stream_visualizer
+import openhcs.runtime.fiji.fiji_viewer_server
 PY
 timeout 120 .venv/bin/python -m nominal_refactor_advisor \
   openhcs/runtime/napari_stream_visualizer.py \

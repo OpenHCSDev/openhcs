@@ -23,8 +23,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowValidationSummaryResult,
     ViewerWindowStateResult,
 )
-from openhcs.runtime.viewer_controls import ViewerNativeDimensions
-from openhcs.runtime.viewer_protocol import ViewerPayloadSummary
+from openhcs.runtime.viewer.viewer_controls import ViewerNativeDimensions
+from openhcs.runtime.viewer.viewer_protocol import ViewerPayloadSummary
 from zmqruntime.viewer_protocol import (
     ViewerNativeImageIntensityPresentation,
     ViewerNativeLayerTransform,
@@ -303,7 +303,7 @@ def test_independent_presentation_capabilities_execute_cooperative_hooks():
 def test_native_summary_absence_is_not_an_external_json_value():
     from copy import deepcopy
     from pydantic import TypeAdapter
-    from openhcs.runtime.viewer_protocol import VIEWER_FIELD_ABSENT, ViewerArrayStatistics
+    from openhcs.runtime.viewer.viewer_protocol import VIEWER_FIELD_ABSENT, ViewerArrayStatistics
 
     assert deepcopy(VIEWER_FIELD_ABSENT) is VIEWER_FIELD_ABSENT
     # The native scalar capability supports optional Pydantic schema descent.

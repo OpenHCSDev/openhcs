@@ -308,7 +308,7 @@ def start_server(request, conn=None, **kwargs):
         cmd = [
             sys.executable,
             "-m",
-            "openhcs.runtime.zmq_execution_server_launcher",
+            "openhcs.runtime.zmq.zmq_execution_server_launcher",
             "--port",
             str(endpoint.port),
             "--transport-mode",

@@ -51,12 +51,12 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamSourceComponentMetadataItems,
 )
 from openhcs.core.config.streaming_config_declarations import ViewerType
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import (
         ManagedViewerLifecycleMixin,
         ViewerLaunchContext,
     )
@@ -205,7 +205,7 @@ class StreamingViewerLifecycle:
         from zmqruntime import ViewerStateManager, get_or_create_viewer
         from zmqruntime.queue_tracker import GlobalQueueTrackerRegistry
 
-        from openhcs.runtime.viewer_protocol import (
+        from openhcs.runtime.viewer.viewer_protocol import (
             ViewerConnectedExternal,
             ViewerGraphicalSessionUnavailableError,
             ViewerLaunchContext,
@@ -269,7 +269,7 @@ class StreamingViewerLifecycle:
         transport_config: ZMQConfig,
         launch_context: ViewerLaunchContext,
     ) -> ManagedViewerLifecycleMixin:
-        from openhcs.runtime.viewer_protocol import ManagedViewerLifecycleMixin
+        from openhcs.runtime.viewer.viewer_protocol import ManagedViewerLifecycleMixin
 
         viewer = config.create_visualizer(
             filemanager,

@@ -17,7 +17,7 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import Backend
 from openhcs.core.execution.execution_visualizer import ExecutionVisualizerABC
-from openhcs.runtime.viewer_display import (
+from openhcs.runtime.viewer.viewer_display import (
     FijiDisplaySettings,
     NapariDisplaySettings,
     ViewerDisplaySettings,
@@ -113,7 +113,7 @@ class NapariViewer(ViewerFamily):
 
     @classmethod
     def visualizer_type(cls) -> type["ExecutionVisualizerABC"]:
-        from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
+        from openhcs.runtime.napari.napari_stream_visualizer import NapariStreamVisualizer
 
         return NapariStreamVisualizer
 
@@ -125,7 +125,7 @@ class FijiViewer(ViewerFamily):
 
     @classmethod
     def visualizer_type(cls) -> type["ExecutionVisualizerABC"]:
-        from openhcs.runtime.fiji_stream_visualizer import FijiStreamVisualizer
+        from openhcs.runtime.fiji.fiji_stream_visualizer import FijiStreamVisualizer
 
         return FijiStreamVisualizer
 

@@ -1172,7 +1172,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
     )
-    from openhcs.processing.backends.cellprofiler.thresholding import threshold
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import threshold
     from openhcs.processing.backends.processors.numpy_processor import (
         percentile_normalize,
     )

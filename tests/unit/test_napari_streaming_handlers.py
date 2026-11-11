@@ -21,12 +21,12 @@ from openhcs.core.config.pipeline_config import (
     NapariDisplayConfig,
     NapariDimensionMode,
 )
-from openhcs.runtime.viewer_display import PadToMaxSize, SeparateLayers
+from openhcs.runtime.viewer.viewer_display import PadToMaxSize, SeparateLayers
 from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
 )
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlResponseField,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
@@ -40,9 +40,9 @@ from openhcs.runtime.viewer_protocol import (
     ViewerStateControlOptions,
     ViewerComponentValueOrdering,
 )
-from openhcs.runtime.napari_viewer_server import NapariViewerServer
-from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_viewer_server import NapariViewerServer
+from openhcs.runtime.viewer.viewer_protocol import NapariViewerServerRequest
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariImageLayer,
     NapariPointsLayer,
     NapariShapesLayer,
@@ -63,7 +63,7 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemantics,
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentCoordinates,
@@ -78,7 +78,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerMappingDisplayConfigInput,
     ViewerRouteComponentValueTracker,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerComponentValueOrdering,
     ViewerControlResponse,
     ViewerControlResponseField,
@@ -91,8 +91,8 @@ from openhcs.runtime.viewer_protocol import (
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.viewer_display import NapariSlots
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.viewer.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 ALL_STACKED = {name: "stack" for name in STREAM_AXES.names()}
@@ -144,7 +144,7 @@ def _layer_item(
 
 
 def _payload_summary(item: NapariStreamLayerItem) -> dict:
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     return napari_viewer_server.NapariViewerStateProjection.payload_summary(
         item,
         item.address.components,
@@ -153,7 +153,7 @@ def _payload_summary(item: NapariStreamLayerItem) -> dict:
 
 
 def test_napari_stream_context_reconstructs_exact_source_spatial_domain():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     producer = StreamProducerIdentity.pipeline_output(
         output_kind="artifact",
         output_key="CropBlue",
@@ -317,7 +317,7 @@ def test_napari_viewer_state_projection_locates_sparse_array_payloads():
 
 
 def test_napari_viewer_state_projection_bounds_dense_coordinate_work():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     projection = napari_viewer_server.NapariViewerStateProjection
     data = np.ones(
         (projection.MAX_NONZERO_COORDINATE_PROJECTION_COUNT + 1,),
@@ -416,7 +416,7 @@ def test_component_value_domain_wire_mapping_normalizes_variable_axis_values():
 
 
 def test_napari_viewer_payload_projection_reuses_state_route_key_contract():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = type(
         "Server",
         (),
@@ -441,7 +441,7 @@ def test_napari_viewer_payload_projection_reuses_state_route_key_contract():
 
 
 def test_napari_viewer_payload_projection_reuses_state_producer_identities():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = type(
         "Server",
         (),
@@ -485,7 +485,7 @@ def test_napari_viewer_payload_projection_reuses_state_producer_identities():
 
 
 def test_napari_viewer_payload_projection_filters_axis_and_samples_array_crop():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = type(
         "Server",
         (),
@@ -561,7 +561,7 @@ def test_napari_viewer_payload_projection_filters_axis_and_samples_array_crop():
 
 
 def test_napari_viewer_payload_projection_filters_semantic_axis_index():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = type(
         "Server",
         (),
@@ -612,7 +612,7 @@ def test_napari_viewer_payload_projection_filters_semantic_axis_index():
 
 
 def test_napari_roi_summary_projection_bounds_globally_and_omits_geometry():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = type(
         "Server",
         (),
@@ -682,7 +682,7 @@ def test_napari_roi_summary_projection_bounds_globally_and_omits_geometry():
 
 
 def test_napari_viewer_state_projection_filters_and_bounds_layer_details():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = type(
         "Server",
         (),
@@ -759,7 +759,7 @@ def test_napari_viewer_state_projection_filters_and_bounds_layer_details():
 
 
 def test_napari_state_control_message_honors_state_request_payload():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     viewer = _FakeViewer()
     viewer.dims = Dims(ndim=3, axis_labels=("site", "y", "x"))
     viewer.camera = Camera()
@@ -982,7 +982,7 @@ def _apply_intensity_window(
 
 
 def test_napari_payload_projection_accepts_collapsed_scalar_axis_index_zero():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "scalar-route"
     server = type(
         "Server",
@@ -1021,7 +1021,7 @@ def test_napari_payload_projection_accepts_collapsed_scalar_axis_index_zero():
 
 
 def test_napari_intensity_window_accepts_collapsed_scalar_axis_index_zero():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "scalar-route"
     server, layer = _intensity_window_server(
         route_key,
@@ -1043,7 +1043,7 @@ def test_napari_intensity_window_accepts_collapsed_scalar_axis_index_zero():
 
 
 def test_napari_intensity_window_matches_projected_and_scalar_axis_indices():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "mixed-route"
     server, _layer = _intensity_window_server(
         route_key,
@@ -1096,7 +1096,7 @@ def test_napari_intensity_window_rejects_invalid_scalar_route_axis_indices(
     axis_indices,
     message_fragment,
 ):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "scalar-route"
     server, layer = _intensity_window_server(
         route_key,
@@ -1117,7 +1117,7 @@ def test_napari_intensity_window_rejects_invalid_scalar_route_axis_indices(
 
 
 def test_napari_intensity_window_uses_matching_raw_payloads_not_sparse_padding():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "image-route"
     viewer = _FakeViewer()
     layer = type(
@@ -1271,7 +1271,7 @@ def test_napari_intensity_window_fails_closed(
     axis_indices,
     message_fragment,
 ):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "route"
     viewer = _FakeViewer()
     layer = type("Layer", (), {"contrast_limits": (0.0, 1.0)})()
@@ -1461,7 +1461,7 @@ def test_napari_image_presentation_uses_payload_local_color_axis():
 
 
 def test_napari_image_display_stacks_sites_without_rebasing_payload_color_axis():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "route-rgb-sites"
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
@@ -1506,7 +1506,7 @@ def test_napari_image_display_stacks_sites_without_rebasing_payload_color_axis()
 def test_napari_image_display_preserves_shared_semantic_axis_slots() -> None:
     """Reduced routes cannot inflate another route's shared Napari sliders."""
 
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "route-sites-wells"
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
@@ -1553,7 +1553,7 @@ def test_napari_image_display_preserves_shared_semantic_axis_slots() -> None:
 def test_napari_viewer_model_keeps_declared_plate_axis_sizes_across_routes() -> None:
     """The production display path derives shared slots from the display declaration."""
 
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     ViewerModel = pytest.importorskip("napari.components").ViewerModel
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
@@ -1657,7 +1657,7 @@ def test_napari_viewer_model_keeps_declared_plate_axis_sizes_across_routes() -> 
 
 
 def test_napari_image_display_materializes_declared_source_spatial_domain():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "route-cropped-image"
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
@@ -1698,7 +1698,7 @@ def test_napari_image_display_materializes_declared_source_spatial_domain():
 
 
 def test_napari_display_pipeline_applies_dimension_labels_to_layer_route_state():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
 
     axis_labels = pipeline.dimension_label_store.apply(
@@ -1717,7 +1717,7 @@ def test_napari_display_pipeline_applies_dimension_labels_to_layer_route_state()
 
 
 def test_napari_display_pipeline_rejects_unbound_payload_local_image_axes():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     policy = napari_viewer_server.NapariImagePayloadAxisLabelPolicy()
 
     with pytest.raises(ValueError, match="component-axis binding"):
@@ -1743,7 +1743,7 @@ def test_napari_display_pipeline_rejects_unbound_payload_local_image_axes():
 
 
 def test_napari_display_pipeline_labels_collapsed_route_components():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
 
     axis_labels = pipeline.dimension_label_store.apply(
@@ -1766,7 +1766,7 @@ def test_napari_display_pipeline_labels_collapsed_route_components():
 
 
 def test_napari_display_pipeline_rejects_nonsemantic_payload_axis_labels() -> None:
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
 
     with pytest.raises(TypeError, match="semantic axis-name strings"):
@@ -1781,7 +1781,7 @@ def test_napari_display_pipeline_rejects_nonsemantic_payload_axis_labels() -> No
 
 
 def test_napari_display_pipeline_projects_route_axes_locally():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
     component_value_domain = _component_value_domain(
         {"channel": [1, 2, 3, 4, 5], "site": [1, 2]}
@@ -1835,7 +1835,7 @@ def test_napari_display_pipeline_projects_route_axes_locally():
 
 
 def test_napari_display_pipeline_uses_declared_domain_independent_of_arrival_order():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
     component_axis_semantics = (
         ViewerComponentAxisSemanticsFactory.from_display_config(
@@ -1872,7 +1872,7 @@ def test_napari_display_pipeline_uses_declared_domain_independent_of_arrival_ord
 
 
 def test_napari_display_pipeline_aligns_scalar_and_stack_routes_by_semantic_value():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     ViewerModel = pytest.importorskip("napari.components").ViewerModel
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
@@ -2015,8 +2015,8 @@ def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordina
 ):
     from napari.components import ViewerModel
     from openhcs.core.config.pipeline_config import NapariDimensionMode
-    from openhcs.runtime.napari_viewer_server import NapariLayerDisplayPipeline
-    from openhcs.runtime.viewer_component_system import ViewerObjectDisplayConfigInput
+    from openhcs.runtime.napari.napari_viewer_server import NapariLayerDisplayPipeline
+    from openhcs.runtime.viewer.viewer_component_system import ViewerObjectDisplayConfigInput
 
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
@@ -2071,7 +2071,7 @@ def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordina
 
 
 def test_display_batch_composes_domain_and_names_for_new_declared_component():
-    from openhcs.runtime.viewer_component_system import ViewerObjectDisplayConfigInput
+    from openhcs.runtime.viewer.viewer_component_system import ViewerObjectDisplayConfigInput
 
     component = _RegionDisplayConfig.REGION_COMPONENT
     config = _RegionDisplayConfig(region_mode=NapariDimensionMode.LAYER)
@@ -2114,7 +2114,7 @@ def test_paired_raw_projection_keeps_one_inherited_algorithm_owner():
 
 
 def test_napari_display_pipeline_rejects_shared_axis_expansion_requiring_rematerialization():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     ViewerModel = pytest.importorskip("napari.components").ViewerModel
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
@@ -2180,7 +2180,7 @@ def test_napari_display_pipeline_rejects_shared_axis_expansion_requiring_remater
 
 
 def test_napari_display_pipeline_projects_aggregate_payload_axes_into_route_domain():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
     component_value_domain = _component_value_domain(
         {"channel": [1], "z_index": [1, 2]}
@@ -2216,7 +2216,7 @@ def test_napari_display_pipeline_projects_aggregate_payload_axes_into_route_doma
 
 
 def test_napari_axis_projector_validates_declared_domain_and_drops_route_singletons():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
@@ -2239,7 +2239,7 @@ def test_napari_axis_projector_validates_declared_domain_and_drops_route_singlet
 
 
 def test_napari_axis_projector_rejects_missing_declared_singleton_component():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     with pytest.raises(
         ValueError, match="route component domain for 'timepoint' is empty"
@@ -2268,7 +2268,7 @@ def test_napari_axis_projector_rejects_missing_declared_singleton_component():
 
 
 def test_napari_axis_projector_rejects_missing_empty_declared_component():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     with pytest.raises(
         ValueError, match="route component domain for 'timepoint' is empty"
@@ -2297,7 +2297,7 @@ def test_napari_axis_projector_rejects_missing_empty_declared_component():
 
 
 def test_napari_axis_projector_rejects_missing_non_singleton_component():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     with pytest.raises(
         ValueError, match="route component domain for 'timepoint' is empty"
@@ -2314,7 +2314,7 @@ def test_napari_axis_projector_rejects_missing_non_singleton_component():
 
 
 def test_napari_axis_projector_keeps_singleton_route_in_shared_viewer_domain():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
@@ -2334,7 +2334,7 @@ def test_napari_axis_projector_keeps_singleton_route_in_shared_viewer_domain():
 
 
 def test_napari_axis_projector_preserves_route_offset_in_shared_viewer_domain():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
@@ -2353,7 +2353,7 @@ def test_napari_axis_projector_preserves_route_offset_in_shared_viewer_domain():
 
 
 def test_napari_axis_projector_uses_route_domain_for_noncontiguous_routes():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
@@ -2373,7 +2373,7 @@ def test_napari_axis_projector_uses_route_domain_for_noncontiguous_routes():
 
 
 def test_napari_axis_projector_keeps_route_domain_for_noncontiguous_shared_axis():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
@@ -2393,7 +2393,7 @@ def test_napari_axis_projector_keeps_route_domain_for_noncontiguous_shared_axis(
 
 
 def test_napari_axis_projector_requires_declared_domain():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     with pytest.raises(ValueError, match="declared component domain missing 'channel'"):
         ViewerLayerAxisProjector().project(
@@ -2428,7 +2428,7 @@ def test_napari_component_name_metadata_merges_without_erasing_values():
 
 
 def test_napari_display_pipeline_applies_active_route_axis_labels_to_viewer():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class FakeSelection:
         active = None
@@ -2473,7 +2473,7 @@ def test_napari_display_pipeline_applies_active_route_axis_labels_to_viewer():
 
 
 def test_napari_display_pipeline_applies_value_overlay_for_offset_route():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class FakeSelection:
         active = None
@@ -2519,7 +2519,7 @@ def test_napari_display_pipeline_applies_value_overlay_for_offset_route():
 
 
 def test_napari_display_pipeline_uses_route_local_steps_for_offset_labels():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class FakeSelection:
         active = None
@@ -2565,7 +2565,7 @@ def test_napari_display_pipeline_uses_route_local_steps_for_offset_labels():
 
 
 def test_napari_navigation_control_selects_visible_layer_and_route_local_axes():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     viewer = _FakeViewer()
     viewer.dims = Dims(
@@ -2633,7 +2633,7 @@ def test_napari_navigation_control_selects_visible_layer_and_route_local_axes():
 
 
 def test_napari_navigation_visibility_change_preserves_selected_label_route():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     viewer = _FakeViewer()
     viewer.dims = Dims(ndim=3, range=((0, 1, 1), (0, 19, 1), (0, 19, 1)))
@@ -2717,7 +2717,7 @@ def test_napari_navigation_visibility_change_preserves_selected_label_route():
 
 
 def test_napari_display_pipeline_includes_collapsed_component_labels_in_overlay():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class FakeSelection:
         active = None
@@ -2764,7 +2764,7 @@ def test_napari_display_pipeline_includes_collapsed_component_labels_in_overlay(
 
 
 def test_napari_display_pipeline_uses_updated_route_when_selected_route_ndim_mismatches():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     selected_layer = SimpleNamespace(visible=True)
     updated_layer = SimpleNamespace(visible=True)
@@ -2833,7 +2833,7 @@ def test_napari_display_pipeline_uses_updated_route_when_selected_route_ndim_mis
 
 
 def test_napari_display_pipeline_applies_updated_derived_route_overlay():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     selected_layer = SimpleNamespace(visible=True)
     derived_layer = SimpleNamespace(visible=True)
@@ -2902,7 +2902,7 @@ def test_napari_display_pipeline_applies_updated_derived_route_overlay():
 
 
 def test_napari_display_pipeline_preserves_active_non_openhcs_layer_during_update():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
@@ -2935,7 +2935,7 @@ def test_napari_display_pipeline_preserves_active_non_openhcs_layer_during_updat
 
 
 def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_step_labels():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     selected_layer = SimpleNamespace(visible=True)
     fallback_layer = SimpleNamespace(visible=True)
@@ -3018,7 +3018,7 @@ def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_st
 
 
 def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     source_layer = SimpleNamespace(visible=True)
     selected_neurite_layer = SimpleNamespace(visible=True)
@@ -3080,7 +3080,7 @@ def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
 
 
 def test_napari_display_pipeline_labels_all_slices_from_nonzero_axis_origin():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     map2_layer = SimpleNamespace(visible=True)
     smi312_layer = SimpleNamespace(visible=True)
@@ -3176,7 +3176,7 @@ def test_napari_axis_origin_includes_implicit_zero_route_offsets():
 
 
 def test_napari_display_pipeline_rejects_axis_labels_for_wrong_viewer_ndim():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class FakeSelection:
         active = None
@@ -3228,7 +3228,7 @@ def test_napari_display_pipeline_rejects_axis_labels_for_wrong_viewer_ndim():
 
 
 def test_napari_display_pipeline_registers_recreated_shapes_before_selection_restore():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "route-shapes"
     old_layer = type("Layer", (), {"name": "old-shapes"})()
     registration_observed = []
@@ -3338,7 +3338,7 @@ def test_napari_display_pipeline_registers_recreated_shapes_before_selection_res
 
 
 def test_napari_viewer_clear_state_resets_accumulated_axis_domains():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class PendingTimer:
         stopped = False
@@ -3388,7 +3388,7 @@ def test_napari_viewer_clear_state_resets_accumulated_axis_domains():
 
 @pytest.mark.parametrize("origin", ["manual", "pipeline", "direct"])
 def test_clear_state_preserves_mounted_payload_and_domains_until_native_removal(origin):
-    from openhcs.runtime.napari_viewer_server import (
+    from openhcs.runtime.napari.napari_viewer_server import (
         NapariLayerDisplayPipeline,
         NapariViewerServer,
     )
@@ -3440,7 +3440,7 @@ def _run_fake_napari_entrypoint(
     ready=False,
     shutdown_during_service=False,
 ):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from qtpy import QtWidgets
 
     events = []
@@ -3648,7 +3648,7 @@ def _run_fake_napari_entrypoint(
     monkeypatch.setattr(napari_viewer_server, "NapariViewerServer", FakeServer)
     monkeypatch.setattr(napari_viewer_server, "QTimer", FakeTimer)
 
-    from openhcs.runtime import napari_orthogonal_widget
+    from openhcs.runtime.napari import napari_orthogonal_widget
 
     monkeypatch.setattr(
         napari_orthogonal_widget,
@@ -3743,7 +3743,7 @@ def test_napari_entrypoint_publishes_endpoints_from_live_qt_event_loop(monkeypat
 
 
 def test_napari_default_window_layout_places_roi_table_below_canvas(qtbot):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     import napari
     from qtpy.QtCore import Qt
     from qtpy.QtWidgets import QApplication
@@ -3784,7 +3784,7 @@ def test_napari_default_window_layout_places_roi_table_below_canvas(qtbot):
 
 
 def test_napari_scope_accent_styles_the_existing_main_window(qtbot):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     import napari
 
     viewer = napari.Viewer(show=True)
@@ -3811,7 +3811,7 @@ def test_napari_scope_accent_styles_the_existing_main_window(qtbot):
 
 def test_napari_runtime_launch_carries_the_projected_scope_accent():
     from openhcs.core.config.pipeline_config import NapariStreamingConfig
-    from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
+    from openhcs.runtime.napari.napari_stream_visualizer import NapariStreamVisualizer
 
     config = NapariStreamingConfig(
         port=6200,
@@ -3847,7 +3847,7 @@ def test_napari_roi_manager_selects_authoritative_shapes_members(qtbot):
         name="OpenHCS ROIs",
     )
     _native_roi_selection_server(
-        pytest.importorskip("openhcs.runtime.napari_viewer_server"),
+        pytest.importorskip("openhcs.runtime.napari.napari_viewer_server"),
         viewer,
         (("rois", layer, 1),),
     )
@@ -3924,7 +3924,7 @@ def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(
     qtbot,
     monkeypatch,
 ):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.components import ViewerModel
 
     subject_feature = napari_viewer_server.ObjectArtifactSubjectBinding.SUBJECT_FEATURE
@@ -4014,7 +4014,7 @@ def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(
 
 
 def test_roi_manager_selection_reveals_3d_roi_on_its_exact_slice(qtbot, monkeypatch):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.components import ViewerModel
     from napari.settings import get_settings
 
@@ -4102,7 +4102,7 @@ def test_roi_manager_selection_reveals_3d_roi_on_its_exact_slice(qtbot, monkeypa
 
 
 def test_empty_shapes_selection_does_not_change_viewer_context(qtbot):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.components import ViewerModel
 
     viewer = ViewerModel(ndisplay=2)
@@ -4144,7 +4144,7 @@ def test_roi_selection_preserves_user_adjusted_native_highlight_thickness(
     qtbot,
     monkeypatch,
 ):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.components import ViewerModel
     from napari.settings import get_settings
 
@@ -4176,7 +4176,7 @@ def test_roi_selection_preserves_user_adjusted_native_highlight_thickness(
 
 
 def test_roi_selection_toolbar_adjusts_native_highlight_setting(qtbot, monkeypatch):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.settings import get_settings
     from qtpy.QtWidgets import QMainWindow, QPushButton, QSpinBox
 
@@ -4229,7 +4229,7 @@ def test_roi_selection_toolbar_adjusts_native_highlight_setting(qtbot, monkeypat
 
 
 def test_roi_layer_color_button_recolors_every_shape(qtbot, monkeypatch):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.components import ViewerModel
     from qtpy.QtCore import Qt
     from qtpy.QtGui import QColor
@@ -4341,7 +4341,7 @@ def test_napari_shutdown_cancels_pending_updates_before_scheduling_viewer_close(
     monkeypatch,
     message_type,
 ):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from qtpy import QtCore
 
     events = []
@@ -4416,7 +4416,7 @@ def test_napari_shutdown_cancels_pending_updates_before_scheduling_viewer_close(
 
 
 def test_napari_axis_projector_drops_only_globally_singleton_axes():
-    pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     component_values = {
         "site": [1, 2],
         "timepoint": [1],
@@ -4504,7 +4504,7 @@ def test_napari_layer_update_authority_declares_shapes_and_points_kwargs():
 
 
 def test_napari_layer_title_authority_uses_stream_display_name_policy():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     producer = StreamProducerIdentity.pipeline_output(
         output_kind="artifact",
         output_key="NucleiObjects3D",
@@ -4529,7 +4529,7 @@ def test_napari_layer_title_authority_uses_stream_display_name_policy():
 
 
 def test_napari_component_display_coordinator_purges_deleted_route_domain():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class _FakeServer:
         def __init__(self):
@@ -4567,7 +4567,7 @@ def test_napari_component_display_coordinator_purges_deleted_route_domain():
 
 
 def test_napari_component_display_coordinator_stages_replacement_without_clearing_mounted_domain():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class _FakeServer:
         replace_layers = True
@@ -4596,7 +4596,7 @@ def test_napari_component_display_coordinator_stages_replacement_without_clearin
 
 
 def test_napari_component_display_coordinator_splits_declared_image_layouts():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class _FakeDisplayPipeline:
         def __init__(self):
@@ -4683,7 +4683,7 @@ def test_napari_component_display_coordinator_splits_declared_image_layouts():
 
 
 def test_napari_component_display_coordinator_preserves_declared_singleton_stack():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class _FakeDisplayPipeline:
         def __init__(self):
@@ -4765,7 +4765,7 @@ def test_napari_component_display_coordinator_preserves_declared_singleton_stack
 
 
 def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     class _FakeDisplayPipeline:
 
@@ -4878,7 +4878,7 @@ def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
 
 
 def test_napari_configured_colormap_reaches_native_layer_and_invalid_name_fails():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     import napari
 
     route_key = "configured-colormap"
@@ -4922,7 +4922,7 @@ def test_napari_configured_colormap_reaches_native_layer_and_invalid_name_fails(
 
 
 def test_napari_layer_title_disambiguation_uses_display_step_number():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     producer = StreamProducerIdentity.pipeline_output(
         output_kind="main",
         output_key="main",
@@ -4987,7 +4987,7 @@ def test_napari_layer_route_state_store_keeps_layer_labels_and_timers_together()
 
 
 def test_napari_settle_rejects_recorded_layer_update_failure():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "failed-route"
 
     class FailingProcessor:
@@ -5046,7 +5046,7 @@ def test_napari_settle_rejects_recorded_layer_update_failure():
 
 
 def test_napari_settlement_reports_incremental_qt_progress(monkeypatch):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     callbacks = []
 
     class DeferredQtTimer:
@@ -5107,7 +5107,7 @@ def test_napari_settlement_reports_incremental_qt_progress(monkeypatch):
 
 
 def test_napari_settlement_reports_progress_within_one_large_route(monkeypatch):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     callbacks = []
 
     class DeferredQtTimer:
@@ -5176,7 +5176,7 @@ def test_napari_settlement_reports_progress_within_one_large_route(monkeypatch):
 
 
 def test_napari_scheduled_update_retains_failure_without_escaping_qt_callback():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     route_key = "failed-scheduled-route"
 
     class BatchProcessors:
@@ -5292,7 +5292,7 @@ def test_viewer_component_coordinate_authority_rejects_missing_axis_component():
 
 
 def test_napari_image_stack_builder_rejects_missing_projected_coordinates():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     with pytest.raises(ValueError, match="missing routed image"):
         napari_viewer_server._build_nd_image_array(
@@ -5304,7 +5304,7 @@ def test_napari_image_stack_builder_rejects_missing_projected_coordinates():
 
 
 def test_napari_image_stack_builder_rejects_wrong_collapsed_component_value():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     with pytest.raises(ValueError, match="collapsed component 'channel'"):
         napari_viewer_server._build_nd_image_array(
@@ -5320,7 +5320,7 @@ def test_napari_image_stack_builder_rejects_wrong_collapsed_component_value():
 
 
 def test_napari_image_stack_builder_preserves_route_local_collapsed_channels():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     image = napari_viewer_server._build_nd_image_array(
         [
@@ -5340,7 +5340,7 @@ def test_napari_image_stack_builder_preserves_route_local_collapsed_channels():
 
 
 def test_napari_image_stack_builder_preserves_sparse_routed_component_pairs():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     component_values = {
         "well": ["A02", "B04", "B12", "B17"],
         "site": [1, 2, 4, 7],
@@ -5376,7 +5376,7 @@ def test_napari_image_stack_builder_preserves_sparse_routed_component_pairs():
 
 
 def test_napari_display_projection_derives_sparse_coordinates_from_routed_items():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
     component_values = {
         "well": ["A02", "B04", "B12", "B17"],
@@ -5421,7 +5421,7 @@ def test_napari_display_projection_derives_sparse_coordinates_from_routed_items(
 
 
 def test_napari_image_stack_builder_consumes_aggregate_payload_axis_as_stack_component():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     image = napari_viewer_server._build_nd_image_array(
         [
@@ -5451,7 +5451,7 @@ def test_napari_image_stack_builder_consumes_aggregate_payload_axis_as_stack_com
 
 
 def test_napari_image_stack_builder_rejects_unrouted_axis_values():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     with pytest.raises(ValueError, match="missing routed image"):
         napari_viewer_server._build_nd_image_array(
@@ -5949,7 +5949,7 @@ def test_napari_shape_label_rasterizer_rejects_mixed_aggregate_plane_metadata():
 
 
 def test_napari_shapes_layer_display_applies_route_global_axis_translate():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.layer_route_state.set_title("objects", "Objects")
@@ -6008,7 +6008,7 @@ def test_napari_shapes_layer_display_applies_route_global_axis_translate():
 
 
 def test_napari_shapes_display_work_appends_bounded_chunks(monkeypatch):
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.components import ViewerModel
 
     events = []
@@ -6078,7 +6078,7 @@ def test_napari_shapes_display_work_appends_bounded_chunks(monkeypatch):
 
 
 def test_napari_shapes_display_work_batches_thousands_with_native_features():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.components import ViewerModel
 
     member_count = 4_097
@@ -6141,7 +6141,7 @@ def test_napari_shapes_display_work_batches_thousands_with_native_features():
 
 
 def test_napari_points_layer_display_applies_route_global_axis_translate():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.layer_route_state.set_title("spots", "Spots")
@@ -6183,7 +6183,7 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
 
 
 def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.layer_route_state.set_title("centres", "Centres")
@@ -6323,7 +6323,7 @@ def test_shape_features_exclude_source_transport_without_mutating_payload():
 
 
 def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = _FakeNapariServer()
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
     semantics = ViewerComponentAxisSemantics(
@@ -6353,7 +6353,7 @@ def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():
 
 
 def test_napari_points_layer_rejects_fractional_z_without_z_axis():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     item = _layer_item(
         {"channel": 1},
         [
@@ -6377,7 +6377,7 @@ def test_napari_points_layer_rejects_fractional_z_without_z_axis():
 
 
 def test_native_image_intensity_command_preserves_data_and_navigation():
-    module = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    module = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from napari.layers import Image
     from zmqruntime.viewer_protocol import (
         ViewerImageIntensityControlOptions,

@@ -57,7 +57,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesFilenameMethod,
 )
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import SpreadsheetFileSelection
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdAssignment,
     CellProfilerThresholdMethod,
 )

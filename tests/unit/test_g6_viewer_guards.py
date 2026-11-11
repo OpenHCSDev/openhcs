@@ -62,7 +62,7 @@ def _strings(path: Path) -> set[str]:
 
 @pytest.mark.parametrize(
     "module",
-    ("openhcs.runtime.napari_viewer_server", "openhcs.runtime.fiji_viewer_server"),
+    ("openhcs.runtime.napari.napari_viewer_server", "openhcs.runtime.fiji.fiji_viewer_server"),
 )
 def test_viewer_server_imports_no_domain_orchestration_or_config(module) -> None:
     pytest.importorskip("napari")

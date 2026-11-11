@@ -9,7 +9,7 @@ from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     RescaleIntensityModule,
     rescale_intensity,
 )

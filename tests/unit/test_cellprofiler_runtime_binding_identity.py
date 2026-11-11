@@ -22,7 +22,7 @@ from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 from openhcs.processing.backends.cellprofiler.crop import CropModule, crop
-from openhcs.processing.backends.cellprofiler.morphology import MaskObjectsModule
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import MaskObjectsModule
 from openhcs.processing.backends.cellprofiler.neighbors import (
     MeasureObjectNeighborsModule,
 )

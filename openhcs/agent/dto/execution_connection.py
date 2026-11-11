@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 from formbridge.connection import EndpointConnectionFields, EndpointConnectionSpec
 from python_introspect import project_dataclass
 
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 if TYPE_CHECKING:
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,7 +29,7 @@ class ExecutionConnectionSpec(EndpointConnectionSpec):
     ) -> ZMQExecutionClient:
         """Construct the OpenHCS execution client for this exact connection."""
 
-        from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+        from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
         return ZMQExecutionClient(
             port=self.port,

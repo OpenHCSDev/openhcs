@@ -9,7 +9,7 @@ from openhcs.interop.cellprofiler.image_normalization import (
     normalize_cellprofiler_image_payload,
 )
 from openhcs.processing.backends.cellprofiler import thresholding
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     NumbaNumpyThresholdDiagnosticsBackendStrategy,
     NumbaNumpyThresholdPrimitiveBackendStrategy,
     unit_interval_scale_for_threshold_selection,

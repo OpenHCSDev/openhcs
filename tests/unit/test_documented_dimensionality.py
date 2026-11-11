@@ -9,7 +9,7 @@ from openhcs.processing.backends.cellprofiler.area_occupied import (
     measure_image_volume_occupied_binary,
     measure_image_volume_occupied_objects,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureObjectIntensityModule,
 )
 from openhcs.processing.backends.cellprofiler.primary_objects import (

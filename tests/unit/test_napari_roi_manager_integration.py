@@ -79,7 +79,7 @@ def test_roi_feature_json_round_trip_preserves_native_values() -> None:
 
 @pytest.mark.unit
 def test_result_binding_reuses_one_mounted_roi_manager_for_native_layers() -> None:
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
 
     events: list[object] = []
 
@@ -130,7 +130,7 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
 ) -> None:
     napari = pytest.importorskip("napari")
     pytest.importorskip("openhcs.napari_roi_manager")
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     viewer = napari.Viewer(show=False)
     qtbot.addWidget(viewer.window._qt_window)
     layer = viewer.add_shapes(
@@ -195,7 +195,7 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
 ])
 def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy):
     napari = pytest.importorskip("napari")
-    module = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    module = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from qtpy import sip
     from qtpy.QtCore import QCoreApplication, QEvent
     from qtpy.QtWidgets import QToolBar

@@ -63,13 +63,13 @@ from openhcs.core.io.viewer_streaming_service import (
     StreamingService,
     StreamingViewerLifecycle,
 )
-from openhcs.runtime.fiji_stream_visualizer import FijiStreamVisualizer
-from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.fiji.fiji_stream_visualizer import FijiStreamVisualizer
+from openhcs.runtime.napari.napari_stream_visualizer import NapariStreamVisualizer
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerConnectedExternal,
     ViewerStopped,
     DetachedViewerLaunchFailure,
@@ -79,8 +79,8 @@ from openhcs.runtime.viewer_protocol import (
     ViewerControlResponse,
     ViewerLaunchContext,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemantics,
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjectionRequestBuilder,
@@ -1108,7 +1108,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
     )
     projection = ViewerLayerAxisProjector().project(request)
     assert "z_index" in projection.projected_axis_components
-    from openhcs.runtime.napari_viewer_server import _build_nd_points
+    from openhcs.runtime.napari.napari_viewer_server import _build_nd_points
 
     points, properties = _build_nd_points([item], projection, ("z_index",))
     assert points[0, projection.projected_axis_components.index("z_index")] == 2.375

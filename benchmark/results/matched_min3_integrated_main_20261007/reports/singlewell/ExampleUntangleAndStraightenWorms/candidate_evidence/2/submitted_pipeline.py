@@ -52,7 +52,7 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     RescaleOption,
     SmoothingMethod,
 )
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
 from openhcs.processing.backends.cellprofiler.outlines import OutlineSourceKind
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsDistanceMethod
@@ -60,7 +60,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     SpreadsheetColumnSelection,
     SpreadsheetFileSelection,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod
 from openhcs.processing.backends.cellprofiler.worms import FlipMode
 from openhcs.processing.func_registry import get_function
 from pathlib import Path

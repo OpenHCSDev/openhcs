@@ -35,27 +35,27 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
 )
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariAxisPresentation,
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.runtime.napari_viewer_server import (
+from openhcs.runtime.napari.napari_viewer_server import (
     NapariControlAction,
     NapariStreamLayerContext,
     PayloadMap,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponseField,
 )
-from openhcs.runtime.viewer_display import NapariSlots
+from openhcs.runtime.viewer.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.axes.axis_declarations import ColourAxis
 
@@ -221,14 +221,14 @@ def test_conflicting_route_calibration_fails_closed():
 def test_native_display_handlers_apply_shared_calibration_after_wire_roundtrip():
     from zmqruntime.config import TransportMode
 
-    from openhcs.runtime.napari_viewer_server import (
+    from openhcs.runtime.napari.napari_viewer_server import (
         NapariImageLayerDisplayHandler,
         NapariLayerDisplayRequest,
         NapariPointsLayerDisplayHandler,
         NapariShapesLayerDisplayHandler,
         NapariViewerServer,
     )
-    from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
+    from openhcs.runtime.viewer.viewer_protocol import NapariViewerServerRequest
 
     viewer = ViewerModel()
     # The real server's stores and pipeline; construction opens no socket.
@@ -707,7 +707,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     projected_metadata = stream_request.source.metadata.metadata_by_path
     assert declared_domain["well"] == [well]
     assert {values["well"] for values in projected_metadata.values()} == {well}
-    from openhcs.runtime.viewer_component_system import (
+    from openhcs.runtime.viewer.viewer_component_system import (
         ViewerLayerAxisProjectionRequest,
         ViewerLayerAxisProjector,
     )

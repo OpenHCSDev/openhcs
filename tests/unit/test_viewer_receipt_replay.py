@@ -43,7 +43,7 @@ from openhcs.core.io.viewer_streaming_service import ViewerStreamingSource
 from openhcs.core.plate.plate_file_inventory import PlateFileKind
 from openhcs.core.plate.plate_image_inventory import PlateFileRecord
 from python_introspect import to_jsonable
-from openhcs.runtime.viewer_protocol import ViewerPayloadSummary
+from openhcs.runtime.viewer.viewer_protocol import ViewerPayloadSummary
 from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
@@ -170,7 +170,7 @@ def test_declared_plane_domain_conflicts_fail_closed(tmp_path, values):
 
 
 def test_observed_and_declared_wire_domains_have_distinct_order_contracts():
-    from openhcs.runtime.viewer_component_system import (
+    from openhcs.runtime.viewer.viewer_component_system import (
         ViewerComponentValueDomainPayload,
     )
 
@@ -206,11 +206,11 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     manager.save(expected, path, "disk")
     from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-    from openhcs.runtime.napari_streaming_handlers import (
+    from openhcs.runtime.napari.napari_streaming_handlers import (
         NapariAggregateAxisBindingBuilder, NapariStreamLayerAddress, NapariStreamLayerItem,
     )
-    from openhcs.runtime.napari_viewer_server import NapariViewerStateProjection
-    from openhcs.runtime.viewer_component_system import (
+    from openhcs.runtime.napari.napari_viewer_server import NapariViewerStateProjection
+    from openhcs.runtime.viewer.viewer_component_system import (
         ViewerComponentAxisSemanticsFactory, ViewerComponentValueDomainPayload,
         ViewerMappingDisplayConfigInput,
     )
@@ -253,8 +253,8 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     assert summary.require_plane_components() == {"channel": (2, 1)}
     if historical_dtype is not None:
         summary = replace(summary, dtype=historical_dtype)
-    from openhcs.runtime.napari_streaming_handlers import NapariAxisPresentation
-    from openhcs.runtime.viewer_component_system import ViewerLayerAxisProjection
+    from openhcs.runtime.napari.napari_streaming_handlers import NapariAxisPresentation
+    from openhcs.runtime.viewer.viewer_component_system import ViewerLayerAxisProjection
 
     presentation = NapariAxisPresentation(
         entries=native_semantics.entries,
@@ -352,7 +352,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     compact = renderer.render(decoded)
     assert '"aggregate_component_values": {"channel": [2, 1]}' in compact
     assert '"source_spatial_shape_yx": [8, 9]' in compact
-    from openhcs.runtime.viewer_component_system import (
+    from openhcs.runtime.viewer.viewer_component_system import (
         ViewerComponentValueDomainPayload,
     )
 
@@ -372,16 +372,16 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     from openhcs.core.steps.stream_component_semantics import (
         StreamImagePayloadMetadataProjector,
     )
-    from openhcs.runtime.napari_streaming_handlers import (
+    from openhcs.runtime.napari.napari_streaming_handlers import (
         NapariAggregateAxisBindingBuilder,
         NapariStreamLayerItem,
     )
-    from openhcs.runtime.napari_viewer_server import (
+    from openhcs.runtime.napari.napari_viewer_server import (
         NapariStreamLayerContext,
         PayloadMap,
         _build_nd_image_array,
     )
-    from openhcs.runtime.viewer_component_system import (
+    from openhcs.runtime.viewer.viewer_component_system import (
         ViewerComponentAxisSemanticsFactory,
         ViewerLayerAxisProjection,
         ViewerMappingDisplayConfigInput,

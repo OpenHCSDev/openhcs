@@ -44,7 +44,7 @@ from openhcs.core.runtime_store.runtime_stores import (
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, ImageFileOptions
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,
     ZMQRuntimeExecutionObservationExport,
 )

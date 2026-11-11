@@ -49,7 +49,7 @@ from openhcs.core.source.source_projection import (
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ImageMode,
     convert_objects_to_image,
 )

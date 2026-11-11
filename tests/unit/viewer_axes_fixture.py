@@ -2,7 +2,7 @@
 
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes.axis_declarations import OrdinalValued
-from openhcs.runtime.viewer_display import DECLARED_AXES_FIELD, DeclaredAxes, DeclaredAxis
+from openhcs.runtime.viewer.viewer_display import DECLARED_AXES_FIELD, DeclaredAxes, DeclaredAxis
 
 STREAM_AXES = DeclaredAxes.of(Microscopy.axes)
 

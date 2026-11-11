@@ -34,7 +34,7 @@ from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.config.config_cache import ConfigCacheSpec
 from openhcs.core.util.xdg_paths import get_openhcs_log_dir
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 logger = logging.getLogger(__name__)
 

@@ -47,7 +47,7 @@ class FijiSlots(ViewerSlotFamily):   Channel(ColourAxis), Slice(StackAxis), Fram
 ## Guards
 
 `tests/unit/test_g6_viewer_guards.py`:
-1. Importing `openhcs.runtime.napari_viewer_server` and `openhcs.runtime.fiji_viewer_server` (fresh subprocess) loads no `openhcs.microscopes`, no `openhcs.core.orchestrator` and no `openhcs.core.config.pipeline_config`.
+1. Importing `openhcs.runtime.napari.napari_viewer_server` and `openhcs.runtime.fiji.fiji_viewer_server` (fresh subprocess) loads no `openhcs.microscopes`, no `openhcs.core.orchestrator` and no `openhcs.core.config.pipeline_config`.
 2. No `AxisFamily` reference in the viewer modules (`runtime/*viewer*`, `napari_*`, `fiji_*`, `viewer_component_system`).
 3. No `ViewerComponentMode` anywhere in `openhcs/` or the submodules' `src/`.
 4. No `ControlMessagePlan`, `Unsupported*ControlPlan` or `NapariControlMessageAction` names; no `"shutdown"`/`"force_shutdown"`/`"clear_state"` literals in the Fiji server.

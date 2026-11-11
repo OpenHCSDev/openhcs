@@ -2,14 +2,14 @@
 
 import pytest
 
-from openhcs.runtime.napari_streaming_handlers import NapariAxisPresentation
+from openhcs.runtime.napari.napari_streaming_handlers import NapariAxisPresentation
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerLayerAxisProjection,
 )
-from openhcs.runtime.viewer_display import NapariSlots
+from openhcs.runtime.viewer.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 

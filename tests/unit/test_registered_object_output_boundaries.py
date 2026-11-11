@@ -26,7 +26,7 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
-from openhcs.processing.backends.cellprofiler.object_filtering import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_filtering import (
     FilterMode,
     FilterObjectsModule,
     filter_objects,

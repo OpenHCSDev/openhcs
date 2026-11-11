@@ -75,7 +75,7 @@ from openhcs.mcp.control_timeout import (
     McpViewerTimeoutPolicy,
 )
 from openhcs.agent.ui_bridge_environment import UIConfigCacheEnvironment
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.authoring.session.operations import SessionOperation

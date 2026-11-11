@@ -59,11 +59,11 @@ from openhcs.core.measurements.runtime_measurements import (
 )
 from openhcs.core.io.roi_point_metadata import ROIFractionalZ
 from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
 )
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
@@ -824,7 +824,7 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
     source_domain = ROIFractionalZ.source_component_domain(rois, metadata)
     z_values = [plane["z_index"] for plane in source_domain]
     assert z_values == list(range(source_z_origin, source_z_origin + 4))
-    viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     projection = ViewerLayerAxisProjection(
         projected_axis_components=("z_index",),
         component_values={"z_index": z_values},
@@ -908,11 +908,11 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     }
     # This geometric-domain projection never invents an image-plane field.
     assert ViewerWireField.PLANE_AXIS.value not in fields
-    from openhcs.runtime.napari_streaming_handlers import (
+    from openhcs.runtime.napari.napari_streaming_handlers import (
         NapariAggregateAxisBinding, NapariAggregateAxisBindingSet,
         NapariShapeLayerPayload, NapariStreamLayerAddress, NapariStreamLayerItem,
     )
-    from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
+    from openhcs.runtime.viewer.viewer_component_system import ViewerComponentValueDomainPayload
     from polystore.streaming_constants import StreamingDataType
     plane_domain = ViewerComponentValueDomainPayload.from_wire_mapping(
         fields[ViewerWireField.PLANE_COMPONENT_VALUES.value], context="saved label ROI",

@@ -76,11 +76,11 @@ from openhcs.processing.backends.cellprofiler.grid import (
 from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureImageIntensityModule,
     MeasureObjectIntensityModule,
 )
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     MeasureColocalizationModule,
 )
 from openhcs.processing.backends.cellprofiler.shape import (
@@ -88,7 +88,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
 )
 from openhcs.processing.backends.cellprofiler.texture import MeasureTextureModule
 from openhcs.processing.backends.cellprofiler.outlines import OverlayObjectsModule
-from openhcs.processing.backends.cellprofiler.morphology import MaskObjectsModule
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import MaskObjectsModule
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (
     executing_context,

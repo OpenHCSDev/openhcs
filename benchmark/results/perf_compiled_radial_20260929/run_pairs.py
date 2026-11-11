@@ -77,7 +77,7 @@ def main():
                     [
                         sys.executable,
                         "-c",
-                        "from openhcs.processing.backends.cellprofiler.intensity_distribution import RadialDistributionBackendStrategy; RadialDistributionBackendStrategy.prepare_registered_family()",
+                        "from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import RadialDistributionBackendStrategy; RadialDistributionBackendStrategy.prepare_registered_family()",
                     ],
                     cwd=ROOT,
                     env=env,

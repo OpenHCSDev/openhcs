@@ -24,7 +24,7 @@ OpenHCS-specific modules:
   ``openhcs.core.progress.runtime_tree`` own the OpenHCS execution and tree
   projections.
 - ``openhcs.core.progress`` emits worker events through the configured progress
-  queue. ``openhcs.runtime.zmq_progress`` constructs execution-server events and
+  queue. ``openhcs.runtime.zmq.zmq_progress`` constructs execution-server events and
   owns the compiler queue adapter.
 
 Consumption path:

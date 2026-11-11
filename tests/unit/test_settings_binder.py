@@ -26,7 +26,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     normalize_cellprofiler_setting_name,
     parse_cellprofiler_int,
 )
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     MeasureColocalizationModule,
 )
 from openhcs.processing.backends.cellprofiler.grid import (
@@ -35,19 +35,19 @@ from openhcs.processing.backends.cellprofiler.grid import (
     DiameterChoice,
     ShapeChoice,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     InterpolationMethod,
     MaskImageModule,
     ResizeMethod,
     TileModule,
 )
-from openhcs.processing.backends.cellprofiler.image_quality import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
     MeasureImageQualityModule,
 )
 from openhcs.processing.backends.cellprofiler.measurement_math import (
     CalculateMathModule,
 )
-from openhcs.processing.backends.cellprofiler.morphology import ResizeObjectsModule
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import ResizeObjectsModule
 from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
 )

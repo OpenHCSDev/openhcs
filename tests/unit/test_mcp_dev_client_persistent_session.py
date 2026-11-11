@@ -21,7 +21,7 @@ from openhcs.pyqt_gui.config import (
     get_default_ui_config,
     save_ui_config_sync,
 )
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 
 def test_child_process_uses_same_isolated_ui_execution_endpoint(

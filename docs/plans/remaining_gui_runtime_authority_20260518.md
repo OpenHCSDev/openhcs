@@ -61,8 +61,8 @@ harder to test independently.
 QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest tests/unit/pyqt_gui -q
 
 .venv/bin/python - <<'PY'
-import openhcs.runtime.fiji_viewer_server
-import openhcs.runtime.omero_instance_manager
+import openhcs.runtime.fiji.fiji_viewer_server
+import openhcs.runtime.runtime_util.omero_instance_manager
 import openhcs.runtime.remote_orchestrator
 PY
 

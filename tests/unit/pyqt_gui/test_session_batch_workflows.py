@@ -46,7 +46,7 @@ from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
-from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionRequestBuilder
 from tests.unit.pyqt_gui.session_harness import add_datasets, caller_session
 from openhcs.core.progress.types import (
     StepCompletedProgressPhase,

@@ -35,7 +35,7 @@ from openhcs.pyqt_gui.services.reactor_providers import (
     OpenHCSLogDiscoveryProvider,
     OpenHCSServerScanProvider,
 )
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 
 def _owned_handlers() -> list[logging.Handler]:

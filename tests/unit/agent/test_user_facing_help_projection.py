@@ -26,7 +26,7 @@ from openhcs.processing.backends.analysis.cell_counting_cpu import (
 )
 from openhcs.processing.custom_functions import manager as custom_function_manager
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig, UIConfig
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 REJECTED_HELP_FRAGMENTS = (

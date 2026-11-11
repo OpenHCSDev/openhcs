@@ -173,7 +173,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         subparsers: argparse._SubParsersAction,
     ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
-        from openhcs.runtime.observation_export_scope import (
+        from openhcs.runtime.runtime_util.observation_export_scope import (
             ExportRuntimeValues,
             ZMQRuntimeObservationExportScope,
         )
@@ -244,7 +244,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             derived_workspace_root,
             mirror_input_workspace,
         )
-        from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+        from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
         from python_introspect import to_jsonable
 
         output_dir = args.output_dir.expanduser().resolve()

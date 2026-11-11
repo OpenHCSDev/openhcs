@@ -18,14 +18,14 @@ from zmqruntime.timeouts import OperationDeadline
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowSnapshotRequest
-from openhcs.runtime.napari_viewer_server import (
+from openhcs.runtime.napari.napari_viewer_server import (
     NapariAcceptedControlRequest,
     NapariControlAction,
     NapariLayerDisplayPipeline,
     NapariScreenshotControlAction,
     NapariViewerServer,
 )
-from openhcs.runtime.viewer_snapshot import ViewerWindowSnapshotService
+from openhcs.runtime.viewer.viewer_snapshot import ViewerWindowSnapshotService
 
 
 @pytest.fixture
@@ -58,9 +58,9 @@ def queued_viewer():
         host="localhost", port=5584, transport_mode=TransportMode.TCP
     )
     server.napari_window_title = "Queued source snapshot"
-    from openhcs.runtime.napari_streaming_handlers import NapariLayerRouteStateStore
+    from openhcs.runtime.napari.napari_streaming_handlers import NapariLayerRouteStateStore
     server.layer_route_state = NapariLayerRouteStateStore.empty()
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
     server.config = OPENHCS_ZMQ_CONFIG
     server.accepted_control_requests = queue.Queue()
     server.display_pipeline = NapariLayerDisplayPipeline(server)
@@ -243,7 +243,7 @@ def test_snapshot_original_deadline_releases_transport_without_cancelling_qt_wor
     queued_viewer, tmp_path
 ):
     import threading
-    from openhcs.runtime.napari_viewer_server import NapariControlTransportPump
+    from openhcs.runtime.napari.napari_viewer_server import NapariControlTransportPump
 
     app, _, server = queued_viewer
     server._running = True
@@ -284,7 +284,7 @@ def test_snapshot_original_deadline_releases_transport_without_cancelling_qt_wor
 def test_corrupted_snapshot_is_rejected_before_qt_queue(
     queued_viewer, tmp_path, corrupted_fields
 ):
-    from openhcs.runtime.napari_viewer_server import NapariControlTransportPump
+    from openhcs.runtime.napari.napari_viewer_server import NapariControlTransportPump
 
     _, _, server = queued_viewer
     pump = NapariControlTransportPump(server)

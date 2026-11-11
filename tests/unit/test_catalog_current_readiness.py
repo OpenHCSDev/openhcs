@@ -27,7 +27,7 @@ from openhcs.core.callable.processing_contracts import (
 )
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
 from openhcs.processing.custom_functions.runtime_registry import CustomFunctionRuntimeRegistry
-from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
 
 
 def declaration(image, gain: float = 1.0):
@@ -341,7 +341,7 @@ def test_endpoint_current_readiness_uses_bound_native_status(native_outcome):
     from openhcs.agent.services.endpoint_function_catalog_service import (
         FunctionCatalogClientSession, FunctionCatalogProjection, ZMQFunctionCatalogService,
     )
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
     from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
     endpoint = replace(OPENHCS_ZMQ_CONFIG, default_port=22319)
@@ -391,7 +391,7 @@ def test_original_control_family_stays_pending_during_refresh(
         FunctionCatalogPreparationControlResponse, FunctionDetailControlRequest,
         FunctionReferenceControlRequest, FunctionSearchRequest,
     )
-    from openhcs.runtime.zmq_control import ZMQControlMessageRouter, ZMQControlRequestContext
+    from openhcs.runtime.zmq.zmq_control import ZMQControlMessageRouter, ZMQControlRequestContext
 
     service, _, _ = catalog
     preparation = FunctionCatalogPreparation(service)

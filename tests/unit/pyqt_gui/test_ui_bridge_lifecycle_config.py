@@ -40,8 +40,8 @@ from formbridge.bridge.server import (
     UiBridgeControlServer,
     UiBridgeEndpointInUseError,
 )
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 
 

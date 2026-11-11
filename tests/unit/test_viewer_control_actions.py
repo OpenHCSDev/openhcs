@@ -8,11 +8,11 @@ import pytest
 from zmqruntime.messages import EndpointControlCapability
 
 from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
-from openhcs.runtime.viewer_control_actions import (
+from openhcs.runtime.viewer.viewer_control_actions import (
     LifecycleControlAction,
     ViewerServerPort,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponse,
     ViewerSettleProgress,
@@ -20,12 +20,12 @@ from openhcs.runtime.viewer_protocol import (
 
 pytest.importorskip("napari")
 
-from openhcs.runtime.fiji_viewer_server import (  # noqa: E402
+from openhcs.runtime.fiji.fiji_viewer_server import (  # noqa: E402
     FijiBatchSettlementState,
     FijiViewerServer,
     FijiWindowRegistry,
 )
-from openhcs.runtime.napari_viewer_server import NapariViewerServer  # noqa: E402
+from openhcs.runtime.napari.napari_viewer_server import NapariViewerServer  # noqa: E402
 
 VIEWER_SERVERS = (NapariViewerServer, FijiViewerServer)
 

@@ -165,7 +165,7 @@ def test_same_named_feature_templates_of_two_modules_are_both_registered() -> No
     from openhcs.processing.backends.cellprofiler.classification import (
         ClassifyObjectsSingleMeasurementModule,
     )
-    from openhcs.processing.backends.cellprofiler.image_geometry import FlipAndRotateModule
+    from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import FlipAndRotateModule
 
     registry = FormattingMeasurementFeatureTemplate.__registry__
     flip = FlipAndRotateModule.MeasurementFeatureTemplate

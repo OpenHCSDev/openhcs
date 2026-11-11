@@ -1823,7 +1823,7 @@ def test_debug_artifact_export_plan_materializes_vfs_payload(tmp_path):
 
 
 def test_zmq_server_reads_local_debug_snapshot_by_control_request(tmp_path):
-    from openhcs.runtime.zmq_control import (
+    from openhcs.runtime.zmq.zmq_control import (
         ZMQControlMessageRouter,
         ZMQControlRequestContext,
     )
@@ -1854,7 +1854,7 @@ def test_zmq_server_reads_local_debug_snapshot_by_control_request(tmp_path):
 
 
 def test_zmq_server_exports_debug_artifact_by_control_request(tmp_path):
-    from openhcs.runtime.zmq_control import (
+    from openhcs.runtime.zmq.zmq_control import (
         ZMQControlMessageRouter,
         ZMQControlRequestContext,
     )
@@ -1887,8 +1887,8 @@ def test_zmq_server_exports_debug_artifact_by_control_request(tmp_path):
 
 
 def test_live_zmq_debug_worker_command_loop_round_trips_paused_worker_status():
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-    from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
+    from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
 
     port = _free_tcp_port()
     server = ZMQExecutionServer(port=port, host="127.0.0.1")
@@ -1942,7 +1942,7 @@ def test_paused_worker_controller_blocks_and_steps_after_snapshot_boundary():
 
 
 def test_zmq_server_routes_paused_worker_command_by_control_request():
-    from openhcs.runtime.zmq_control import (
+    from openhcs.runtime.zmq.zmq_control import (
         ZMQControlMessageRouter,
         ZMQControlRequestContext,
     )

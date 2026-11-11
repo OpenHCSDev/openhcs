@@ -196,7 +196,7 @@ def run_zmq(
         PipelineConfig,
     )
     from openhcs.core.io.pipeline_document import PipelineDocumentCodec
-    from openhcs.runtime.zmq_execution_client import (
+    from openhcs.runtime.zmq.zmq_execution_client import (
         OpenHCSExecutionSubmission,
         ZMQExecutionClient,
     )
@@ -241,11 +241,11 @@ def viewer_state(napari) -> dict:
     from openhcs.agent.dto.execution import ExecutionConnectionSpec
     from openhcs.agent.dto.viewer import ViewerWindowStateRequest
     from openhcs.agent.services.viewer_window_service import ViewerWindowService
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import (
         ViewerControlMessageRequest,
         ViewerRuntimeEndpoint,
     )
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
     transport = napari.viewer_runtime_config().transport_endpoint
     endpoint = ViewerRuntimeEndpoint(transport, OPENHCS_ZMQ_CONFIG)

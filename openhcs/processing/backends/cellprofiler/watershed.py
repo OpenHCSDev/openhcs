@@ -10,7 +10,7 @@ from openhcs.core.payload.aligned_image_payload import FullStackExecution
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
-from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import MorphologyBackendStrategy
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
 )

@@ -260,7 +260,7 @@ from openhcs.processing.backends.cellprofiler.classification import (
     ClassificationResult,
     ClassifyObjectsSingleMeasurementModule,
 )
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     ColocalizationMeasurements,
     MeasureColocalizationModule,
     ObjectColocalizationMeasurements,
@@ -293,12 +293,12 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     CorrectIlluminationApplyModule,
     IlluminationCorrectionMethod,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import tile
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import tile
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureObjectIntensityModule,
     measure_object_intensity,
 )
-from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
     MeasureObjectIntensityDistributionModule,
 )
 from openhcs.processing.backends.cellprofiler.measurement_math import (
@@ -307,7 +307,7 @@ from openhcs.processing.backends.cellprofiler.measurement_math import (
     MathOperation,
     calculate_math,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     ExpandShrinkMode,
     MaskObjectsModule,
     closing,
@@ -322,7 +322,7 @@ from openhcs.processing.backends.cellprofiler.neighbors import (
     MeasureObjectNeighborsModule,
     measure_object_neighbors,
 )
-from openhcs.processing.backends.cellprofiler.object_filtering import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_filtering import (
     FilterMethod,
     FilterMode,
     FilterObjectsRemovedObjectSourceRelation,
@@ -330,7 +330,7 @@ from openhcs.processing.backends.cellprofiler.object_filtering import (
     PerObjectAssignment,
     filter_objects,
 )
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ImageMode,
     convert_objects_to_image,
 )
@@ -6785,7 +6785,7 @@ def test_resolved_measurement_image_preserves_runtime_slice_projection() -> None
 
 @pytest.mark.parametrize("aliases", (("Process", "Nuclear"), ("Nuclear", "Process")))
 def test_multi_image_photometry_consumes_each_named_current_source(aliases):
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         ObjectIntensityPreparedLabels,
         object_intensity_backend,
     )
@@ -6927,7 +6927,7 @@ def test_object_intensity_measurement_image_batch_preserves_request_labels() -> 
     from openhcs.processing.backends.cellprofiler._backend import (
         DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
         measure_object_intensity_measurement_image_batch,
     )
@@ -7046,7 +7046,7 @@ def test_object_intensity_measurement_image_batch_delegates_natural_prepared_req
     from openhcs.interop.cellprofiler.runtime.object_measurement_row_policies import (
         ObjectMeasurementInvocation,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
         measure_object_intensity_measurement_image_batch,
     )

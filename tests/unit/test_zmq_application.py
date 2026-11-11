@@ -1,10 +1,10 @@
 """OpenHCS application identity projected through the generic ZMQ handshake."""
 
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.runtime.zmq_application import (
+from openhcs.runtime.zmq.zmq_application import (
     OPENHCS_ENDPOINT_APPLICATION,
 )
-from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
 
 
 def test_execution_server_advertises_the_openhcs_version_declaration() -> None:

@@ -20,7 +20,7 @@ from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdap
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     mask_image,
     resize,
     resize_volumetric,

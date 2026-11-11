@@ -1075,7 +1075,7 @@ def test_setup_fold_is_source_ordered_and_uses_module_registry() -> None:
 @pytest.mark.parametrize("dtype,foreground", [(np.uint8, 255), (np.uint16, 65535), (np.float32, 0.25)])
 def test_declared_binary_source_preserves_foreground_through_cp_normalization(dtype, foreground):
     from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
-    from openhcs.processing.backends.cellprofiler.image_geometry import binary_mask_plane
+    from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import binary_mask_plane
 
     raw = np.asarray([[0, foreground], [foreground, 0]], dtype=dtype)
     context = ImagePayloadSourceMetadataContext(SourceImageIdentity('/input/mask.tif'))

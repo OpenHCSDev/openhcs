@@ -29,7 +29,7 @@ from openhcs.processing.backends.cellprofiler.color import (
     unmix_colors,
 )
 from openhcs.core.pipeline.function_contracts import ImagePayloadConsumption
-from openhcs.processing.backends.cellprofiler.image_quality import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
     MeasureImageQualityModule,
     measure_image_quality,
 )

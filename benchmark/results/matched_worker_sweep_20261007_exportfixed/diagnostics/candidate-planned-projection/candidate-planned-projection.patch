@@ -48,7 +48,7 @@
      RuntimeMeasurementDialect,
      normalize_runtime_identifier,
  )
- from openhcs.core.runtime_measurements import (
+ from openhcs.core.measurements.runtime_measurements import (
 -    MeasuredObjectAnchorFeatureMarker,
      MeasurementScope,
  )

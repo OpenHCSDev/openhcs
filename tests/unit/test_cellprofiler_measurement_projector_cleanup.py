@@ -22,7 +22,7 @@ from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
     RelationshipMeasurementRows,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureImageIntensityModule,
     measure_image_intensity,
 )

@@ -155,8 +155,8 @@ from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
     MeasurementImageOperandVectorResolution,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     ObjectColocalizationMetricArrays,
 )
 from openhcs.processing.backends.cellprofiler.measurement_math import (
@@ -9394,7 +9394,7 @@ def test_cellprofiler_module_executor_measures_each_declared_image_and_object(
 
 
 def test_real_object_intensity_batch_preserves_source_and_object_ownership():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 

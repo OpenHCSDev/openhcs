@@ -12,7 +12,7 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
     identify_primary_objects,
 )
 from openhcs.processing.backends.cellprofiler.skeleton import measure_object_skeleton
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureObjectIntensityModule,
     measure_object_intensity,
 )

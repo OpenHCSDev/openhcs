@@ -17,13 +17,13 @@ from openhcs.core.config.pipeline_config import (
     NapariDisplayConfig,
 )
 from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
-from openhcs.runtime import fiji_viewer_server as fiji_viewer_server_module
-from openhcs.runtime.fiji_macro_runtime import (
+from openhcs.runtime.fiji import fiji_viewer_server as fiji_viewer_server_module
+from openhcs.runtime.fiji.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
     FijiMacroExecutionResponse,
 )
-from openhcs.runtime.viewer_display import FijiDisplaySettings
-from openhcs.runtime.fiji_viewer_server import (
+from openhcs.runtime.viewer.viewer_display import FijiDisplaySettings
+from openhcs.runtime.fiji.fiji_viewer_server import (
     FijiBatchSettlementState,
     FijiBatchWireParser,
     FijiDimensionAxis,
@@ -43,17 +43,17 @@ from openhcs.runtime.fiji_viewer_server import (
     FijiWindowRegistry,
     FijiWireItem,
 )
-from openhcs.runtime.napari_viewer_server import (
+from openhcs.runtime.napari.napari_viewer_server import (
     NapariStreamLayerContext,
     PayloadMap,
 )
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
     ViewerObjectDisplayConfigInput,
 )
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponse,
     SettlementRunning,

@@ -32,8 +32,8 @@ from openhcs.processing.custom_functions.manager import CustomFunctionManager
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_execution_client import FunctionCatalogEndpointUnavailableError
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_execution_client import FunctionCatalogEndpointUnavailableError
 
 
 def request(root, **changes):
@@ -601,7 +601,7 @@ def test_generated_mcp_retains_native_cause_and_observes_without_replay(tmp_path
         CustomFunctionRegistrationObservationRequest,
         FunctionCatalogControlPayload,
     )
-    from openhcs.runtime.zmq_control import ZMQControlMessageRouter, ZMQControlRequestContext
+    from openhcs.runtime.zmq.zmq_control import ZMQControlMessageRouter, ZMQControlRequestContext
 
     native = FunctionCatalogService(path_policy=policy(tmp_path))
     dispatched = []

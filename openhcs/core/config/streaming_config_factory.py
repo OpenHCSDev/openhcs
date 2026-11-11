@@ -25,7 +25,7 @@ from zmqruntime.messages import WireMessage
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
 from openhcs.core.config.streaming_config_declarations import ViewerFamily
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
     from openhcs.core.config.pipeline_config import StreamingConfig

@@ -15,7 +15,7 @@ target = Path(sys.argv[1]).resolve()
 sys.path.insert(0, str(target))
 import openhcs
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
-from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
+from openhcs.runtime.zmq.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
 
 assert Path(openhcs.__file__).resolve().is_relative_to(target), openhcs.__file__
 acquisition = Path('/run/media/ts/hdd/openhcs-engineering/engineering721725-public10-94-20261005/photometry722/acquisition')

@@ -35,7 +35,7 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.io.viewer_streaming_service import StreamingService, ViewerStreamingSource
 from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.runtime.viewer_protocol import ViewerLaunchContext
+from openhcs.runtime.viewer.viewer_protocol import ViewerLaunchContext
 
 
 def declared_output(root, aliases):

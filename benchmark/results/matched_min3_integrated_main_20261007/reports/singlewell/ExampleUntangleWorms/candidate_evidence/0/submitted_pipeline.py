@@ -53,8 +53,8 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     RescaleOption,
     SmoothingMethod,
 )
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod
 from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesBitDepth,
@@ -64,7 +64,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     SpreadsheetColumnSelection,
     SpreadsheetFileSelection,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
 )

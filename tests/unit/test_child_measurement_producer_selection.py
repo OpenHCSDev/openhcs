@@ -332,7 +332,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
     from openhcs.processing.backends.cellprofiler.relationships import (
         RelateObjectsRelationshipMeasurementRows,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         MeasureObjectIntensityModule,
     )
     from tests.unit.cellprofiler_runtime_test_support import (

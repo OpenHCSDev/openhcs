@@ -60,7 +60,7 @@ class BenchmarkControlService:
         )
         from zmqruntime.messages import ExecutionStatus
 
-        from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+        from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
         completed = self._session.finished_executions.get(request.execution_id)
         if completed is None:

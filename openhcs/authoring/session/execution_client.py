@@ -21,8 +21,8 @@ from zmqruntime.startup import EndpointStartupStatus, EndpointStartupStatusCallb
 from zmqruntime.transport import TransportEndpoint
 
 if TYPE_CHECKING:
-    from openhcs.runtime.zmq_config import OpenHCSZMQConfig
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+    from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
+    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 ProgressCallback: TypeAlias = Callable[[dict], None]
 
@@ -144,7 +144,7 @@ class ZMQClientService:
         persistent: bool | None = None,
         timeout: float | None = None,
     ) -> "ZMQExecutionClient | None":
-        from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+        from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
         config = self.config
         existing_session = self._session
@@ -216,7 +216,7 @@ class ZMQClientService:
 
         from zmqruntime import EndpointShutdownMode
 
-        from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+        from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
         loop = asyncio.get_running_loop()
         async with self._client_ownership():

@@ -375,7 +375,7 @@ def plate_dir(test_function_dir, microscope_config, test_params, data_type_confi
     ):
         import tempfile
 
-        from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+        from openhcs.runtime.runtime_util.omero_instance_manager import OMEROInstanceManager
 
         # Connect to OMERO (automatically starts docker-compose if needed)
         omero_manager = OMEROInstanceManager()

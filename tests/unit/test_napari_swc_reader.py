@@ -3,7 +3,7 @@ from importlib.resources import files
 import numpy as np
 import pytest
 
-from openhcs.runtime.napari_swc_reader import read_swc_layers
+from openhcs.runtime.napari.napari_swc_reader import read_swc_layers
 
 
 @pytest.mark.unit

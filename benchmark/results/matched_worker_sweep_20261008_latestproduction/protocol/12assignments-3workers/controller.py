@@ -8,11 +8,11 @@ sys.path.insert(0,str(SOURCE))
 import openhcs.core
 from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime
 configure_headless_cpu_benchmark_runtime('WARNING')
-import openhcs.runtime.zmq_config as config
+import openhcs.runtime.zmq.zmq_config as config
 config.OPENHCS_ZMQ_CONFIG=replace(config.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0)
 from benchmark import matched_cellprofiler_batch as driver
 from zmqruntime import DataControlPortPairAuthority
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 HERE=Path(__file__).resolve().parent
 WORKERS=int(sys.argv[sys.argv.index('--workers')+1])
 ASSIGNMENTS=int(sys.argv[sys.argv.index('--assignments')+1])

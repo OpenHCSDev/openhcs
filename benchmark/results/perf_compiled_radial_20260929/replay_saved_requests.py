@@ -7,7 +7,7 @@ from pathlib import Path
 import pickle
 import time
 import numpy as np
-from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
     NativeNumpyRadialDistributionBackendStrategy,
     NumbaNumpyRadialDistributionBackendStrategy,
 )

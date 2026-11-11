@@ -9,7 +9,7 @@ import pytest
 
 napari_components = pytest.importorskip("napari.components")
 
-from openhcs.runtime.napari_viewer_server import NapariLayerDisplayPipeline  # noqa: E402
+from openhcs.runtime.napari.napari_viewer_server import NapariLayerDisplayPipeline  # noqa: E402
 
 
 def _pipeline_for(viewer) -> SimpleNamespace:

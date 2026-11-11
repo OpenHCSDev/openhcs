@@ -53,10 +53,10 @@ from openhcs.processing.backends.cellprofiler.grid import (
     DiameterChoice,
     ShapeChoice,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import MaskSource
-from openhcs.processing.backends.cellprofiler.intensity_distribution import IntensityDistributionZernikeMode
-from openhcs.processing.backends.cellprofiler.morphology import ExpandShrinkMode
-from openhcs.processing.backends.cellprofiler.object_filtering import FilterMethod
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import MaskSource
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import IntensityDistributionZernikeMode
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import ExpandShrinkMode
+from openhcs.processing.backends.cellprofiler.object_analysis.object_filtering import FilterMethod
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     UnclumpMethod,
     WatershedMethod,

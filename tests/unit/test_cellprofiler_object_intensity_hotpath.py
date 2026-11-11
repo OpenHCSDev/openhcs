@@ -15,7 +15,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     ObjectIntensityMeasurementRows,
     ObjectIntensityPreparedLabels,
     object_intensity_backend,

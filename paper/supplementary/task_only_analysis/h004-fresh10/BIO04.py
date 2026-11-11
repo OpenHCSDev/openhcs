@@ -39,9 +39,9 @@ pipeline_config = PipelineConfig(
     )
 )
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.secondary import SecondaryMethod
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdScope, CellProfilerThresholdMethod
 from openhcs.processing.backends.cellprofiler.feature_enhancement import OperationMethod, EnhanceMethod, NeuriteMethod
 from openhcs.core.config.pipeline_config import LazyStepMaterializationConfig
 

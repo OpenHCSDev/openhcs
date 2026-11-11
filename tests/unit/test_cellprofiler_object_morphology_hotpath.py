@@ -16,7 +16,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     MidpointPreservationPolicy,
     MorphologyBackendStrategy,
     StructuringElement,
@@ -154,7 +154,7 @@ def test_erode_image_returns_exact_nonempty_stack_without_same_dtype_copy(
     ) -> np.ndarray:
         return pixels
 
-    import openhcs.processing.backends.cellprofiler.morphology as morphology
+    import openhcs.processing.backends.cellprofiler.morphology_family.morphology as morphology
 
     monkeypatch.setattr(morphology, "_morph_image_pixels", preserve_pixels)
     observed = _raw_function(erode_image)(

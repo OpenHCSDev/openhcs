@@ -7,7 +7,7 @@ import openhcs,benchmark
 benchmark.__path__.insert(0,str(artifact/'benchmark'))
 import benchmark.matched_cellprofiler_batch as driver
 from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.serialization.json import to_jsonable
 source=Path(driver.__file__);tree=ast.parse(source.read_text());pair=None
 for node in ast.walk(tree):

@@ -139,8 +139,8 @@ def run(args) -> None:
         from openhcs.mcp.dev_client import McpDevClient
         from openhcs.mcp.dev_client_core import McpDevServerSpec
         from openhcs.pyqt_gui.config import UIConfig, save_ui_config_sync
-        from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-        from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+        from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+        from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
         from python_introspect import to_jsonable
 
         modules = (openhcs, polystore, zmqruntime, metaclass_registry,

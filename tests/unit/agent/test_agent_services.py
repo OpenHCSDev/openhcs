@@ -113,7 +113,7 @@ from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSour
 from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.core.io import virtual_workspace_metadata as metadata_module
 from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponseField,
     ViewerLayerIsolationField,
@@ -123,7 +123,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (
     CompileProgressPhase,

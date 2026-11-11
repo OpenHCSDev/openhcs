@@ -59,7 +59,7 @@ from openhcs.core.plate.plate_image_inventory import (
 from openhcs.core.io.result_file_formats import ResultFileFormat, ResultFileOpener
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 
 logger = logging.getLogger(__name__)
 

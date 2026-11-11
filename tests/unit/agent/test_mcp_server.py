@@ -107,9 +107,9 @@ from formbridge.bridge.service import DEFAULT_UI_BRIDGE_CONNECTION_SPEC
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.config.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.runtime.viewer_protocol import ViewerPayloadSummary, ViewerArrayValueSummary
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.viewer.viewer_protocol import ViewerPayloadSummary, ViewerArrayValueSummary
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
 
@@ -7149,7 +7149,7 @@ def test_mcp_dev_client_viewer_payloads_use_protocol_defaults():
         return
 
     import openhcs.mcp.dev_client as dev_client
-    from openhcs.runtime.viewer_protocol import ViewerPayloadControlOptions
+    from openhcs.runtime.viewer.viewer_protocol import ViewerPayloadControlOptions
 
     parser = dev_client._build_parser()
     args = parser.parse_args(("viewer-payloads", "5565"))

@@ -50,7 +50,7 @@ from openhcs.mcp.dev_client_core import (
     viewer_route_key_argument,
     viewer_visible_route_keys_argument,
 )
-from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
+from openhcs.runtime.viewer.viewer_controls import ViewerNavigationControlOptions
 
 
 class ViewerPayloadsCommandSpec(CapabilityBackedCommandSpec):

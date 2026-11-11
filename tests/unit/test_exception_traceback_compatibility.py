@@ -12,7 +12,7 @@ from formbridge.bridge.service import (
 from openhcs.core.config.streaming_config_declarations import ViewerType
 from formbridge.bridge.in_process import UiCodeDocumentValidationError
 from formbridge.bridge.server import UiBridgeUnsupportedOperationError
-from openhcs.runtime.viewer_protocol import ViewerGraphicalSessionUnavailableError
+from openhcs.runtime.viewer.viewer_protocol import ViewerGraphicalSessionUnavailableError
 
 
 @contextmanager

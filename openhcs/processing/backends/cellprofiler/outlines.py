@@ -53,7 +53,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.color import coerce_rgb_color
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ImageMode,
     ImageModeRenderer,
 )
@@ -146,7 +146,7 @@ class OverlayObjectsModule(
         return default
 
 
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     align_binary_mask_to_shape,
     align_label_plane_to_shape,
 )

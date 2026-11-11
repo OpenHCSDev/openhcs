@@ -32,7 +32,7 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     CorrectIlluminationApplyModule,
     correct_illumination_apply,
 )
-from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import measure_object_intensity
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.runtime_registry import (
     EphemeralLifetime,

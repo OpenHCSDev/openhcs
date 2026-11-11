@@ -7,7 +7,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import (
         ViewerControlResponse,
         ViewerPersistenceMode,
         ViewerSettleProgress,

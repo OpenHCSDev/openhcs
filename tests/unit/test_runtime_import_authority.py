@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 import openhcs
-from openhcs.runtime.import_authority import (
+from openhcs.runtime.runtime_util.import_authority import (
     OpenHCSRuntimeImportAuthority,
     OpenHCSRuntimeImportError,
 )

@@ -156,8 +156,8 @@ For PyQt GUI and runtime viewer campaigns, also run focused imports:
 
 ```bash
 .venv/bin/python - <<'PY'
-import openhcs.runtime.napari_stream_visualizer
-import openhcs.runtime.napari_viewer_server
+import openhcs.runtime.napari.napari_stream_visualizer
+import openhcs.runtime.napari.napari_viewer_server
 import openhcs.pyqt_gui.widgets.shared.plate_view_widget
 PY
 ```

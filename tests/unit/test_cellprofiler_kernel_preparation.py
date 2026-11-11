@@ -14,7 +14,7 @@ def test_declared_preparation_covers_sobel_and_integer_label_shrink(tmp_path):
         from openhcs.processing.backends.cellprofiler.edge import (
             EdgeMethod, enhance_edges, _sobel_numba_kernel,
         )
-        from openhcs.processing.backends.cellprofiler.morphology import (
+        from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
             ShrinkDefinedPixelsStrategy, expand_or_shrink_objects,
             _binary_shrink_2d_numba,
         )
@@ -62,17 +62,17 @@ def test_registry_preparation_covers_volume_erosion_and_quantized_diagnostics(tm
         from numba.core.dispatcher import Dispatcher
 
         from openhcs.core.callable.processing_preparation import CallablePreparation
-        from openhcs.processing.backends.cellprofiler.morphology import (
+        from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
             NumbaNumpyMorphologyBackendStrategy,
             NumpyMorphologyBackendStrategy,
             _erode_labeled_objects_numba,
             erode_objects,
         )
-        from openhcs.processing.backends.cellprofiler.thresholding import (
+        from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
             NumbaNumpyThresholdDiagnosticsBackendStrategy,
             threshold,
         )
-        from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_diagnostics_quantized import (
+        from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_diagnostics_quantized import (
             _populate_quantized_threshold_codebook_numba,
             _threshold_diagnostics_rectangular_mask_quantized_numba,
             _threshold_diagnostics_unmasked_finite_quantized_numba,

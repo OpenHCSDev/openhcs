@@ -15,19 +15,19 @@
       "matches_source": true
     },
     {
-      "module": "openhcs.runtime.function_catalog_preparation",
+      "module": "openhcs.runtime.runtime_util.function_catalog_preparation",
       "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/runtime/function_catalog_preparation.py",
       "sha256": "75e26491f9d13792a4dc312eaa439ac71197e432dc2591ee275146f4a757a12f",
       "matches_source": true
     },
     {
-      "module": "openhcs.runtime.zmq_execution_server",
+      "module": "openhcs.runtime.zmq.zmq_execution_server",
       "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/runtime/zmq_execution_server.py",
       "sha256": "e3eab99bfc1fbb5828e7e83f228e497ed1e83bb9693d8479bc4409f073c563a4",
       "matches_source": true
     },
     {
-      "module": "openhcs.runtime.zmq_execution_server_launcher",
+      "module": "openhcs.runtime.zmq.zmq_execution_server_launcher",
       "path": "/tmp/openhcs-server-startup-final-installed-20260930/openhcs/runtime/zmq_execution_server_launcher.py",
       "sha256": "09c3dd01d5bfd0fe2d08d6d8ffe0c9c806a817940d2df2d176ae5108cf0a1708",
       "matches_source": true

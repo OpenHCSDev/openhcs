@@ -17,14 +17,14 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
     _remap_object_label_variant_after_final_relabel,
     identify_primary_objects,
 )
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdMethod,
     NumbaNumpyThresholdDiagnosticsBackendStrategy,
     NumpyThresholdDiagnosticsBackendStrategy,
     ThresholdApplicationSmoothing,
 )
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_otsu import (
     _finite_flat_float32,
     _finite_flat_float64,
 )

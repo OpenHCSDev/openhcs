@@ -17,7 +17,7 @@ from openhcs.core.memory import numpy as numpy_function
 from openhcs.core.pipeline.function_contracts import execution_scope
 from openhcs.core.object_labels.runtime_object_labels import ObjectLabelVariantData
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     resize_objects,
     resize_objects_3d,
 )
@@ -585,7 +585,7 @@ def test_shared_registry_wrapper_preserves_plate_call_semantics() -> None:
 
 
 def test_cellprofiler_threshold_diagnostics_backend_resolves_numpy() -> None:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         NumbaNumpyThresholdDiagnosticsBackendStrategy,
         ThresholdDiagnosticsBackendStrategy,
     )
@@ -603,7 +603,7 @@ def test_cellprofiler_threshold_diagnostics_backend_resolves_numpy() -> None:
 
 
 def test_cellprofiler_threshold_diagnostics_handles_nd_images_as_one_domain() -> None:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         NumpyThresholdDiagnosticsBackendStrategy,
         ThresholdDiagnosticsBackendStrategy,
     )
@@ -649,7 +649,7 @@ def test_cellprofiler_threshold_diagnostics_handles_nd_images_as_one_domain() ->
 
 
 def test_cellprofiler_threshold_diagnostics_prewarm_covers_runtime_paths() -> None:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         NumpyThresholdDiagnosticsBackendStrategy,
         ThresholdDiagnosticsBackendStrategy,
     )
@@ -698,7 +698,7 @@ def test_cellprofiler_threshold_diagnostics_prewarm_covers_runtime_paths() -> No
 def test_threshold_application_smoothing_matches_cellprofiler_mask_formula() -> None:
     from scipy import ndimage as ndi
 
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdApplicationRequest,
     )
 
@@ -738,7 +738,7 @@ def test_threshold_selection_scale_policy_accepts_uint16_unit_interval_proof() -
     from openhcs.core.payload.runtime_image_values import (
         ImagePayloadMetadata,
     )
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         unit_interval_scale_for_threshold_selection,
     )
 
@@ -834,16 +834,16 @@ def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         NumbaNumpyObjectIntensityBackendStrategy,
         ObjectIntensityBackendStrategy,
     )
-    from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
         NativeNumpyRadialDistributionBackendStrategy,
         NumbaNumpyRadialDistributionBackendStrategy,
         RadialDistributionBackendStrategy,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         CentrosomeNumpyMorphologyBackendStrategy,
         MorphologyBackendStrategy,
         NumbaNumpyMorphologyBackendStrategy,
@@ -857,7 +857,7 @@ def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
         NumbaNumpyShapeMeasurementBackendStrategy,
         ShapeMeasurementBackendStrategy,
     )
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         CentrosomeNumpyThresholdPrimitiveBackendStrategy,
         NumbaNumpyThresholdDiagnosticsBackendStrategy,
         NumbaNumpyThresholdPrimitiveBackendStrategy,
@@ -1395,7 +1395,7 @@ def test_medianfilter_preserves_unit_interval_scale_metadata() -> None:
 
 def test_rescale_intensity_identity_preserves_unit_interval_scale_metadata() -> None:
     from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         AutomaticHigh,
         AutomaticLow,
         RescaleMethod,
@@ -1422,7 +1422,7 @@ def test_rescale_intensity_identity_preserves_unit_interval_scale_metadata() -> 
 
 def test_rescale_intensity_nonidentity_clears_unit_interval_scale_metadata() -> None:
     from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         AutomaticHigh,
         AutomaticLow,
         RescaleMethod,
@@ -1449,7 +1449,7 @@ def test_rescale_intensity_nonidentity_clears_unit_interval_scale_metadata() -> 
 
 def test_resize_nearest_preserves_unit_interval_scale_metadata() -> None:
     from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-    from openhcs.processing.backends.cellprofiler.image_geometry import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
         InterpolationMethod,
         ResizeMethod,
         resize_volumetric,
@@ -1473,7 +1473,7 @@ def test_resize_nearest_preserves_unit_interval_scale_metadata() -> None:
 
 def test_resize_interpolation_clears_unit_interval_scale_metadata() -> None:
     from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-    from openhcs.processing.backends.cellprofiler.image_geometry import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
         InterpolationMethod,
         ResizeMethod,
         resize_volumetric,
@@ -1501,7 +1501,7 @@ def test_cellprofiler_backend_provider_rejects_raw_strings() -> None:
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 
@@ -1518,7 +1518,7 @@ def test_numba_threshold_smoothing_kernel_matches_centrosome_public_primitive() 
     centrosome_smooth = pytest.importorskip("centrosome.smooth")
     import numpy as np
 
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         _threshold_smoothing_kernel,
     )
 
@@ -1535,7 +1535,7 @@ def test_threshold_application_smoothing_is_mask_normalized() -> None:
     centrosome_smooth = pytest.importorskip("centrosome.smooth")
     import scipy.ndimage as ndi
 
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdApplicationSmoothing,
     )
 
@@ -1564,7 +1564,7 @@ def test_threshold_application_smoothing_is_mask_normalized() -> None:
 def test_threshold_application_smoothing_matches_scipy_unmasked() -> None:
     import scipy.ndimage as ndi
 
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdApplicationSmoothing,
     )
 
@@ -1591,7 +1591,7 @@ def test_threshold_application_smoothing_matches_scipy_unmasked() -> None:
 
 
 def test_numba_threshold_primitives_are_default_and_roundtrip_log_transform() -> None:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         NumbaNumpyThresholdPrimitiveBackendStrategy,
         ThresholdPrimitiveBackendStrategy,
     )
@@ -1613,7 +1613,7 @@ def test_numba_threshold_primitives_are_default_and_roundtrip_log_transform() ->
 
 
 def test_numba_log_transform_uses_dynamic_range_floor() -> None:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdPrimitiveBackendStrategy,
     )
 
@@ -1628,7 +1628,7 @@ def test_numba_log_transform_uses_dynamic_range_floor() -> None:
 
 
 def test_numba_threshold_primitives_cover_otsu_and_multiotsu() -> None:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdPrimitiveBackendStrategy,
     )
 
@@ -1655,7 +1655,7 @@ def test_numba_threshold_primitives_cover_otsu_and_multiotsu() -> None:
 def test_numba_multiotsu_matches_public_tie_behavior() -> None:
     from skimage.filters import threshold_multiotsu
 
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdPrimitiveBackendStrategy,
     )
 
@@ -1677,7 +1677,7 @@ def test_numba_multiotsu_matches_public_tie_behavior() -> None:
 
 
 def test_numba_threshold_primitives_cover_histogram_methods() -> None:
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdPrimitiveBackendStrategy,
     )
 
@@ -1719,7 +1719,7 @@ def test_numba_threshold_primitives_cover_histogram_methods() -> None:
 def test_numba_minimum_cross_entropy_uses_li_positive_shift_semantics() -> None:
     from skimage.filters import threshold_li
 
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdPrimitiveBackendStrategy,
     )
 
@@ -1767,7 +1767,7 @@ def test_numba_minimum_cross_entropy_uses_li_positive_shift_semantics() -> None:
 def test_numba_minimum_cross_entropy_uses_quantized_scale_without_semantic_drift() -> (
     None
 ):
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdPrimitiveBackendStrategy,
     )
 
@@ -1802,7 +1802,7 @@ def test_numba_minimum_cross_entropy_uses_quantized_scale_without_semantic_drift
 
 
 def test_measure_colocalization_object_thresholds_use_pixel_dtype_boundary() -> None:
-    from openhcs.processing.backends.cellprofiler.colocalization import (
+    from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
         measure_colocalization_objects,
     )
 
@@ -1839,7 +1839,7 @@ def test_measure_colocalization_object_thresholds_use_pixel_dtype_boundary() -> 
 def test_measure_colocalization_object_correlation_uses_cellprofiler_two_pass_formula() -> (
     None
 ):
-    from openhcs.processing.backends.cellprofiler.colocalization import (
+    from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
         measure_colocalization_objects,
     )
 
@@ -1883,13 +1883,13 @@ def test_cellprofiler_backend_selection_does_not_silently_fallback() -> None:
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         ObjectIntensityBackendStrategy,
     )
-    from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import (
         RadialDistributionBackendStrategy,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
     from openhcs.processing.backends.cellprofiler.neighbors import (
@@ -1898,7 +1898,7 @@ def test_cellprofiler_backend_selection_does_not_silently_fallback() -> None:
     from openhcs.processing.backends.cellprofiler.shape import (
         ShapeMeasurementBackendStrategy,
     )
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdPrimitiveBackendStrategy,
         ThresholdSmoothingBackendStrategy,
     )
@@ -1963,7 +1963,7 @@ def test_object_intensity_inner_edges_match_cellprofiler_boundary_semantics() ->
     from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         object_intensity_backend,
     )
 
@@ -1993,7 +1993,7 @@ def test_object_intensity_3d_batch_matches_single_image_backend() -> None:
     from openhcs.core.object_labels.runtime_object_labels import (
         ObjectLabelPayload,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         ObjectIntensityMeasurementRows,
         ObjectIntensityPreparedLabels,
         object_intensity_backend,
@@ -2034,7 +2034,7 @@ def test_numba_declumping_smoothing_matches_native_provider() -> None:
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 
@@ -2061,7 +2061,7 @@ def test_numba_seed_shrink_matches_centrosome_provider() -> None:
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 

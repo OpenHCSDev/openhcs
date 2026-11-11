@@ -28,7 +28,7 @@ from openhcs.processing.backends.cellprofiler.alignment import (
     AlignShiftMeasurement,
     align,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     closing,
     mask_objects,
 )
@@ -51,11 +51,11 @@ from openhcs.processing.backends.cellprofiler.area_occupied import (
 from openhcs.processing.backends.cellprofiler.texture import (
     ObjectTextureCropBackendStrategy,
 )
-from openhcs.processing.backends.cellprofiler.image_math import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import (
     ImageMathOperation,
     image_math,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     MaskSource,
     mask_image,
 )
@@ -66,7 +66,7 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
     WatershedMethod,
     identify_primary_objects,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     CELLPROFILER_LOW_RES_AUTO_MAXIMA_SUPPRESSION_SIZE,
     DeclumpingMaximaGeometry,
     dilate_objects,
@@ -75,13 +75,13 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     manual_declumping_size,
     resize_object_labels_nearest,
 )
-import openhcs.processing.backends.cellprofiler.thresholding as thresholding_backend
-from openhcs.processing.backends.cellprofiler.colocalization import (
+import openhcs.processing.backends.cellprofiler.thresholding_family.thresholding as thresholding_backend
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     measure_colocalization,
     measure_colocalization_objects,
     _divide_measurements,
 )
-from openhcs.processing.backends.cellprofiler.colocalization import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
     ColocalizationCostesThresholdBatch,
     ColocalizationCostesThresholdRequest,
     ColocalizationCostesThresholds,
@@ -95,10 +95,10 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
     object_colocalization_threshold_reductions,
     thresholded_colocalization_metrics,
 )
-from openhcs.processing.backends.cellprofiler.colocalization_costes import (
+from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization_costes import (
     _cellprofiler_mean_variance_float32,
 )
-from openhcs.processing.backends.cellprofiler.morphology import opening
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import opening
 from openhcs.processing.backends.cellprofiler.outlines import (
     LineMode,
     OverlayObjectsModule,
@@ -106,14 +106,14 @@ from openhcs.processing.backends.cellprofiler.outlines import (
     overlay_objects,
 )
 from openhcs.processing.backends.cellprofiler.outlines import overlay_outlines
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     align_label_plane_to_shape,
 )
 from openhcs.processing.backends.cellprofiler.relationships import (
     DistanceMethod,
     relate_objects,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     resize,
     resize_volumetric,
     FlipMethod,
@@ -129,7 +129,7 @@ from openhcs.processing.backends.cellprofiler.structuring_elements import (
     StructuringElement,
 )
 from openhcs.processing.backends.cellprofiler.smoothing import SmoothingMethod, smooth
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CELLPROFILER_BASIC_THRESHOLD_SMOOTHING_SCALE,
     CellProfilerAveragingMethod,
     CellProfilerOtsuMethod,
@@ -149,7 +149,7 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     threshold_histogram_bin_width,
     threshold_multiotsu,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import threshold
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import threshold
 from openhcs.processing.backends.cellprofiler.color import StainType, unmix_colors
 from openhcs.processing.backends.cellprofiler.crop import CropModule
 from openhcs.core.config.pipeline_config import DtypeConfig
@@ -180,7 +180,7 @@ from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
     Pure3DContract,
 )
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     CellProfilerDeclumpMethod,
 )
 from openhcs.interop.cellprofiler.module_declarations import (
@@ -321,7 +321,7 @@ def test_cellprofiler_module_discovers_measurement_features_from_mro():
     from openhcs.processing.backends.cellprofiler.area_occupied import (
         MeasureImageAreaOccupiedBinaryModule,
     )
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         MeasureObjectIntensityModule,
     )
 
@@ -441,7 +441,7 @@ def test_watershed_marker_mode_preserves_marker_label_identity() -> None:
 
 
 def test_resize_objects_preserves_leading_axes_for_volume_stacks() -> None:
-    from openhcs.processing.backends.cellprofiler.morphology import resize_objects
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import resize_objects
 
     image = np.zeros((2, 3, 4, 5), dtype=np.float32)
     labels = np.zeros_like(image, dtype=np.int32)
@@ -594,7 +594,7 @@ def test_resize_volumetric_projects_default_cellprofiler_validity_mask() -> None
 
 
 def test_erode_objects_preserves_leading_axes_for_volume_stacks() -> None:
-    from openhcs.processing.backends.cellprofiler.morphology import erode_objects
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import erode_objects
 
     image = np.zeros((2, 3, 7, 7), dtype=np.float32)
     labels = np.zeros_like(image, dtype=np.int32)
@@ -618,7 +618,7 @@ def test_erode_objects_preserves_leading_axes_for_volume_stacks() -> None:
 
 
 def test_erode_image_preserves_leading_axes_for_volume_stacks() -> None:
-    from openhcs.processing.backends.cellprofiler.morphology import erode_image
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import erode_image
 
     image = np.zeros((2, 3, 7, 7), dtype=np.float32)
     image[:, :, 2:5, 2:5] = 1
@@ -636,7 +636,7 @@ def test_erode_image_preserves_leading_axes_for_volume_stacks() -> None:
 
 
 def test_convert_objects_to_image_accepts_volume_label_stacks() -> None:
-    from openhcs.processing.backends.cellprofiler.object_images import (
+    from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
         ImageMode,
         convert_objects_to_image,
     )
@@ -659,7 +659,7 @@ def test_convert_objects_to_image_accepts_volume_label_stacks() -> None:
 
 
 def test_convert_objects_to_image_uint16_preserves_integer_object_ids() -> None:
-    from openhcs.processing.backends.cellprofiler.object_images import (
+    from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
         ImageMode,
         convert_objects_to_image,
     )
@@ -1190,7 +1190,7 @@ def test_measure_colocalization_objects_emits_and_splits_both_scopes():
     from openhcs.interop.cellprofiler.measurement_scope import (
         CellProfilerMeasurementTargetScope,
     )
-    from openhcs.processing.backends.cellprofiler.colocalization import (
+    from openhcs.processing.backends.cellprofiler.colocalization_family.colocalization import (
         MeasureColocalizationMeasurementRowPolicy,
     )
 
@@ -1874,7 +1874,7 @@ def test_minimum_cross_entropy_threshold_uses_default_numba_primitive():
     )
     mask = np.ones(image.shape, dtype=bool)
     from openhcs.constants.constants import MemoryType
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         ThresholdPrimitiveBackendStrategy,
     )
 
@@ -1890,7 +1890,7 @@ def test_minimum_cross_entropy_threshold_uses_default_numba_primitive():
 
 
 def test_cellprofiler_three_class_otsu_honors_log_transform():
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         threshold_primitives,
     )
 
@@ -2105,7 +2105,7 @@ def test_watershed_xy_downsample_factors_preserve_leading_axes():
     assert watershed_xy_downsample_factors(2, 2) == (2.0, 2.0)
     assert watershed_xy_downsample_factors(3, 2) == (1.0, 2.0, 2.0)
     assert watershed_xy_downsample_factors(4, 2) == (1.0, 1.0, 2.0, 2.0)
-    from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import MorphologyBackendStrategy
 
     labels = MorphologyBackendStrategy.for_memory_type().label_equal_values(
         np.ones((2, 3, 4, 5), dtype=bool)
@@ -2823,7 +2823,7 @@ def test_object_texture_crop_backend_matches_regionprops_intensity_images():
 
 
 def test_measure_object_intensity_uses_cellprofiler_mad_interpolation():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -2842,7 +2842,7 @@ def test_measure_object_intensity_uses_cellprofiler_mad_interpolation():
 
 
 def test_measure_object_intensity_rejects_unprojected_replicated_rgb_image():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -2861,7 +2861,7 @@ def test_measure_object_intensity_rejects_unprojected_replicated_rgb_image():
 
 
 def test_measure_object_intensity_measures_3d_objects_as_single_volume_domain():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -2885,7 +2885,7 @@ def test_measure_object_intensity_measures_3d_objects_as_single_volume_domain():
 def test_measure_object_intensity_honors_3d_mask_and_empty_object_semantics():
     from skimage.measure import label
 
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -2947,7 +2947,7 @@ def test_measure_object_intensity_honors_3d_mask_and_empty_object_semantics():
 
 
 def test_measure_object_intensity_preserves_sparse_object_ids_without_dense_lookup():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -2967,7 +2967,7 @@ def test_measure_object_intensity_preserves_sparse_object_ids_without_dense_look
 
 
 def test_measure_object_intensity_honors_declared_object_count_domain():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -2990,7 +2990,7 @@ def test_measure_object_intensity_honors_declared_object_count_domain():
 
 
 def test_measure_object_intensity_preserves_sparse_declared_ids():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -3009,7 +3009,7 @@ def test_measure_object_intensity_preserves_sparse_declared_ids():
 
 
 def test_measure_object_intensity_maximum_position_uses_cellprofiler_quicksort_order():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -3030,7 +3030,7 @@ def test_measure_object_intensity_maximum_position_uses_cellprofiler_quicksort_o
 
 
 def test_measure_object_intensity_rejects_unprojected_true_color_image():
-    from openhcs.processing.backends.cellprofiler.intensity import (
+    from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
         measure_object_intensity,
     )
 
@@ -3049,7 +3049,7 @@ def test_measure_object_intensity_rejects_unprojected_true_color_image():
 
 
 def test_measure_image_quality_uses_openhcs_image_quality_backend():
-    from openhcs.processing.backends.cellprofiler.image_quality import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
         image_quality_haralick_correlation,
     )
     from openhcs.processing.backends.cellprofiler._backend import (
@@ -3065,8 +3065,8 @@ def test_measure_image_quality_uses_openhcs_image_quality_backend():
 
 
 def test_measure_image_quality_uses_openhcs_power_spectrum_backend(monkeypatch):
-    import openhcs.processing.backends.cellprofiler.image_quality as module
-    from openhcs.processing.backends.cellprofiler.image_quality import (
+    import openhcs.processing.backends.cellprofiler.image_processing.image_quality as module
+    from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
         image_quality_power_spectrum_slope,
     )
     from openhcs.processing.backends.cellprofiler._backend import (
@@ -3101,12 +3101,12 @@ def test_measure_image_quality_uses_openhcs_power_spectrum_backend(monkeypatch):
 def test_measure_image_quality_otsu_matches_development_oracle():
     centrosome_threshold = pytest.importorskip("centrosome.threshold")
 
-    from openhcs.processing.backends.cellprofiler.image_quality import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
         ImageQualityOtsuObjective,
         ImageQualityThresholdMethod,
         image_quality_threshold,
     )
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         CellProfilerOtsuMethod,
         CellProfilerThresholdAssignment,
     )
@@ -3134,7 +3134,7 @@ def test_measure_image_quality_otsu_matches_development_oracle():
 
 
 def test_measure_image_quality_constancy_check_matches_numpy_unique():
-    from openhcs.processing.backends.cellprofiler.image_quality import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
         image_quality_has_multiple_unique_values,
     )
 
@@ -3152,7 +3152,7 @@ def test_measure_image_quality_constancy_check_matches_numpy_unique():
 
 def test_measure_image_quality_log_log_slope_matches_lstsq():
     import scipy.linalg
-    from openhcs.processing.backends.cellprofiler.image_quality import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
         _least_squares_log_log_slope_numba,
     )
 
@@ -3173,7 +3173,7 @@ def test_measure_image_quality_log_log_slope_matches_lstsq():
 
 def test_measure_image_quality_local_focus_matches_grid_semantics():
     from scipy.ndimage import mean as ndimage_mean, sum as ndimage_sum
-    from openhcs.processing.backends.cellprofiler.image_quality import (
+    from openhcs.processing.backends.cellprofiler.image_processing.image_quality import (
         image_quality_local_focus_score,
     )
 
@@ -3855,7 +3855,7 @@ def test_correct_illumination_automatic_filter_size_matches_cellprofiler_source(
         SplineBgMode,
         correct_illumination_calculate,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 
@@ -3932,7 +3932,7 @@ def test_correct_illumination_median_smoothing_uses_skimage_for_wide_rank_domain
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 
@@ -3999,7 +3999,7 @@ def test_correct_illumination_median_smoothing_fast_minimum_majority_path():
 
 def test_correct_illumination_median_smoothing_hybrid_matches_rank_reference():
     import skimage.filters
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 
@@ -4120,7 +4120,7 @@ def test_absorbed_convex_hull_transform_matches_centrosome_oracle():
         _cellprofiler_convex_hull_transform,
         _native_exact_level_set_convex_hull_smoothing,
     )
-    from openhcs.processing.backends.cellprofiler.morphology import (
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
         MorphologyBackendStrategy,
     )
 

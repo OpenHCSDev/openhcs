@@ -55,13 +55,13 @@ from openhcs.core.config.streaming_config_declarations import (
     ViewerFamily,
     ViewerType,
 )
-from openhcs.runtime.fiji_macro_runtime import FijiMacroExecutionRequest
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.fiji.fiji_macro_runtime import FijiMacroExecutionRequest
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageRequest,
     ViewerRuntimeEndpoint,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
 

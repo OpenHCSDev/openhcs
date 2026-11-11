@@ -15,8 +15,8 @@ from zmqruntime.messages import (
     ProcessIdentity,
 )
 
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 SERVER_START_TIMEOUT_SECONDS = 600
 ANOTHER_PROCESS = ProcessIdentity(pid=1, create_time=0.0)
@@ -75,7 +75,7 @@ _OWNER_SCRIPT = """
 import sys, time
 from openhcs._source_dependencies import ensure_source_checkout_external_paths
 ensure_source_checkout_external_paths()
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 with ZMQExecutionClient.with_private_server() as client:
     print(client.connected_endpoint.process_identity.pid, flush=True)
     time.sleep(3600)

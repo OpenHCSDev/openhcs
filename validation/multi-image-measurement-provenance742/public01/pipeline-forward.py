@@ -53,7 +53,7 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
     UnclumpMethod,
     WatershedMethod,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
 

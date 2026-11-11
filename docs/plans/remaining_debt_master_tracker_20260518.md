@@ -155,10 +155,10 @@ qtcore.QTimer = _DummyQTimer
 sys.modules.setdefault('qtpy', qtpy)
 sys.modules.setdefault('qtpy.QtCore', qtcore)
 sys.modules.setdefault('qtpy.QtWidgets', qtwidgets)
-import openhcs.runtime.napari_stream_visualizer
-import openhcs.runtime.napari_viewer_server
-import openhcs.runtime.fiji_stream_visualizer
-import openhcs.runtime.fiji_viewer_server
+import openhcs.runtime.napari.napari_stream_visualizer
+import openhcs.runtime.napari.napari_viewer_server
+import openhcs.runtime.fiji.fiji_stream_visualizer
+import openhcs.runtime.fiji.fiji_viewer_server
 PY
 # viewer imports ok
 
@@ -1076,7 +1076,7 @@ Verification:
 
 ```bash
 .venv/bin/python - <<'PY'
-from openhcs.processing.backends.cellprofiler.intensity_distribution import __all__ as i
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity_distribution import __all__ as i
 from openhcs.processing.backends.cellprofiler.watershed import __all__ as w
 print(i)
 print(w)
@@ -1109,7 +1109,7 @@ Verification:
 
 ```bash
 .venv/bin/python - <<'PY'
-from openhcs.processing.backends.cellprofiler.thresholding import __all__
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import __all__
 print(tuple(__all__))
 PY
 # tuple matched the previous thresholding export order and names

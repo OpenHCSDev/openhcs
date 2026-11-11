@@ -16,9 +16,9 @@ from typing import cast, ClassVar
 
 from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 
-import openhcs.core.runtime_artifact_queries as runtime_artifact_queries
-import openhcs.core.measurement_feature_queries as measurement_feature_queries
-import openhcs.core.measurement_row_materialization as measurement_row_materialization
+import openhcs.core.runtime_store.runtime_artifact_queries as runtime_artifact_queries
+import openhcs.core.measurements.measurement_feature_queries as measurement_feature_queries
+import openhcs.core.measurements.measurement_row_materialization as measurement_row_materialization
 import openhcs.core.equivalence.cells as equivalence_cells
 import openhcs.core.equivalence.keys as equivalence_keys
 import openhcs.core.equivalence.measurement_facts as measurement_facts
@@ -29,7 +29,7 @@ import openhcs.core.equivalence.object_label_measurements as object_label_measur
 import openhcs.core.equivalence.policy as equivalence_policy
 import openhcs.core.equivalence.relationships as equivalence_relationships
 import openhcs.core.equivalence.tables as equivalence_tables
-import openhcs.core.runtime_measurements as runtime_measurements
+import openhcs.core.measurements.runtime_measurements as runtime_measurements
 from openhcs.core.artifacts import (
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
@@ -38,16 +38,16 @@ from openhcs.core.artifacts import (
     MeasurementBearingArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.axes.axis_declarations.component_group_scope import ComponentGroupScope
+from openhcs.core.measurements.measurement_row_materialization import (
     iter_measurement_rows,
     measurement_row_source_image_name,
 )
-from openhcs.core.runtime_execution_validation import (
+from openhcs.core.runtime_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
-from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.runtime_measurements import (
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementStatistic,
     ObjectCoreMeasurementFeature,
@@ -59,13 +59,13 @@ from openhcs.core.runtime_measurements import (
     ObjectLocationFeatureMarker,
     ObjectShapeDescriptorFeatureMarker,
 )
-from openhcs.core.runtime_tabular_values import measurement_row_mapping
-from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.payload.runtime_tabular_values import measurement_row_mapping
+from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
 from openhcs.core.registry_strategies import (
     EnumKeyedStrategyMixin,
     MostDerivedContextStrategyMixin,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.runtime_relationships import (
@@ -159,7 +159,7 @@ from openhcs.core.equivalence.comparison import (
     runtime_image_differences as _image_differences,
     runtime_table_differences as _table_differences,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenanceIdentity
+from openhcs.core.source.source_image_provenance import SourceImageProvenanceIdentity
 
 _RUNTIME_MEASUREMENT_PROJECTION_MODULES = (
     sys.modules[__name__],

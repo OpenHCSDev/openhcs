@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PyQt6.QtWidgets import QApplication
 
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
-from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
+from openhcs.runtime.zmq.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.util.artifact_inspection import (
     CompiledArtifactInspection,
     CompiledArtifactInspectionRequest,
@@ -50,11 +50,11 @@ from openhcs.pyqt_gui.widgets.artifact_plan_view import (
 from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )
-from openhcs.runtime.zmq_compilation import (
+from openhcs.runtime.zmq.zmq_compilation import (
     ZMQCompilationResult,
     ZMQCompileArtifactRecord,
 )
-from openhcs.runtime.zmq_control import (
+from openhcs.runtime.zmq.zmq_control import (
     ZMQControlMessageRouter,
     ZMQControlRequestContext,
 )

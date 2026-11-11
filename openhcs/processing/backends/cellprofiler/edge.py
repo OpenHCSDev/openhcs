@@ -48,7 +48,7 @@ import warnings
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
-from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_weighted import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding_threshold_numba_otsu_weighted import (
     running_variance_numba,
 )
 from openhcs.core.memory.decorators import numpy as numpy_decorator
@@ -62,7 +62,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NativeBackendProvider,
     NumbaBackendProvider,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     CellProfilerPlaneGeometry,
 )
 from openhcs.processing.backends.cellprofiler.enum_attributes import (

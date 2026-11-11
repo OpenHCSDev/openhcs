@@ -60,7 +60,7 @@ from openhcs.interop.cellprofiler.workspace_export import (
     CPAIndexWorkspaceAxis,
     CPAScatterWorkspacePanel,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerOtsuMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerOtsuMethod
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
 

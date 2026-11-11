@@ -8,9 +8,9 @@ from openhcs.core.config.pipeline_config import (PipelineConfig, LazyProcessingC
 from openhcs.core.source.source_bindings import NamedSourceBinding, SourceSelector, ComponentSelector
 from openhcs.processing.func_registry import get_function
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.intensity import RescaleMethod, AutomaticLow, AutomaticHigh
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import RescaleMethod, AutomaticLow, AutomaticHigh
 from openhcs.processing.backends.cellprofiler.smoothing import SmoothingMethod
-from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.image_processing.image_math import ImageMathOperation
 
 payload = Path('/run/media/ts/hdd/openhcs-science/next-retina-h003-fresh26-94-89-20261006/R0010_FRESH26_94')
 pipeline_config = PipelineConfig(
@@ -47,9 +47,9 @@ pipeline_steps = [
 ]
 
 from openhcs.processing.backends.cellprofiler.primary_objects import UnclumpMethod, WatershedMethod
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
-from openhcs.processing.backends.cellprofiler.object_images import ImageMode
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import ImageMode
 from openhcs.processing.backends.cellprofiler.structuring_elements import StructuringElement
 pipeline_steps += [
     FunctionStep(name='Join short interruptions in body response', func=(get_function('openhcs:cellprofiler_closing'), {

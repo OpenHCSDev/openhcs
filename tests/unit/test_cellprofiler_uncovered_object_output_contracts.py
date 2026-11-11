@@ -52,7 +52,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     measurement_table_for_module,
 )
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ConvertImageToObjectsModule,
     ConvertObjectsToImageModule,
     ObjectConversionStats,

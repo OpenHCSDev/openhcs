@@ -98,13 +98,13 @@ def test_real_primary_callable_declumps_through_selected_signed_watershed(
     monkeypatch, provider
 ):
     from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array
-    from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
     from openhcs.processing.backends.cellprofiler.primary_objects import (
         UnclumpMethod,
         WatershedMethod,
         identify_primary_objects,
     )
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         CellProfilerThresholdMethod,
     )
 

@@ -36,10 +36,10 @@ from openhcs.processing.backends.cellprofiler.flagging import (
 )
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     MeasureImageIntensityModule,
 )
-from openhcs.processing.backends.cellprofiler.object_overlap import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_overlap import (
     MeasureImageOverlapModule,
     measureimageoverlap,
     measureimageoverlap_with_emd,

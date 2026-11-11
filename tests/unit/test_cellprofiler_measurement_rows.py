@@ -53,7 +53,7 @@ from openhcs.interop.cellprofiler.runtime.object_measurement_row_policies import
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     measurement_source_image_name_for_slice,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     ImageIntensityMeasurement,
     ImageIntensityPercentileSpec,
     MeasureImageIntensityModule,

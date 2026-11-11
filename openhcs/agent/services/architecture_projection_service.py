@@ -318,11 +318,11 @@ class ExecutionRuntimeArchitectureTopic(ArchitectureTopicProjection):
     def symbol_specs(self) -> tuple[InternalApiSymbolSpec, ...]:
         from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-        from openhcs.runtime.zmq_execution_client import (
+        from openhcs.runtime.zmq.zmq_execution_client import (
             OpenHCSExecutionSubmission,
             ZMQExecutionClient,
         )
-        from openhcs.runtime.zmq_execution_signature import ZMQExecutionRequestPayload
+        from openhcs.runtime.zmq.zmq_execution_signature import ZMQExecutionRequestPayload
 
         return (
             InternalApiSymbolSpec(

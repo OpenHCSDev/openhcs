@@ -21,14 +21,14 @@ from polystore.streaming_constants import StreamingDataType
 
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.napari_roi_manager.widgets._roi_manager import QRoiManager
-from openhcs.runtime.napari_streaming_handlers import (
+from openhcs.runtime.napari.napari_streaming_handlers import (
     NapariShapeLayerPayload,
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
     VisualMetadataField,
 )
-from openhcs.runtime.napari_viewer_server import NapariShapesLayerDisplayHandler
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.napari.napari_viewer_server import NapariShapesLayerDisplayHandler
+from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
 )

@@ -10,7 +10,7 @@ from functools import lru_cache
 from types import MappingProxyType
 from typing import Generic, cast
 
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.axes.axis_declarations.component_group_scope import ComponentGroupScope
 from openhcs.core.equivalence.cells import (
     RuntimeCellSignature,
     RuntimeMeasurementCellSignatureProjection,
@@ -53,7 +53,7 @@ from openhcs.core.equivalence.policy import (
 from openhcs.core.equivalence.tables import (
     MEASUREMENT_IDENTITY_FIELDS,
 )
-from openhcs.core.measurement_row_materialization import (
+from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementRowDeclaredValue,
     MeasurementRowObjectIdentityRole,
     MeasurementRowObjectLabel,
@@ -61,7 +61,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementRowSourceImageName,
     measurement_row_has_long_form_measurement_fields,
 )
-from openhcs.core.runtime_measurements import (
+from openhcs.core.measurements.runtime_measurements import (
     aggregate_image_number_reference_measurement_field,
     image_number_reference_measurement_field,
     parts_contain_adjacent_image_number,
@@ -73,7 +73,7 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeatureOwner,
     RuntimeMeasurementRowIdentityContract,
 )
-from openhcs.core.runtime_tabular_values import (
+from openhcs.core.payload.runtime_tabular_values import (
     MeasurementObjectRowIdentity,
     measurement_row_mapping,
 )

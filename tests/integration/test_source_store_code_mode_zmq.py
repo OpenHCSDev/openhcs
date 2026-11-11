@@ -50,11 +50,11 @@ from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
 from objectstate.lazy_factory import resolve_lazy_configurations_for_serialization
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
 from openhcs.ui.shared.plate_manager_code_document import (

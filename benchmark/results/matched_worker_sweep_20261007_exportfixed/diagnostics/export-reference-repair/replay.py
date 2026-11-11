@@ -9,7 +9,7 @@ openhcs.core.__path__.append('/home/ts/.local/state/openhcs-maintenance/20261004
 from openhcs.interop.cellprofiler.image_set_numbering import CellProfilerImageSetNumbering
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source.source_image_provenance import SourceImageProvenance,SourceImageProvenancePlanes
-from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.axes.axis_declarations.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.measurements.runtime_measurements import MeasurementTable,MeasurementSubject,MeasurementScope
 from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows, MEASUREMENT_SPARSE_CELL
 from openhcs.core.payload.runtime_tabular_values import FieldSpec

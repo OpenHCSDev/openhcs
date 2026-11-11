@@ -32,7 +32,7 @@ def _field(empty=False):
 def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
     from openhcs.core.config.pipeline_config import DtypeConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-    from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+    from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
     from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
         PrimaryObjectDiagnosticPlanes,
     )
@@ -40,7 +40,7 @@ def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
         UnclumpMethod,
         WatershedMethod,
     )
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         CellProfilerThresholdMethod,
     )
 
@@ -158,7 +158,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         SecondaryMethod,
         identify_secondary_objects,
     )
-    from openhcs.processing.backends.cellprofiler.thresholding import (
+    from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
         CellProfilerThresholdMethod,
     )
     from openhcs.core.materialization.core import MaterializationInput

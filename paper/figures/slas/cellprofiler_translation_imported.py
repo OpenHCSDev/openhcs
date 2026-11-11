@@ -60,12 +60,12 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     correct_illumination_apply,
     correct_illumination_calculate,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     MaskSource,
     mask_image,
 )
-from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import measure_object_intensity
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     FillHolesOption,
     mask_objects,
 )
@@ -89,7 +89,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     export_to_spreadsheet,
 )
 from openhcs.processing.backends.cellprofiler.texture import measure_texture_objects
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdMethod,
 )
 

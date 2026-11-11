@@ -51,11 +51,11 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
-from openhcs.runtime.zmq_execution_client import (
+from openhcs.runtime.zmq.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_observation import (
+from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
 from objectstate.lazy_factory import (
@@ -64,7 +64,7 @@ from objectstate.lazy_factory import (
 )
 from zmqruntime.execution import ExecutionSubmissionResponse, ExecutionWaitResult
 from zmqruntime import DataControlPortPairAuthority, TransportMode
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.core.progress.types import AxisStartedProgressPhase
 
 ROOT = Path(sys.argv[1]).resolve()

@@ -5,7 +5,7 @@ from typing import get_args, get_type_hints
 
 import pytest
 
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     GlobalThresholdKeywordArguments,
     GlobalThresholdMethodParameters,
 )

@@ -56,8 +56,8 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     RescaleOption,
     SmoothingMethod,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import MaskSource
-from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import MaskSource
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.outlines import (
     LineMode,
     OutlineSourceKind,
@@ -70,7 +70,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     SaveImagesBitDepth,
     SaveImagesFileFormat,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import CellProfilerThresholdMethod
 from openhcs.processing.func_registry import get_function
 from pathlib import Path
 

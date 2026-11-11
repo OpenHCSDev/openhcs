@@ -41,7 +41,7 @@ from openhcs.processing.backends.cellprofiler.imagej_macro import (
     RunImagejMacroModule,
     run_imagej_macro,
 )
-from openhcs.runtime.fiji_macro_runtime import FijiMacroExecutionRequest
+from openhcs.runtime.fiji.fiji_macro_runtime import FijiMacroExecutionRequest
 from openhcs.processing.backends.cellprofiler.skeleton import (
     MeasureObjectSkeletonModule,
     ObjectSkeletonMeasurement,

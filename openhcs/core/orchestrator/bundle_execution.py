@@ -97,7 +97,7 @@ from openhcs.core.progress.types import (
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import (
         ViewerControlResponse,
         ViewerSettleProgress,
     )

@@ -29,8 +29,8 @@ from zmqruntime.queue_tracker import GlobalQueueTrackerRegistry
 from zmqruntime.transport import DataControlPortPairAuthority, TransportEndpoint
 
 from openhcs.core.config.pipeline_config import NapariDisplayConfig
-from openhcs.runtime.napari_viewer_server import NapariViewerServer
-from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
+from openhcs.runtime.napari.napari_viewer_server import NapariViewerServer
+from openhcs.runtime.viewer.viewer_protocol import NapariViewerServerRequest
 
 
 class SyntheticMicroscope(ViewerMicroscopeHandlerABC):

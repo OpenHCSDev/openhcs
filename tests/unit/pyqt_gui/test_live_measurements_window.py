@@ -11,7 +11,7 @@ from openhcs.pyqt_gui.windows.live_measurements_window import (
     LiveMeasurementsWindow,
     _scope_text,
 )
-from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 from openhcs.domains.microscopy.axes import Microscopy
 
 

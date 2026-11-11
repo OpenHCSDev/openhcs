@@ -32,7 +32,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     MeasurementFeatureRecord,
     measurement_table_for_module,
 )
-from openhcs.processing.backends.cellprofiler.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdResult,
     ObjectThresholdResult,
     ThresholdModule,

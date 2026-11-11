@@ -11,7 +11,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelSet,
 )
-from openhcs.processing.backends.cellprofiler.image_geometry import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import (
     align_label_plane_to_shape,
     aligned_image_mask_planes,
 )

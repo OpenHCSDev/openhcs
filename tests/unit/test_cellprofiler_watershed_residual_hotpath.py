@@ -5,7 +5,7 @@ import pytest
 import skimage.measure
 import skimage.segmentation
 
-from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import MorphologyBackendStrategy
 
 from openhcs.core.payload.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array

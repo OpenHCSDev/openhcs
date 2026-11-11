@@ -35,8 +35,8 @@ from openhcs.agent.dto.execution import (
 from openhcs.core.debug.debug_view_models import DebugViewModel
 from openhcs.core.debug.debug_runtime import DebugCommandType, DebugPausedWorkerStatus
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import PongResponse, ServerRole
 from zmqruntime.startup import (

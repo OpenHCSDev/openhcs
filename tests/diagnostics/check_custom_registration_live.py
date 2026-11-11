@@ -36,8 +36,8 @@ def child_server(role: str, audit: Path, native_argv: list[str]) -> None:
         CustomFunctionRegistrationControlResponse,
         CustomFunctionRegistrationDestinationRequest,
     )
-    from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
-    from openhcs.runtime.zmq_execution_server_launcher import main
+    from openhcs.runtime.zmq.zmq_execution_server import ZMQExecutionServer
+    from openhcs.runtime.zmq.zmq_execution_server_launcher import main
 
     native_imports = {"openhcs": openhcs.__file__, "polystore": polystore.__file__}
     assert Path(openhcs.__file__).resolve() == SOURCE / "openhcs/__init__.py"
@@ -232,8 +232,8 @@ def run(args) -> None:
     from openhcs.mcp.dev_client import McpDevClient
     from openhcs.mcp.dev_client_core import McpDevServerSpec
     from openhcs.processing.custom_functions.manager import CustomFunctionManager
-    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+    from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
     from python_introspect import to_jsonable
 
     imports = {"openhcs": openhcs.__file__, "polystore": polystore.__file__}

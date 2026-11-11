@@ -3,7 +3,7 @@ import inspect
 import numpy as np
 import pytest
 
-from openhcs.processing.backends.cellprofiler.object_images import (
+from openhcs.processing.backends.cellprofiler.object_analysis.object_images import (
     ImageMode,
     convert_objects_to_image,
 )
@@ -12,7 +12,7 @@ from openhcs.processing.backends.cellprofiler.area_occupied import (
     OperandChoice,
     measure_image_area_occupied,
 )
-from openhcs.processing.backends.cellprofiler.intensity import (
+from openhcs.processing.backends.cellprofiler.intensity_family.intensity import (
     measure_image_intensity_objects,
 )
 from openhcs.processing.backends.cellprofiler.skeleton import measure_object_skeleton

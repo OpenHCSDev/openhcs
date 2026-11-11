@@ -158,7 +158,7 @@ def test_stdio_stuck_child_uses_unchanged_forced_reap_budget(tmp_path):
 
 @pytest.mark.parametrize("fail_cleanup", (False, True))
 def test_real_sdk_stdio_declared_resource_closes_before_child_exit(tmp_path, fail_cleanup):
-    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+    from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 
     source_root = OpenHCSRuntimeImportAuthority.current().import_root
     script = tmp_path / "declared_resource_server.py"

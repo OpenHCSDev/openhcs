@@ -83,15 +83,15 @@ from openhcs.agent.dto.viewer import (
     viewer_window_probe_from_state,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
-from openhcs.runtime.viewer_controls import ViewerNativeDimensions
-from openhcs.runtime.viewer_component_system import (
+from openhcs.runtime.viewer.viewer_controls import ViewerNativeDimensions
+from openhcs.runtime.viewer.viewer_component_system import (
     ComponentValue,
     ComponentValues,
     ViewerComponentValueParser,
     ViewerLayerAxisProjection,
 )
-from openhcs.runtime.viewer_protocol import OpenHCSViewerControlMessageType
-from openhcs.runtime.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import OpenHCSViewerControlMessageType
+from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlField,
     ViewerControlMessageType,
     ViewerControlMessageRequest,
@@ -105,7 +105,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerArrayValueSummary,
     ViewerRuntimeEndpoint,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 OptionalViewerFieldT = TypeVar("OptionalViewerFieldT")
 ValidationWarningContextT = TypeVar("ValidationWarningContextT")

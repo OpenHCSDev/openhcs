@@ -34,7 +34,7 @@ from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
 )
-from openhcs.runtime.fiji_macro_runtime import FijiMacroExecutionRequest
+from openhcs.runtime.fiji.fiji_macro_runtime import FijiMacroExecutionRequest
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock

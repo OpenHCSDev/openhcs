@@ -145,7 +145,7 @@ def run_pipeline(work_dir: Path, fields: int, tile: int, runs: int) -> dict:
     from openhcs.processing.backends.processors.cupy_processor import percentile_normalize
     from openhcs.processing import custom_functions
     from openhcs.processing.custom_functions import CustomFunctionManager
-    from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionClient
+    from openhcs.runtime.zmq.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionClient
     from zmqruntime.execution.responses import ExecutionSubmissionResponse, ExecutionWaitResult
 
     plate_dir = work_dir / "plate"

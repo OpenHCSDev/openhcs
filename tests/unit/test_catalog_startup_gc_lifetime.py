@@ -10,7 +10,7 @@ import pytest
 from zmqruntime import OperationCancellation
 
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
 
 
 def test_startup_freeze_preserves_job_gc_and_releases_source_cycles():

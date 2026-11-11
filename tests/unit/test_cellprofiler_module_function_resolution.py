@@ -17,8 +17,8 @@ from openhcs.core.source.source_bindings import NamedSourceBinding
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.processing.backends.cellprofiler.crop import CropModule
-from openhcs.processing.backends.cellprofiler.image_geometry import MaskImageModule
-from openhcs.processing.backends.cellprofiler.morphology import (
+from openhcs.processing.backends.cellprofiler.image_processing.image_geometry import MaskImageModule
+from openhcs.processing.backends.cellprofiler.morphology_family.morphology import (
     DilateObjectsModule,
     MorphologicalskeletonModule,
     RemoveHolesModule,

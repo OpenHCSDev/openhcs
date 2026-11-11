@@ -16,13 +16,13 @@ from zmqruntime.viewer_protocol import ViewerBatchDisplayPayload
 
 from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.config.pipeline_config import NapariDisplayConfig
-from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
-from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.viewer.viewer_protocol import NapariViewerServerRequest
+from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
 def test_napari_settlement_surfaces_terminal_transport_failure() -> None:
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     server = object.__new__(napari_viewer_server.NapariViewerServer)
     server.transport_failure = RuntimeError("receiver copy failed")
 
@@ -43,7 +43,7 @@ def test_napari_transport_rep_follows_receiver_owned_shared_memory_copy(
     monkeypatch,
     metadata,
 ) -> None:
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     port = 46000 + uuid.uuid4().int % 10000
     remove_ipc_socket(port, OPENHCS_ZMQ_CONFIG)
     server = napari_viewer_server.NapariViewerServer(
@@ -146,14 +146,14 @@ def test_napari_transport_rep_follows_receiver_owned_shared_memory_copy(
 
 
 def test_napari_control_pump_reports_active_settlement_without_qt_dispatch() -> None:
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari.napari_viewer_server")
     from polystore.streaming_constants import StreamingDataType
 
-    from openhcs.runtime.napari_streaming_handlers import NapariPendingLayerUpdate
-    from openhcs.runtime.viewer_component_system import (
+    from openhcs.runtime.napari.napari_streaming_handlers import NapariPendingLayerUpdate
+    from openhcs.runtime.viewer.viewer_component_system import (
         ViewerComponentAxisSemanticsFactory,
     )
-    from openhcs.runtime.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import (
         ViewerControlResponse,
         SettlementRunning,
         ViewerSettleProgress,

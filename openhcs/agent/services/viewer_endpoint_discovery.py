@@ -18,7 +18,7 @@ from typing import Any
 
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
 _VIEWER_SOCKET_PATTERN = re.compile(r"^openhcs-zmq-(\d+)\.sock$")
 _DISCOVERY_TIMEOUT_MS = 750
