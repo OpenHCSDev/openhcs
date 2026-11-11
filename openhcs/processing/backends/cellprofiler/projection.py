@@ -30,6 +30,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_float,
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
 class ProjectionType(Enum):
@@ -211,8 +212,6 @@ class MakeProjectionModule(
 ):
     module_name = "MakeProjection"
     function_name = "make_projection"
-    validated = True
-    confidence = 1.0
     image_input_setting = SettingNameFamily("Select the input image")
     image_output_setting = SettingNameFamily("Name the output image")
     setting_bindings = (

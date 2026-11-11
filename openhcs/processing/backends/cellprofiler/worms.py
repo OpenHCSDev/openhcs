@@ -7,6 +7,7 @@ It takes a binary image and labels the worms, untangling them and
 associating all of a worm's pieces together.
 """
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
 import inspect
@@ -257,8 +258,6 @@ class UntangleWormsModule(
         for strategy in WormLabelOutputStrategy.__registry__.values()
         if strategy.overlap_style is not OverlapStyle.WITHOUT_OVERLAP
     )
-    validated = True
-    confidence = 1.0
 
     calculated_measurement_feature_prefixes = (
         ("worm",),
@@ -705,9 +704,7 @@ class StraightenWormsModule(
 ):
     module_name = "StraightenWorms"
     function_name = "straighten_worms"
-    validated = True
     group_by_role = TileAxis
-    confidence = 1.0
 
     input_objects_setting = "Select the input untangled worm objects"
     output_objects_setting = "Name the output straightened worm objects"
@@ -3151,8 +3148,6 @@ class IdentifyDeadWormsModule(
 ):
     module_name = "IdentifyDeadWorms"
     function_name = "identify_dead_worms"
-    validated = True
-    confidence = 1.0
     measurement_feature_family = "Worm"
     measurement_category_prefixes = (("worm",),)
 

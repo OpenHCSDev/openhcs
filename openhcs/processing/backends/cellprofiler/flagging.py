@@ -1,6 +1,7 @@
 """FlagImage backend entrypoints for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import astuple, dataclass, field, fields, replace
@@ -648,8 +649,6 @@ class FlagImageModule(
 ):
     module_name = "FlagImage"
     function_name = "flag_image"
-    validated = True
-    confidence = 1.0
     flag_count_setting: ClassVar[str] = "Flag count"
     setting_bindings = FlagImagePlan.setting_bindings()
     ignored_settings = (

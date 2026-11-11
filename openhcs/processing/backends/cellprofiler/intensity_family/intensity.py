@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, ClassVar
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
@@ -95,8 +96,6 @@ class MeasureImageIntensityModule(
     module_name = "MeasureImageIntensity"
     function_name = "measure_image_intensity"
     function_variants = ("measure_image_intensity_objects",)
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (("intensity",),)
     measurement_feature_family = "Intensity"
     object_gate_setting = SettingNameFamily(
@@ -400,11 +399,9 @@ class AutomaticHigh(Enum):
     EACH_IMAGE = "each_image"
 
 
-class RescaleIntensityModule(CellProfilerModule):
+class RescaleIntensityModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "RescaleIntensity"
     function_name = "rescale_intensity"
-    validated = True
-    confidence = 1.0
     setting_bindings = (
         SettingToKeywordBinding.input("Select the input image", ImageArtifactType),
         ModuleOnlySettingBinding(
@@ -1951,8 +1948,6 @@ class MeasureObjectIntensityModule(
 ):
     module_name = "MeasureObjectIntensity"
     function_name = "measure_object_intensity"
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (("intensity",), ("location",))
 
     class MeasurementFeature(RuntimeMeasurementFeature):

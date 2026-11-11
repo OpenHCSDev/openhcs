@@ -101,6 +101,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
 from openhcs.core.payload.runtime_image_values import PlainImagePayload
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -1482,8 +1483,6 @@ class MeasureObjectNeighborsModule(
 ):
     module_name = "MeasureObjectNeighbors"
     function_name = "measure_object_neighbors"
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (("neighbors",),)
     relationship_type = "Neighbors"
     measured_objects_setting = SettingNameFamily("Select objects to measure")

@@ -89,9 +89,7 @@ class WatershedModule(
     module_name = "Watershed"
     function_name = "watershed_library"
     function_variants = ("watershed_cellprofiler4",)
-    validated = True
     respects_masks = True
-    confidence = 1.0
     watershed_method_setting = SettingNameFamily(
         "Generate from",
         aliases=("Select watershed method",),

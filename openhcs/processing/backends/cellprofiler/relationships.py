@@ -161,8 +161,6 @@ class RelateObjectsModule(
     module_name = "RelateObjects"
     function_name = "relate_objects"
     function_variants = ("relate_objects_with_saved_children",)
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (("children",), ("parent",))
     parent_relationship_type = "Parent"
     child_relationship_type = "Child"

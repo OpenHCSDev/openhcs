@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import dataclasses
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from openhcs.core.payload.runtime_profile import RuntimeProfiler
 
@@ -219,9 +220,7 @@ class MeasureGranularityModule(
 ):
     module_name = "MeasureGranularity"
     function_name = "measure_granularity"
-    validated = True
     function_variants = ("measure_granularity_objects",)
-    confidence = 1.0
     measurement_category_prefixes = (("granularity",),)
 
     class MeasurementFeature(RuntimeMeasurementFeature, NativeNumpyBackend):

@@ -1,6 +1,7 @@
 """Grid-label backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 import re
 from abc import ABC, abstractmethod
@@ -615,8 +616,6 @@ class IdentifyObjectsInGridModule(
 ):
     module_name = "IdentifyObjectsInGrid"
     function_name = "identify_objects_in_grid"
-    validated = True
-    confidence = 1.0
 
     grid_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
         "Select the defined grid"

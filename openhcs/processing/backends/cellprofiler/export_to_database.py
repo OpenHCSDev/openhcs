@@ -1,6 +1,7 @@
 """Executable CellProfiler-compatible database export."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 import inspect
 from collections.abc import Callable, Mapping, Sequence
@@ -109,13 +110,11 @@ def _parse_overwrite_mode(
     raise ValueError(f"Unsupported ExportToDatabase overwrite mode {value!r}.")
 
 
-class ExportToDatabaseModule(ArtifactExportModule):
+class ExportToDatabaseModule(ArtifactExportModule, ValidatedHighConfidenceModule):
     """Nominal module owner for plate-scoped SQLite/CPA export semantics."""
 
     module_name = "ExportToDatabase"
     function_name = "export_to_database"
-    validated = True
-    confidence = 1.0
 
     database_type_setting = SettingNameFamily("Database type")
     sqlite_file_setting = SettingNameFamily("Name the SQLite database file")

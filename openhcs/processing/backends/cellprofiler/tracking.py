@@ -1,6 +1,7 @@
 """Tracking backends for CellProfiler-compatible TrackObjects."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
@@ -152,8 +153,6 @@ class TrackObjectsModule(
 ):
     module_name = "TrackObjects"
     function_name = "track_objects"
-    validated = True
-    confidence = 1.0
     parent_relationship_type = "Parent"
 
     @dataclass(frozen=True, slots=True)

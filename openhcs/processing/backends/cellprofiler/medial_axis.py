@@ -7,6 +7,7 @@ import numpy as np
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.memory.decorators import numpy as numpy_backend
 from openhcs.interop.cellprofiler.module_declarations import (
+    ValidatedHighConfidenceModule,
     CellProfilerModule,
 )
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
@@ -38,11 +39,9 @@ def medialaxis(image: np.ndarray) -> np.ndarray:
     return skeleton.astype(np.float32)
 
 
-class MedialaxisModule(CellProfilerModule):
+class MedialaxisModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "Medialaxis"
     function_name = "medialaxis"
-    validated = True
-    confidence = 1.0
     setting_bindings = (
         SettingToKeywordBinding.input(
             "Select the input image",

@@ -1011,3 +1011,14 @@ class CellProfilerModule(
             for spec in callable_contract.artifact_inputs
             if spec.parameter_name is None
         )
+
+
+class ValidatedHighConfidenceModule:
+    """Mixin: marks a CellProfiler module as validated with full confidence.
+
+    81 module classes each restated ``validated = True`` and ``confidence = 1.0``.
+    Compose this in the base list instead.
+    """
+
+    validated: ClassVar[bool] = True
+    confidence: ClassVar[float] = 1.0

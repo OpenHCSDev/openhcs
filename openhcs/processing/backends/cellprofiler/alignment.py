@@ -87,6 +87,7 @@ from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
 class _AlignShiftFieldRole(str, Enum):
@@ -200,13 +201,10 @@ class AlignModule(
     AlignOutputMeasurementRecordRowsMixin,
     NoObjectNameMeasurementRecordMixin,
     DeclaredImageOutputPayloadMeasurementRecordMixin,
-    MeasurementArtifactOutputModule,
-):
+    MeasurementArtifactOutputModule, ValidatedHighConfidenceModule):
     module_name = "Align"
     function_name = "align"
-    validated = True
     group_by_role = TileAxis
-    confidence = 1.0
 
     class Method(Enum):
         """Image-registration metric supported by CellProfiler Align."""

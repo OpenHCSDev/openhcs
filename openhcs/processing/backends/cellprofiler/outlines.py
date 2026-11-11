@@ -47,6 +47,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 (
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
@@ -104,8 +105,6 @@ class OverlayObjectsModule(
 ):
     module_name = "OverlayObjects"
     function_name = "overlay_objects"
-    validated = True
-    confidence = 1.0
     input_image_setting = SettingNameFamily(
         "Select the input image", aliases=("Input",)
     )
@@ -164,8 +163,6 @@ class OverlayOutlinesModule(
 ):
     module_name = "OverlayOutlines"
     function_name = "overlay_outlines"
-    validated = True
-    confidence = 1.0
     blank_image_setting = "Display outlines on a blank image?"
     base_image_setting = "Select image on which to display outlines"
     output_image_setting = "Name the output image"

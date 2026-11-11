@@ -1,6 +1,7 @@
 """Shared CellProfiler image-plane geometry semantics."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from typing import Annotated, TYPE_CHECKING, ClassVar
 
@@ -86,8 +87,6 @@ class MaskImageModule(
 ):
     module_name = "MaskImage"
     function_name = "mask_image"
-    validated = True
-    confidence = 1.0
     input_image_setting = SettingNameFamily("Select the input image")
     masking_image_setting = SettingNameFamily("Select image for mask")
     masking_objects_setting = SettingNameFamily("Select object for mask")
@@ -229,12 +228,10 @@ def _parse_tile_direction_setting(value: str) -> str:
     return coerce_cellprofiler_enum(TileStyle, value).value
 
 
-class ResizeModule(CellProfilerModule):
+class ResizeModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "Resize"
     function_name = "resize"
-    validated = True
     function_variants = ("resize_volumetric",)
-    confidence = 1.0
     input_image_setting = SettingNameFamily("Select the input image")
     desired_dimensions_image_setting = SettingNameFamily(
         "Select the image with the desired dimensions"
@@ -481,11 +478,9 @@ def _parse_tile_assembly_method(value: str) -> str:
     return normalized
 
 
-class TileModule(CellProfilerModule):
+class TileModule(CellProfilerModule, ValidatedHighConfidenceModule):
     module_name = "Tile"
     function_name = "tile"
-    validated = True
-    confidence = 1.0
     input_image_setting = SettingNameFamily("Select an input image")
     additional_image_setting = SettingNameFamily("Select an additional image to tile")
     output_image_setting = SettingNameFamily("Name the output image")
@@ -1411,8 +1406,6 @@ class FlipAndRotateModule(
 ):
     module_name = "FlipAndRotate"
     function_name = "flip_and_rotate"
-    validated = True
-    confidence = 1.0
 
     input_image_setting = SettingNameFamily("Select the input image")
     output_image_setting = SettingNameFamily("Name the output image")

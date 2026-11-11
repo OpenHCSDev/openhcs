@@ -1,6 +1,7 @@
 """Illumination backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
@@ -168,8 +169,6 @@ class CorrectIlluminationApplyModule(
 ):
     module_name = "CorrectIlluminationApply"
     function_name = "correct_illumination_apply"
-    validated = True
-    confidence = 1.0
 
     input_image_setting = "Select the input image"
     output_image_setting = "Name the output image"
@@ -407,8 +406,6 @@ class CorrectIlluminationCalculateModule(
 ):
     module_name = "CorrectIlluminationCalculate"
     function_name = "correct_illumination_calculate"
-    validated = True
-    confidence = 1.0
 
     @classmethod
     def main_flow_output_specs(

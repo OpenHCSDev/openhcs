@@ -1,6 +1,7 @@
 """Image-quality backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from metaclass_registry.caches import ProcessLocalBoundedCache
@@ -197,8 +198,6 @@ class MeasureImageQualityModule(
 ):
     module_name = "MeasureImageQuality"
     function_name = "measure_image_quality"
-    validated = True
-    confidence = 1.0
     measurement_category_prefixes = (("image", "quality"), ("quality",))
     measurement_feature_family = "ImageQuality"
     scale_qualified_measurement_feature_prefixes = (("local", "focus", "score"),)

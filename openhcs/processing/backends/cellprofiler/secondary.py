@@ -1,5 +1,6 @@
 from __future__ import annotations
 import dataclasses
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 """Secondary-object backend strategies for CellProfiler-compatible processing."""
 
 import logging
@@ -117,8 +118,6 @@ class IdentifyTertiaryObjectsModule(
 ):
     module_name = "IdentifyTertiaryObjects"
     function_name = "identify_tertiary_objects"
-    validated = True
-    confidence = 1.0
 
     @classmethod
     def measurement_record_rows(cls, request) -> ColumnarRows:
@@ -1424,8 +1423,6 @@ class IdentifySecondaryObjectsModule(
     module_name = "IdentifySecondaryObjects"
     function_name = "identify_secondary_objects"
     function_variants = ("identify_secondary_objects_with_replacement_primary",)
-    validated = True
-    confidence = 1.0
 
     input_image_setting = "Select the input image"
     input_objects_setting = "Select the input objects"
