@@ -1,6 +1,7 @@
 """Granularity numerics for CellProfiler-compatible texture measurement."""
 
 from __future__ import annotations
+import dataclasses
 
 from openhcs.core.payload.runtime_profile import RuntimeProfiler
 
@@ -530,14 +531,10 @@ class GranularityBatchSettings:
     def from_request(
         cls, request: RuntimeBatchInvocationRequest
     ) -> "GranularityBatchSettings":
-        return cls(
-            subsample_size=float(request.kwargs["subsample_size"]),
-            background_subsample_size=float(
-                request.kwargs["background_subsample_size"]
-            ),
-            element_radius=int(request.kwargs["element_radius"]),
-            spectrum_length=int(request.kwargs["spectrum_length"]),
-        )
+        return cls(**{
+            f.name: f.type(request.kwargs[f.name])
+            for f in dataclasses.fields(cls)
+        })
 
 
 @dataclass(frozen=True, slots=True)
