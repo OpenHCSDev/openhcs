@@ -132,6 +132,7 @@ class DatasetSourceChoice(ABC):
     """A class that selects the dataset source for one dataset root."""
 
     source_name: ClassVar[str]
+    auto_detected: ClassVar[bool] = False
 
     @staticmethod
     def iter_choices() -> Iterator[type["DatasetSourceChoice"]]:
@@ -606,6 +607,7 @@ class AutoDetectedSource(DatasetSourceChoice):
     """Select the first registered source whose detection claims the root."""
 
     source_name = "auto"
+    auto_detected = True
 
     @classmethod
     def source_type_for(
