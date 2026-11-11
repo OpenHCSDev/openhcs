@@ -71,7 +71,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
 )
 from openhcs.core.payload.runtime_profile import RuntimeProfiler
-from openhcs.processing.backends.cellprofiler.label_geometry import (
+from openhcs.processing.backends.cellprofiler.measurement.label_geometry import (
     CellProfilerLabelHull,
     _cellprofiler_column_envelope_vertices_numba,
 )

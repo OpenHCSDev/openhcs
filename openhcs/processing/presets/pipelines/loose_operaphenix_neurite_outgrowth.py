@@ -56,6 +56,7 @@ from openhcs.processing.backends.cellprofiler.feature_enhancement import (
     enhance_or_suppress_features,
 )
 from openhcs.processing.backends.cellprofiler.intensity_family.intensity import measure_image_intensity
+from openhcs.processing.backends.cellprofiler.measurement.skeleton import measure_object_skeleton_with_branchpoint_image
 from openhcs.processing.backends.cellprofiler.medial_axis import medialaxis
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     identify_primary_objects,
@@ -63,9 +64,6 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
 from openhcs.processing.backends.cellprofiler.secondary import (
     IdentifySecondaryObjectsModule,
     identify_secondary_objects,
-)
-from openhcs.processing.backends.cellprofiler.skeleton import (
-    measure_object_skeleton_with_branchpoint_image,
 )
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     export_to_spreadsheet,

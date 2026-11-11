@@ -104,7 +104,7 @@ from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryPropagationBackendStrategy,
     secondary_propagation_backend,
 )
-from openhcs.processing.backends.cellprofiler.shape import (
+from openhcs.processing.backends.cellprofiler.measurement.shape import (
     ShapeMeasurementBackendStrategy,
     shape_measurement_backend,
 )
@@ -132,7 +132,7 @@ from openhcs.interop.cellprofiler.runtime.object_measurement_row_completion impo
 from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     LabelsObjectInputPolicy,
 )
-from openhcs.processing.backends.cellprofiler.zernike import (
+from openhcs.processing.backends.cellprofiler.measurement.zernike import (
     IntensityZernikeFeatureAuthority,
     IntensityZernikeMeasurementRowsRequest,
 )

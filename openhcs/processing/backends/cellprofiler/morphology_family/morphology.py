@@ -690,9 +690,7 @@ from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enu
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.processing.backends.cellprofiler.relationships import (
-    ObjectRelationshipBackendStrategy,
-)
+from openhcs.processing.backends.cellprofiler.measurement.relationships import ObjectRelationshipBackendStrategy
 from openhcs.processing.backends.cellprofiler.structuring_elements import (
     StructuringElement,
     StructuringElementInput,

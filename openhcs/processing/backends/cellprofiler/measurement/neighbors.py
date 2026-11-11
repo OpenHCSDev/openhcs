@@ -690,9 +690,7 @@ def measure_object_neighbors(
     from openhcs.processing.backends.cellprofiler.outlines import (
         ObjectOutlineBackendStrategy,
     )
-    from openhcs.processing.backends.cellprofiler.relationships import (
-        ObjectRelationshipBackendStrategy,
-    )
+    from openhcs.processing.backends.cellprofiler.measurement.relationships import ObjectRelationshipBackendStrategy
 
     profile_start = time.perf_counter()
     profile_mark = profile_start

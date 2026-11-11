@@ -49,6 +49,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     CurrentPayloadMeasurementRecordMixin,
     NoObjectNameMeasurementRecordMixin,
 )
+from openhcs.processing.backends.cellprofiler.measurement.shape import shape_measurement_backend
 from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerAveragingMethod,
     CellProfilerOtsuMethod,
@@ -85,7 +86,6 @@ from openhcs.processing.backends.cellprofiler.morphology_family.morphology impor
     manual_declumping_size,
 )
 from openhcs.core.payload.runtime_profile import RuntimeProfiler
-from openhcs.processing.backends.cellprofiler.shape import shape_measurement_backend
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,

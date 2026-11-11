@@ -47,9 +47,7 @@ from openhcs.interop.cellprofiler.runtime.object_input_policies import (
 from openhcs.processing.backends.cellprofiler.perf_fixtures import (
     capture_array_fixture,
 )
-from openhcs.processing.backends.cellprofiler.zernike import (
-    ShapeZernikeFeatureAuthority,
-)
+from openhcs.processing.backends.cellprofiler.measurement.zernike import ShapeZernikeFeatureAuthority
 from openhcs.core.object_labels.runtime_object_labels import ObjectLabelVariantData
 from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
@@ -473,7 +471,7 @@ from openhcs.processing.backends.analysis.region_properties import (
     DenseLabelRegionProperties,
     LabelRegionPropertiesBackendStrategy,
 )
-from openhcs.processing.backends.cellprofiler.label_geometry import (
+from openhcs.processing.backends.cellprofiler.measurement.label_geometry import (
     feret_diameters_from_labels,
     prepare_arccos_kernels,
     _numpy124_aquicksort_indices,
@@ -486,7 +484,7 @@ from openhcs.core.payload.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.distance_propagation_numba import (
     _edt_1d_numba,
 )
-from openhcs.processing.backends.cellprofiler.zernike import shape_zernike_moments
+from openhcs.processing.backends.cellprofiler.measurement.zernike import shape_zernike_moments
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 logger = logging.getLogger(__name__)

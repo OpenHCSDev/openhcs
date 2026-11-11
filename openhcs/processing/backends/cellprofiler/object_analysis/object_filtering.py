@@ -71,9 +71,7 @@ from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )
-from openhcs.processing.backends.cellprofiler.relationships import (
-    ObjectRelationshipBackendStrategy,
-)
+from openhcs.processing.backends.cellprofiler.measurement.relationships import ObjectRelationshipBackendStrategy
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,

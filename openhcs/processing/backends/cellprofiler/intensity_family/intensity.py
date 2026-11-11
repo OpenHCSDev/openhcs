@@ -326,12 +326,8 @@ from openhcs.processing.backends.cellprofiler.intensity_family.intensity_object_
     _object_intensity_scan_3d_sparse_batch_numba,
     _object_intensity_scan_numba,
 )
-from openhcs.processing.backends.cellprofiler.shape import (
-    ShapeMeasurementBackendStrategy,
-)
-from openhcs.processing.backends.cellprofiler.label_geometry import (
-    _numpy124_ordered_label_maximum_indices,
-)
+from openhcs.processing.backends.cellprofiler.measurement.shape import ShapeMeasurementBackendStrategy
+from openhcs.processing.backends.cellprofiler.measurement.label_geometry import _numpy124_ordered_label_maximum_indices
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.core.callable.processing_contracts import (
     FlexibleContract,
