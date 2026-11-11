@@ -15,6 +15,7 @@ import skimage.segmentation
 from python_introspect import declared_enum_type
 from openhcs.core.aligned_image_payload import (AlignedImageStack, ImagePayloadBundleContext)
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.alignment import (
     AlignModule,
@@ -2651,12 +2652,11 @@ def test_measure_texture_objects_emits_and_splits_both_scopes(monkeypatch):
 
 
 def test_measure_object_neighbors_prepare_uses_nominal_label_payload():
-    from openhcs.core.callable_contract import prepare_processing_callable
     from openhcs.processing.backends.cellprofiler.neighbors import (
         measure_object_neighbors,
     )
 
-    prepare_processing_callable(measure_object_neighbors)
+    CallablePreparation.from_callable(measure_object_neighbors).prepare()
 
 
 def test_measure_texture_objects_rejects_unprojected_plane_domain_stack():

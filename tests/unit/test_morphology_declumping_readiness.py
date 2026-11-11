@@ -12,7 +12,7 @@ def test_declumping_preparation_rejects_late_compilation_or_disk_load(tmp_path):
         from contextlib import ExitStack
         from unittest.mock import patch
         import numpy as np
-        from openhcs.core.callable_contract import prepare_processing_callable
+        from openhcs.core.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler import morphology
 
         kernels = (
@@ -20,7 +20,7 @@ def test_declumping_preparation_rejects_late_compilation_or_disk_load(tmp_path):
             morphology._smooth_image_for_declumping_full_mask_numba,
         )
         assert all(not kernel.signatures for kernel in kernels)
-        prepare_processing_callable(morphology.erode_objects)
+        CallablePreparation.from_callable(morphology.erode_objects).prepare()
         signatures = tuple(tuple(kernel.signatures) for kernel in kernels)
         assert all(signatures)
 

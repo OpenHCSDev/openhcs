@@ -16,10 +16,7 @@ from arraybridge import ArrayPayload
 
 import openhcs.core.callable_contract as contract_module
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.callable_contract import (
-    CallableContract, CallableImportIdentity, CallableDeclaration, CallableProjection,
-    attach_callable_contract_metadata, attach_processing_prepare,
-)
+from openhcs.core.callable_contract import CallableContract, CallableImportIdentity, CallableDeclaration, CallableProjection, attach_callable_contract_metadata, attach_processing_prepare
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
     NormalizedFunctionGroup,
@@ -69,7 +66,7 @@ def test_composition_default_respects_explicit_raw_carrier_boundary(
         raw.__annotations__["image"] = annotation
     if composed:
         composed_image_payload(raw)
-    contract = CallableContract.from_prepared_callable(raw)
+    contract = CallablePreparation.from_callable(raw).prepared_contract()
     pixels = np.arange(20, dtype=np.float32).reshape(1, 4, 5)
     mask = np.ones((1, 4, 5), dtype=bool)
     mask[0, 0, 0] = False
@@ -91,7 +88,7 @@ def test_composition_default_respects_explicit_raw_carrier_boundary(
 def test_prepared_composition_default_survives_transport_without_introspection(
     serializer, fake_preparation, monkeypatch,
 ):
-    contract = CallableContract.from_prepared_callable(unannotated_composed_echo)
+    contract = CallablePreparation.from_callable(unannotated_composed_echo).prepared_contract()
     reference = ImportableFunctionReference(
         import_identity=CallableImportIdentity.from_callable(unannotated_composed_echo),
         composite_key="test:unannotated_composed_echo", declaration=contract.declaration,
@@ -199,7 +196,7 @@ def test_authored_preparation_precedes_metadata_validation(monkeypatch):
 
     monkeypatch.setattr(CallablePreparation, "prepare", lambda self: events.append("prepared"))
     monkeypatch.setattr(CallableDeclaration, "from_namespace", classmethod(validate))
-    contract = CallableContract.from_prepared_callable(raw)
+    contract = CallablePreparation.from_callable(raw).prepared_contract()
     assert contract.canonical_parameter_annotations["image"] is np.ndarray
 
 
@@ -222,13 +219,13 @@ def test_lowering_a_pattern_without_compiling_it_prepares_nothing(fake_preparati
     assert contract.canonical_signature == declared.canonical_signature
     assert (
         declared.canonical_signature
-        == CallableContract.from_prepared_callable(raw_numeric).canonical_signature
+        == CallablePreparation.from_callable(raw_numeric).prepared_contract().canonical_signature
     )
 
 
 @pytest.mark.parametrize("serializer", [pickle, cloudpickle])
 def test_prepared_signature_metadata_namespace_and_reference_transport(serializer, fake_preparation):
-    contract = CallableContract.from_prepared_callable(raw_numeric)
+    contract = CallablePreparation.from_callable(raw_numeric).prepared_contract()
     metadata = contract.declaration
 
     def proxy(image):
@@ -249,7 +246,7 @@ def test_prepared_signature_metadata_namespace_and_reference_transport(serialize
 
 
 def test_compiled_raw_projection_never_queries_signature_or_annotations(monkeypatch, fake_preparation):
-    contract = CallableContract.from_prepared_callable(raw_numeric)
+    contract = CallablePreparation.from_callable(raw_numeric).prepared_contract()
     reference = ImportableFunctionReference(
         import_identity=CallableImportIdentity.from_callable(raw_numeric),
         composite_key="test:raw_numeric", declaration=contract.declaration,
@@ -274,12 +271,12 @@ def test_custom_signature_and_mutable_default_are_retained_until_recompilation(m
         inspect.Parameter("image", inspect.Parameter.POSITIONAL_ONLY, annotation=ArrayPayload),
         inspect.Parameter("values", inspect.Parameter.KEYWORD_ONLY, default=default),
     ])
-    first = CallableContract.from_prepared_callable(raw)
+    first = CallablePreparation.from_callable(raw).prepared_contract()
     assert first.canonical_signature.parameters["values"].default is default
     raw.__signature__ = raw.__signature__.replace(parameters=[
         inspect.Parameter("image", inspect.Parameter.POSITIONAL_ONLY, annotation=np.ndarray),
     ])
-    second = CallableContract.from_prepared_callable(raw)
+    second = CallablePreparation.from_callable(raw).prepared_contract()
     assert first.canonical_parameter_annotations["image"] is ArrayPayload
     assert second.canonical_parameter_annotations["image"] is np.ndarray
 
@@ -360,7 +357,7 @@ def test_distinct_authored_runtime_signature_transport_and_new_compilation_refre
         *inspect.signature(raw).parameters.values(),
         inspect.Parameter("injected",inspect.Parameter.KEYWORD_ONLY,default=False),
     ])
-    first = CallableContract.from_prepared_callable(wrapper)
+    first = CallablePreparation.from_callable(wrapper).prepared_contract()
     assert "injected" in first.canonical_signature.parameters
     assert "injected" not in first.raw_runtime_signature.parameters
     assert first.prepared_runtime_signature is not None
@@ -371,7 +368,7 @@ def test_distinct_authored_runtime_signature_transport_and_new_compilation_refre
     assert FunctionContractAttribute.canonical_signature not in vars(wrapper)
     raw.__defaults__ = (4,)
     raw.__annotations__["scale"] = float
-    second = CallableContract.from_prepared_callable(wrapper)
+    second = CallablePreparation.from_callable(wrapper).prepared_contract()
     assert first.raw_runtime_signature.parameters["scale"].default == 2
     assert second.raw_runtime_signature.parameters["scale"].default == 4
     assert second.raw_runtime_signature.parameters["scale"].annotation is float
@@ -387,18 +384,18 @@ def test_distinct_targets_own_signatures_even_when_layouts_match_without_compari
     @wraps(raw)
     def wrapper(*args, **kwargs):
         return raw(*args, **kwargs)
-    contract = CallableContract.from_prepared_callable(wrapper)
+    contract = CallablePreparation.from_callable(wrapper).prepared_contract()
     assert contract.prepared_runtime_signature is not None
     assert contract.raw_runtime_signature is not contract.canonical_signature
     assert contract.raw_runtime_signature.parameters["values"].default is default
     raw.__defaults__ = ("new raw default",)
-    second = CallableContract.from_prepared_callable(wrapper)
+    second = CallablePreparation.from_callable(wrapper).prepared_contract()
     assert second.raw_runtime_signature.parameters["values"].default == "new raw default"
     assert contract.raw_runtime_signature.parameters["values"].default is default
 
 
 def test_same_actual_target_shares_canonical_signature(fake_preparation):
-    contract = CallableContract.from_prepared_callable(raw_numeric)
+    contract = CallablePreparation.from_callable(raw_numeric).prepared_contract()
     assert contract.prepared_runtime_signature is None
     assert contract.raw_runtime_signature is contract.canonical_signature
 

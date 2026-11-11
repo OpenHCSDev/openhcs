@@ -9,11 +9,8 @@ import pytest
 from python_introspect import parameter_exclusions
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.callable_contract import (
-    CallableContract,
-    CallableDeclaration,
-    prepare_processing_callable,
-)
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import compile_function_pattern
@@ -109,7 +106,7 @@ def test_wrapper_preparation_does_not_resurrect_context_inference():
         del context
         return image
 
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
     contract = CallableContract.from_callable(process).with_prepared_signature()
     assert contract.runtime_context_parameter is None
     assert "context" not in contract.runtime_owned_parameter_names

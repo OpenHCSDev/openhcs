@@ -12,6 +12,7 @@ import textwrap
 import pytest
 
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 
 
@@ -85,10 +86,8 @@ def test_exact_callable_contract_and_preparation_keep_other_modules_lazy() -> No
         import importlib
         import sys
 
-        from openhcs.core.callable_contract import (
-            CallableImportIdentity,
-            prepare_processing_callable,
-        )
+        from openhcs.core.callable_contract import CallableImportIdentity
+        from openhcs.core.processing_preparation import CallablePreparation
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 
         module_name = "openhcs.processing.backends.cellprofiler.crop"
@@ -102,7 +101,7 @@ def test_exact_callable_contract_and_preparation_keep_other_modules_lazy() -> No
         owner = CellProfilerModule.for_callable_import_identity(identity)
         assert owner is not None
         assert owner.require_module_name() == "Crop"
-        prepare_processing_callable(raw_crop)
+        CallablePreparation.from_callable(raw_crop).prepare()
 
         after = {
             name for name in sys.modules if name.startswith(prefix)
@@ -292,7 +291,7 @@ def test_compiled_callable_owner_keeps_current_declaration_admission(
 ) -> None:
     module = CellProfilerModule.require_module("Crop")
     raw = module.require_callable()
-    contract = CallableContract.from_prepared_callable(raw)
+    contract = CallablePreparation.from_callable(raw).prepared_contract()
     if mutation == "replacement":
         implementation_module = importlib.import_module(module.__module__)
         monkeypatch.setattr(

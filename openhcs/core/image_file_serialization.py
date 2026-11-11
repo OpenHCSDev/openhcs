@@ -20,8 +20,10 @@ from openhcs.core.result_file_formats import (
     ResultFileFormat,
     TiffResultFile,
 )
-from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
-from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
+from openhcs.core.processing_preparation import (
+    CompilerPreparedAutoRegisterFamily,
+    PersistentNumbaKernelPreparation,
+)
 from openhcs.core.image_quantization_numba import quantize_image_uint8
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.runtime_image_values import (
