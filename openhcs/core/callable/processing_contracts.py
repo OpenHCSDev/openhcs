@@ -72,6 +72,7 @@ from openhcs.core.callable.variable_component_stack_requirement import (
 from openhcs.core.callable.callable_contract import CallableDeclaration
 from openhcs.core.callable.runtime_batch_contracts import runtime_batch_executors_from_callable
 from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
+from openhcs.core.callable.callable_contract import register_processing_contract_type
 
 
 PURE2D_VALUE_TYPE_REGISTRY_KEY = "value_type"
@@ -1462,3 +1463,5 @@ class LibraryContractCall(ContractCall):
                 for values in batch.auxiliary_groups
             ),
         )
+
+register_processing_contract_type(ProcessingContract)

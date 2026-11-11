@@ -20,6 +20,7 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.callable.callable_contract import register_runtime_batch_callable_family
 
 
 
@@ -424,3 +425,5 @@ def measurement_image_batch_executor(executor: Callable) -> Callable[[F], F]:
         RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES,
         executor,
     )
+
+register_runtime_batch_callable_family(RuntimeBatchCallableFamily)

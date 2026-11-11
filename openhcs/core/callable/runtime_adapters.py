@@ -44,6 +44,7 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
 from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.callable.callable_contract import register_runtime_adapter_spec_type
 
 
 
@@ -340,3 +341,5 @@ def runtime_adapter(
         return func
 
     return decorator
+
+register_runtime_adapter_spec_type(RuntimeAdapterSpec)

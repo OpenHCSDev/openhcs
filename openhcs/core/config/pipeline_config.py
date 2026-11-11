@@ -1470,6 +1470,7 @@ register_namespace_provider(
 from objectstate import config_context
 from objectstate.lazy_factory import resolve_lazy_configurations_for_serialization
 from openhcs.core.source.source_matching import source_filters_match
+from openhcs.core.callable.callable_contract import register_runtime_config_parameter
 
 with config_context(PipelineConfig()):
     EMPTY_SOURCE_BINDINGS: StepSourceBindingsConfig = (
@@ -1488,3 +1489,5 @@ logger.debug("Configuration framework initialized with OpenHCS types")
 # happens on-demand when config windows are first opened.
 
 # NOTE: Step editor cache warming is done in openhcs.core.steps.__init__ to avoid circular imports
+
+register_runtime_config_parameter(runtime_config_parameter)
