@@ -14,7 +14,7 @@ from collections.abc import Hashable
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
-from typing import Annotated, ClassVar, TypeAlias, TypeVar, cast
+from typing import Annotated, Any, ClassVar, TypeAlias, TypeVar, cast
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -463,6 +463,18 @@ class CentrosomeNumpyBackend:
     backend_provider: ClassVar[type[BackendProvider]] = CentrosomeBackendProvider
 
 
+class MethodKeyedStrategy:
+    """Strategy families keyed by a ``method`` enum member.
+
+    Restates ``__enum_member_attr__`` once; each strategy base inherits
+    it instead of redeclaring it (P39 Missing Mixin, Proposition 4.2).
+    """
+
+    __enum_member_attr__: ClassVar[str] = "method"
+    method: ClassVar[Any] = None
+    method_label: ClassVar[str | None] = None
+
+
 __all__ = [
     "DEFAULT_CELLPROFILER_BACKEND_SELECTION",
     "BackendProvider",
@@ -473,6 +485,7 @@ __all__ = [
     "CellProfilerBackendSelection",
     "CellProfilerBackendStrategyMixin",
     "CentrosomeBackendProvider",
+    "MethodKeyedStrategy",
     "CentrosomeNumpyBackend",
     "CppBackendProvider",
     "CucimBackendProvider",

@@ -123,6 +123,7 @@ from openhcs.interop.cellprofiler.runtime.output_record_request import (
 CellProfilerOutputRecordRequest,
 )
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPolicy, NumbaNumpyDefaultBackend):
     """TrackObjects emits object rows and image-level tracking counts together."""
 
@@ -1162,15 +1163,11 @@ class NumbaNumpyObjectTrackingBackendStrategy(ObjectTrackingBackendStrategy):
 
 
 class TrackObjectsMethodStrategy(
-    EnumKeyedStrategyMixin[TrackingMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[TrackingMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Registered CellProfiler TrackObjects method behavior."""
 
     __registry_key__ = "method_label"
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "method"
-    method: ClassVar[TrackingMethod | None] = None
-    method_label: ClassVar[str | None] = None
 
     @classmethod
     def require_supported_method(cls, method: TrackingMethod) -> None:

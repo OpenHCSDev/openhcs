@@ -22,6 +22,7 @@ from arraybridge.array_operations import ArrayOperations
 from metaclass_registry import AutoRegisterMeta
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 from openhcs.processing.backends.processors.method_axes import (
     SpatialBinMethod,
     StackProjectionMethod,
@@ -128,11 +129,9 @@ def min_projection(ops: ArrayOperations, stack: Any) -> Any:
 
 
 class StackProjection(
-    EnumKeyedStrategyMixin[StackProjectionMethod], metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[StackProjectionMethod], MethodKeyedStrategy, metaclass=AutoRegisterMeta
 ):
     """One leading-axis projection, keyed by its method value."""
-
-    __enum_member_attr__ = "method"
 
     @abstractmethod
     def project(self, ops: ArrayOperations, stack: Any) -> Any:
@@ -173,10 +172,8 @@ def create_projection(ops: ArrayOperations, stack: Any, method: Any) -> Any:
 # ----- spatial binning (NumPy-compatible libraries) -----
 
 
-class SpatialBin(EnumKeyedStrategyMixin[SpatialBinMethod], metaclass=AutoRegisterMeta):
+class SpatialBin(EnumKeyedStrategyMixin[SpatialBinMethod], MethodKeyedStrategy, metaclass=AutoRegisterMeta):
     """Reduction applied within each spatial bin."""
-
-    __enum_member_attr__ = "method"
 
     @abstractmethod
     def reduce(self, ops: ArrayOperations, array: Any, axis: tuple[int, ...]) -> Any:

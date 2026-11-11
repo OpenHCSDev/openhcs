@@ -97,12 +97,12 @@ from openhcs.core.axes.axis_declarations import Axis
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 class IntensityChoice(Enum, NativeNumpyBackend):
     """CellProfiler CorrectIlluminationCalculate intensity source."""
 
     REGULAR = "regular"
     BACKGROUND = "background"
-
 
 class SmoothingMethod(Enum):
     """CellProfiler CorrectIlluminationCalculate smoothing method."""
@@ -115,9 +115,7 @@ class SmoothingMethod(Enum):
     TO_AVERAGE = "to_average"
     SPLINES = "splines"
 
-
 SmoothingMethod.NONE.cellprofiler_literals = ("No smoothing",)
-
 
 class FilterSizeMethod(Enum):
     """CellProfiler CorrectIlluminationCalculate filter-size mode."""
@@ -126,14 +124,12 @@ class FilterSizeMethod(Enum):
     OBJECT_SIZE = "object_size"
     MANUALLY = "manually"
 
-
 class RescaleOption(Enum):
     """CellProfiler CorrectIlluminationCalculate output rescale mode."""
 
     YES = "yes"
     NO = "no"
     MEDIAN = "median"
-
 
 class SplineBgMode(Enum):
     """CellProfiler CorrectIlluminationCalculate spline background mode."""
@@ -142,7 +138,6 @@ class SplineBgMode(Enum):
     DARK = "dark"
     BRIGHT = "bright"
     GRAY = "gray"
-
 
 class CalculationScope(Enum):
     """CellProfiler CorrectIlluminationCalculate image aggregation scope."""
@@ -155,11 +150,9 @@ class CalculationScope(Enum):
     def uses_all_images(self) -> bool:
         return self is not CalculationScope.EACH
 
-
 class IlluminationCorrectionMethod(Enum):
     DIVIDE = "divide"
     SUBTRACT = "subtract"
-
 
 class CorrectIlluminationApplyModule(
     CellProfilerModule,
@@ -377,7 +370,6 @@ class CorrectIlluminationApplyModule(
             parameter_name: tuple((parse_cellprofiler_bool(value) for value in values))
         }
 
-
 class IlluminationCalculationScopeExecutionModePolicy:
     """Run all-image illumination calculation once over the full image stack."""
 
@@ -395,7 +387,6 @@ class IlluminationCalculationScopeExecutionModePolicy:
         if scope.uses_all_images:
             return FullStackExecution
         return default
-
 
 class CorrectIlluminationCalculateModule(
     IlluminationCalculationScopeExecutionModePolicy,
@@ -596,13 +587,11 @@ class CorrectIlluminationCalculateModule(
         )
         return (relation_type(source=image_inputs[0].ref()),)
 
-
 NDIMAGE_CONSTANT_MODE = "constant"
 ROBUST_FACTOR = 0.02
 CORRECT_ILLUMINATION_CALCULATE_NAME = "correct_illumination_calculate"
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
-
 
 def illumination_gaussian_filter(
     pixel_data: np.ndarray, mask: np.ndarray | None, sigma: float
@@ -618,18 +607,15 @@ def illumination_gaussian_filter(
         ),
     ).apply()
 
-
 IlluminationCalculationResult = RuntimeArrayData | AlignedImageStack
-
 
 class IlluminationCorrectionStrategy(
     EnumKeyedStrategyMixin[IlluminationCorrectionMethod],
-    ABC,
+    MethodKeyedStrategy, ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Nominal correction implementation for one CellProfiler method."""
 
-    __enum_member_attr__ = "method"
     method: ClassVar[IlluminationCorrectionMethod]
 
     @abstractmethod
@@ -637,7 +623,6 @@ class IlluminationCorrectionStrategy(
         self, image_pixels: np.ndarray, illumination_function: np.ndarray
     ) -> np.ndarray:
         """Apply the correction method."""
-
 
 class DivideIlluminationCorrectionStrategy(IlluminationCorrectionStrategy):
     method = IlluminationCorrectionMethod.DIVIDE
@@ -655,7 +640,6 @@ class DivideIlluminationCorrectionStrategy(IlluminationCorrectionStrategy):
             )
         return output
 
-
 class SubtractIlluminationCorrectionStrategy(IlluminationCorrectionStrategy):
     method = IlluminationCorrectionMethod.SUBTRACT
 
@@ -668,7 +652,6 @@ class SubtractIlluminationCorrectionStrategy(IlluminationCorrectionStrategy):
         )
         np.subtract(image_pixels, illumination_function, out=output)
         return output
-
 
 @dataclass(slots=True)
 class IlluminationCalculationRequest:
@@ -919,7 +902,6 @@ class IlluminationCalculationRequest:
     ) -> RuntimeArrayData:
         return metadata.payload_with(image, self.mask_for_output(image))
 
-
 @numpy(contract=FlexibleContract)
 def correct_illumination_calculate(
     image: ImagePayload,
@@ -992,7 +974,6 @@ def correct_illumination_calculate(
     )
     return request.calculate_payload(metadata)
 
-
 @processing_prepare(correct_illumination_calculate)
 def _prepare_correct_illumination_calculate() -> None:
     """Compile common illumination kernels outside measured step execution."""
@@ -1047,7 +1028,6 @@ def _prepare_correct_illumination_calculate() -> None:
         rescale_option=RescaleOption.NO,
     )
 
-
 @numpy(contract=Pure2DContract)
 @special_inputs("illumination_function")
 def correct_illumination_apply(
@@ -1088,19 +1068,14 @@ def correct_illumination_apply(
         )
     )
 
-
 class SmoothingFilterSizeStrategy(
-    EnumKeyedStrategyMixin[FilterSizeMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[FilterSizeMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal filter-size derivation for one closed CellProfiler mode."""
-
-    __enum_member_attr__ = "method"
-    method: ClassVar[FilterSizeMethod | None] = None
 
     @abstractmethod
     def calculate(self, request: IlluminationCalculationRequest) -> float:
         """Return the smoothing filter size."""
-
 
 class ManualSmoothingFilterSizeStrategy(SmoothingFilterSizeStrategy):
     method = FilterSizeMethod.MANUALLY
@@ -1108,13 +1083,11 @@ class ManualSmoothingFilterSizeStrategy(SmoothingFilterSizeStrategy):
     def calculate(self, request: IlluminationCalculationRequest) -> float:
         return float(request.manual_filter_size)
 
-
 class ObjectWidthSmoothingFilterSizeStrategy(SmoothingFilterSizeStrategy):
     method = FilterSizeMethod.OBJECT_SIZE
 
     def calculate(self, request: IlluminationCalculationRequest) -> float:
         return request.object_width * 2.35 / 3.5
-
 
 class AutomaticSmoothingFilterSizeStrategy(SmoothingFilterSizeStrategy):
     method = FilterSizeMethod.AUTOMATIC
@@ -1122,14 +1095,10 @@ class AutomaticSmoothingFilterSizeStrategy(SmoothingFilterSizeStrategy):
     def calculate(self, request: IlluminationCalculationRequest) -> float:
         return min(30.0, float(np.max(request.spatial_image_shape)) / 40.0)
 
-
 class SmoothingPlaneStrategy(
-    EnumKeyedStrategyMixin[SmoothingMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[SmoothingMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal smoothing implementation for one closed CellProfiler mode."""
-
-    __enum_member_attr__ = "method"
-    method: ClassVar[SmoothingMethod | None] = None
 
     @abstractmethod
     def smooth(
@@ -1139,7 +1108,6 @@ class SmoothingPlaneStrategy(
         filter_size: float,
     ) -> np.ndarray:
         """Return the smoothed illumination plane."""
-
 
 class NoSmoothingPlaneStrategy(SmoothingPlaneStrategy):
     method = SmoothingMethod.NONE
@@ -1153,7 +1121,6 @@ class NoSmoothingPlaneStrategy(SmoothingPlaneStrategy):
         del request, filter_size
         return pixel_data
 
-
 class FitPolynomialSmoothingPlaneStrategy(SmoothingPlaneStrategy):
     method = SmoothingMethod.FIT_POLYNOMIAL
 
@@ -1165,7 +1132,6 @@ class FitPolynomialSmoothingPlaneStrategy(SmoothingPlaneStrategy):
     ) -> np.ndarray:
         del filter_size
         return fit_polynomial_surface(pixel_data, request.mask)
-
 
 class GaussianFilterSmoothingPlaneStrategy(SmoothingPlaneStrategy):
     method = SmoothingMethod.GAUSSIAN_FILTER
@@ -1179,7 +1145,6 @@ class GaussianFilterSmoothingPlaneStrategy(SmoothingPlaneStrategy):
         return illumination_gaussian_filter(
             pixel_data, request.mask, filter_size / 2.35
         )
-
 
 class MedianFilterSmoothingPlaneStrategy(SmoothingPlaneStrategy):
     method = SmoothingMethod.MEDIAN_FILTER
@@ -1200,7 +1165,6 @@ class MedianFilterSmoothingPlaneStrategy(SmoothingPlaneStrategy):
             morphology=request.morphology,
         )
 
-
 class AverageSmoothingPlaneStrategy(SmoothingPlaneStrategy):
     method = SmoothingMethod.TO_AVERAGE
 
@@ -1216,7 +1180,6 @@ class AverageSmoothingPlaneStrategy(SmoothingPlaneStrategy):
         else:
             mean_val = np.mean(pixel_data)
         return np.full(pixel_data.shape, mean_val, dtype=pixel_data.dtype)
-
 
 class ConvexHullSmoothingPlaneStrategy(SmoothingPlaneStrategy):
     method = SmoothingMethod.CONVEX_HULL
@@ -1235,7 +1198,6 @@ class ConvexHullSmoothingPlaneStrategy(SmoothingPlaneStrategy):
             filter_size=filter_size,
             morphology=request.morphology,
         )
-
 
 class SplinesSmoothingPlaneStrategy(SmoothingPlaneStrategy):
     method = SmoothingMethod.SPLINES
@@ -1273,7 +1235,6 @@ class SplinesSmoothingPlaneStrategy(SmoothingPlaneStrategy):
             result -= np.mean(result)
         return result
 
-
 def fit_polynomial_surface(
     pixel_data: np.ndarray, mask: np.ndarray | None
 ) -> np.ndarray:
@@ -1302,11 +1263,9 @@ def fit_polynomial_surface(
         image.shape[0], image.shape[1], np.ascontiguousarray(coeffs, dtype=np.float64)
     )
 
-
 @lru_cache(maxsize=16)
 def fit_polynomial_unmasked_gram(height: int, width: int) -> np.ndarray:
     return _fit_polynomial_unmasked_gram_numba(int(height), int(width))
-
 
 @njit(cache=True)
 def _fit_polynomial_unmasked_gram_numba(height: int, width: int) -> np.ndarray:
@@ -1328,7 +1287,6 @@ def _fit_polynomial_unmasked_gram_numba(height: int, width: int) -> np.ndarray:
                     gram[i, j] += features[i] * features[j]
     return gram
 
-
 @njit(cache=True)
 def _fit_polynomial_unmasked_rhs_numba(pixel_data: np.ndarray) -> np.ndarray:
     height, width = pixel_data.shape
@@ -1346,7 +1304,6 @@ def _fit_polynomial_unmasked_rhs_numba(pixel_data: np.ndarray) -> np.ndarray:
             rhs[4] += y_value * value
             rhs[5] += value
     return rhs
-
 
 @njit(cache=True)
 def _fit_polynomial_normal_equations_numba(
@@ -1376,7 +1333,6 @@ def _fit_polynomial_normal_equations_numba(
                     gram[i, j] += features[i] * features[j]
     return (gram, rhs)
 
-
 @njit(cache=True)
 def _evaluate_polynomial_surface_numba(
     height: int, width: int, coeffs: np.ndarray
@@ -1397,12 +1353,10 @@ def _evaluate_polynomial_surface_numba(
             )
     return output
 
-
 class ConvexHullSmoothingBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Convex-hull illumination smoothing keyed by OpenHCS memory/provider."""
-
 
     @abstractmethod
     def smooth_background_plane(
@@ -1415,12 +1369,10 @@ class ConvexHullSmoothingBackendStrategy(
     ) -> np.ndarray:
         """Return a smoothed illumination background plane."""
 
-
 class RankMedianSmoothingBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Rank-median illumination smoothing keyed by OpenHCS memory/provider."""
-
 
     @staticmethod
     def disk_rows(footprint: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -1448,7 +1400,6 @@ class RankMedianSmoothingBackendStrategy(
     ) -> np.ndarray:
         """Return a rank-median smoothed illumination background plane."""
 
-
 @dataclass(frozen=True, slots=True)
 class RankMedianProfilerPhase:
     """Single authority for rank-median profiler event construction."""
@@ -1467,7 +1418,6 @@ class RankMedianProfilerPhase:
             radius=self.radius,
             **fields,
         )
-
 
 class NumbaNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStrategy):
     """NumPy-memory rank median matching skimage rank median border semantics."""
@@ -1551,7 +1501,6 @@ class NumbaNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStr
         phase.log("rank_median_numba_codes", value_count=int(values.size))
         result = values[result_codes]
         return result.astype(np.float32) / 65535.0
-
 
 class NativeNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStrategy):
     """Compact-domain skimage rank-median backend for NumPy planes."""
@@ -1707,7 +1656,6 @@ class NativeNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendSt
         )
         return values[result_codes].astype(np.float32) / 65535.0
 
-
 class LegacyFastNumpyConvexHullSmoothingBackendStrategy(
     ConvexHullSmoothingBackendStrategy
 ):
@@ -1741,7 +1689,6 @@ class LegacyFastNumpyConvexHullSmoothingBackendStrategy(
             result = np.asarray(result, dtype=np.float32)
             result[~np.asarray(mask, dtype=bool)] = 0
         return result.astype(np.float32, copy=False)
-
 
 class ExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
     ConvexHullSmoothingBackendStrategy
@@ -1782,7 +1729,6 @@ class ExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
             morphology,
         )
 
-
 class NativeExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
     ConvexHullSmoothingBackendStrategy
 ):
@@ -1807,7 +1753,6 @@ class NativeExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
             morphology,
         )
 
-
 def _native_exact_level_set_convex_hull_smoothing(
     image: np.ndarray, mask: np.ndarray | None, morphology: MorphologyBackendStrategy
 ) -> np.ndarray:
@@ -1830,7 +1775,6 @@ def _native_exact_level_set_convex_hull_smoothing(
     eroded = grey_morphology.erode(image, valid_mask)
     output = _cellprofiler_convex_hull_transform(eroded, valid_mask)
     return grey_morphology.dilate(output, valid_mask).astype(image.dtype, copy=False)
-
 
 def _cellprofiler_convex_hull_transform(
     image: np.ndarray,
@@ -1868,7 +1812,6 @@ def _cellprofiler_convex_hull_transform(
     output_levels = _incremental_quantized_hulls_numba(scaled)
     return scale[output_levels]
 
-
 @njit(cache=True, inline="always")
 def _next_unpainted_column_row_numba(
     successor: np.ndarray, row: int, column: int
@@ -1879,7 +1822,6 @@ def _next_unpainted_column_row_numba(
         successor[row, column] = successor[following, column]
         row = following
     return row
-
 
 @njit(cache=True)
 def _paint_column_envelope_level_numba(
@@ -1921,7 +1863,6 @@ def _paint_column_envelope_level_numba(
                 successor, row + 1, column
             )
             row = successor[row, column]
-
 
 @njit(cache=True)
 def _incremental_quantized_hulls_numba(scaled: np.ndarray) -> np.ndarray:
@@ -2006,7 +1947,6 @@ def _incremental_quantized_hulls_numba(scaled: np.ndarray) -> np.ndarray:
             )
     return output
 
-
 @dataclass(frozen=True, slots=True)
 class CellProfilerMaskedGreyMorphology:
     """CellProfiler masked grey morphology semantics for convex-hull smoothing."""
@@ -2061,7 +2001,6 @@ class CellProfilerMaskedGreyMorphology:
         result[~mask] = image[~mask]
         return result
 
-
 @njit(cache=True)
 def _rank_median_global_minimum_is_majority_everywhere_numba(
     image: np.ndarray,
@@ -2106,7 +2045,6 @@ def _rank_median_global_minimum_is_majority_everywhere_numba(
             if minimum_count <= total_count // 2:
                 return False
     return True
-
 
 @njit(cache=True)
 def _rank_median_codes_2d_sliding_histogram_numba(
@@ -2155,7 +2093,6 @@ def _rank_median_codes_2d_sliding_histogram_numba(
                 output[y, x] = _fenwick_select_code(tree, count // 2)
     return output
 
-
 @njit(cache=True)
 def _rank_median_small_codes_2d_sliding_histogram_numba(
     code_image: np.ndarray,
@@ -2198,7 +2135,6 @@ def _rank_median_small_codes_2d_sliding_histogram_numba(
                     count += 1
             output[y, x] = _rank_median_select_small_code(histogram, count)
     return output
-
 
 @njit(cache=True)
 def _rank_median_small_codes_minimum_majority_hybrid_numba(
@@ -2271,14 +2207,12 @@ def _rank_median_small_codes_minimum_majority_hybrid_numba(
             )
     return output
 
-
 def _rank_median_fft_zero_mask_candidate(
     code_image: np.ndarray,
     footprint: np.ndarray,
 ) -> bool:
     """Return whether FFT zero-majority counting is likely to beat sliding counts."""
     return bool(code_image.size >= 262_144 and np.asarray(footprint).sum() >= 4096)
-
 
 def _rank_median_zero_exact_mask_fft(
     code_image: np.ndarray,
@@ -2313,7 +2247,6 @@ def _rank_median_zero_exact_mask_fft(
         )
     return np.ascontiguousarray(exact_mask)
 
-
 @njit(cache=True)
 def _rank_median_correct_zero_exact_mask_numba(
     code_image: np.ndarray,
@@ -2345,7 +2278,6 @@ def _rank_median_correct_zero_exact_mask_numba(
                     if code_image[yy, xx] == 0:
                         minimum_count += 1
             exact_mask[y, x] = minimum_count <= total_count // 2
-
 
 @njit(cache=True)
 def _rank_median_small_codes_exact_mask_runs_numba(
@@ -2387,7 +2319,6 @@ def _rank_median_small_codes_exact_mask_runs_numba(
                 width - 1,
             )
     return output
-
 
 @njit(cache=True)
 def _rank_median_fill_small_code_run(
@@ -2434,7 +2365,6 @@ def _rank_median_fill_small_code_run(
                 count += 1
         output[y, x] = _rank_median_select_small_code(histogram, count)
 
-
 @njit(cache=True)
 def _rank_median_select_small_code(histogram: np.ndarray, count: int) -> int:
     target = count // 2 + 1
@@ -2445,7 +2375,6 @@ def _rank_median_select_small_code(histogram: np.ndarray, count: int) -> int:
             return code
     return max(0, histogram.shape[0] - 1)
 
-
 @njit(cache=True)
 def _fenwick_add_code(tree: np.ndarray, code: int, delta: int) -> None:
     index = code + 1
@@ -2453,11 +2382,9 @@ def _fenwick_add_code(tree: np.ndarray, code: int, delta: int) -> None:
         tree[index] += delta
         index += index & -index
 
-
 @njit(cache=True)
 def _fenwick_select_code(tree: np.ndarray, kth: int) -> int:
     return _fenwick_select_index(tree, kth, _highest_fenwick_bit(tree))
-
 
 @njit(cache=True)
 def _highest_fenwick_bit(tree: np.ndarray) -> int:
@@ -2465,7 +2392,6 @@ def _highest_fenwick_bit(tree: np.ndarray) -> int:
     while bit < tree.shape[0]:
         bit <<= 1
     return bit >> 1
-
 
 @njit(cache=True)
 def _fenwick_select_index(tree: np.ndarray, kth: int, initial_bit: int) -> int:
@@ -2479,7 +2405,6 @@ def _fenwick_select_index(tree: np.ndarray, kth: int, initial_bit: int) -> int:
             target -= tree[next_index]
         bit >>= 1
     return index
-
 
 @njit(cache=True)
 def _rank_median_uint16_2d_sliding_histogram_numba(
@@ -2532,7 +2457,6 @@ def _rank_median_uint16_2d_sliding_histogram_numba(
                 output[y, x] = _fenwick_select_uint16(tree, count // 2)
     return output
 
-
 @njit(cache=True)
 def _fenwick_add_uint16(tree: np.ndarray, value: np.uint16, delta: int) -> None:
     index = int(value) + 1
@@ -2540,11 +2464,9 @@ def _fenwick_add_uint16(tree: np.ndarray, value: np.uint16, delta: int) -> None:
         tree[index] += delta
         index += index & -index
 
-
 @njit(cache=True)
 def _fenwick_select_uint16(tree: np.ndarray, kth: int) -> np.uint16:
     return np.uint16(_fenwick_select_index(tree, kth, 32768))
-
 
 __all__ = public_names_from_objects(
     AutomaticSmoothingFilterSizeStrategy,

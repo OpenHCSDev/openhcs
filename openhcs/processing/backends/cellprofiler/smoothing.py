@@ -84,6 +84,7 @@ from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload, ImagePayloadMetadata
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 
 
 class SmoothingMethod(Enum):
@@ -149,13 +150,10 @@ class SmoothingBackendSelectionRequest:
 
 
 class SmoothingBackendProviderPolicy(
-    EnumKeyedStrategyMixin[SmoothingMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[SmoothingMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal SSOT for CellProfiler Smooth default backend semantics."""
 
-    __registry_key__ = "strategy_label"
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "method"
     method: ClassVar[SmoothingMethod]
     strategy_label: ClassVar[str | None] = None
 

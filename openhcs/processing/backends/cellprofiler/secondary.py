@@ -310,6 +310,7 @@ from openhcs.processing.backends.cellprofiler.watershed import (
     cellprofiler_legacy_watershed,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
@@ -417,13 +418,11 @@ class SecondarySegmentationRequest:
 
 class SecondarySegmentationStrategy(
     EnumKeyedStrategyMixin[SecondaryMethod],
-    ABC,
+    MethodKeyedStrategy, ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Segmentation strategy for one closed secondary-object method."""
 
-    __enum_member_attr__ = "method"
-    method: ClassVar[SecondaryMethod | None] = None
     default_propagation_backend_provider: ClassVar[BackendProviderInput] = (
         DEFAULT_CELLPROFILER_BACKEND_SELECTION
     )
@@ -811,13 +810,11 @@ class SecondaryObjectLabels:
 
 class ThresholdCalculator(
     EnumKeyedStrategyMixin[ThresholdMethod],
-    ABC,
+    MethodKeyedStrategy, ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Threshold strategy for one closed CellProfiler threshold method."""
 
-    __enum_member_attr__ = "method"
-    method: ClassVar[ThresholdMethod | None] = None
     primitive: ClassVar[
         Callable[[ThresholdPrimitiveBackendStrategy, np.ndarray], float]
     ]

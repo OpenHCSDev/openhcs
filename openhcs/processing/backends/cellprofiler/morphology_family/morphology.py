@@ -724,6 +724,7 @@ from openhcs.core.callable.processing_contracts import (
     Pure3DContract,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 
 HolePredicate = Callable[[int, bool], bool]
 ConnectivityStructureBuilder = Callable[[int], np.ndarray]
@@ -5242,15 +5243,11 @@ class CombineObjectsStats:
 
 
 class CombineObjectsStrategy(
-    EnumKeyedStrategyMixin[CombineObjectsMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[CombineObjectsMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal object-label combination strategy."""
 
     __registry_key__ = "method_label"
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "method"
-    method_label: ClassVar[str | None] = None
-    method: ClassVar[CombineObjectsMethod | None] = None
 
     @classmethod
     def for_method(cls, method: CombineObjectsMethod) -> CombineObjectsStrategy:
@@ -5572,13 +5569,11 @@ class MergeObjectsStrategy(SplitOrMergeOperationStrategy):
 
 
 class SplitOrMergeMergeMethodStrategy(
-    EnumKeyedStrategyMixin[SplitOrMergeMergeMethod], ABC, metaclass=AutoRegisterMeta
+    EnumKeyedStrategyMixin[SplitOrMergeMergeMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal implementation for one SplitOrMergeObjects merge method."""
 
     __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "method"
     method: ClassVar[SplitOrMergeMergeMethod]
     strategy_label: ClassVar[str | None] = None
 
