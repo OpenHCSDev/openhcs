@@ -81,7 +81,6 @@ class ProjectionStrategy(
     """Apply one CellProfiler MakeProjection operation."""
 
     __registry_key__ = "projection_type_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "projection_type"
     projection_type: ClassVar[ProjectionType | None] = None
     projection_type_label: ClassVar[str | None] = None

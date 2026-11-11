@@ -949,7 +949,6 @@ class PlateDimensionStrategy(
     """Nominal dimensions for one CellProfiler plate type."""
 
     __registry_key__ = "plate_type_label"
-    __skip_if_no_key__ = True
 
     plate_type: ClassVar[PlateType | None] = None
     plate_type_label: ClassVar[str | None] = None
