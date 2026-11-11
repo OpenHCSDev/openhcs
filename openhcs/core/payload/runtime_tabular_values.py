@@ -18,10 +18,7 @@ from python_introspect import JsonValue, to_jsonable
 
 import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxisValueProjection,
-    RuntimeSliceProjectableValue,
-)
+from openhcs.core.payload.runtime_plane_projection import RuntimeSliceProjectableValue
 
 
 class ColumnarRows(RuntimeSliceProjectableValue):

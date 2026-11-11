@@ -17,10 +17,7 @@ from typing import Any, Callable, ClassVar, Dict, List, Optional
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeature
-from openhcs.core.materialization.path_scopes import (
-    MaterializationRelativePathScope,
-    SharedMaterializationRelativePathScope,
-)
+from openhcs.core.materialization.path_scopes import SharedMaterializationRelativePathScope
 
 
 class MaterializedFilenameIdentity(ABC, metaclass=AutoRegisterMeta):

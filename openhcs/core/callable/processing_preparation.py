@@ -22,11 +22,7 @@ from typing import Any, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable.callable_contract import (
-    CallableContract,
-    DeclaredCallable,
-    CallableProjection,
-)
+from openhcs.core.callable.callable_contract import DeclaredCallable, CallableProjection
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 

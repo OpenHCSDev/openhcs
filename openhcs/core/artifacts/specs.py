@@ -11,28 +11,10 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Self, TypeVar
 
-from openhcs.core.artifacts.kinds import (
-    ArtifactType,
-    ArtifactTypeValue,
-    MeasurementsArtifactType,
-)
-from openhcs.core.artifacts.plans import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactPlan,
-    ArtifactSpecRef,
-    DeclaredRelations,
-    require_plan_type,
-    require_registered_plan_type,
-)
-from openhcs.core.artifacts.relations import (
-    ArtifactGroupScopeSourceRelation,
-    ArtifactSpecRelation,
-    AssembledStackGroupLineageSourceRelation,
-    GroupLineageSourceRelation,
-    SourceStackLineageSourceRelation,
-)
-from openhcs.core.artifacts.streaming import AutomaticStreaming, ViewerStreaming
+from openhcs.core.artifacts.kinds import ArtifactType, MeasurementsArtifactType
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan, ArtifactSpecRef, DeclaredRelations, require_plan_type, require_registered_plan_type
+from openhcs.core.artifacts.relations import AssembledStackGroupLineageSourceRelation, GroupLineageSourceRelation, SourceStackLineageSourceRelation
+from openhcs.core.artifacts.streaming import AutomaticStreaming
 from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureOwner
 
 

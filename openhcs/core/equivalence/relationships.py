@@ -8,10 +8,7 @@ from typing import ClassVar
 
 from metaclass_registry import RegistryFamily, RegistryKeyAttribute
 
-from openhcs.core.equivalence.keys import (
-    RuntimeAggregateFeatureIdentity,
-    RuntimeMeasurementFeatureKey,
-)
+from openhcs.core.equivalence.keys import RuntimeAggregateFeatureIdentity
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 

@@ -8,11 +8,7 @@ from types import MappingProxyType
 from typing import Any, Hashable
 
 from openhcs.core.source.source_bindings import SourceBindingRuntimeMetadataNormalizer
-from openhcs.core.source.source_metadata import (
-    MetadataExtractionRule,
-    ResolvedSourceMetadataRecord,
-    SourceMetadataMapping,
-)
+from openhcs.core.source.source_metadata import ResolvedSourceMetadataRecord
 from openhcs.core.source.source_matching import source_component_metadata_items
 from openhcs.core.source.source_path_identity import source_path_identity_key
 from openhcs.core.source.source_binding_selection import DeclaredSourceMetadataRecord, SourceIdentityResolutionContext

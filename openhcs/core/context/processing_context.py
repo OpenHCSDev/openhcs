@@ -19,7 +19,7 @@ from typing import TypeVar, cast
 from polystore.filemanager import FileManager
 from zmqruntime.config import ZMQConfig
 
-from openhcs.core.config.pipeline_config import StreamingConfig, TiffConfig
+from openhcs.core.config.pipeline_config import TiffConfig
 from openhcs.core.debug.debug_runtime import (
     DebugEventSink,
     DebugExecutionContext,

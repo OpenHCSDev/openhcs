@@ -23,27 +23,13 @@ from openhcs.core.artifacts.plans import (
     grouped_artifact_path,
 )
 from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
-from openhcs.core.callable.function_patterns import (
-    CompiledFunctionGroup,
-    CompiledFunctionInvocation,
-    CompiledFunctionPattern,
-    InvocationArtifactInputEdgePlan,
-    InvocationArtifactInputProjectionKey,
-    MainFlowInputProjection,
-    RuntimeParameterBinding,
-    compile_function_pattern,
-    normalize_function_pattern,
-)
+from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan, InvocationArtifactInputProjectionKey, RuntimeParameterBinding, compile_function_pattern, normalize_function_pattern
 from objectstate import get_base_type_for_lazy
 from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     PIPELINE_INPUT_ARTIFACT,
 )
-from openhcs.core.execution.compiled_step_plan import (
-    CompiledStepPlan,
-    InputConversionPlan,
-    MaterializedOutputPlan,
-)
+from openhcs.core.execution.compiled_step_plan import InputConversionPlan, MaterializedOutputPlan
 from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     DynamicGroupScope,
@@ -52,32 +38,17 @@ from openhcs.core.axes.component_group_scope import (
 )
 from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.pipeline.artifact_declarations import MissingArtifactInputError
-from openhcs.core.pipeline.artifact_planning import (
-    ArtifactGraph,
-    ArtifactOutputMaterializationPlanner,
-)
+from openhcs.core.pipeline.artifact_planning import ArtifactOutputMaterializationPlanner
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
-from openhcs.core.pipeline.compilation_session import (
-    CompilationDatasetScope,
-    CompilationSession,
-)
-from openhcs.core.source.source_bindings import (
-    CompiledSourceBindingPlan,
-    CompiledSourceUniversePlan,
-    SourceBindingDeclarationsMixin,
-    source_binding_group_keys_for_group_by,
-)
-from openhcs.core.util.step_dependencies import (
-    StepInputDependency,
-    StepOutputInput,
-    UnresolvedStepInput,
-)
+from openhcs.core.pipeline.compilation_session import CompilationDatasetScope
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan, CompiledSourceUniversePlan, source_binding_group_keys_for_group_by
+from openhcs.core.util.step_dependencies import StepOutputInput, UnresolvedStepInput
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GroupingDeclaration, Ungrouped
+from openhcs.core.axes.axis_declarations import AxisFamily, Ungrouped
 from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 

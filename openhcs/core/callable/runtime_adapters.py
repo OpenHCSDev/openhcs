@@ -9,10 +9,7 @@ from typing import Any, TypeVar
 
 from python_introspect import add_parameter_exclusions
 
-from openhcs.core.payload.aligned_image_payload import (
-    ImagePayloadExecutionMode,
-    NaturalExecution,
-)
+from openhcs.core.payload.aligned_image_payload import NaturalExecution
 from openhcs.core.util.artifact_key_selection import (
     ArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,
@@ -30,17 +27,11 @@ from openhcs.core.callable.function_patterns import (
     InvocationArtifactInputProjectionKey,
 )
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput
-from openhcs.core.source.source_bindings import (
-    CompiledSourceBindingPlan,
-    NamedSourceBinding,
-)
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source.source_binding_selection import (
     SourceUniverseRequest,
 )
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxisValueProjection,
-    RuntimePlaneProjection,
-)
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])

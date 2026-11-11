@@ -9,7 +9,7 @@ from dataclasses import dataclass, replace
 from typing import Any, ClassVar, Self
 
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.artifacts.plans import ArtifactPlan, ArtifactSpecRef
+from openhcs.core.artifacts.plans import ArtifactPlan
 from openhcs.core.artifacts.relations import ArtifactSpecRelation
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, ObjectLineageArtifactType
@@ -19,20 +19,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceIndexedValue
-from openhcs.core.source.source_image_provenance import (
-    SourceImageProvenance,
-    SourceImageProvenanceFields,
-)
+from openhcs.core.source.source_image_provenance import SourceImageProvenanceFields
 
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
-from openhcs.core.measurements.runtime_measurements import (
-    MeasurementRowAxisField,
-    ObjectReferenceFeatureMarker,
-    MeasurementScalarLiteral,
-)
+from openhcs.core.measurements.runtime_measurements import ObjectReferenceFeatureMarker, MeasurementScalarLiteral
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
 from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainMetadataStrategy
 from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainScope

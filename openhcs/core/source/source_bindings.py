@@ -18,7 +18,7 @@ from urllib.parse import unquote, urlsplit
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.artifacts.plans import ArtifactSpecRef
-from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
@@ -26,24 +26,11 @@ from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from polystore.formats import get_format_from_extension
 from python_introspect import FieldLabel, RegisteredClassChoices
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
-from openhcs.core.source.source_metadata import (
-    MetadataExtractionRule,
-    MetadataSource,
-    ResolvedSourceMetadataRecord,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceMetadataFields,
-    SourceMetadataMapping,
-    SourceMetadataScalar,
-    normalize_source_binding_values,
-    source_metadata_dict,
-    source_metadata_scalar,
-)
+from openhcs.core.source.source_metadata import MetadataExtractionRule, MetadataSource, ResolvedSourceMetadataRecord, SourceFilterClause, SourceFilterMatchType, SourceFilterSubject, SourceMetadataFields, normalize_source_binding_values, source_metadata_dict, source_metadata_scalar
 from openhcs.core.util.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source.source_path_identity import source_path_posix, source_paths_equal
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.source.source_matching import source_filters_match, semantic_source_metadata_value, source_component_metadata_values, source_metadata_values_equal
 from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.payload_axes import PayloadAxes

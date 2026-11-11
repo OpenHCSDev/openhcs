@@ -14,9 +14,9 @@ from openhcs.core.util.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
-from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS, StepSourceBindingsConfig
-from openhcs.core.axes.axis_declarations import GroupingDeclaration, Ungrouped, is_grouping_declaration
-from openhcs.core.callable.function_patterns import FunctionInvocationKey, NormalizedFunctionItem
+from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS
+from openhcs.core.axes.axis_declarations import Ungrouped, is_grouping_declaration
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
 
 _ClaimValue = TypeVar("_ClaimValue")
 

@@ -16,15 +16,12 @@ from openhcs.core.artifacts.plans import (
     ArtifactOutputPlan,
     ArtifactSpecRef,
 )
-from openhcs.core.axes.component_group_scope import (
-    ComponentGroupScope,
-    UngroupedScope,
-)
+from openhcs.core.axes.component_group_scope import UngroupedScope
 from openhcs.core.source.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
 )
-from openhcs.core.util.step_dependencies import StepInputDependency, UnresolvedStepInput
+from openhcs.core.util.step_dependencies import UnresolvedStepInput
 
 if TYPE_CHECKING:
     pass

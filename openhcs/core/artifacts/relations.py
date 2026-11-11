@@ -20,12 +20,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.artifacts.plans import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactPlan,
-    ArtifactSpecRef,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan, ArtifactPlan
 from openhcs.core.measurements.runtime_measurements import MeasurementSubject
 from openhcs.core.measurements.runtime_measurements import MeasurementScope
 

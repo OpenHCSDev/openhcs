@@ -29,21 +29,7 @@ from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     MostDerivedContextStrategyMixin,
 )
-from openhcs.core.measurements.runtime_measurements import (
-    MeasurementScope,
-    MeasurementStatistic,
-    ObjectCoreMeasurementFeature,
-    ObjectCalculatedFeatureMarker,
-    ObjectCountFeatureMarker,
-    ObjectIdentifierFeatureMarker,
-    ObjectIntensityFeatureMarker,
-    object_location_features,
-    ObjectLocationFeatureMarker,
-    ObjectShapeDescriptorFeatureMarker,
-    RuntimeMeasurementFeatureRelation,
-    RuntimeMeasurementFeatureSemanticMarker,
-    RuntimeMeasurementFeature,
-)
+from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementStatistic, ObjectCoreMeasurementFeature, ObjectCalculatedFeatureMarker, ObjectCountFeatureMarker, ObjectIdentifierFeatureMarker, ObjectIntensityFeatureMarker, object_location_features, ObjectLocationFeatureMarker, ObjectShapeDescriptorFeatureMarker, RuntimeMeasurementFeatureRelation, RuntimeMeasurementFeatureSemanticMarker
 
 RuntimeMeasurementFactCounterMapping = Mapping[
     RuntimeMeasurementFeatureKey,

@@ -7,10 +7,7 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from openhcs.core.artifacts.kinds import ArtifactType
-from openhcs.core.axes.component_group_scope import (
-    GroupedScope,
-    RuntimeExecutionAxisScope,
-)
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 
 from typing import TYPE_CHECKING
 

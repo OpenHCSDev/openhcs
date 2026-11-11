@@ -30,18 +30,9 @@ from zmqruntime.viewer_protocol import (
 
 from openhcs.runtime.viewer.viewer_display import DeclaredAxes, ViewerSlotFamily
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.payload.runtime_slice_projection import (
-    RuntimeProjectionData,
-    RuntimeProjectedPayloadItem,
-    RuntimeProjectionSourceIdentityRequest,
-    RequiredSourceComponentMetadata,
-)
+from openhcs.core.payload.runtime_slice_projection import RuntimeProjectedPayloadItem, RuntimeProjectionSourceIdentityRequest, RequiredSourceComponentMetadata
 
-from openhcs.core.source.source_image_provenance import (
-    SourceComponentMetadata,
-    SourceImageIdentity,
-    SourceImageProvenance,
-)
+from openhcs.core.source.source_image_provenance import SourceComponentMetadata
 from openhcs.core.source.source_matching import (
     source_component_metadata_raw_value,
     source_metadata_value,
@@ -56,7 +47,7 @@ from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentValueDomainPayload,
     ViewerObjectDisplayConfigInput,
 )
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily
+from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.axes.axis_declarations import ColourAxis
 
 StreamComponentMetadata = SourceComponentMetadata | None

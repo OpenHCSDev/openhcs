@@ -33,14 +33,8 @@ from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadat
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source.source_image_provenance import (
-    SourceComponentMetadata,
-    SourceImageIdentity,
-)
-from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspaceSourceProjection,
-    WorkspaceSourceProjections,
-)
+from openhcs.core.source.source_image_provenance import SourceImageIdentity
+from openhcs.core.source.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,

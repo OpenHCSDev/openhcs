@@ -8,13 +8,7 @@ from dataclasses import dataclass, replace
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from openhcs.core.callable.function_patterns import (
-    CompiledFunctionGroup,
-    CompiledFunctionPattern,
-    AuthoredFunctionPattern,
-    NormalizedFunctionPattern,
-    NormalizedFunctionItem,
-)
+from openhcs.core.callable.function_patterns import AuthoredFunctionPattern, NormalizedFunctionPattern
 from openhcs.core.callable.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,

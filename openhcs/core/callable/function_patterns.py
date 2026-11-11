@@ -22,16 +22,8 @@ from arraybridge import MemoryType
 from formbridge.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
 
-from openhcs.core.artifacts.plans import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpecRef,
-)
-from openhcs.core.artifacts.specs import (
-    ArtifactSpec,
-    ArtifactSpecAccumulator,
-    ArtifactSpecCollection,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpecAccumulator
 from openhcs.core.callable.callable_declarations import (
     FunctionStepExecutionScope,
     ImagePayloadConsumption,
@@ -40,11 +32,7 @@ from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadStackComposition,
 )
-from openhcs.core.callable.callable_contract import (
-    CallableProjection,
-    CallableContract,
-    PayloadAxisRequirement,
-)
+from openhcs.core.callable.callable_contract import CallableProjection
 from openhcs.core.callable.processing_preparation import CallablePreparation
 from openhcs.core.callable.function_reference import FunctionReference
 from openhcs.core.payload.runtime_image_values import project_image_mask_to_data_domain

@@ -12,31 +12,16 @@ from typing import TypeVar
 
 from openhcs.core.source.source_path_identity import source_path_identity, source_path_join
 from openhcs.constants import Backend
-from openhcs.core.source.source_bindings import (
-    SOURCE_BINDING_ALIAS_METADATA_FIELD,
-    NamedSourceBinding,
-    SourceProjectionRole,
-)
-from openhcs.core.source.source_metadata import (
-    SourceFilterClause,
-    SourceMetadataFields,
-    SourceMetadataMapping,
-)
+from openhcs.core.source.source_bindings import SOURCE_BINDING_ALIAS_METADATA_FIELD
+from openhcs.core.source.source_metadata import SourceMetadataFields
 from openhcs.core.source.source_matching import (
     source_component_metadata_values,
     source_metadata_value,
     source_metadata_values_equal,
 )
 from openhcs.core.source.source_path_identity import source_path_identity_key
-from openhcs.core.source.source_projection import SourceProjection, SourceProjectionMetadataSerializer
-from openhcs.core.io.virtual_workspace_metadata import (
-    OpenHCSMetadataPayload,
-    OpenHCSMetadataSubdirectories,
-    OpenHCSSubdirectoryPayload,
-    VirtualWorkspaceMapping,
-    VirtualWorkspaceSourceProjectionEntries,
-    VirtualWorkspaceSourceMetadataEntries,
-)
+from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer
+from openhcs.core.io.virtual_workspace_metadata import OpenHCSMetadataSubdirectories, VirtualWorkspaceMapping, VirtualWorkspaceSourceProjectionEntries, VirtualWorkspaceSourceMetadataEntries
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.payload.runtime_image_values import ImagePayload

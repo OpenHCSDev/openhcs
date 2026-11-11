@@ -21,19 +21,9 @@ from openhcs.core.callable.callable_declarations import ImagePayloadConsumption
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput
 from openhcs.core.payload.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
-from openhcs.core.callable.function_patterns import (
-    CompiledFunctionGroup,
-    FunctionGroupKey,
-    GroupedPatternMap,
-    InvocationArtifactInputEdgePlan,
-    RuntimeInvocationDomain,
-)
+from openhcs.core.callable.function_patterns import FunctionGroupKey, RuntimeInvocationDomain
 from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
-from openhcs.core.source.source_binding_selection import (
-    SourceBoundAnchorPatternPolicy,
-    SourceCandidatePath,
-    SourcePatternResolutionContext,
-)
+from openhcs.core.source.source_binding_selection import SourceBoundAnchorPatternPolicy, SourceCandidatePath
 from openhcs.core.util.step_dependencies import PipelineStartInput
 from openhcs.core.steps.function_io import (
     generate_materialized_paths,

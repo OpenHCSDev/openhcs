@@ -17,33 +17,12 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.components.component_values import AxisValues
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source.source_bindings import (
-    SOURCE_BINDING_ALIAS_METADATA_FIELD,
-    NamedSourceBinding,
-    PrimaryPlaneRole,
-    SourceArtifactRole,
-    SourceProjectionRole,
-)
-from openhcs.core.source.source_matching import (
-    SourceImageSetIdentityPolicy,
-    source_component_metadata_raw_value,
-    source_component_metadata_values,
-    source_metadata_component,
-    source_metadata_values_equal,
-    with_declared_source_metadata,
-    with_source_component_metadata,
-)
-from openhcs.core.source.source_metadata import (
-    SourceMetadataFields,
-    ResolvedSourceMetadataRecord,
-    SourceMetadataMapping,
-    SourceMetadataValue,
-    source_metadata_dict,
-    source_metadata_scalar,
-)
+from openhcs.core.source.source_bindings import SOURCE_BINDING_ALIAS_METADATA_FIELD, PrimaryPlaneRole, SourceArtifactRole
+from openhcs.core.source.source_matching import source_component_metadata_raw_value, source_component_metadata_values, source_metadata_component, source_metadata_values_equal, with_declared_source_metadata, with_source_component_metadata
+from openhcs.core.source.source_metadata import SourceMetadataFields, ResolvedSourceMetadataRecord, source_metadata_dict, source_metadata_scalar
 from python_introspect import to_jsonable
 from openhcs.core.source.source_path_identity import absolute_source_path, source_path_posix
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, PartitionAxis, StackAxis, TileAxis
+from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis, StackAxis, TileAxis
 
 
 class SourceDatasetConflictError(ValueError):

@@ -45,12 +45,8 @@ from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadExecutionMode,
 )
-from openhcs.core.util.artifact_key_selection import (
-    ArtifactOutputPolicy,
-    ArtifactPlanKeySelector,
-    NativeReturnArtifactOutputPolicy,
-)
-from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
+from openhcs.core.util.artifact_key_selection import ArtifactPlanKeySelector, NativeReturnArtifactOutputPolicy
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute

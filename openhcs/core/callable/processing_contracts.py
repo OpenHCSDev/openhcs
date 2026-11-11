@@ -55,20 +55,13 @@ from openhcs.core.payload.runtime_output_matching import (
     RuntimeOutputBundle,
     runtime_output_tuple,
 )
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisValueProjection,
-)
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
-from openhcs.core.callable.variable_component_stack_requirement import (
-    AlwaysRequiresVariableComponentStack,
-    SemanticControlVariableComponentStackRequirement,
-    VariableComponentStackRequirement,
-)
+from openhcs.core.callable.variable_component_stack_requirement import AlwaysRequiresVariableComponentStack, SemanticControlVariableComponentStackRequirement
 from openhcs.core.callable.callable_contract import CallableDeclaration
 from openhcs.core.callable.runtime_batch_contracts import runtime_batch_executors_from_callable
 from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable

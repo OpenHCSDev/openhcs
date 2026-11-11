@@ -13,7 +13,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.dataset_sources.discovery import domain_registry_config
-from openhcs.core.io.pipeline_document import PipelineDocument, PipelineDocumentCodec
+from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 
 
 class PipelineImporter(ABC, metaclass=AutoRegisterMeta):

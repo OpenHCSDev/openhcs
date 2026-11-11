@@ -20,23 +20,10 @@ from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source.source_bindings import PrimaryPlaneRole, SourceProjectionRole
-from openhcs.core.source.source_metadata import (
-    DurableSourceMetadata,
-    SourceMetadataMapping,
-    SourceMetadataScalar,
-    SourceVoxelSpacing,
-)
-from openhcs.core.source.source_projection import (
-    OpenHCSPlaneAddress,
-    SourceArtifactProjection,
-    SourcePlaneProjection,
-    SourceProjection,
-    SourceProjectionMetadataSerializer,
-    SourceProjectionSet,
-)
+from openhcs.core.source.source_metadata import DurableSourceMetadata, SourceVoxelSpacing
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection, SourcePlaneProjection, SourceProjectionMetadataSerializer, SourceProjectionSet
 from openhcs.core.source.source_tile_geometry import SourceTileLayout
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, ColourAxis
-
+from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
 
 
 @dataclass(frozen=True)
@@ -314,8 +301,6 @@ def get_metadata_path(dataset_root: str | Path) -> Path:
     """Return the canonical metadata path for one OpenHCS plate root."""
 
     return METADATA_CONFIG.metadata_path(dataset_root)
-
-
 
 
 @dataclass(frozen=True)

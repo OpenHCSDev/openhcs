@@ -31,32 +31,13 @@ from openhcs.core.payload.image_file_serialization import (
     ImageFileSourceMetadata,
 )
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData
-from openhcs.core.payload.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_intensity_scale_for_dtype,
-)
+from openhcs.core.payload.runtime_image_values import image_intensity_scale_for_dtype
 from openhcs.core.payload.runtime_profile import RuntimeProfileLogger
-from openhcs.core.payload.runtime_slice_projection import (
-    RuntimeProjectedPayloadItem,
-    RuntimeProjectionSourceIdentityRequest,
-    RequiredSourceComponentMetadata,
-)
-from openhcs.core.source.source_image_provenance import (
-    SourceComponentMetadata,
-    SourceImageIdentity,
-)
-from openhcs.core.source.source_projection import (
-    OpenHCSPlaneAddress,
-    SourceArtifactProjection,
-    SourcePlaneProjection,
-    SourceProjection,
-    SourceProjectionMetadataSerializer,
-)
+from openhcs.core.payload.runtime_slice_projection import RuntimeProjectionSourceIdentityRequest, RequiredSourceComponentMetadata
+from openhcs.core.source.source_image_provenance import SourceImageIdentity
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection, SourcePlaneProjection, SourceProjectionMetadataSerializer
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
-from openhcs.core.steps.function_artifact_materialization import (
-    ArtifactMaterializationTargetPlan,
-    MaterializedRuntimeArtifact,
-)
+from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
 from openhcs.core.steps.function_io import (
     prepare_storage_image_payloads,
     save_materialized_data,
@@ -65,22 +46,14 @@ from openhcs.core.steps.function_io import (
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )
-from openhcs.core.steps.function_output_manifest import (
-    ProducedOutputSemantics,
-    step_output_manifest,
-)
+from openhcs.core.steps.function_output_manifest import step_output_manifest
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
     StreamImagePayloadMetadataProjector,
     StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
 )
-from openhcs.core.io.virtual_workspace_metadata import (
-    METADATA_CONFIG,
-    AtomicMetadataWriter,
-    OpenHCSMetadataSubdirectories,
-    VirtualWorkspaceSourceProjectionEntries,
-)
+from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG, AtomicMetadataWriter, VirtualWorkspaceSourceProjectionEntries
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
 

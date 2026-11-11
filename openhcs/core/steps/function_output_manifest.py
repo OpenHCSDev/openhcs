@@ -17,7 +17,7 @@ from openhcs.core.source.source_path_identity import (
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.payload.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.util.path_pattern_matching import PathPatternTemplateMatcher
-from openhcs.core.source.source_metadata import DurableSourceMetadata, SourceMetadataValue
+from openhcs.core.source.source_metadata import DurableSourceMetadata
 
 from openhcs.core.util.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_output_identity import (

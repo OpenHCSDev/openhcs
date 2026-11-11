@@ -25,11 +25,7 @@ from python_introspect import AnnotationChoices
 from openhcs.constants.constants import Backend
 from openhcs.core.dataset_sources.discovery import domain_registry_config
 from openhcs.core.source.source_path_identity import absolute_source_path
-from openhcs.core.dataset_sources.interfaces import (
-    FilenameParser,
-    MetadataHandler,
-    FilenameParserCapability,
-)
+from openhcs.core.dataset_sources.interfaces import FilenameParserCapability
 from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG, FIELDS, AtomicMetadataWriter, get_metadata_path
 
 logger = logging.getLogger(__name__)

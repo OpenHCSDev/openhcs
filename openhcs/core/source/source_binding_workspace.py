@@ -16,18 +16,7 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.constants.constants import Backend
 from openhcs.core.payload.runtime_array_values import array_geometry
 from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
-from openhcs.core.source.source_bindings import (
-    ComponentSelector,
-    ImportedMetadataTable,
-    NamedSourceBinding,
-    PairByMetadata,
-    PairByOrder,
-    BroadcastSource,
-    PrimaryPlaneRole,
-    SourceArtifactRole,
-    SourceProjectionRole,
-    SourceSetPairing,
-)
+from openhcs.core.source.source_bindings import PairByMetadata, PairByOrder, BroadcastSource, PrimaryPlaneRole, SourceArtifactRole, SourceProjectionRole
 from openhcs.core.config.pipeline_config import SourceBindingsConfig
 from openhcs.core.source.source_path_identity import source_path_posix
 from openhcs.core.source.source_matching import (
@@ -41,26 +30,8 @@ from openhcs.core.source.source_matching import (
     source_metadata_values_equal,
     with_source_component_metadata,
 )
-from openhcs.core.source.source_metadata import (
-    DECLARED_SOURCE_METADATA_FIELD,
-    DeclaredSourceMetadata,
-    SourceFilterPathMetadata,
-    SourceMetadataMapping,
-    SourceMetadataFields,
-    SourceMetadataScalar,
-    SourceVoxelSpacing,
-    SourceAxisProjection,
-)
-from openhcs.core.source.source_projection import (
-    OpenHCSPlaneAddress,
-    SourceCandidate,
-    SourceDatasetDiagnostic,
-    SourceArtifactProjection,
-    SourcePlaneProjection,
-    SourceProjection,
-    SourceProjectionMetadataSerializer,
-    SourceProjectionSet,
-)
+from openhcs.core.source.source_metadata import DECLARED_SOURCE_METADATA_FIELD, DeclaredSourceMetadata, SourceFilterPathMetadata, SourceMetadataFields, SourceVoxelSpacing, SourceAxisProjection
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourceCandidate, SourceArtifactProjection, SourcePlaneProjection, SourceProjectionMetadataSerializer, SourceProjectionSet
 from openhcs.core.source.source_tile_geometry import SourceTileLayout
 from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.io.virtual_workspace_metadata import (

@@ -9,11 +9,7 @@ from typing import Dict, List, Mapping, Sequence, TypeAlias
 from python_introspect import project_dataclass
 
 from openhcs.core.context.processing_context import CompiledContext
-from openhcs.core.debug.debug_runtime import (
-    DebugExecutionContext,
-    DebugExecutionPolicy,
-    DebugSinkInstallRequest,
-)
+from openhcs.core.debug.debug_runtime import DebugSinkInstallRequest
 from openhcs.core.progress.types import ProgressExecutionContext
 
 TransportAxisContexts: TypeAlias = List[tuple[str, CompiledContext]]

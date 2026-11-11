@@ -17,15 +17,7 @@ from openhcs.core.payload.image_file_serialization import (
     ImageFileFormat,
     prepare_disk_image_payloads,
 )
-from openhcs.core.axes.axis_declarations import (
-    Axis,
-    AxisFamily,
-    AxisRoleKeyedStrategyMixin,
-    ColourAxis,
-    StackAxis,
-    TileAxis,
-    TimeAxis,
-)
+from openhcs.core.axes.axis_declarations import AxisFamily, AxisRoleKeyedStrategyMixin, ColourAxis, StackAxis, TileAxis, TimeAxis
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
 

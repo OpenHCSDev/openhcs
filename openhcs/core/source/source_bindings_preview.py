@@ -6,12 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from openhcs.core.source.source_binding_workspace import (
-    SourceSetAssembler,
-    SourceBindingWorkspaceProjector,
-    SourceCandidate,
-    _SourceSet,
-)
+from openhcs.core.source.source_binding_workspace import SourceSetAssembler, SourceBindingWorkspaceProjector, SourceCandidate
 from openhcs.core.source.source_bindings import NamedSourceBinding
 
 

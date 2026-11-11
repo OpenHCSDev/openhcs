@@ -10,17 +10,8 @@ from types import MappingProxyType
 import numpy as np
 
 from openhcs.core.payload import runtime_image_values
-from openhcs.core.object_labels.runtime_object_label_domains import (
-    ObjectLabelDomain,
-    ObjectLabelDomainScope,
-    PresentObjectLabelIdsDomainDeclaration,
-)
-from openhcs.core.object_labels.runtime_object_labels import (
-    ObjectLabelPayload,
-    ObjectLabelSet,
-    ObjectLabelVariantData,
-    ObjectLabelVariants,
-)
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain, PresentObjectLabelIdsDomainDeclaration
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelPayload, ObjectLabelSet, ObjectLabelVariantData
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.payload.runtime_array_values import array_geometry
 

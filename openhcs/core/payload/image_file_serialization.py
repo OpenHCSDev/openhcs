@@ -15,22 +15,11 @@ from arraybridge import MemoryType, detect_memory_type
 from metaclass_registry import AutoRegisterMeta
 from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
-from openhcs.core.io.result_file_formats import (
-    NumpyResultFile,
-    ResultFileFormat,
-    TiffResultFile,
-)
-from openhcs.core.callable.processing_preparation import (
-    CompilerPreparedAutoRegisterFamily,
-    PersistentNumbaKernelPreparation,
-    PreparationOperation,
-)
+from openhcs.core.io.result_file_formats import NumpyResultFile, TiffResultFile
+from openhcs.core.callable.processing_preparation import CompilerPreparedAutoRegisterFamily, PersistentNumbaKernelPreparation
 from openhcs.core.payload.image_quantization_numba import quantize_image_uint8
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
-from openhcs.core.payload.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_intensity_scale_for_dtype,
-)
+from openhcs.core.payload.runtime_image_values import image_intensity_scale_for_dtype
 from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.payload_axes import PayloadAxes
 from openhcs.core.payload.runtime_array_values import array_geometry

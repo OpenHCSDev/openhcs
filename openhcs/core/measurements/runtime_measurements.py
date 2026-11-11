@@ -7,15 +7,8 @@ from functools import lru_cache
 from dataclasses import dataclass, field
 
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
-from openhcs.core.payload.runtime_tabular_values import (
-    ColumnarRows,
-    FieldSpec,
-    MeasurementObjectRowIdentity,
-)
-from openhcs.core.source.source_image_provenance import (
-    SourceImageProvenance,
-    SourceImageProvenanceFields,
-)
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.core.source.source_image_provenance import SourceImageProvenanceFields
 
 from abc import ABC
 from abc import abstractmethod
@@ -38,22 +31,7 @@ from openhcs.core.source.source_spatial_domain import (
     VolumeSourceSpatialDomain,
 )
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
-from openhcs.core.measurements.measurement_declarations import (
-    MeasurementScope,
-    RuntimeMeasurementFeatureRelation,
-    RuntimeMeasurementFeatureRelationDeclaration,
-    RuntimeMeasurementFeatureRelationDeclarationCollection,
-    RuntimeMeasurementFeatureSemanticMarker,
-    ObjectCountFeatureMarker,
-    ObjectGroupInvariantFeatureMarker,
-    ObjectReferenceFeatureMarker,
-    ObjectIdentifierFeatureMarker,
-    MeasuredObjectAnchorFeatureMarker,
-    ObjectLocationFeatureMarker,
-    ObjectIntensityFeatureMarker,
-    ObjectCalculatedFeatureMarker,
-    RuntimeMeasurementRowIdentityContract,
-)
+from openhcs.core.measurements.measurement_declarations import MeasurementScope, RuntimeMeasurementFeatureRelation, RuntimeMeasurementFeatureRelationDeclaration, RuntimeMeasurementFeatureSemanticMarker
 
 
 @dataclass(slots=True, kw_only=True)

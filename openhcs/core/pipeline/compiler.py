@@ -34,23 +34,9 @@ from openhcs.core.execution.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
 )
-from openhcs.core.context.processing_context import (
-    CompiledContext,
-    CompilingContext,
-    RequiredVisualizer,
-)
-from openhcs.core.config.pipeline_config import (
-    GlobalPipelineConfig,
-    MaterializeToZarr,
-    StreamingConfig,
-    VFSConfig,
-    PartitionFilterConfig,
-)
-from openhcs.core.axes.axis_filter import (
-    StepAxisFilterMap,
-    StepAxisFilterResolution,
-    StepAxisFilterSet,
-)
+from openhcs.core.context.processing_context import RequiredVisualizer
+from openhcs.core.config.pipeline_config import MaterializeToZarr, StreamingConfig, PartitionFilterConfig
+from openhcs.core.axes.axis_filter import StepAxisFilterResolution, StepAxisFilterSet
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
@@ -59,10 +45,7 @@ from openhcs.core.pipeline.compilation_session import (
     ResolvedPipelineDefinition,
     resolve_declared_dataclass_paths,
 )
-from openhcs.core.source.source_workspace_projection import (
-    DEFAULT_SOURCE_PROJECTION_CACHE,
-    VirtualWorkspaceSourceProjection,
-)
+from openhcs.core.source.source_workspace_projection import DEFAULT_SOURCE_PROJECTION_CACHE
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )

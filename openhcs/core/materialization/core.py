@@ -50,27 +50,10 @@ from openhcs.core.payload.runtime_image_values import (
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.payload.runtime_slice_projection import (
-    RuntimeProjectedPayloadItem,
-    RuntimeProjectionPlaneMetadata,
-    RuntimeProjectionSourceIdentityRequest,
-    OptionalSourceIdentity,
-)
-from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
-from openhcs.core.payload.runtime_tabular_values import (
-    ColumnarRows,
-    FieldSpec,
-    MeasurementObjectRowIdentity,
-    measurement_row_mapping,
-    supports_measurement_row_mapping,
-)
-from openhcs.core.source.source_image_provenance import (
-    SourceComponentMetadata,
-    SourceImageIdentity,
-    SourceImageProvenance,
-    SourcePlaneIndexedMetadata,
-    VariableComponentAxisProjection,
-)
+from openhcs.core.payload.runtime_slice_projection import RuntimeProjectedPayloadItem, RuntimeProjectionSourceIdentityRequest, OptionalSourceIdentity
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows, FieldSpec, measurement_row_mapping, supports_measurement_row_mapping
+from openhcs.core.source.source_image_provenance import SourceImageIdentity, SourceImageProvenance, SourcePlaneIndexedMetadata, VariableComponentAxisProjection
 from openhcs.core.source.source_matching import (
     source_component_metadata_value,
     source_metadata_value,

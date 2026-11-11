@@ -13,18 +13,9 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.payload.aligned_image_payload import AlignedImageStack, ImageOutputBundle
-from openhcs.core.object_labels.runtime_object_labels import (
-    ObjectLabelMeasurementSource,
-    ObjectLabelValue,
-    ObjectLabelVariantData,
-    object_label_dense_array,
-    object_label_project_plane,
-)
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue, ObjectLabelVariantData, object_label_dense_array, object_label_project_plane
 from openhcs.core.payload.runtime_profile import RuntimeProfileLogger, RuntimeProfileTimer
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxisProjector,
-    RuntimePlaneAxisValueProjection,
-)
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter

@@ -32,12 +32,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openhcs.core.payload.runtime_image_values import ImageMaskDomain
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData, array_geometry
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisProjector,
-    RuntimePlaneAxisValueProjection,
-)
+from openhcs.core.payload.runtime_array_values import array_geometry
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.payload.runtime_slice_projection import preserved_image_plane_projection
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.source.source_spatial_domain import (

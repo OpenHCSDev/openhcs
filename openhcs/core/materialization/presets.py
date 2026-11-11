@@ -10,13 +10,7 @@ from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from typing import Any, Callable, Dict, List, Optional
 
 from openhcs.core.materialization.core import MaterializationSpec
-from openhcs.core.materialization.options import (
-    CsvOptions,
-    JsonOptions,
-    ROIOptions,
-    TextOptions,
-    TiffStackOptions,
-)
+from openhcs.core.materialization.options import CsvOptions, JsonOptions, ROIOptions, TextOptions
 
 
 @dataclass(frozen=True, slots=True)

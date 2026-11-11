@@ -18,7 +18,7 @@ from typing import ClassVar, Self, TypeVar, cast
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.artifacts.kinds import ArtifactType, SpecialArtifactType
-from openhcs.core.artifacts.streaming import AutomaticStreaming, ViewerStreaming
+from openhcs.core.artifacts.streaming import AutomaticStreaming
 from openhcs.core.axes.component_group_scope import ComponentGroupScope, UngroupedScope
 from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection

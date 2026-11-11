@@ -30,17 +30,13 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxisProjector,
-    RuntimePlaneAxisValueProjection,
-    RuntimePlaneProjection,
-)
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection, RuntimePlaneProjection
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
 from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.progress.types import ProgressContextPayload, ProgressEvent, ProgressExecutionContext, ProgressStatus, emit_event
+from openhcs.core.progress.types import ProgressContextPayload, emit_event
 from openhcs.core.progress.types import (
     ErrorProgressStatus,
     PatternGroupProgressPhase,

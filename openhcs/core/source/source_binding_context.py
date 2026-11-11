@@ -5,11 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from openhcs.core.config.pipeline_config import (
-    EMPTY_SOURCE_BINDINGS,
-    SourceBindingsConfig,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.config.pipeline_config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.core.source.source_bindings_preview import SourceInventory
 
 
