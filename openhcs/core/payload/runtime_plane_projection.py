@@ -10,8 +10,6 @@ from typing import Any, ClassVar
 from typing import Self
 
 from openhcs.core.axes.axis_declarations import AxisFamily
-from openhcs.core.source.source_image_provenance import SourceImageProvenance
-from openhcs.core.axes.axis_declarations import ColourAxis
 
 
 
@@ -49,6 +47,7 @@ class RuntimeSliceProjectableValue(ABC):
 
     def slice_source_provenances(self) -> tuple[SourceImageProvenance, ...]:
         """Return the source provenance of each runtime slice, without reading pixels."""
+        from openhcs.core.axes.axis_declarations import ColourAxis
 
         count = self.runtime_slice_count()
         metadata = self.image_metadata
@@ -325,6 +324,7 @@ class RuntimeSlicePlaneAxis(RuntimePlaneAxis):
         scalar_sources: Sequence[SourceImageProvenance],
         **topology: bool,
     ) -> SourceImageProvenance:
+        from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
         return SourceImageProvenance.stack(
             provenances, scalar_sources=scalar_sources, **topology
@@ -372,6 +372,7 @@ class SourceBindingPlaneAxis(RuntimePlaneAxis):
         scalar_sources: Sequence[SourceImageProvenance],
         **topology: bool,
     ) -> SourceImageProvenance:
+        from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
         return SourceImageProvenance.bundle(
             provenances, scalar_sources=scalar_sources, **topology
