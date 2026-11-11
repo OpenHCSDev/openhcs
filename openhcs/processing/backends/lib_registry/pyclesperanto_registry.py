@@ -18,7 +18,7 @@ import numpy as np
 from openhcs.constants import MemoryType
 from openhcs.utils.import_utils import optional_import_placeholder
 
-from .unified_registry import LibraryRegistryBase, RuntimeTestingRegistryBase
+from openhcs.processing.backends.unified_registry import LibraryRegistryBase, RuntimeTestingRegistryBase
 
 
 class PyclesperantoRuntimeParameter(Enum):

@@ -3,7 +3,7 @@ URL routing for OMERO-OpenHCS plugin.
 """
 
 from django.urls import re_path
-from . import views
+from openhcs.omero.plugin import views
 
 # URL patterns for the plugin
 # OMERO.web will include these under /webclient/

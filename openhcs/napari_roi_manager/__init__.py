@@ -1,3 +1,3 @@
-from .widgets import QRoiManager
+from openhcs.widgets import QRoiManager
 
 __all__ = ["QRoiManager"]

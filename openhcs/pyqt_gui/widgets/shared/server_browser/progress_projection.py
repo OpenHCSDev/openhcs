@@ -13,8 +13,8 @@ from pyqt_reactive.widgets.shared import TreeStateAdapter, TreeSyncAdapter
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.runtime_tree import RuntimeTreeNode, RuntimeTreeProjection
 
-from .presentation_models import summarize_execution_server
-from .progress_tree_builder import ProgressTreeBuilder
+from openhcs.pyqt_gui.widgets.shared.presentation_models import summarize_execution_server
+from openhcs.pyqt_gui.widgets.shared.progress_tree_builder import ProgressTreeBuilder
 
 logger = logging.getLogger(__name__)
 

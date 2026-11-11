@@ -20,7 +20,7 @@ from openhcs.processing.custom_functions.source_namespace import (
     CustomFunctionSourceNamespace,
 )
 
-from .source_namespace import CustomFunctionSourceRevision
+from openhcs.processing.source_namespace import CustomFunctionSourceRevision
 class CustomFunctionPreparationFuture(Future[FunctionMetadata]):
     """Share source preparation, not the execution frames of its failure.
 

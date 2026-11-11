@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from openhcs.utils.import_utils import optional_import_placeholder
 
-from .gpu_kernels import (
+from openhcs.processing.backends.pos_gen.gpu_kernels import (
     launch_find_minimum_edges_kernel,
     launch_reset_flatten_kernel,
     launch_union_components_kernel,

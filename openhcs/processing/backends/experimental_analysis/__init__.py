@@ -9,7 +9,7 @@ Result-format behavior is selected through the scope-keyed strategies in
 single declaration of its input format.
 """
 
-from .unified_analysis_engine import DataProcessingError, ExperimentalAnalysisEngine
+from openhcs.processing.backends.unified_analysis_engine import DataProcessingError, ExperimentalAnalysisEngine
 
 __all__ = [
     "DataProcessingError",

@@ -16,7 +16,7 @@ from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping, project_dataclass, to_jsonable
 from zmqruntime.messages import TaskProgress
 
-from .exceptions import ProgressError
+from openhcs.core.exceptions import ProgressError
 
 # =============================================================================
 # Progress vocabulary: channels, phases and statuses are class families

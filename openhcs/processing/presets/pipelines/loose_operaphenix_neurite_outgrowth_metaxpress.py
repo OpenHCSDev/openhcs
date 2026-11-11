@@ -28,7 +28,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     neurite_outgrowth_metaxpress,
 )
 
-from .loose_operaphenix_neurite_outgrowth import (
+from openhcs.processing.presets.loose_operaphenix_neurite_outgrowth import (
     LooseOperaPhenixNeuriteInputs,
     SemanticImageSource,
     build_loose_operaphenix_neurite_config,

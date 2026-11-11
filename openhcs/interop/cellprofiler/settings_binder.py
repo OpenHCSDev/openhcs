@@ -32,7 +32,7 @@ from openhcs.interop.cellprofiler_setting_normalization import (
     normalize_cellprofiler_setting_name,
 )
 
-from .parser import ModuleBlock, ModuleSetting
+from openhcs.interop.parser import ModuleBlock, ModuleSetting
 
 logger = logging.getLogger(__name__)
 
