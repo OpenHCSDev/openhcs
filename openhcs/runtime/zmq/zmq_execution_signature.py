@@ -8,17 +8,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from zmqruntime.messages import ExecuteRequest, MessageFields
 
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.debug.debug_runtime import DebugExecutionConfig
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.runtime.runtime_util import observation_export_scope
-
-if TYPE_CHECKING:
-    from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
-    from openhcs.core.debug.debug_runtime import DebugExecutionConfig
 
 TransportValue = (
     str

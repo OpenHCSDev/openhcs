@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any, ClassVar, TYPE_CHECKING
 
 import numpy as np
 from matplotlib.colors import CSS4_COLORS, to_rgb
@@ -75,11 +75,11 @@ from openhcs.core.callable.processing_contracts import (
 )
 from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 
 if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 

@@ -62,18 +62,19 @@ from openhcs.core.plate.plate_image_inventory import (
     PlateResultFileInventory,
 )
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily
+from openhcs.core.components.parser_metaprogramming import (
+    FilenameParseResult,
+    FilenameParseValue,
+)
+from openhcs.core.dataset_sources.source import DatasetSource
+from openhcs.core.dataset_sources.interfaces import (
+    FilenameParser,
+    MetadataComponentValueSet,
+    MetadataHandler,
+    FilenameParserCapability,
+)
+
 if TYPE_CHECKING:
-    from openhcs.core.components.parser_metaprogramming import (
-        FilenameParseResult,
-        FilenameParseValue,
-    )
-    from openhcs.core.dataset_sources.source import DatasetSource
-    from openhcs.core.dataset_sources.interfaces import (
-        FilenameParser,
-        MetadataComponentValueSet,
-        MetadataHandler,
-        FilenameParserCapability,
-    )
     from polystore.filemanager import FileManager
 
 

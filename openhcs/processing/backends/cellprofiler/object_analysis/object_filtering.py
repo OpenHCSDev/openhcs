@@ -23,7 +23,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
 import inspect
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
@@ -124,10 +124,8 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
-
-if TYPE_CHECKING:
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 
 
 class _FilterMeasurementValuesRuntimeParameter(KeywordRuntimeParameter):

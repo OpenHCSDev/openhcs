@@ -23,12 +23,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING
-
 import numpy as np
 import pandas as pd
 
 from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
@@ -38,9 +37,6 @@ from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.payload.vfs_protocol import PlateInputDirectory
 from openhcs.core.materialization.options import CsvOptions
 from openhcs.core.materialization.core import MaterializationSpec
-
-if TYPE_CHECKING:
-    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 logger = logging.getLogger(__name__)
 
