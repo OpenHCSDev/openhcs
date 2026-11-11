@@ -137,6 +137,36 @@ class FunctionMetadata:
     def require_current_declaration(self) -> None:
         """Validate declaration lifetimes specialized by metadata owners."""
 
+    @classmethod
+    def from_cache_entry(
+        cls,
+        name: str,
+        cached_data: dict,
+        func: "Callable",
+        contract: "type[ProcessingContract]",
+        registry: "LibraryRegistryBase",
+    ) -> "FunctionMetadata":
+        """Reconstruct from a cache entry, deriving fields from the dataclass."""
+        return cls(
+            name=name,
+            func=func,
+            contract=contract,
+            registry=registry,
+            module=cached_data.get("module", ""),
+            doc=cached_data.get("doc", ""),
+            tags=cached_data.get("tags", []),
+            original_name=cached_data.get("original_name", name),
+            memory_type=cached_data.get("memory_type", registry.get_memory_type()),
+        )
+
+    def to_cache_entry(self) -> dict:
+        """Serialize to a cache entry, deriving keys from the dataclass fields."""
+        return {
+            f.name: getattr(self, f.name)
+            for f in dataclasses.fields(self)
+            if f.name not in ("func", "contract", "registry")
+        }
+
     @property
     def display_name(self) -> str:
         """Human-readable function name for catalogs and selectors."""
@@ -766,16 +796,8 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
 
             final_func = self.reconstruct_cached_callable(func, contract)
 
-            metadata = FunctionMetadata(
-                name=func_name,
-                func=final_func,
-                contract=contract,
-                registry=self,
-                module=cached_data.get("module", ""),
-                doc=cached_data.get("doc", ""),
-                tags=cached_data.get("tags", []),
-                original_name=cached_data.get("original_name", func_name),
-                memory_type=cached_data.get("memory_type", self.get_memory_type()),
+            metadata = FunctionMetadata.from_cache_entry(
+                func_name, cached_data, final_func, contract, self,
             )
             functions[func_name] = metadata
 
