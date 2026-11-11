@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from typing import ClassVar
 
-from objectstate import DataclassFieldAccess, get_base_config_type
+from objectstate import DataclassFieldAccess
 from python_introspect.validation import overlay_non_none_dataclass
 from polystore.filemanager import FileManager
 from polystore.streaming.viewer_transport import (
@@ -222,32 +222,3 @@ class StreamingConfigBehaviorMixin:
         )
 
 
-def get_all_streaming_ports(
-    config=None,
-    num_ports_per_type: int = 10,
-) -> list[int]:
-    """Get all configured streaming ports for all registered streaming config types."""
-
-    from objectstate.global_config import get_current_global_config
-
-    from openhcs.core.config.pipeline_config import StreamingConfig
-
-    ports: list[int] = []
-    base_config_type = get_base_config_type()
-
-    if config is None:
-        config = get_current_global_config(base_config_type)
-        if config is None:
-            return ports
-
-    global_config = get_current_global_config(base_config_type)
-
-    for streaming_config_type in tuple(StreamingConfig.__registry__.values()):
-        port = streaming_config_type.port_from_config(config)
-        if port is None and global_config is not None:
-            port = streaming_config_type.port_from_config(global_config)
-        if port is None:
-            continue
-        ports.extend(port + i for i in range(num_ports_per_type))
-
-    return ports

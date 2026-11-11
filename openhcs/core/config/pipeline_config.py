@@ -100,7 +100,8 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 
 
 
-from objectstate import auto_create_decorator, abbreviation
+from objectstate import auto_create_decorator, abbreviation, get_base_config_type
+from objectstate.global_config import get_current_global_config
 from objectstate.lazy_factory import LazyDataclass
 
 
@@ -1487,3 +1488,29 @@ logger.debug("Configuration framework initialized with OpenHCS types")
 # happens on-demand when config windows are first opened.
 
 # NOTE: Step editor cache warming is done in openhcs.core.steps.__init__ to avoid circular imports
+
+
+def get_all_streaming_ports(
+    config=None,
+    num_ports_per_type: int = 10,
+) -> list[int]:
+    """Get all configured streaming ports for all registered streaming config types."""
+    ports: list[int] = []
+    base_config_type = get_base_config_type()
+
+    if config is None:
+        config = get_current_global_config(base_config_type)
+        if config is None:
+            return ports
+
+    global_config = get_current_global_config(base_config_type)
+
+    for streaming_config_type in tuple(StreamingConfig.__registry__.values()):
+        port = streaming_config_type.port_from_config(config)
+        if port is None and global_config is not None:
+            port = streaming_config_type.port_from_config(global_config)
+        if port is None:
+            continue
+        ports.extend(port + i for i in range(num_ports_per_type))
+
+    return ports

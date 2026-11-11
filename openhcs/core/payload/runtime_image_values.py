@@ -1674,10 +1674,6 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
     def _leading_plane_count(self) -> int:
         geometry = self.geometry
         if geometry.ndim <= AxisFamily.active().payload_spatial_rank:
-            from openhcs.core.payload.runtime_slice_projection import (
-                RuntimeSliceProjectionDeclarationError,
-            )
-
             raise RuntimeSliceProjectionDeclarationError(
                 "Runtime-slice image payload must expose its declared plane axis "
                 f"as the leading dimension, got shape {geometry.shape!r}."

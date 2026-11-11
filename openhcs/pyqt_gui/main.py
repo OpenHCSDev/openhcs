@@ -596,7 +596,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         self,
         ui_config: UIConfig | None = None,
     ) -> list[int]:
-        from openhcs.core.config.streaming_config_factory import get_all_streaming_ports
+        from openhcs.core.config.pipeline_config import get_all_streaming_ports
 
         config = self.runtime_context.ui_config if ui_config is None else ui_config
         zmq_config = config.zmq
