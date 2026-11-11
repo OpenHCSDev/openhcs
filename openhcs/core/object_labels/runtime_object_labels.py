@@ -2271,7 +2271,6 @@ class ObjectLabelSetReplacementStrategy(
     representation: ClassVar[ObjectLabelRepresentation | None] = None
     representation_label: ClassVar[str | None] = None
     __registry_key__ = "representation_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "representation"
 
     @abstractmethod

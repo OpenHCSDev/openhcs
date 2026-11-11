@@ -812,11 +812,8 @@ class FillObjectsModeStrategy(
 ):
     """Nominal implementation for one FillObjects mode."""
 
-    __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "mode"
     mode: ClassVar[FillMode | None] = None
-    strategy_label: ClassVar[str | None] = None
 
     @classmethod
     def for_mode(cls, mode: FillMode) -> FillObjectsModeStrategy:
@@ -4377,11 +4374,8 @@ class ExpandShrinkOperationStrategy(
 ):
     """Nominal CellProfiler ExpandOrShrinkObjects operation strategy."""
 
-    __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "mode"
     mode: ClassVar[ExpandShrinkMode | None] = None
-    strategy_label: ClassVar[str | None] = None
     cellprofiler_operations: ClassVar[
         tuple[CellProfilerExpandShrinkOperation, ...]
     ] = ()
@@ -4836,11 +4830,8 @@ class MaskObjectsOverlapHandlingStrategy(
 ):
     """Apply one MaskObjects overlap-handling policy to a label plane."""
 
-    __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "overlap_handling"
     overlap_handling: ClassVar[MaskObjectsOverlapHandling | None] = None
-    strategy_label: ClassVar[str | None] = None
 
     @classmethod
     def for_choice(
@@ -4972,11 +4963,8 @@ class MaskObjectsNumberingStrategy(
 ):
     """Apply one MaskObjects label-numbering policy."""
 
-    __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "numbering"
     numbering: ClassVar[MaskObjectsNumberingChoice | None] = None
-    strategy_label: ClassVar[str | None] = None
 
     @classmethod
     def for_choice(
@@ -5526,11 +5514,8 @@ class SplitOrMergeOperationStrategy(
 ):
     """Nominal implementation for one SplitOrMergeObjects operation."""
 
-    __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "operation"
     operation: ClassVar[SplitOrMergeOperation]
-    strategy_label: ClassVar[str | None] = None
 
     @classmethod
     def for_operation(
@@ -5573,9 +5558,7 @@ class SplitOrMergeMergeMethodStrategy(
 ):
     """Nominal implementation for one SplitOrMergeObjects merge method."""
 
-    __registry_key__ = MORPHOLOGY_STRATEGY_REGISTRY_KEY
     method: ClassVar[SplitOrMergeMergeMethod]
-    strategy_label: ClassVar[str | None] = None
 
     @classmethod
     def for_method(

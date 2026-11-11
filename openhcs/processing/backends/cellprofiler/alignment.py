@@ -668,7 +668,6 @@ class AlignCropModeStrategy(
     """Nominal strategy family for legacy Align crop modes."""
 
     __registry_key__ = "crop_mode_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "crop_mode"
     crop_mode: ClassVar[AlignModule.CropMode | None] = None
     crop_mode_label: ClassVar[str | None] = None
