@@ -1226,33 +1226,18 @@ class ImagePayloadMetadata(
             plane_axis=plane_axis,
         )
 
+    _INTENSITY_FIELD_NAMES: ClassVar[tuple[str, ...]] = (
+        "intensity_scale", "source_dtype", "unit_interval_intensity",
+        "source_plane_intensity_scales", "source_plane_dtypes",
+    )
+
     def _missing_intensity_fields(
         self,
         source: "ImagePayloadMetadata",
     ) -> dict[str, Any]:
         return {
-            "intensity_scale": (
-                self.intensity_scale
-                if self.intensity_scale is not None
-                else source.intensity_scale
-            ),
-            "source_dtype": (
-                self.source_dtype
-                if self.source_dtype is not None
-                else source.source_dtype
-            ),
-            "unit_interval_intensity": (
-                self.unit_interval_intensity
-                if self.unit_interval_intensity is not None
-                else source.unit_interval_intensity
-            ),
-            "source_plane_intensity_scales": (
-                self.source_plane_intensity_scales
-                or source.source_plane_intensity_scales
-            ),
-            "source_plane_dtypes": (
-                self.source_plane_dtypes or source.source_plane_dtypes
-            ),
+            name: getattr(self, name) or getattr(source, name)
+            for name in self._INTENSITY_FIELD_NAMES
         }
 
     def with_missing_intensity_from(
