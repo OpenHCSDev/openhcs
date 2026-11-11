@@ -16,8 +16,19 @@ from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, StoredRuntimeValue
 from openhcs.core.steps.step_observation import StepExecutionObservation
+
+
+def observation_paths_for(
+    observation: StepExecutionObservation, record: StoredRuntimeValue
+) -> tuple[Path, ...]:
+    """Return saved paths for this exact producer value, never its filename."""
+    address = RuntimeArtifactAddress.from_record(record)
+    return tuple(
+        Path(location.path)
+        for location in observation.materialized_locations_by_address.get(address, ())
+    )
 from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, FileOutputOptions, ImageFileOptions
 from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.core import materialization_is_empty
@@ -254,7 +265,7 @@ class RuntimeExportObservation:
 
     def matching_table_outputs(self, record: StoredRuntimeValue) -> tuple[Path, ...]:
         """Match tables through the original saved-output address relation."""
-        owned_paths = frozenset(self.outputs.paths_for(record))
+        owned_paths = frozenset(observation_paths_for(self.outputs, record))
         return tuple(path for path in self.table_outputs if path in owned_paths)
 
 

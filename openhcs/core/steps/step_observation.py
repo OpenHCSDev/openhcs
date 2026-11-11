@@ -7,12 +7,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
 
+from typing import TYPE_CHECKING
+
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
-from openhcs.core.runtime_store.runtime_stores import (
-    RuntimeArtifactAddress,
-    RuntimeArtifactLocation,
-    StoredRuntimeValue,
-)
+
+if TYPE_CHECKING:
+    from openhcs.core.runtime_store.runtime_stores import (
+        RuntimeArtifactAddress,
+        RuntimeArtifactLocation,
+        StoredRuntimeValue,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,14 +75,6 @@ class StepExecutionObservation:
     @classmethod
     def empty(cls) -> "StepExecutionObservation":
         return cls(MappingProxyType({}))
-
-    def paths_for(self, record: StoredRuntimeValue) -> tuple[Path, ...]:
-        """Return saved paths for this exact producer value, never its filename."""
-        address = RuntimeArtifactAddress.from_record(record)
-        return tuple(
-            Path(location.path)
-            for location in self.materialized_locations_by_address.get(address, ())
-        )
 
     @classmethod
     def combine(
