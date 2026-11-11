@@ -44,7 +44,7 @@ from openhcs.core.config.pipeline_config import (
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionExtras,
 )
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactViewerPayloadExpectation,
     runtime_artifact_viewer_component_identity,
 )

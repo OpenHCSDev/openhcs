@@ -40,7 +40,7 @@ from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationshipDeclaration,
 )
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows, FieldSpec
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
@@ -98,7 +98,7 @@ from openhcs.processing.backends.cellprofiler.export_to_database import (
     export_to_database,
 )
 from openhcs.core.materialization.options import FileBundleOptions
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (
     executing_context,

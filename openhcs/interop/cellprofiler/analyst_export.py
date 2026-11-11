@@ -64,7 +64,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
 from openhcs.core.payload.runtime_identifier import (
     normalize_runtime_identifier,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )

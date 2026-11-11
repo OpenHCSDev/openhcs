@@ -12,15 +12,15 @@ from openhcs.core.artifacts.kinds import (
     SpecialArtifactType,
 )
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.runtime_store.runtime_artifact_values import (
+from openhcs.core.artifact_store.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
 )
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactAxisExpectation,
     RuntimeArtifactExecutionExpectation,
 )
-from openhcs.core.runtime_store.runtime_exports import (
+from openhcs.core.artifact_store.runtime_exports import (
     RuntimeExportExpectation,
     RuntimeExportObservation,
 )
@@ -36,7 +36,7 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,

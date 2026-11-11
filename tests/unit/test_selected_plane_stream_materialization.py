@@ -28,7 +28,7 @@ from openhcs.core.payload.projected_image_output import (
     SelectedPlaneImageOutput,
     SourcePlaneSelectionImageOutput,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,

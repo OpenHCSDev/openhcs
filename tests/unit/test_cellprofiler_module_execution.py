@@ -85,11 +85,11 @@ from openhcs.core.measurements.measurement_row_materialization import (
     join_measurement_tables,
 )
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, object_label_input_execution_mode_from_callable, runtime_bound_parameters, special_inputs)
-from openhcs.core.runtime_store.runtime_artifact_queries import (
+from openhcs.core.artifact_store.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
     RuntimeArtifactQueryContext,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.callable.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
@@ -150,7 +150,7 @@ from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactBatch,
     RuntimeValueStore,
     StoredRuntimeValue,

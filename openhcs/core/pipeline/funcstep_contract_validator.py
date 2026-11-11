@@ -30,7 +30,7 @@ from typing import (
 from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 from openhcs.core.callable.function_patterns import normalize_function_pattern
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch
 from openhcs.core.util.step_dependencies import NoMainFlowInput
 from openhcs.core.callable.variable_component_stack_requirement import (
     VariableComponentStackRequirementRequest,

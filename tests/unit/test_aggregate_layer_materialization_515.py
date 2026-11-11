@@ -16,7 +16,7 @@ from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.pipeline.artifact_planning import (
     AutomaticObjectLabelsArtifactOutputMaterializationStrategy,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_image_values import (
     ImagePayloadMetadata,
     RuntimeSliceProjectionDeclarationError,

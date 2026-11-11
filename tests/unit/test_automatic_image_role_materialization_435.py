@@ -26,9 +26,9 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.execution.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.pipeline.artifact_planning import ArtifactOutputMaterializationPlanner
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection

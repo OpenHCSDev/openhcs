@@ -16,14 +16,14 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation, RuntimeExecutionObservation,
 )
 from openhcs.core.payload.projected_image_output import SourceProjectedImageOutput
-from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey, RuntimeValue
-from openhcs.core.runtime_store.runtime_exports import (
+from openhcs.core.artifact_store.runtime_artifact_values import ArtifactKey, RuntimeValue
+from openhcs.core.artifact_store.runtime_exports import (
     RuntimeExportExpectation, RuntimeExportObservation, runtime_export_failures,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactAddress, RuntimeArtifactLocation, RuntimeValueStore,
 )
 from openhcs.core.payload.runtime_tabular_values import FieldSpec

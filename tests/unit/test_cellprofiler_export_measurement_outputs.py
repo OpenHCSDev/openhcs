@@ -27,7 +27,7 @@ from openhcs.core.callable.function_patterns import (
 )
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.measurements.runtime_measurements import (
@@ -35,7 +35,7 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowValueField,
     MeasurementScope,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source.source_matching import (
     SourceImageSetIdentityPolicy,

@@ -13,7 +13,7 @@ import pytest
 
 from benchmark.equivalence.outputs import RuntimeOutputSnapshot
 from benchmark.equivalence.runtime import RuntimeMeasurementSnapshot
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
 
 

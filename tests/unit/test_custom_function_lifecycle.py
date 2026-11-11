@@ -42,7 +42,7 @@ from openhcs.core.callable.callable_contract import FunctionStepExecutionScope
 from openhcs.core.pipeline.function_contracts import (
     artifact_outputs, execution_scope, runtime_bound_parameters,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch
 
 @execution_scope(FunctionStepExecutionScope.PLATE)
 @runtime_bound_parameters(RuntimeArtifactBatch)

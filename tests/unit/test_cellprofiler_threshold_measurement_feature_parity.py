@@ -15,15 +15,15 @@ from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey, RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import ArtifactKey, RuntimeValue
 from benchmark.equivalence.runtime import runtime_reference_artifact_equivalence
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )

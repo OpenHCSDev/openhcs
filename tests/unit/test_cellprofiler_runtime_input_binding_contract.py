@@ -26,12 +26,12 @@ from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.interop.cellprofiler.module_callable_abi import (

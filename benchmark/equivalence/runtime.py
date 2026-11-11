@@ -21,7 +21,7 @@ from typing import cast, ClassVar
 
 from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 
-import openhcs.core.runtime_store.runtime_artifact_queries as runtime_artifact_queries
+import openhcs.core.artifact_store.runtime_artifact_queries as runtime_artifact_queries
 import openhcs.core.measurements.measurement_feature_queries as measurement_feature_queries
 import openhcs.core.measurements.measurement_row_materialization as measurement_row_materialization
 import openhcs.core.equivalence.cells as equivalence_cells
@@ -50,7 +50,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     iter_measurement_rows,
     measurement_row_source_image_name,
 )
-from openhcs.core.runtime_store.runtime_execution_validation import (
+from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
@@ -63,7 +63,7 @@ from openhcs.core.measurements.runtime_measurements import (
     ObjectLocationFeatureMarker,
 )
 from openhcs.core.payload.runtime_tabular_values import measurement_row_mapping
-from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
+from openhcs.core.artifact_store.runtime_stores import StoredRuntimeValue
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     MostDerivedContextStrategyMixin,

@@ -19,7 +19,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     MEASUREMENT_SPARSE_CELL,
 )
-from openhcs.core.runtime_store.runtime_artifact_queries import (
+from openhcs.core.artifact_store.runtime_artifact_queries import (
     RuntimeArtifactQueryContext,
     MeasurementLabelSliceFeatureBatchQuery,
     MeasurementLabelSliceFeatureQuery,
@@ -53,7 +53,7 @@ from openhcs.core.object_labels.runtime_object_label_domains import (
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
@@ -71,7 +71,7 @@ from openhcs.core.source.source_image_provenance import (
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,

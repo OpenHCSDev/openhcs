@@ -29,7 +29,7 @@ from openhcs.core.config.pipeline_config import (
     PipelineConfig,
 )
 from openhcs.core.progress.types import ProgressEvent
-from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
+from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeOutputSnapshot,

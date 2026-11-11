@@ -22,7 +22,7 @@ from openhcs.core.callable.function_patterns import (
 )
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.processing.backends.cellprofiler.area_occupied import (
     AreaOccupiedRow,

@@ -25,8 +25,8 @@ from openhcs.core.execution.compiled_step_plan import (
     RuntimeArtifactMaterializationPlan,
 )
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactLocation, StoredRuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactLocation, StoredRuntimeValue
 from openhcs.core.steps.function_artifact_materialization import (
     MaterializedRuntimeArtifact,
     RuntimeArtifactMaterialization,

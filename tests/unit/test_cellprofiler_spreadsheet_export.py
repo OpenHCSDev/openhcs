@@ -27,7 +27,7 @@ from openhcs.core.callable.callable_contract import CallableContract, FunctionSt
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     MEASUREMENT_SPARSE_CELL,
@@ -43,7 +43,7 @@ from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactBatch,
     RuntimeArtifactLocation,
     StoredRuntimeValue,
@@ -1960,11 +1960,11 @@ def test_spatial_grid_geometry_is_exported_for_exact_source_cycles(
 ) -> None:
     from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid, SpatialGridAxis
     from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
-    from openhcs.core.runtime_store.runtime_artifact_queries import (
+    from openhcs.core.artifact_store.runtime_artifact_queries import (
         RuntimeArtifactQueryContext,
         runtime_measurement_tables,
     )
-    from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+    from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 
     provenance = SourceImageProvenance(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(

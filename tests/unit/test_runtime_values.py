@@ -28,7 +28,7 @@ from openhcs.core.axes.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import (
+from openhcs.core.artifact_store.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
 )

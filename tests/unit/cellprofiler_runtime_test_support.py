@@ -22,7 +22,7 @@ from openhcs.core.callable.function_patterns import (
 )
 from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache

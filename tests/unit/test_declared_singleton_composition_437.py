@@ -33,7 +33,7 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain

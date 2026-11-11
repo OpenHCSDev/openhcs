@@ -20,7 +20,7 @@ from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.axes.component_set import ComponentSet
 from metaclass_registry.caches import BoundedCache
 from openhcs.core.callable.function_patterns import InvocationArtifactInputEdgePlan
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )

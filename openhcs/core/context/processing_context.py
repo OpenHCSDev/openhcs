@@ -25,7 +25,7 @@ from openhcs.core.debug.debug_runtime import (
     DebugExecutionContext,
     NO_OP_DEBUG_EVENT_SINK,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCache
 from openhcs.core.payload.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.payload.runtime_source_binding_cache import RuntimeSourceBindingContextCache

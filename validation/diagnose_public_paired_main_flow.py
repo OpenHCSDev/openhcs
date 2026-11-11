@@ -15,7 +15,7 @@ from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY, FunctionI
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.payload.runtime_output_matching import RuntimeReturnedOutputMatcher
-from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeValueStore
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.module_execution import CellProfilerModuleExecutor
 from openhcs.processing.backends.cellprofiler.classification import (

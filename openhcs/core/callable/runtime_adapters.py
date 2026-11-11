@@ -26,7 +26,7 @@ from openhcs.core.callable.function_patterns import (
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactInput
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source.source_binding_selection import (
     SourceUniverseRequest,

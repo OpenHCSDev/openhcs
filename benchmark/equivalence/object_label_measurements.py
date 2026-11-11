@@ -48,7 +48,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     object_label_dense_array,
     object_label_project_plane,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import (
+from openhcs.core.artifact_store.runtime_artifact_values import (
     RuntimeValue,
 )
 from collections import Counter
@@ -64,7 +64,7 @@ from openhcs.core.measurements.runtime_measurements import (
     ObjectLocationFeatureMarker,
     RuntimeMeasurementFeatureSemanticMarker,
 )
-from openhcs.core.runtime_store.runtime_stores import StoredRuntimeValue
+from openhcs.core.artifact_store.runtime_stores import StoredRuntimeValue
 if TYPE_CHECKING:
     pass
 from types import MappingProxyType

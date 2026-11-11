@@ -18,7 +18,7 @@ from openhcs.constants.constants import Backend
 from openhcs.core.axes.axis_filter import step_axis_allows_config
 from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation, RuntimeValueStore
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactLocation, RuntimeValueStore
 from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenanceFields,

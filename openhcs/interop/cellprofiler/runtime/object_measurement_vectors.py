@@ -14,7 +14,7 @@ from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.measurements.measurement_row_materialization import (
     measurement_row_has_object_identity,
 )
-from openhcs.core.runtime_store.runtime_artifact_queries import (
+from openhcs.core.artifact_store.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureQuery,
     MeasurementLabelSliceFeatureBatchQuery,
 )

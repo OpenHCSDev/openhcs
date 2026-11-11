@@ -7,7 +7,7 @@ prelude=(BASE/'price_actual_values.py').read_text().split('original=ColumnarMeas
 prelude=prelude.replace('ColumnarMeasurementTableSchema,MeasurementTableObjectFeatureSemantics,','ColumnarMeasurementTableSchema,').replace('MeasurementTableObjectFeatureSemantics.from_table(table)','ColumnarMeasurementTableSchema.from_table(table)').replace('semantics.object_names','semantics.object_names(table)').replace('semantics.feature_names','semantics.feature_names(table)')
 exec(compile(prelude,str(BASE/'price_actual_values.py'), 'exec'))
 from openhcs.core.measurements.measurement_row_materialization import ConcatenatedColumnarRows,WideMeasurementRowAccumulator
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch
 from openhcs.core.artifacts import MeasurementsArtifactType,RelationshipsArtifactType
 from openhcs.core.progress.live_measurements import _columnar_row_preview
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import render_spreadsheet_bundle

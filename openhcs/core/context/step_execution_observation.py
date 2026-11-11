@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 
 if TYPE_CHECKING:
-    from openhcs.core.runtime_store.runtime_stores import (
+    from openhcs.core.artifact_store.runtime_stores import (
         RuntimeArtifactAddress,
         RuntimeArtifactLocation,
         StoredRuntimeValue,

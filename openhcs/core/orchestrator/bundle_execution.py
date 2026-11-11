@@ -34,8 +34,8 @@ from openhcs.core.callable.runtime_batch_contracts import (
     RuntimeArtifactPartitionBatchRequest,
     RuntimeBatchExecutionDomain,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch, RuntimeArtifactLocation, RuntimeArtifactQuery, replace_runtime_artifact_payload
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch, RuntimeArtifactLocation, RuntimeArtifactQuery, replace_runtime_artifact_payload
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,

@@ -35,8 +35,8 @@ from openhcs.core.callable.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
-from openhcs.core.runtime_store.runtime_artifact_values import ArtifactKey, RuntimeValue
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_artifact_values import ArtifactKey, RuntimeValue
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,

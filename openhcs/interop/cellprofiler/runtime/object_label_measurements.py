@@ -19,7 +19,7 @@ from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.runtime_store.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
+from openhcs.core.artifact_store.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )

@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 from openhcs.constants.constants import Backend
 from openhcs.core.progress.types import AxisErrorProgressPhase, CancelledProgressPhase, CancelledProgressStatus, ErrorProgressStatus
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactQuery
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactQuery
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
 
 if TYPE_CHECKING:

@@ -25,7 +25,7 @@ from openhcs.core.artifacts.kinds import (
     SpatialGridArtifactType,
 )
 from openhcs.core.callable.runtime_adapters import RuntimeAdapterRequest, RuntimeAdapterSpec
-from openhcs.core.runtime_store.runtime_artifact_values import (
+from openhcs.core.artifact_store.runtime_artifact_values import (
     RuntimeValue,
 )
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData
@@ -52,7 +52,7 @@ from openhcs.core.payload.runtime_slice_projection import (
 from openhcs.core.measurements.runtime_spatial_grid import (
     SpatialGrid,
 )
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactInput,
     RuntimeArtifactLocation,
     RuntimeArtifactQuery,

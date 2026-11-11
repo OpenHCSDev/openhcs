@@ -66,7 +66,7 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerStepAssemblyStage,
     PathPlannerValidationStage,
 )
-from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+from openhcs.core.artifact_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchExecutionDomain
 from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
@@ -76,7 +76,7 @@ from openhcs.core.measurements.runtime_measurements import (
 )
 from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_store.runtime_stores import (
+from openhcs.core.artifact_store.runtime_stores import (
     RuntimeArtifactBatch,
     RuntimeArtifactLocation,
     replace_runtime_artifact_payload,
