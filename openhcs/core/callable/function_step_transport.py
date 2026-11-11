@@ -343,3 +343,6 @@ class PipelineFunctionReferences:
             return (func_ref, params)
 
         return AuthoredFunctionPattern.map_leaves(func_value, reference_leaf)
+
+from openhcs.core.execution.compiled_execution import _register_FunctionStepTransportAuthority
+_register_FunctionStepTransportAuthority(FunctionStepTransportAuthority)

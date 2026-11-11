@@ -5083,3 +5083,8 @@ def materialize(
     )
     batch.save()
     return batch.primary_path
+
+from openhcs.core.materialization.options import _register__render_csv_rows
+_register__render_csv_rows(_render_csv_rows)
+from openhcs.core.materialization.options import _register__render_csv
+_register__render_csv(_render_csv)

@@ -23,6 +23,16 @@ from openhcs.core.materialization.path_scopes import (
     SharedMaterializationRelativePathScope,
 )
 
+_render_csv_rows = None  # registration slot
+def _register__render_csv_rows(val):
+    global _render_csv_rows
+    _render_csv_rows = val
+
+_render_csv = None  # registration slot
+def _register__render_csv(val):
+    global _render_csv
+    _render_csv = val
+
 
 class MaterializedFilenameIdentity(ABC, metaclass=AutoRegisterMeta):
     """What a materialized artifact's filename is built from; ``name`` is its spelling."""
@@ -126,14 +136,12 @@ class CsvOptions(FileOutputOptions, SourceOptions, TabularExtractionOptions):
         schema: tuple[tuple[str, ...], tuple[tuple[str, ...], ...]] | None = None,
     ) -> tuple[str, str]:
         """Derive header and complete CSV through this writer's format owner."""
-        from openhcs.core.materialization.core import _render_csv_rows
 
         columns, _headers = self.csv_schema(rows) if schema is None else schema
         return _render_csv_rows((), columns), self.render(rows)
 
     def render(self, data: Any) -> str:
         """Render through the existing CSV format owner."""
-        from openhcs.core.materialization.core import _render_csv
 
         return _render_csv(data, self)
 

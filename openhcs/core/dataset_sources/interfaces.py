@@ -29,6 +29,16 @@ from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 
+OpenHCSMetadata = None  # registration slot
+def _register_OpenHCSMetadata(val):
+    global OpenHCSMetadata
+    OpenHCSMetadata = val
+
+VirtualWorkspacePathLookup = None  # registration slot
+def _register_VirtualWorkspacePathLookup(val):
+    global VirtualWorkspacePathLookup
+    VirtualWorkspacePathLookup = val
+
 
 
 
@@ -153,7 +163,6 @@ class AnalysisResultDirectory:
         """Resolve a file through the source bindings this directory's metadata declares."""
         if self.source_projection is None:
             return None
-        from openhcs.core.source.source_workspace_projection import VirtualWorkspacePathLookup
 
         return self.source_projection.source_projection_for(
             VirtualWorkspacePathLookup.from_paths(virtual_path, full_path)
@@ -685,7 +694,6 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         microscope_handler: ViewerMicroscopeHandlerABC,
     ) -> MetadataViewDocument:
         """Project this handler's metadata into the standard read-only UI document."""
-        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
 
         component_values = self.component_value_set(dataset_root)
         grid_dims = self.get_metadata_grid_dimensions(dataset_root)

@@ -39,6 +39,7 @@ from openhcs.core.config.streaming_config_declarations import ViewerFamily
 from openhcs.core.axes.axis_filter import StepAxisFilterMap
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.core.callable.callable_contract import register_context_parameter_name
 
 _RuntimeStepValue = TypeVar("_RuntimeStepValue")
 
@@ -306,3 +307,5 @@ class ExecutingContext(CompiledContext):
 
 
 DebugExecutionContext.register(ExecutingContext)
+
+register_context_parameter_name(ProcessingContext.require_parameter_name())

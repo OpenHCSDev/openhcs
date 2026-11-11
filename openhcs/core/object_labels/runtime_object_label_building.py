@@ -167,3 +167,6 @@ class SourceImageObjectLabelBuildRequest:
                 f"domain: {tuple(label_array.shape[-2:])!r} != {tuple(source_shape_yx)!r}."
             )
         return projection
+
+from openhcs.core.payload.runtime_image_values import _register_SourceImageObjectLabelBuildRequest
+_register_SourceImageObjectLabelBuildRequest(SourceImageObjectLabelBuildRequest)

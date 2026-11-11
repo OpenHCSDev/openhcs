@@ -1252,3 +1252,6 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
             sub_dir=str(output_dir.relative_to(dataset_root)),
             results_dir=str(output_dir),
         )
+
+from openhcs.core.steps.abstract import _register_OpenHCSMetadataTarget
+_register_OpenHCSMetadataTarget(OpenHCSMetadataTarget)

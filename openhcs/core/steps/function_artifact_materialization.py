@@ -66,6 +66,11 @@ from openhcs.core.materialization.core import (
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily, PartitionAxis
 from openhcs.core.payload.runtime_image_values import as_runtime_value
 
+PostExecuteHook = None  # registration slot
+def _register_PostExecuteHook(val):
+    global PostExecuteHook
+    PostExecuteHook = val
+
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
@@ -995,7 +1000,6 @@ class RuntimeArtifactMaterialization:
         context: "ExecutingContext",
     ) -> StepExecutionObservation:
         """Report historical debug destinations and read their retained CSV text."""
-        from openhcs.core.util.post_execute import PostExecuteHook
 
         target = plan.runtime_artifact_materialization
         if not target.has_persistent_target:
@@ -1220,7 +1224,6 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             if self.materialization.spec.participates_in_runtime_export_observation()
             else ()
         )
-        from openhcs.core.util.post_execute import PostExecuteHook
 
         return StepExecutionObservation(
             MappingProxyType({address: locations}),

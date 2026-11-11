@@ -277,3 +277,6 @@ class RuntimeValue:
                 materialization_source_metadata=self.materialization_source_metadata,
             )
         return self
+
+from openhcs.core.artifacts.plans import _register_RuntimeValue
+_register_RuntimeValue(RuntimeValue)

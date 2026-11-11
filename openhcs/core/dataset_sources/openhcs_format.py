@@ -1702,3 +1702,10 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
     # - get_grid_dimensions(self, dataset_root: Union[str, Path])
     # - get_pixel_size(self, dataset_root: Union[str, Path])
     # These will use our OpenHCSMetadataHandler correctly.
+
+from openhcs.core.dataset_sources.interfaces import _register_OpenHCSMetadata
+_register_OpenHCSMetadata(OpenHCSMetadata)
+from openhcs.core.steps.function_io import _register_OpenHCSMetadataHandler
+_register_OpenHCSMetadataHandler(OpenHCSMetadataHandler)
+from openhcs.core.steps.function_io import _register_OpenHCSMetadataGenerator
+_register_OpenHCSMetadataGenerator(OpenHCSMetadataGenerator)
