@@ -906,7 +906,7 @@ ColocalizationAnalyzer = Callable[
 ]
 
 
-COLOCALIZATION_ANALYZERS: dict[str, ColocalizationAnalyzer] = (
+COLOCALIZATION_ANALYZERS: dict[ColocalizationMethod, ColocalizationAnalyzer] = (
     colocalization_analyzer_catalog(
         distance_based=(
             lambda chan_1_result, chan_2_result, max_distance, _min_overlap_area, _intensity_threshold: ColocalizationAnalysis().distance_based(

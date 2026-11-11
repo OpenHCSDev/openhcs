@@ -326,7 +326,7 @@ def count_cells_multi_channel(
     coloc_result = _analyze_colocalization(
         chan_1_result,
         chan_2_result,
-        colocalization_method.value,
+        colocalization_method,
         max_distance,
         min_overlap_area,
         intensity_threshold,
@@ -961,26 +961,26 @@ def _detect_cells_threshold(
 def _analyze_colocalization(
     chan_1_result: CellCountResult,
     chan_2_result: CellCountResult,
-    method: str,
+    method: ColocalizationMethod,
     max_distance: float,
     min_overlap_area: float,
     intensity_threshold: float,
 ) -> MultiChannelResult:
     """Analyze colocalization between two channels."""
 
-    if method == ColocalizationMethod.DISTANCE_BASED.value:
+    if method is ColocalizationMethod.DISTANCE_BASED:
         return _colocalization_distance_based(
             chan_1_result, chan_2_result, max_distance
         )
-    elif method == ColocalizationMethod.OVERLAP_AREA.value:
+    elif method is ColocalizationMethod.OVERLAP_AREA:
         return _colocalization_overlap_based(
             chan_1_result, chan_2_result, min_overlap_area
         )
-    elif method == ColocalizationMethod.INTENSITY_CORRELATION.value:
+    elif method is ColocalizationMethod.INTENSITY_CORRELATION:
         return _colocalization_intensity_based(
             chan_1_result, chan_2_result, intensity_threshold
         )
-    elif method == ColocalizationMethod.MANDERS_COEFFICIENTS.value:
+    elif method is ColocalizationMethod.MANDERS_COEFFICIENTS:
         return _colocalization_manders(
             chan_1_result, chan_2_result, intensity_threshold
         )

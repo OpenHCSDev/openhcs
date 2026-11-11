@@ -375,7 +375,7 @@ def count_cells_multi_channel(
     coloc_result = _analyze_colocalization(
         chan_1_result,
         chan_2_result,
-        colocalization_method.value,
+        colocalization_method,
         max_distance,
         min_overlap_area,
         intensity_threshold,
@@ -736,7 +736,7 @@ DETECTION_METHODS: dict[DetectionMethod, DetectionMethodHandler] = detection_met
 def _analyze_colocalization(
     chan_1_result: CellCountResult,
     chan_2_result: CellCountResult,
-    method: str,
+    method: ColocalizationMethod,
     max_distance: float,
     min_overlap_area: float,
     intensity_threshold: float,
@@ -761,7 +761,7 @@ ColocalizationAnalyzer = Callable[
 ]
 
 
-COLOCALIZATION_ANALYZERS: dict[str, ColocalizationAnalyzer] = (
+COLOCALIZATION_ANALYZERS: dict[ColocalizationMethod, ColocalizationAnalyzer] = (
     colocalization_analyzer_catalog(
         distance_based=(
             lambda chan_1_result, chan_2_result, max_distance, _min_overlap_area, _intensity_threshold: ColocalizationAnalysis().distance_based(
