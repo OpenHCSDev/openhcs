@@ -820,10 +820,7 @@ def _calculate_initial_positions_gpu(
     grid_rows, grid_cols = grid_dims
 
     # Handle both numpy and cupy arrays
-    if isinstance(image_stack, cp.ndarray):
-        tile_height, tile_width = image_stack.shape[1:3]
-    else:
-        tile_height, tile_width = image_stack.shape[1:3]
+    tile_height, tile_width = image_stack.shape[1:3]
 
     spacing_factor = 1.0 - overlap_ratio
 
@@ -1065,10 +1062,7 @@ def ashlar_compute_tile_positions_gpu(
 
         # Use original image_stack for fallback dimensions
         request_stack_is_gpu = _is_cupy_array(request.image_stack)
-        if request_stack_is_gpu:
-            tile_height, tile_width = request.image_stack.shape[1:3]
-        else:
-            tile_height, tile_width = request.image_stack.shape[1:3]
+        tile_height, tile_width = request.image_stack.shape[1:3]
 
         spacing_factor = 1.0 - request.overlap_ratio
 
@@ -1080,10 +1074,7 @@ def ashlar_compute_tile_positions_gpu(
             positions.append((float(x_pos), float(y_pos)))
 
         # Set result_image_stack for fallback case
-        if not request_stack_is_gpu:
-            result_image_stack = request.image_stack
-        else:
-            result_image_stack = request.image_stack
+        result_image_stack = request.image_stack
 
     logger.info(f"Ashlar GPU: Completed processing {len(positions)} tile positions")
 
