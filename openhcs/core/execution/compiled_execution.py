@@ -8,6 +8,7 @@ from typing import Mapping, Sequence
 from objectstate.lazy_factory import (
     resolve_lazy_configurations_for_serialization,
 )
+from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.execution.worker_start_policy import (
     WorkerStartDecision,
     WorkerStartExecutionFacts,
@@ -162,8 +163,6 @@ class CompiledExecutionBundle:
         worker_assignments: Mapping[str, list[str]],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
     ) -> "CompiledExecutionBundle":
-        from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
-
         transport_contexts = FunctionStepTransportAuthority.normalize_contexts(
             resolve_lazy_configurations_for_serialization(dict(runtime_contexts.items()))
         )
@@ -200,9 +199,6 @@ class CompiledExecutionBundle:
         context_keys: Sequence[str] | None = None,
     ) -> "CompiledExecutionBundle":
         """Derive pickle-safe contexts while retaining shared declarations."""
-
-        from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
-
         contexts = (
             self.transport_contexts
             if context_keys is None

@@ -21,6 +21,7 @@ from polystore.streaming.viewer_transport import (
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 
 
 @dataclass(frozen=True, slots=True, init=False, eq=False)
@@ -144,8 +145,6 @@ class AnalysisResultDirectory:
         """Resolve a file through the source bindings this directory's metadata declares."""
         if self.source_projection is None:
             return None
-        from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
-
         return self.source_projection.source_projection_for(
             VirtualWorkspacePathLookup.from_paths(virtual_path, full_path)
         )

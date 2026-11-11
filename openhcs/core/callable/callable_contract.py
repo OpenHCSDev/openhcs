@@ -63,6 +63,7 @@ from openhcs.core.payload.runtime_image_values import owned_runtime_value, Runti
 from openhcs.core.payload.runtime_output_matching import split_runtime_output
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.config.pipeline_config import runtime_config_parameter
+from openhcs.core.pipeline.annotation_checks import special_input_parameter_accepts_sequence
 
 
 CallableNamespace = Mapping[str, Any]
@@ -1435,8 +1436,6 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
 
     def validate_artifact_input_parameter_bindings(self) -> None:
         """Validate exact artifact occurrences against the normalized callable ABI."""
-
-        from openhcs.core.pipeline.annotation_checks import special_input_parameter_accepts_sequence
 
         artifact_parameters = {}
         parameters = self.canonical_signature.parameters
