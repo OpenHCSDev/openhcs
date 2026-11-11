@@ -91,7 +91,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_float,
     parse_cellprofiler_int,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
@@ -171,7 +171,7 @@ def log_threshold_profile(label: str, seconds: float, **fields: object) -> None:
     RuntimeProfileLogger.log(logger, label, seconds, **fields)
 
 
-class CellProfilerThresholdAssignment(Enum):
+class CellProfilerThresholdAssignment(Enum, NumbaNumpyDefaultBackend):
     """Closed foreground/background assignment for multi-class CP thresholds."""
 
     FOREGROUND = "Foreground"
@@ -767,11 +767,6 @@ class ThresholdSmoothingBackendStrategy(
 
 class NumbaNumpyThresholdSmoothingBackendStrategy(ThresholdSmoothingBackendStrategy):
     """NumPy-memory threshold smoothing with Numba convolution."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         image = np.linspace(0.0, 1.0, 16, dtype=np.float64).reshape((4, 4))
         mask = np.ones(image.shape, dtype=np.bool_)
@@ -889,7 +884,7 @@ class ThresholdDiagnosticsBackendStrategy(
         """Compute foreground plus background log-histogram entropy."""
 
 
-class NumpyThresholdDiagnosticsBackendStrategy(ThresholdDiagnosticsBackendStrategy):
+class NumpyThresholdDiagnosticsBackendStrategy(ThresholdDiagnosticsBackendStrategy, NumbaNumpyDefaultBackend):
     """Independent NumPy implementation of CellProfiler threshold diagnostics."""
 
     memory_type = MemoryType.NUMPY
@@ -997,11 +992,6 @@ class NumbaNumpyThresholdDiagnosticsBackendStrategy(
     ThresholdDiagnosticsBackendStrategy
 ):
     """Numba-accelerated NumPy implementation of threshold diagnostics."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         image64 = np.linspace(0.0, 1.0, 16, dtype=np.float64).reshape((4, 4))
         image32 = image64.astype(np.float32)
@@ -1344,13 +1334,8 @@ class NumbaLogTransformConversion:
     log_max: float
 
 
-class NumbaNumpyThresholdPrimitiveBackendStrategy(ThresholdPrimitiveBackendStrategy):
+class NumbaNumpyThresholdPrimitiveBackendStrategy(ThresholdPrimitiveBackendStrategy, NumbaNumpyDefaultBackend):
     """Numba-backed threshold primitives for NumPy-memory images."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         values = np.linspace(0.01, 1.0, 32, dtype=np.float64)
         image = values[:25].reshape((5, 5))

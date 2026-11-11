@@ -103,7 +103,7 @@ from openhcs.interop.cellprofiler.setting_names import (
     optional_setting_value,
     required_setting_value,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
@@ -125,7 +125,7 @@ if TYPE_CHECKING:
     from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 
 
-class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPolicy):
+class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPolicy, NumbaNumpyDefaultBackend):
     """TrackObjects emits object rows and image-level tracking counts together."""
 
     explicit_row_ownership_required = True
@@ -1003,11 +1003,6 @@ class ObjectTrackingBackendStrategy(
 
 class NumbaNumpyObjectTrackingBackendStrategy(ObjectTrackingBackendStrategy):
     """Numba implementation of TrackObjects dense-label primitives."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         current = np.array([[0, 1], [2, 2]], dtype=np.int32)
         previous = np.array([[0, 1], [1, 0]], dtype=np.int32)

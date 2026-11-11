@@ -86,7 +86,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
-class RelateObjectsDistanceParentInputRelation(ArtifactSpecRelation):
+class RelateObjectsDistanceParentInputRelation(ArtifactSpecRelation, NumbaNumpyDefaultBackend):
     """Mark an object input as a repeated distance-parent role."""
 
     relation_key = "relate_objects_distance_parent_input"
@@ -825,7 +825,7 @@ class RelateObjectsDistanceAggregateFeatureSemantics(
         return feature.unqualified_feature_name
 
 
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -1766,11 +1766,6 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
 
 class NumbaNumpyObjectRelationshipBackendStrategy(ObjectRelationshipBackendStrategy):
     """Numba-accelerated NumPy object relationship primitives."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         parent_labels = np.array([[1, 1, 0], [0, 2, 2], [0, 0, 0]], dtype=np.int32)
         child_labels = np.array([[1, 0, 0], [0, 2, 2], [0, 0, 3]], dtype=np.int32)

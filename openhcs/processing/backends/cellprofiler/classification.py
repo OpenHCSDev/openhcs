@@ -89,7 +89,7 @@ class ClassifiedImageOutput:
 
 
 @dataclass(frozen=True)
-class ClassifiedImageSourceRelation(SourceStackLineageSourceRelation):
+class ClassifiedImageSourceRelation(SourceStackLineageSourceRelation, NumbaNumpyDefaultBackend):
     """Tie one classified image to its exact repeated classification rule."""
 
     relation_key: ClassVar[str] = "classify_objects_classified_image_source"
@@ -1292,7 +1292,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -1968,11 +1968,6 @@ class NumbaNumpyObjectClassificationBackendStrategy(
     ObjectClassificationBackendStrategy
 ):
     """Numba-backed NumPy object classification primitives."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         labels = np.array([[0, 1], [2, 2]], dtype=np.int32)
         image = np.array([[0.0, 1.0], [2.0, 3.0]], dtype=np.float64)

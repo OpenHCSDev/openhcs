@@ -129,7 +129,7 @@ class MeasureImageIntensityModule(
     ignored_settings = ("Measure the intensity only from areas enclosed by objects?",)
 
     @dataclass(frozen=True, slots=True)
-    class MeasurementRows(ModuleOwnedResultMeasurementRows):
+    class MeasurementRows(ModuleOwnedResultMeasurementRows, NumbaNumpyDefaultBackend):
         """Project image-intensity records into exact CellProfiler features."""
 
         measurement_name: str
@@ -309,7 +309,7 @@ from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchInvocation
 from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
     PreparedObjectMeasurementInvocation,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendSelection,
     CellProfilerBackendStrategyMixin,
@@ -1041,9 +1041,6 @@ class ObjectIntensityBackendStrategy(
 class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
     """Numba-accelerated NumPy object-intensity backend."""
 
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
     sparse_foreground_max_fraction: ClassVar[float] = 0.6
 
     def maximum_intensity_positions(

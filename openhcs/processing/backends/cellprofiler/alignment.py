@@ -73,7 +73,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     ModuleOwnedResultMeasurementRows,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -95,7 +95,7 @@ class _AlignShiftFieldRole(str, Enum):
     IMAGE_OUTPUT_INDEX = "image_output_index"
 
 
-class AlignOutputMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule):
+class AlignOutputMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule, NumbaNumpyDefaultBackend):
     """Declares Align measurement rows on the module MRO."""
 
     measurement_feature_family = "Align"
@@ -513,11 +513,6 @@ class AlignmentBackendStrategy(
 
 class NumbaNumpyAlignmentBackendStrategy(AlignmentBackendStrategy):
     """Numba-accelerated NumPy alignment primitives."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         pixels = np.arange(16, dtype=np.float64).reshape((4, 4))
         mask = np.ones(pixels.shape, dtype=np.bool_)

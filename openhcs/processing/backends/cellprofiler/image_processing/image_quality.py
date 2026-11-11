@@ -74,7 +74,7 @@ from openhcs.interop.cellprofiler.setting_names import (
     setting_values,
     split_symbol_names,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
@@ -98,7 +98,7 @@ if TYPE_CHECKING:
     from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 
 
-class ImageQualityThresholdMethod(Enum):
+class ImageQualityThresholdMethod(Enum, NumbaNumpyDefaultBackend):
     """Threshold algorithms exposed by MeasureImageQuality settings."""
 
     def __new__(
@@ -1043,11 +1043,6 @@ class NumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
 
 class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
     """Numba-accelerated NumPy image-quality backend."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         image = np.arange(25, dtype=np.float32).reshape((5, 5))
         self.haralick_h3(image, scale=1)

@@ -70,7 +70,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     normalize_cellprofiler_setting_name,
     parse_cellprofiler_int,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -149,7 +149,7 @@ class MeasureTextureModule(
         "Number of angles to compute for Gabor",
     )
 
-    class MeasurementFeature(RuntimeMeasurementFeature):
+    class MeasurementFeature(RuntimeMeasurementFeature, NumbaNumpyDefaultBackend):
         """Haralick feature families emitted by MeasureTexture."""
 
         ANGULAR_SECOND_MOMENT = "AngularSecondMoment"
@@ -253,11 +253,6 @@ class HaralickTextureBackendStrategy(
 
 class NumbaNumpyObjectTextureCropBackendStrategy(ObjectTextureCropBackendStrategy):
     """Numba-accelerated NumPy backend for object texture crop extraction."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
         labels = np.array([[0, 1, 1], [0, 1, 0], [2, 2, 0]], dtype=np.int64)
@@ -289,13 +284,8 @@ class NumbaNumpyObjectTextureCropBackendStrategy(ObjectTextureCropBackendStrateg
         return (object_labels.astype(np.int64, copy=False), tuple(crops))
 
 
-class NumbaNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy):
+class NumbaNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy, NumbaNumpyDefaultBackend):
     """Numba implementation of mahotas' default 2-D Haralick semantics."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
-
     def prepare_backend(self) -> None:
         image = np.arange(25, dtype=np.int64).reshape((5, 5))
         self.haralick_features(image, scale=1, ignore_zeros=False)

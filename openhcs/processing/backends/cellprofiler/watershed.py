@@ -404,7 +404,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
 from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.processing.backends.cellprofiler._backend import (
+(
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
@@ -982,7 +982,7 @@ class WatershedSeedStrategy(
         """Return marker labels for the supplied seed image."""
 
 
-class LocalWatershedSeedStrategy(WatershedSeedStrategy):
+class LocalWatershedSeedStrategy(WatershedSeedStrategy, NumbaNumpyDefaultBackend):
     strategy_key = WatershedSeedMethod.LOCAL
 
     def markers(
@@ -1624,9 +1624,6 @@ class CentrosomeNumpyLegacyWatershedBackendStrategy(NumpyLegacyWatershedBackendS
 class NumbaNumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
     """NumPy-memory legacy watershed backend with required Numba acceleration."""
 
-    memory_type = MemoryType.NUMPY
-    backend_provider = NumbaBackendProvider
-    is_default_backend = True
     prefer_fast = True
 
     def prepare_backend(self) -> None:
