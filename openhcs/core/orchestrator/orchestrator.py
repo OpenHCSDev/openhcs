@@ -571,7 +571,7 @@ class PipelineOrchestrator:
 
 
         source_role = self.microscope_handler.source_selection_role()
-        if not source_role.requires_local_directory:
+        if not source_role.should_create_local_metadata():
             logger.debug("Skipping local metadata creation for %s", source_role.role_name)
             return
 
