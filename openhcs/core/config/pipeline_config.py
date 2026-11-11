@@ -992,6 +992,37 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
             return CompiledSourceBindingPlan()
         return self.compiled_plan(selected_bindings=bindings)
 
+    def resolve_defaults(self) -> "SourceBindingsConfig":
+        """Return concrete source-binding defaults from eager or lazy config values."""
+        from objectstate import get_base_type_for_lazy
+
+        lazy_base_type = get_base_type_for_lazy(type(self))
+        if lazy_base_type is SourceBindingsConfig:
+            concrete_defaults = SourceBindingsConfig()
+            return SourceBindingsConfig(
+                **{
+                    item.name: (
+                        resolved
+                        if (
+                            resolved := type(self).__getattribute__(
+                                self,
+                                item.name,
+                            )
+                        )
+                        is not None
+                        else object.__getattribute__(concrete_defaults, item.name)
+                    )
+                    for item in fields(SourceBindingsConfig)
+                    if item.init
+                }
+            )
+        if isinstance(self, SourceBindingsConfig):
+            return self
+        raise TypeError(
+            "Source-binding defaults must resolve to SourceBindingsConfig, got "
+            f"{type(self).__name__}."
+        )
+
 @global_pipeline_config(
     preview_label="STEP_SRC",
     abbreviation="step_src",
@@ -1024,34 +1055,7 @@ def source_bindings_defaults_to_base(
     defaults: SourceBindingsConfig,
 ) -> SourceBindingsConfig:
     """Return concrete source-binding defaults from eager or lazy config values."""
-    from objectstate import get_base_type_for_lazy
-
-    lazy_base_type = get_base_type_for_lazy(type(defaults))
-    if lazy_base_type is SourceBindingsConfig:
-        concrete_defaults = SourceBindingsConfig()
-        return SourceBindingsConfig(
-            **{
-                item.name: (
-                    resolved
-                    if (
-                        resolved := type(defaults).__getattribute__(
-                            defaults,
-                            item.name,
-                        )
-                    )
-                    is not None
-                    else object.__getattribute__(concrete_defaults, item.name)
-                )
-                for item in fields(SourceBindingsConfig)
-                if item.init
-            }
-        )
-    if isinstance(defaults, SourceBindingsConfig):
-        return defaults
-    raise TypeError(
-        "Source-binding defaults must resolve to SourceBindingsConfig, got "
-        f"{type(defaults).__name__}."
-    )
+    return defaults.resolve_defaults()
 
 
 @abbreviation("seq")

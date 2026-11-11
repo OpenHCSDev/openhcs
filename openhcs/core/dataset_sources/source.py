@@ -199,13 +199,12 @@ class DatasetSourceChoice(ABC):
         """Construct the selected source bound to ``root``."""
 
         from openhcs.core.dataset_sources.source import DeclaredFileSource
-        from openhcs.core.config.pipeline_config import source_bindings_defaults_to_base
 
         root = Path(root)
         source_bindings = (
             None
             if source_bindings_config is None
-            else source_bindings_defaults_to_base(source_bindings_config)
+            else source_bindings_config.resolve_defaults()
         )
         source_type = cls.source_type_for(root, filemanager, source_bindings)
         if (
