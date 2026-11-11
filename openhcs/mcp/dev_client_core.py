@@ -1519,12 +1519,9 @@ class McpDevTransportAuthority:
     def daemon_enabled(cls) -> bool:
         """Return whether the daemon environment variable opts in."""
 
-        return os.getenv(cls.daemon_environment_variable, "").strip().lower() in {
-            "1",
-            "on",
-            "true",
-            "yes",
-        }
+        from openhcs.utils.environment import BOOL_TRUE_STRINGS
+
+        return os.getenv(cls.daemon_environment_variable, "").strip().lower() in BOOL_TRUE_STRINGS
 
     @classmethod
     def spawn_failure_marker_path(cls, socket_path: Path) -> Path:
