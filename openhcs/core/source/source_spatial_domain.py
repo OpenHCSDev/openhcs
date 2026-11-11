@@ -654,11 +654,7 @@ class SourceSpatialDomainAdapter(ABC):
         *,
         source_shape_override_yx: tuple[int, int] | None = None,
     ) -> "SourceSpatialDomainAdapter | None":
-        """Return the placement adapter of a placed value or a bare NumPy array."""
-        if isinstance(value, np.ndarray):
-            from openhcs.core.payload.runtime_image_values import PlainImagePayload
-
-            value = PlainImagePayload(value)
+        """Return the placement adapter of a spatially placed value."""
         if not isinstance(value, SpatiallyPlacedValue):
             return None
         return value.spatial_adapter(source_shape_override_yx=source_shape_override_yx)
