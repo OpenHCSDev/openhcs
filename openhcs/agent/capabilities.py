@@ -634,9 +634,9 @@ def _enum_member_title(value: Enum) -> str:
 def _contract_schema_name(contract: AgentContract | None) -> str | None:
     if contract is None:
         return None
-    if isinstance(contract, (AgentScalarInputContract, AgentResultFamilyContract)):
-        return contract.schema_name
-    return contract.__name__
+    if isinstance(contract, type):
+        return contract.__name__
+    return contract.schema_name
 
 
 def require_agent_type_contract(contract: AgentContract | None) -> type:
