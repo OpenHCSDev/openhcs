@@ -995,7 +995,7 @@ def _colocalization_distance_based(
 
     if not chan_1_result.cell_positions or not chan_2_result.cell_positions:
         return _create_empty_coloc_result(
-            chan_1_result, chan_2_result, "distance_based"
+            chan_1_result, chan_2_result, ColocalizationMethod.DISTANCE_BASED,
         )
 
     # Convert positions to arrays
@@ -1053,7 +1053,7 @@ def _colocalization_distance_based(
         slice_index=chan_1_result.slice_index,
         chan_1_results=chan_1_result,
         chan_2_results=chan_2_result,
-        colocalization_method="distance_based",
+        colocalization_method=ColocalizationMethod.DISTANCE_BASED,
         colocalized_count=colocalized_count,
         colocalization_percentage=colocalization_percentage,
         chan_1_only_count=chan_1_only,
@@ -1064,7 +1064,7 @@ def _colocalization_distance_based(
 
 
 def _create_empty_coloc_result(
-    chan_1_result: CellCountResult, chan_2_result: CellCountResult, method: str
+    chan_1_result: CellCountResult, chan_2_result: CellCountResult, method: ColocalizationMethod,
 ) -> MultiChannelResult:
     """Create empty colocalization result when no cells found."""
     return MultiChannelResult(
@@ -1112,7 +1112,7 @@ def _colocalization_intensity_based(
 
     if not chan_1_result.cell_positions or not chan_2_result.cell_positions:
         return _create_empty_coloc_result(
-            chan_1_result, chan_2_result, "intensity_correlation"
+            chan_1_result, chan_2_result, ColocalizationMethod.INTENSITY_CORRELATION,
         )
 
     # Use distance-based pairing first
@@ -1156,7 +1156,7 @@ def _colocalization_intensity_based(
         slice_index=chan_1_result.slice_index,
         chan_1_results=chan_1_result,
         chan_2_results=chan_2_result,
-        colocalization_method="intensity_correlation",
+        colocalization_method=ColocalizationMethod.INTENSITY_CORRELATION,
         colocalized_count=colocalized_count,
         colocalization_percentage=colocalization_percentage,
         chan_1_only_count=len(pos_1) - colocalized_count,
@@ -1175,7 +1175,7 @@ def _colocalization_manders(
 
     if not chan_1_result.cell_positions or not chan_2_result.cell_positions:
         return _create_empty_coloc_result(
-            chan_1_result, chan_2_result, "manders_coefficients"
+            chan_1_result, chan_2_result, ColocalizationMethod.MANDERS_COEFFICIENTS,
         )
 
     # Simplified Manders calculation based on detected cells
