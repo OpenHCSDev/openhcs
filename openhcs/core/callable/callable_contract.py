@@ -194,9 +194,8 @@ class DeclaredValue(ABC):
     """How one callable-namespace declaration is validated and normalized."""
 
     default: ClassVar[Any] = None
-    # A declaration whose default is itself a decision (not "undeclared") is
-    # always written, so a reader never re-derives it.
-    written_when_default: ClassVar[bool] = False
+    def should_write(self, value: Any) -> bool:
+        return value != self.default
 
     def read(self, value: object, *, owner: str) -> Any:
         """Return the declared value, or this kind's default when undeclared."""
@@ -258,7 +257,8 @@ class DeclaredMember(DeclaredInstance):
 class DeclaredDecision(DeclaredInstance):
     """A declaration where None is a decision, such as "inject no context"."""
 
-    written_when_default: ClassVar[bool] = True
+    def should_write(self, value: Any) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -547,7 +547,7 @@ class CallableDeclaration:
             attribute: value
             for name, attribute, kind in _declared_fields(CallableDeclaration)
             for value in (getattr(self, name),)
-            if value != kind.default or kind.written_when_default
+            if kind.should_write(value)
         }
 
     @property
