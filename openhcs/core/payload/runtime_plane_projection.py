@@ -30,8 +30,8 @@ class RuntimeSliceProjectableValue(ABC):
         return NoPlaneAxis
 
     @property
-    def image_metadata(self) -> ImagePayloadMetadata:
-        """Return the image metadata this value carries; only images carry any."""
+    def image_metadata(self) -> PlaneMetadata:
+        """Return the plane metadata this value carries; only images carry any."""
         from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
         return ImagePayloadMetadata()

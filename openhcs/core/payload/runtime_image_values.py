@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from openhcs.core.axes.alias_property import AliasProperty
+from openhcs.core.payload.plane_provenance import PlaneMetadata
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
@@ -458,6 +459,7 @@ class ImagePayloadMetadata(
     ImagePayloadIntensityFields,
     SourceSpatialDomainFields,
     SourceVoxelSpacingFields,
+    PlaneMetadata,
 ):
     """Generic source-image metadata that should travel with runtime pixels."""
 

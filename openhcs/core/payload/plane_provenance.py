@@ -1,9 +1,10 @@
-"""Abstract plane provenance for tensor stack composition.
+"""Abstract plane provenance and metadata for tensor stack composition.
 
-Declares the provenance interface that the runtime plane axis hierarchy
-requires for composing, selecting and validating tensor planes.  The
-microscopy layer (``SourceImageProvenance``) implements this protocol;
-arraypipe consumers use only this interface.
+Declares the provenance and metadata interfaces that the runtime plane
+axis hierarchy requires for composing, selecting and validating tensor
+planes.  The microscopy layer (``SourceImageProvenance``,
+``ImagePayloadMetadata``) implements these protocols; arraypipe consumers
+use only these interfaces.
 """
 
 from __future__ import annotations
@@ -11,6 +12,26 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Self
+
+
+class PlaneMetadata(ABC):
+    """Metadata a tensor value carries about its plane structure.
+
+    Subclasses carry domain-specific information (source provenance,
+    spatial calibration, intensity scaling).  The tensor infrastructure
+    reads only the abstract properties declared here.
+    """
+
+    __slots__ = ()
+
+    @property
+    @abstractmethod
+    def source_provenance(self) -> PlaneProvenance:
+        """The provenance of this value's data planes."""
+
+    @abstractmethod
+    def axis_position(self, role: type) -> int | None:
+        """Return the rank-relative position of the axis carrying ``role``."""
 
 
 class PlaneProvenance(ABC):
