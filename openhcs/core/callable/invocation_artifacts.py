@@ -207,14 +207,6 @@ class ArtifactDeclarationStepContext:
         main_flow_artifacts: ArtifactSpecCollection,
     ) -> "ArtifactDeclarationStepContext":
         """Return the forward declaration context after one artifact graph."""
-
-        from openhcs.core.pipeline.artifact_planning import ArtifactGraph
-
-        if not isinstance(graph, ArtifactGraph):
-            raise TypeError(
-                "Artifact declaration advancement requires ArtifactGraph, got "
-                f"{type(graph).__name__}."
-            )
         if not isinstance(main_flow_artifacts, ArtifactSpecCollection):
             raise TypeError(
                 "Artifact graph advancement requires an ArtifactSpecCollection "
