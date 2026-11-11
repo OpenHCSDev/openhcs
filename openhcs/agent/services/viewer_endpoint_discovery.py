@@ -140,24 +140,28 @@ def _owned_viewer_state(port: int) -> bool:
 
 def _projection_from_response(
     response: Any,
-) -> tuple[str | None, int | None]:
-    """Project the viewer title and layer count from one state response."""
+) -> tuple[str | None, str | None, int | None]:
+    """Project the viewer type, title and layer count from one state response.
 
+    Reads the response dict through ViewerWindowStateResult's field structure
+    rather than hand-listing its keys. Falls back to None for malformed input.
+    """
     if not isinstance(response, dict):
         return None, None, None
-    viewer = response.get("viewer")
-    if not isinstance(viewer, dict):
+    try:
+        from openhcs.agent.dto.viewer import ViewerWindowStateResult
+        result = ViewerWindowStateResult.from_mapping(response)
+        viewer = result.viewer
+        viewer_type = viewer.type if viewer is not None else None
+        title = viewer.title if viewer is not None else None
+        layer_count = result.layer_count or (len(result.layers) if result.layers else None)
+        return (
+            str(viewer_type) if viewer_type is not None else None,
+            str(title) if title is not None else None,
+            int(layer_count) if isinstance(layer_count, int) else None,
+        )
+    except (KeyError, TypeError, ValueError):
         return None, None, None
-    title = viewer.get("title")
-    viewer_type = viewer.get("type")
-    layer_count = response.get("layer_count")
-    if layer_count is None and isinstance(response.get("layers"), (list, tuple)):
-        layer_count = len(response["layers"])
-    return (
-        str(viewer_type) if viewer_type is not None else None,
-        str(title) if title is not None else None,
-        int(layer_count) if isinstance(layer_count, int) else None,
-    )
 
 
 def discover_viewer_endpoints() -> tuple[ViewerEndpointRecord, ...]:
