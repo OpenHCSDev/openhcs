@@ -260,14 +260,14 @@ def test_primary_objects_preparation_readies_all_admitted_storage_signatures(tmp
     script = textwrap.dedent("""
         from unittest.mock import patch
         import numpy as np
-        from openhcs.core.callable_contract import prepare_processing_callable
+        from openhcs.core.processing_preparation import CallablePreparation
         from openhcs.core.runtime_object_labels import (
             _dense_label_coordinate_moments_numba, dense_label_centers_2d_numba,
             object_label_axis_centers,
         )
         from openhcs.processing.backends.cellprofiler.primary_objects import identify_primary_objects
         assert not _dense_label_coordinate_moments_numba.signatures
-        prepare_processing_callable(identify_primary_objects)
+        CallablePreparation.from_callable(identify_primary_objects).prepare()
         kernels = (_dense_label_coordinate_moments_numba, dense_label_centers_2d_numba)
         signatures = tuple(tuple(kernel.signatures) for kernel in kernels)
         assert all(signatures)

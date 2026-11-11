@@ -10,7 +10,7 @@ from pathlib import Path
 def test_declared_preparation_covers_sobel_and_integer_label_shrink(tmp_path):
     script = textwrap.dedent("""
         import numpy as np
-        from openhcs.core.callable_contract import prepare_processing_callable
+        from openhcs.core.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler.edge import (
             EdgeMethod, enhance_edges, _sobel_numba_kernel,
         )
@@ -20,8 +20,8 @@ def test_declared_preparation_covers_sobel_and_integer_label_shrink(tmp_path):
         )
         assert not _sobel_numba_kernel.signatures
         assert not _binary_shrink_2d_numba.signatures
-        prepare_processing_callable(enhance_edges)
-        prepare_processing_callable(expand_or_shrink_objects)
+        CallablePreparation.from_callable(enhance_edges).prepare()
+        CallablePreparation.from_callable(expand_or_shrink_objects).prepare()
         dispatchers = (_sobel_numba_kernel, _binary_shrink_2d_numba)
         before = tuple(tuple(dispatcher.signatures) for dispatcher in dispatchers)
         assert all(before)
@@ -61,7 +61,7 @@ def test_registry_preparation_covers_volume_erosion_and_quantized_diagnostics(tm
         import numpy as np
         from numba.core.dispatcher import Dispatcher
 
-        from openhcs.core.callable_contract import prepare_processing_callable
+        from openhcs.core.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler.morphology import (
             NumbaNumpyMorphologyBackendStrategy,
             NumpyMorphologyBackendStrategy,
@@ -85,8 +85,8 @@ def test_registry_preparation_covers_volume_erosion_and_quantized_diagnostics(tm
             _threshold_diagnostics_unmasked_finite_quantized_numba,
         )
         assert all(not dispatcher.signatures for dispatcher in dispatchers)
-        prepare_processing_callable(erode_objects)
-        prepare_processing_callable(threshold)
+        CallablePreparation.from_callable(erode_objects).prepare()
+        CallablePreparation.from_callable(threshold).prepare()
         before = tuple(tuple(dispatcher.signatures) for dispatcher in dispatchers)
         assert all(before)
         late = []
@@ -156,7 +156,7 @@ def test_illumination_preparation_covers_masked_polynomial_and_array_views(tmp_p
         from contextlib import ExitStack
         from unittest.mock import patch
         import numpy as np
-        from openhcs.core.callable_contract import prepare_processing_callable
+        from openhcs.core.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler import illumination
 
         dispatchers = (
@@ -166,7 +166,7 @@ def test_illumination_preparation_covers_masked_polynomial_and_array_views(tmp_p
             illumination._evaluate_polynomial_surface_numba,
         )
         assert all(not dispatcher.signatures for dispatcher in dispatchers)
-        prepare_processing_callable(illumination.correct_illumination_calculate)
+        CallablePreparation.from_callable(illumination.correct_illumination_calculate).prepare()
         signatures = tuple(tuple(dispatcher.signatures) for dispatcher in dispatchers)
         assert all(signatures), "A reached masked polynomial kernel was not prepared"
 
@@ -238,7 +238,7 @@ def test_illumination_preparation_covers_shared_hull_and_line_geometry(tmp_path)
         import numpy as np
         import centrosome.filter
         import centrosome.cpmorphology
-        from openhcs.core.callable_contract import prepare_processing_callable
+        from openhcs.core.processing_preparation import CallablePreparation
         from openhcs.processing.backends.cellprofiler import illumination, label_geometry, worm_geometry
 
         dispatchers = (
@@ -248,7 +248,7 @@ def test_illumination_preparation_covers_shared_hull_and_line_geometry(tmp_path)
             worm_geometry._fill_cellprofiler_line_points_numba,
         )
         assert all(not dispatcher.signatures for dispatcher in dispatchers)
-        prepare_processing_callable(illumination.correct_illumination_calculate)
+        CallablePreparation.from_callable(illumination.correct_illumination_calculate).prepare()
         before = tuple(tuple(dispatcher.signatures) for dispatcher in dispatchers)
         assert all(before)
         layouts = {signature[0].layout for signature in dispatchers[0].signatures}

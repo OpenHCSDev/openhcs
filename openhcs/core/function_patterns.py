@@ -50,6 +50,7 @@ from openhcs.core.callable_contract import (
     PayloadAxisRequirement,
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.runtime_image_values import project_image_mask_to_data_domain
 from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
@@ -1566,13 +1567,13 @@ def normalize_prepared_function_pattern(
     """
     if isinstance(pattern, NormalizedFunctionPattern):
         for item in pattern.iter_items():
-            CallableProjection.from_callable(item.func).prepared_callable()
+            CallablePreparation.from_callable(item.func).prepared_callable()
         return pattern
     for _, chain in AuthoredFunctionPattern.groups(pattern):
         for leaf in chain:
             func, kwargs = AuthoredFunctionPattern.split_leaf(leaf)
             if not RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs or {}):
-                CallableProjection.from_callable(func).prepared_callable()
+                CallablePreparation.from_callable(func).prepared_callable()
     return normalize_function_pattern(pattern)
 
 

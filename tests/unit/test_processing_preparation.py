@@ -14,19 +14,9 @@ from types import ModuleType
 import psutil
 import pytest
 
-from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
-from openhcs.core.callable_contract import (
-    CallableContract,
-    prepare_processing_callable,
-    reset_processing_callable_preparation_cache,
-)
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.processing_preparation import (
-    CallablePreparation,
-    PreparationCacheBatch,
-    PreparationOperation,
-    PreparationCacheWorker,
-)
+from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, PreparationCacheBatch, PreparationCacheWorker, PreparationOperation
 
 
 @dataclass(frozen=True)
@@ -49,9 +39,9 @@ class AdditionalChildCachePreparation(PreparationOperation):
 def declared_module(monkeypatch):
     module = ModuleType("_openhcs_preparation_test")
     monkeypatch.setitem(sys.modules, module.__name__, module)
-    reset_processing_callable_preparation_cache()
+    PreparationOperation.reset()
     yield module
-    reset_processing_callable_preparation_cache()
+    PreparationOperation.reset()
 
 
 def declare_process(module):
@@ -89,8 +79,8 @@ def test_hooks_are_read_after_preceding_registry_and_module_effects(
         "prepare_module_registered_families",
         prepare_registries,
     )
-    prepare_processing_callable(process)
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
+    CallablePreparation.from_callable(process).prepare()
     assert events == [(declared_module.__name__,), "module", "callable"]
 
 
@@ -102,7 +92,7 @@ def test_invalid_callable_hook_fails_after_module_preparation(declared_module):
     )
     process.__dict__[FunctionContractAttribute.processing_prepare] = 42
     with pytest.raises(TypeError, match="must be callable"):
-        prepare_processing_callable(process)
+        CallablePreparation.from_callable(process).prepare()
     assert events == ["module"]
 
 
@@ -118,8 +108,8 @@ def test_failed_hook_remains_retryable_then_success_is_shared(declared_module):
     process.__dict__[FunctionContractAttribute.processing_prepare] = prepare
     with pytest.raises(RuntimeError, match="not ready"):
         CallablePreparation.from_callable(process).prepare()
-    prepare_processing_callable(process)
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
+    CallablePreparation.from_callable(process).prepare()
     assert attempts == [0, 1]
 
 
@@ -129,10 +119,10 @@ def test_replaced_module_hook_keeps_its_distinct_identity(declared_module):
     first = lambda: events.append("first")
     second = lambda: events.append("second")
     declared_module.__dict__[FunctionContractAttribute.processing_prepare] = first
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
     declared_module.__dict__[FunctionContractAttribute.processing_prepare] = second
-    prepare_processing_callable(process)
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
+    CallablePreparation.from_callable(process).prepare()
     assert events == ["first", "second"]
 
 
@@ -143,8 +133,8 @@ def test_callable_without_module_runs_only_its_declared_hook(declared_module):
     process.__dict__[FunctionContractAttribute.processing_prepare] = (
         lambda: events.append("callable")
     )
-    prepare_processing_callable(process)
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
+    CallablePreparation.from_callable(process).prepare()
     assert events == ["callable"]
     assert PreparationCacheBatch.from_callables((process,)).preparations == ()
 
@@ -292,7 +282,7 @@ def test_registry_startup_includes_declared_raw_owner_in_another_module(
         wrapper
     ).resolve_canonical_raw_callable()
     assert compiler_target is raw
-    prepare_processing_callable(compiler_target)
+    CallablePreparation.from_callable(compiler_target).prepare()
 
     assert events == [
         (declared_module.__name__, raw_module.__name__),

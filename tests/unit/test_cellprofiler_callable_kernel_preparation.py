@@ -14,11 +14,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import config as numba_config
 from numba.core.registry import CPUDispatcher
 
-from openhcs.core.callable_contract import prepare_processing_callable
-from openhcs.core.processing_preparation import (
-    PreparationCacheBatch,
-    PreparationOperation,
-)
+from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch, PreparationOperation
 from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
@@ -78,8 +74,8 @@ def test_generic_kernel_registry_prepares_non_cellprofiler_families_once(
     assert "__registry__" not in vars(PersistentNumbaKernelPreparation)
     assert "__registry__" not in vars(RegisteredNumbaKernelPreparation)
 
-    prepare_processing_callable(process)
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
+    CallablePreparation.from_callable(process).prepare()
     assert events == ["first", "second", "module", "callable"]
 
 
@@ -189,8 +185,8 @@ def test_capture_preparation_retains_registry_module_callable_effect_order(
     process = declare_callable(kernel_module, CapturedKernel().execute)
     kernel_module.__openhcs_prepare__ = lambda: events.append("module")
     monkeypatch.setenv("OPENHCS_CAPTURE_CELLPROFILER_FIXTURES_DIR", str(tmp_path))
-    prepare_processing_callable(process)
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
+    CallablePreparation.from_callable(process).prepare()
     assert events == ["module", "kernel"]
 
 
@@ -212,10 +208,10 @@ def test_late_module_capture_effect_reaches_real_shape_callable_hook(
         monkeypatch.setenv("OPENHCS_CAPTURE_CELLPROFILER_FIXTURES_DIR", str(tmp_path))
 
     kernel_module.__openhcs_prepare__ = enable_capture
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
     captured = set(tmp_path.glob("*.npz"))
     assert captured
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
     assert set(tmp_path.glob("*.npz")) == captured
 
 
@@ -258,8 +254,8 @@ def test_new_declarations_populate_children_then_share_parent_hook_readiness(
         pids = (tmp_path / name).read_text().splitlines()
         assert len(pids) == 1 and int(pids[0]) != os.getpid()
 
-    prepare_processing_callable(process)
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
+    CallablePreparation.from_callable(process).prepare()
     FirstKernel().prepare()
     for name in ("first", "second"):
         pids = (tmp_path / name).read_text().splitlines()
@@ -282,10 +278,10 @@ def test_failure_keeps_kernel_and_enclosing_module_retryable(kernel_module):
     kernel_module.RetryKernel = RetryKernel
     process = declare_callable(kernel_module, RetryKernel().prepare)
     with pytest.raises(RuntimeError, match="kernel not ready"):
-        prepare_processing_callable(process)
+        CallablePreparation.from_callable(process).prepare()
     assert not PreparationOperation._completed
-    prepare_processing_callable(process)
-    prepare_processing_callable(process)
+    CallablePreparation.from_callable(process).prepare()
+    CallablePreparation.from_callable(process).prepare()
     RetryKernel().prepare()
     assert attempts == [0, 1]
 

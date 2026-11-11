@@ -18,12 +18,7 @@ from openhcs.core.aligned_image_payload import (AlignedImageStack, ImageOutputBu
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.callable_contract import (
-    CallableContract,
-    CallableDeclaration,
-    CallableProjection,
-    callable_request,
-)
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration, CallableProjection, callable_request
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
@@ -478,7 +473,7 @@ def test_authored_distinct_raw_abi_batch_has_no_runtime_queries_and_filters_cont
         inspect.Parameter("injected",inspect.Parameter.KEYWORD_ONLY,default=False),
     ])
     monkeypatch.setattr(CallablePreparation,"prepare",lambda self:None)
-    contract = CallableContract.from_prepared_callable(wrapper)
+    contract = CallablePreparation.from_callable(wrapper).prepared_contract()
     contract = replace(contract,processing_contract=Pure2DContract, artifact_outputs=(ArtifactSpec.output("Result",ImageArtifactType),))
     source = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis,source_image_names=("DNA",)).payload_with(np.ones((12,3,4)),None)
     projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis,axis_size=12)

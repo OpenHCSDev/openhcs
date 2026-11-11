@@ -1,5 +1,6 @@
 """Shared weighted arithmetic preserves each production consumer's recipe."""
 
+from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import inspect
 
@@ -7,7 +8,6 @@ import numpy as np
 import pytest
 
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
 from openhcs.processing.backends.cellprofiler.color import combine_color_to_gray
 from openhcs.processing.backends.processors.numpy_processor import (
     NumpyWeightedProjectionKernelPreparation,

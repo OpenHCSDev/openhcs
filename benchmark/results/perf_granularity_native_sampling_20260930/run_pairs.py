@@ -90,9 +90,9 @@ def main():
                     [
                         sys.executable,
                         "-c",
-                        "from openhcs.core.callable_contract import prepare_processing_callable; "
+                        "from openhcs.core.processing_preparation import CallablePreparation; "
                         "from openhcs.processing.backends.cellprofiler.granularity import measure_granularity; "
-                        "prepare_processing_callable(measure_granularity)",
+                        "CallablePreparation.from_callable(measure_granularity).prepare()",
                     ],
                     cwd=ROOT,
                     env=env,

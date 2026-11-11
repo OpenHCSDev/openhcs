@@ -30,6 +30,7 @@ from openhcs.core.artifacts.kinds import (
     SpatialGridArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.processing_preparation import CallablePreparation
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
@@ -432,11 +433,11 @@ def test_optional_object_special_input_does_not_consume_primary_image() -> None:
     objects = ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType)
 
     assert MeasureImageIntensityModule.primary_image_inputs(
-        CallableContract.from_prepared_callable(measure_image_intensity),
+        CallablePreparation.from_callable(measure_image_intensity).prepared_contract(),
         (image,),
     ) == (image,)
     assert MeasureImageIntensityModule.primary_image_inputs(
-        CallableContract.from_prepared_callable(measure_image_intensity_objects),
+        CallablePreparation.from_callable(measure_image_intensity_objects).prepared_contract(),
         (image, objects),
     ) == (image,)
 

@@ -10,25 +10,7 @@ from arraybridge import MemoryContractAttribute, SliceBySliceRuntimeParameter
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import parameter_exclusions
 
-from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
-from openhcs.core.callable_contract import (
-    CallableContract,
-    CallableImportIdentity,
-    CallableDeclaration,
-    FunctionStepExecutionScope,
-    ImagePayloadConsumption,
-    CompilerPreparedAutoRegisterFamily,
-    PayloadAxisRequirement,
-    PayloadAxisTransition,
-    PreservedPayloadAxes,
-    attach_callable_contract_metadata,
-    prepare_module_autoregister_families,
-    prepare_processing_callable,
-    preserves_payload_axes,
-    requires_payload_axis,
-    reset_processing_callable_preparation_cache,
-    runtime_image_execution_mode,
-)
+from openhcs.core.callable_contract import CallableContract, CallableImportIdentity, CallableDeclaration, FunctionStepExecutionScope, ImagePayloadConsumption, PayloadAxisRequirement, PayloadAxisTransition, PreservedPayloadAxes, attach_callable_contract_metadata, preserves_payload_axes, requires_payload_axis, runtime_image_execution_mode
 from openhcs.core.config import LazyDtypeConfig
 import openhcs.core.config as config_module
 from openhcs.core.context.processing_context import ProcessingContext
@@ -46,6 +28,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
+from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, CompilerPreparedAutoRegisterFamily, ModuleRegistryPreparation, PreparationOperation
 from openhcs.core.runtime_batch_contracts import (
     RuntimeBatchExecutionDomain,
     RuntimePure2DSliceBatchRequest,
@@ -452,9 +435,9 @@ def test_callable_contract_metadata_preserves_explicit_nominal_processing_contra
 def test_prepare_processing_callable_warms_imported_registered_families() -> None:
     global _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS
     _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS = 0
-    reset_processing_callable_preparation_cache()
+    PreparationOperation.reset()
 
-    prepare_processing_callable(_function_with_imported_prepared_family)
+    CallablePreparation.from_callable(_function_with_imported_prepared_family).prepare()
 
     assert _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS == 1
 
@@ -501,15 +484,15 @@ def test_prepare_processing_callable_does_not_warm_unrelated_loaded_families() -
     unrelated_module.UnrelatedImplementation = UnrelatedImplementation
     process.__module__ = related_module.__name__
 
-    reset_processing_callable_preparation_cache()
+    PreparationOperation.reset()
     sys.modules[related_module.__name__] = related_module
     sys.modules[unrelated_module.__name__] = unrelated_module
     try:
-        prepare_processing_callable(process)
+        CallablePreparation.from_callable(process).prepare()
     finally:
         sys.modules.pop(related_module.__name__, None)
         sys.modules.pop(unrelated_module.__name__, None)
-        reset_processing_callable_preparation_cache()
+        PreparationOperation.reset()
 
     assert calls == {"related": 1, "unrelated": 0}
 
@@ -579,10 +562,10 @@ def test_prepare_processing_callable_caches_equivalent_bound_method_hooks() -> N
     first.__dict__[FunctionContractAttribute.processing_prepare] = first.prepare
     second.__dict__[FunctionContractAttribute.processing_prepare] = second.prepare
 
-    reset_processing_callable_preparation_cache()
+    PreparationOperation.reset()
 
-    prepare_processing_callable(first)
-    prepare_processing_callable(second)
+    CallablePreparation.from_callable(first).prepare()
+    CallablePreparation.from_callable(second).prepare()
 
     assert PreparedCallable.calls == 1
 
@@ -590,9 +573,7 @@ def test_prepare_processing_callable_caches_equivalent_bound_method_hooks() -> N
 def test_prepare_module_autoregister_families_skips_cellprofiler_backend_mixin_root() -> (
     None
 ):
-    prepare_module_autoregister_families(
-        "openhcs.processing.backends.cellprofiler.crop"
-    )
+    ModuleRegistryPreparation("openhcs.processing.backends.cellprofiler.crop").prepare()
 
 
 def test_module_registered_family_preparation_runs_compiler_prepared_family_hook() -> (
@@ -642,7 +623,7 @@ def test_function_reference_preserves_batching_through_compiler_and_transport(
 ) -> None:
     func = _function_with_runtime_batch_executor
     monkeypatch.setattr(func, "__dict__", dict(vars(func)))
-    prepare_processing_callable(func)
+    CallablePreparation.from_callable(func).prepare()
     reference = FunctionReferenceTransportAuthority.function_reference(func)
 
     normalized = normalize_function_pattern(reference)
@@ -672,7 +653,7 @@ def test_reference_batch_family_preserves_wrapper_precedence_and_raw_inheritance
         wrapper,
         raw_processing_function=_function_with_runtime_batch_executor,
     )
-    prepare_processing_callable(wrapper)
+    CallablePreparation.from_callable(wrapper).prepare()
     reference = FunctionReferenceTransportAuthority.function_reference(wrapper)
     assert isinstance(
         reference.declaration.raw_processing_function, ImportableFunctionReference

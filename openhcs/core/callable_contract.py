@@ -63,7 +63,6 @@ if TYPE_CHECKING:
     from openhcs.core.function_reference import FunctionReference
     from openhcs.core.image_file_serialization import ImageFileSourceMetadata
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
-    from openhcs.core.processing_preparation import PreparationOperation
     from openhcs.core.runtime_adapters import RuntimeAdapterSpec
     from openhcs.core.runtime_output_matching import RuntimeMatchedOutput
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
@@ -153,27 +152,6 @@ class KeywordRuntimeParameter(RuntimeParameterDeclarationABC):
             default=cls.default_value(),
             annotation=cls.annotation_type,
         )
-
-
-class CompilerPreparedAutoRegisterFamily(ABC):
-    """AutoRegisterMeta family that can prepare runtime compiler substrates."""
-
-    @classmethod
-    @abstractmethod
-    def prepare_registered_family(cls) -> None:
-        """Prepare registered implementations before timed callable execution."""
-
-    @classmethod
-    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
-        """Project cache work independently of process-local readiness."""
-        from openhcs.core.processing_preparation import RegistryFamilyPreparation
-
-        return (RegistryFamilyPreparation(cls),)
-
-    @classmethod
-    def can_prepare_in_child(cls) -> bool:
-        """Whether preparation populates a persistent cache the parent can load."""
-        return False
 
 
 class FunctionStepExecutionScope(str, Enum):
@@ -1531,11 +1509,6 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
             return self.prepared_canonical_signature
         return self.resolve_signature(self.resolve_raw_runtime_callable())
 
-    @classmethod
-    def from_prepared_callable(cls, func: Callable[..., object]) -> "CallableContract":
-        """Construct a compiled view only after the declaration owner prepares it."""
-        return CallableProjection.from_callable(func).prepared_contract()
-
     def decode_public_kwargs(self, kwargs: Mapping[str, object]) -> dict[str, object]:
         """Descend declared scalar enums at authoring, before source projection."""
 
@@ -2139,27 +2112,6 @@ def creates_payload_axis(role: type[AxisRole]) -> Any:
     return decorator
 
 
-def prepare_processing_callable(func: Any) -> None:
-    """Prepare declarations through their shared process-local operation contract."""
-    from openhcs.core.processing_preparation import CallablePreparation
-
-    CallablePreparation.from_callable(func).prepare()
-
-
-def reset_processing_callable_preparation_cache() -> None:
-    """Clear process-local preparation caches for deterministic tests and tooling."""
-    from openhcs.core.processing_preparation import PreparationOperation
-
-    PreparationOperation.reset()
-
-
-def prepare_module_autoregister_families(module_name: str) -> None:
-    """Prepare the module's declared registry obligation once in this process."""
-    from openhcs.core.processing_preparation import ModuleRegistryPreparation
-
-    ModuleRegistryPreparation(module_name).prepare()
-
-
 def _is_function_reference(func: Any) -> bool:
     """Return whether func is the compiler's nominal picklable reference."""
     from openhcs.core.function_reference import FunctionReference
@@ -2243,13 +2195,9 @@ class CallableProjection:
         function pattern) runs no kernel, so it must neither compile nor load
         one: kernels belong to the catalog preparation of the process that executes.
         """
-        return self._contract_of(self.declared_callable())
+        return self.contract_of(self.declared_callable())
 
-    def prepared_contract(self) -> "CallableContract":
-        """The same contract, after the declaration owner prepared the callable."""
-        return self._contract_of(self.prepared_callable())
-
-    def _contract_of(self, resolved: Any) -> "CallableContract":
+    def contract_of(self, resolved: Any) -> "CallableContract":
         contract = CallableContract.from_callable(resolved)
         if contract.prepared_canonical_signature is None:
             contract = contract.with_prepared_signature()
@@ -2257,15 +2205,6 @@ class CallableProjection:
             contract, func=self.func, function_name=self.name,
             module_name=self.module_name,
         )
-
-    def prepared_callable(self) -> Any:
-        """Keep ready library references or prepare live authored targets before validation."""
-        if self.has_published_signature():
-            return self.func
-        resolved = _resolve_declared_callable(self.func)
-        for target in type(self).from_callable(resolved).prepare_targets():
-            prepare_processing_callable(target)
-        return resolved
 
     def warm_canonical_signature(self) -> None:
         """Publish prepared target signatures only after all library hooks finish."""

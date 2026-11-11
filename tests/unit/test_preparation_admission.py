@@ -7,18 +7,13 @@ import os
 
 import pytest
 
-from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,
 )
-from openhcs.core.processing_preparation import (
-    PreparationCacheBatch,
-    PreparationCacheWorker,
-    PreparationOperation,
-)
+from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, PreparationCacheBatch, PreparationCacheWorker, PreparationOperation
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 
@@ -232,7 +227,7 @@ def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded
     )
     dynamic_invocation = CompiledFunctionInvocation(
         key=FunctionInvocationKey("dynamic", "default", 1),
-        contract=CallableContract.from_prepared_callable(dynamic),
+        contract=CallablePreparation.from_callable(dynamic).prepared_contract(),
     )
     assert events == ["selected", "unselected", "dynamic"]
     assert dynamic_invocation.contract.prepared_canonical_signature is not None

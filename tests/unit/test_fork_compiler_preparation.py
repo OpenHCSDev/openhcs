@@ -9,18 +9,12 @@ import pytest
 from metaclass_registry import AutoRegisterMeta
 from numba import config as numba_config
 
-from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
-from openhcs.core.callable_contract import (
-    CallableContract,
-    CompilerPreparedAutoRegisterFamily,
-    reset_processing_callable_preparation_cache,
-)
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,
 )
-from openhcs.core.processing_preparation import PreparationCacheBatch
+from openhcs.core.processing_preparation import AutoRegisterRegistryPreparation, CallablePreparation, CompilerPreparedAutoRegisterFamily, PreparationCacheBatch, PreparationOperation
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
 )
@@ -143,10 +137,10 @@ def test_prepared_contract_hook_is_not_replayed_by_runtime_binding(
     process.__dict__[FunctionContractAttribute.processing_prepare] = (
         lambda: events.append("parent")
     )
-    reset_processing_callable_preparation_cache()
+    PreparationOperation.reset()
     invocation = CompiledFunctionInvocation(
         key=FunctionInvocationKey("process", "default", 0),
-        contract=CallableContract.from_prepared_callable(process),
+        contract=CallablePreparation.from_callable(process).prepared_contract(),
     )
     assert events == ["parent"]
 
