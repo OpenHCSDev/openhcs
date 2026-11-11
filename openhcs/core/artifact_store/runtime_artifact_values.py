@@ -235,7 +235,7 @@ class RuntimeValue:
     def materialization_payload(self) -> object:
         """Return the payload that materializers should receive for this value."""
 
-        return self.artifact_type.materialization_payload(self)
+        return self.key.artifact_type.materialization_payload(self)
 
     def validated_for_output_plan(
         self,
@@ -250,18 +250,18 @@ class RuntimeValue:
                 f"RuntimeValue name {self.key.name!r} does not match planned "
                 f"artifact {output_plan.name!r}."
             )
-        if self.artifact_type is not output_plan.artifact_type:
+        if self.key.artifact_type is not output_plan.artifact_type:
             raise ValueError(
                 f"Artifact {output_plan.name!r} expected "
-                f"{output_plan.artifact_type.value}, got {self.artifact_type.value}."
+                f"{output_plan.artifact_type.value}, got {self.key.artifact_type.value}."
             )
         if self.key.scope.axis_id != axis_id:
             raise ValueError(
                 f"Artifact {output_plan.name!r} belongs to axis "
                 f"{self.key.scope.axis_id!r}, not {axis_id!r}."
             )
-        self.artifact_type.validate_runtime_payload(output_plan.name, self.data)
-        semantic_id = self.artifact_type.runtime_semantic_id(self.data)
+        self.key.artifact_type.validate_runtime_payload(output_plan.name, self.data)
+        semantic_id = self.key.artifact_type.runtime_semantic_id(self.data)
         if semantic_id != self.key.semantic_id:
             return RuntimeValue(
                 key=replace(self.key, semantic_id=semantic_id),
