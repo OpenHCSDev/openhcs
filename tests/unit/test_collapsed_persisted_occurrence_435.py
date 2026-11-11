@@ -39,11 +39,8 @@ from openhcs.core.steps.function_outputs import (
     PrimaryImageMetadataTarget,
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.materialization import (
-    ImageFileOptions,
-    MaterializationSpec,
-    NameByArtifactName,
-)
+from openhcs.core.materialization.options import ImageFileOptions, NameByArtifactName
+from openhcs.core.materialization.core import MaterializationSpec
 
 from tests.unit.test_function_outputs import (
     context_stub,

@@ -47,6 +47,9 @@ from openhcs.core.source_spatial_domain import (
     SourceSpatialDomainAdapter,
 )
 from openhcs.core.axes import ColourAxis
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -92,7 +95,6 @@ class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def executable_payload(cls, payload: Any) -> Any:
         """Return the payload a measurement callable receives in this mode."""
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         return RuntimeSliceProjection.full_stack_value(payload)
 
@@ -164,10 +166,6 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             AlignedImageStack,
             aligned_image_stack_kwargs,
         )
-        from openhcs.core.runtime_plane_projection import (
-            RuntimePlaneAxisValueProjection,
-        )
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         if not isinstance(request.image, AlignedImageStack):
             raise TypeError(
@@ -215,7 +213,6 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             AlignedImageStack,
             aligned_image_stack_kwargs,
         )
-        from openhcs.core.memory import detect_memory_type
         from openhcs.core.processing_contracts import (
             Pure2DAuxiliaryOutputAggregator,
             Pure2DSliceResultBatch,
@@ -224,9 +221,6 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             Pure2DSliceBatchExecutor,
             RuntimePure2DSliceBatchRequest,
         )
-        from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-        from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         callable_contract = call.callable_contract
         owner = (
@@ -394,7 +388,6 @@ class AlignedImageStackKwargResolver:
     reference_payload: Any | None = None
 
     def resolve(self, value: Any) -> Any:
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         return RuntimeSliceProjection.aligned_value(value, self)
 
@@ -1210,7 +1203,6 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
                 context.require_plane_index(),
                 context.axis_size,
             )
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         projected_slices = tuple(
             RuntimeSliceProjection.value_for_slice(image_slice, context)
@@ -1571,7 +1563,6 @@ class ProducedImageStack(ImagePayloadSliceStack):
     def runtime_slice_count(self) -> int | None:
         if self.plane_axis.one_plane_per_runtime_slice:
             return len(self.slices)
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         return RuntimeSliceProjection.slice_count_from_values(self.slices)
 
@@ -1777,7 +1768,6 @@ class ImageOutputBundle(AlignedImageStack):
 
     def inner_runtime_slice_count(self) -> int | None:
         """Return the runtime-slice count the named outputs themselves declare."""
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         return RuntimeSliceProjection.slice_count_from_values(self.slices)
 
@@ -1792,7 +1782,6 @@ class ImageOutputBundle(AlignedImageStack):
             and self.inner_runtime_slice_count() is None
         ):
             return self.aligned_slice(context.require_plane_index(), context.axis_size)
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         projected_outputs = tuple(
             RuntimeSliceProjection.value_for_slice(output, context)
@@ -1976,7 +1965,6 @@ def compose_aligned_image_payload(
             payload=image_payloads[0],
             execution_mode=NaturalExecution,
         )
-    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
     runtime_slice_counts = tuple(
         RuntimeSliceProjection.slice_count_from_values((payload,))

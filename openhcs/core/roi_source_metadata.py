@@ -15,6 +15,7 @@ from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
 from openhcs.core.source_image_provenance import SourceComponentMetadata
 from python_introspect import to_jsonable
 from openhcs.core.axes import AxisFamily
+from openhcs.core.roi_point_metadata import ROIFractionalZ
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,7 +103,6 @@ class ROIArchiveSourceMetadata:
     def source_component_domain(
         cls, rois: Sequence[ROI], metadata: ImagePayloadMetadata,
     ) -> tuple[SourceComponentMetadata, ...] | None:
-        from openhcs.core.roi_point_metadata import ROIFractionalZ
 
         point_domain = ROIFractionalZ.source_component_domain(rois, metadata)
         return (

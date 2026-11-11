@@ -48,6 +48,9 @@ from openhcs.core.virtual_workspace_metadata import (
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes import AxisFamily
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
+from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.source_image_provenance import SourceImageIdentity
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ExecutingContext
@@ -418,8 +421,6 @@ class VirtualWorkspaceSourceProjection:
         filemanager: FileManagerLike,
     ) -> tuple[RuntimeArrayData, ...]:
         """Load exact selected occurrences with their declared pixel semantics."""
-        from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-        from openhcs.core.source_image_provenance import SourceImageIdentity
 
         payloads = filemanager.load_batch(list(paths), Backend.VIRTUAL_WORKSPACE.value)
         if len(payloads) != len(paths):
@@ -685,7 +686,6 @@ class VirtualWorkspaceImagePayloadProjection:
 def source_schema_filename_metadata(path: str) -> SourceMetadataMapping | None:
     """Return component metadata encoded in a normalized virtual source filename."""
 
-    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     parsed = SourceSchemaFilenameParser().parse_filename(path)
     if parsed is None:

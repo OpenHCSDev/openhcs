@@ -1,4 +1,4 @@
-from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
+from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
 from openhcs.runtime.zmq_progress import ZMQCompilerProgressQueue, ZMQProgressEmitter
 from openhcs.core.progress.types import (
     CompileProgressPhase,

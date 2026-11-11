@@ -45,9 +45,8 @@ from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from python_introspect import to_jsonable
-from openhcs.core.materialization import (
-    ImageFileOptions, MaterializationSpec,
-)
+from openhcs.core.materialization.options import ImageFileOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.domains.microscopy.axes import Microscopy
 
 

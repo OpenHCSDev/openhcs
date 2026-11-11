@@ -14,7 +14,8 @@ from skimage.measure import regionprops
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
 from openhcs.core.artifacts.specs import ArtifactSpec
-from openhcs.core.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization.options import CsvOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )

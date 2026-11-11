@@ -115,7 +115,8 @@ from openhcs.core.processing_contracts import (
     Pure3DContract,
     VolumetricToSliceContract,
 )
-from openhcs.core.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization.options import CsvOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.processing.backends.analysis.multi_template_matching import (
     TemplateMatchResult,
 )

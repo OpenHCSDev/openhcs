@@ -136,7 +136,7 @@ def run_direct(root: Path, output_root: Path) -> dict:
     )
     from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.progress import ProgressExecutionContext, set_progress_queue
+    from openhcs.core.progress.types import ProgressExecutionContext, set_progress_queue
 
     ObjectStateRegistry.clear()
     queue = SimpleQueue()

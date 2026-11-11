@@ -28,6 +28,7 @@ from openhcs.core.artifacts.plans import (
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.runtime_measurements import MeasurementSubject
+from openhcs.core.runtime_measurements import MeasurementScope
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.specs import ArtifactSpec
@@ -333,10 +334,6 @@ class ObjectMeasurementSubjectRelation(ArtifactSpecRelation):
     id_field: str | None = None
 
     def measurement_subject(self) -> MeasurementSubject:
-        from openhcs.core.runtime_measurements import (
-            MeasurementScope,
-            MeasurementSubject,
-        )
 
         return MeasurementSubject(
             MeasurementScope.OBJECT,
@@ -441,10 +438,6 @@ class ImageMeasurementSubjectRelation(ArtifactSpecRelation):
     target_artifact_type = MeasurementsArtifactType
 
     def measurement_subject(self) -> MeasurementSubject:
-        from openhcs.core.runtime_measurements import (
-            MeasurementScope,
-            MeasurementSubject,
-        )
 
         return MeasurementSubject(MeasurementScope.SAMPLE, self.source.name)
 
@@ -476,10 +469,6 @@ class ArtifactMeasurementSubjectRelation(ArtifactSpecRelation):
         return self
 
     def measurement_subject(self) -> MeasurementSubject:
-        from openhcs.core.runtime_measurements import (
-            MeasurementScope,
-            MeasurementSubject,
-        )
 
         return MeasurementSubject(MeasurementScope.ARTIFACT)
 

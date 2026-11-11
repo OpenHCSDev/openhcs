@@ -53,7 +53,7 @@ from openhcs.core.orchestrator.execution_result import (
     MergeDatasetInputRecords,
     OmitRuntimeRecords,
 )
-from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
+from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     artifact_outputs,
@@ -86,7 +86,8 @@ from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.step_dependencies import NoMainFlowInput
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.materialization import FileBundleOptions, MaterializationSpec
+from openhcs.core.materialization.options import FileBundleOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (

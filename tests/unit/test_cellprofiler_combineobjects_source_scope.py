@@ -25,7 +25,7 @@ from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_o
 from openhcs.core.pipeline.path_planner import (
     PathPlannerExecutionGroups,
 )
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceArtifactRole,

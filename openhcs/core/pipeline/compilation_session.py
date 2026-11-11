@@ -12,6 +12,7 @@ from openhcs.core.artifacts.plans import ArtifactSpecRef
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.context.processing_context import CompilingContext
+from openhcs.core.pipeline.artifact_planning import ArtifactGraph
 from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.abstract import AbstractStep
@@ -33,9 +34,12 @@ from openhcs.core.vfs_protocol import (
     DatasetPathDeclaration,
 )
 from openhcs.core.axes import AxisFamily, Ungrouped
+from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
+from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
+from openhcs.core.components.validation import GenericValidator
 
 if TYPE_CHECKING:
-    from openhcs.core.pipeline.artifact_planning import ArtifactGraph
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 
@@ -193,14 +197,6 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
         """Admit fixed contracts and forward topology once, before axis fanout."""
         if self._artifact_graphs is not None:
             return
-        from openhcs.core.callable_contract import FunctionStepExecutionScope
-        from openhcs.core.pipeline.artifact_planning import (
-            ArtifactGraph,
-            extract_artifact_declarations,
-        )
-        from openhcs.core.pipeline.funcstep_contract_validator import (
-            FuncStepContractValidator,
-        )
 
         provider = PipelineInvocationContractProviderAuthority.provider_for_pipeline(
             self
@@ -319,8 +315,6 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
         global_config: GlobalPipelineConfig,
     ) -> None:
         """Validate declaration-owned group keys once against the whole plate."""
-        from openhcs.core.callable_contract import FunctionStepExecutionScope
-        from openhcs.core.components.validation import GenericValidator
 
         validator = GenericValidator(AxisFamily.active())
 

@@ -24,12 +24,8 @@ from enum import Enum
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.vfs_protocol import PlateInputDirectory
-from openhcs.core.materialization import (
-    CsvOptions,
-    JsonOptions,
-    MaterializationSpec,
-    TextOptions,
-)
+from openhcs.core.materialization.options import CsvOptions, JsonOptions, TextOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.constants.constants import Backend
 
 logger = logging.getLogger(__name__)

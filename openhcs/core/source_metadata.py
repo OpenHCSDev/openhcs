@@ -27,6 +27,7 @@ from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.axes import Axis, AxisFamily, ColourAxis, PartitionAxis, StackAxis
+from openhcs.core.source_spatial_domain import CommonRuntimeValue
 
 SourceBindingValue = TypeVar("SourceBindingValue")
 
@@ -1123,7 +1124,6 @@ class SourceVoxelSpacing:
         Numeric metadata compatibility values never establish a source frame.
         Individual payload declarations remain authoritative when frames differ.
         """
-        from openhcs.core.source_spatial_domain import CommonRuntimeValue
 
         spacing = CommonRuntimeValue.from_values(spacings).single
         return cls() if spacing is None else spacing

@@ -35,7 +35,7 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation,
     RuntimeExecutionObservation,
 )
-from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
+from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionOutcomeExport,
 )

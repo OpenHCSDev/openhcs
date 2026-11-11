@@ -1,4 +1,4 @@
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from types import SimpleNamespace
 
 from zmqruntime.messages import (

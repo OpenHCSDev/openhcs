@@ -42,13 +42,8 @@ from openhcs.core.invocation_artifacts import (
     callable_contract_artifact_declarations,
 )
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
-from openhcs.core.materialization import (
-    CsvOptions,
-    ImageFileOptions,
-    NameByArtifactName,
-    ROIOptions,
-    TerminalMaterializationSpec,
-)
+from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions
+from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.source_bindings import CompiledSourceBindingPlan

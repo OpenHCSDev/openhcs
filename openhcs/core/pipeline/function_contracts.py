@@ -37,8 +37,9 @@ from openhcs.core.variable_component_stack_requirement import (
     AlwaysRequiresVariableComponentStack,
     VariableComponentStackRequirement,
 )
-from openhcs.core.materialization import MaterializationSpec
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.axes import AxisRole
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
 F = TypeVar("F", bound=Callable)
 
@@ -182,7 +183,6 @@ class ObjectLabelInputExecutionMode(ABC, metaclass=AutoRegisterMeta):
             and runtime_projection is not None
             and runtime_projection.axis_size == 1
         ):
-            from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
             kwargs = RuntimeSliceProjection.kwargs_for_slice(
                 kwargs, runtime_projection.selected_plane(0)
@@ -217,7 +217,6 @@ class SliceAlignedLabels(ObjectLabelInputExecutionMode):
 
     @classmethod
     def semantic_label_payload(cls, source_projected_payload, completion_payload):
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         del source_projected_payload
         projection = completion_payload.declared_plane_projection()

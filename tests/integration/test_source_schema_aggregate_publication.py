@@ -5,7 +5,7 @@ record. The original source-schema parser must admit genuinely collapsed Z while
 the normal image writer preserves all four pass-through source planes.
 """
 
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from csv import DictReader
 from hashlib import sha256
 from pathlib import Path
@@ -50,7 +50,8 @@ from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
     register_custom_function,
 )
-from openhcs.core.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization.options import CsvOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource

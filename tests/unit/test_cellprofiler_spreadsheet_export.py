@@ -93,13 +93,9 @@ from openhcs.processing.backends.cellprofiler.intensity import (
 )
 from openhcs.processing.backends.cellprofiler.crop import CropModule
 from openhcs.processing.backends.cellprofiler.tracking import TrackObjectsModule
-from openhcs.core.materialization import (
-    FileBundleOptions,
-    MaterializationSpec,
-    WriteMode,
-    materialize,
-    materialization_outputs,
-)
+from openhcs.core.materialization.options import FileBundleOptions
+from openhcs.core.materialization.core import MaterializationSpec, materialize, materialization_outputs
+from openhcs.core.materialization.constants import WriteMode
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.materialization_plans import output_plan as materialization_output_plan

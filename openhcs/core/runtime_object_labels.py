@@ -65,6 +65,8 @@ from openhcs.core.source_spatial_domain import (
 )
 
 from enum import Enum
+from openhcs.core.memory import MemoryType, runtime_slice_stack_geometry, stack_runtime_slices
+from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
 _PRESERVE_PLANE_AXIS = object()
 
@@ -347,7 +349,6 @@ class PlaneStackObjectLabelVariantData(ObjectLabelVariantData):
     def __init__(
         self, variants: Sequence[ObjectLabelVariantData], memory_type: str,
     ) -> None:
-        from openhcs.core.memory import MemoryType, runtime_slice_stack_geometry
 
         target = MemoryType(memory_type)
         if target is not MemoryType.NUMPY:
@@ -690,7 +691,6 @@ class ObjectLabelValue(
     def _declared_runtime_slice_count(self) -> int:
         plane_count = self.declared_plane_count()
         if plane_count is None:
-            from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
             raise RuntimeSliceProjectionDeclarationError(
                 "Runtime-slice object labels have no nominal plane-stack contract."
@@ -704,7 +704,6 @@ class ObjectLabelValue(
             return self
         plane_count = self.declared_plane_count()
         if plane_count is None:
-            from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
             raise RuntimeSliceProjectionDeclarationError(
                 "Object labels have no nominal plane-stack contract for their "
@@ -1749,7 +1748,6 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
         labels: Sequence[object],
         memory_type: str,
     ) -> ObjectLabelData:
-        from openhcs.core.memory import stack_runtime_slices
 
         return stack_runtime_slices(
             tuple(cast(np.ndarray, value) for value in labels),

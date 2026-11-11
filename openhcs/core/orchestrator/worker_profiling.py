@@ -10,12 +10,10 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 
 
 class WorkerProfilingPolicy(ABC):

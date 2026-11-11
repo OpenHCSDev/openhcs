@@ -31,6 +31,8 @@ from openhcs.core.axes import (
     TimeAxis,
 )
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, OpenHCSMetadataSubdirectories, VirtualWorkspaceSourceProjectionEntries, get_metadata_path
+from openhcs.core.source_projection import SourceProjectionMetadataSerializer, SourceProjectionSet
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -377,12 +379,6 @@ def update_metadata_for_zarr_conversion(
     context: ExecutingContext,
 ) -> None:
     """Update OpenHCS metadata after a Zarr input conversion."""
-    from openhcs.core.virtual_workspace_metadata import (
-        AtomicMetadataWriter,
-        OpenHCSMetadataSubdirectories,
-        VirtualWorkspaceSourceProjectionEntries,
-        get_metadata_path,
-    )
     from openhcs.core.dataset_sources.openhcs_format import (
         OpenHCSMetadataGenerator,
         OpenHCSMetadataHandler,
@@ -410,10 +406,6 @@ def update_metadata_for_zarr_conversion(
         if source_projections.entries:
             from polystore.virtual_workspace import SourcePixelRef
 
-            from openhcs.core.source_projection import (
-                SourceProjectionMetadataSerializer,
-                SourceProjectionSet,
-            )
 
             materialized_projections = []
             for output_path in context.filemanager.list_image_files(

@@ -12,7 +12,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -21,16 +21,15 @@ from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.dataset_sources.discovery import domain_registry_config
 from openhcs.core.materialization.core import Output
+from openhcs.core.orchestrator.execution_result import (
+    ExecutionResult,
+    RuntimeExecutionObservation,
+)
 from openhcs.core.steps.function_artifact_materialization import (
     MaterializedRuntimeArtifact,
     RuntimeArtifactMaterialization,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.execution_result import (
-        ExecutionResult,
-        RuntimeExecutionObservation,
-    )
 
 
 HookObservations = Mapping[str, object]

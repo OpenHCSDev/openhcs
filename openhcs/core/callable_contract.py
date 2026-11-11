@@ -59,6 +59,10 @@ from openhcs.core.variable_component_stack_requirement import (
 from metaclass_registry.caches import IdentityBoundProcessCache
 from openhcs.core.axes import AxisRole
 from openhcs.core.vfs_protocol import DatasetPathDeclaration
+from openhcs.core.aligned_image_payload import compose_aligned_image_payload, AlignedImageStack, pack_aligned_image_outputs
+from openhcs.core.runtime_image_values import owned_runtime_value, RuntimeSliceProjectionDeclarationError, ImagePayload
+from openhcs.core.runtime_output_matching import split_runtime_output
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
 if TYPE_CHECKING:
     from openhcs.core.function_reference import FunctionReference
@@ -207,7 +211,6 @@ class ImagePayloadConsumption(str, Enum):
         stack_broadcast_source_indices: Sequence[int | None] = (),
     ) -> ImagePayloadComposition:
         """Admit primary sources to the original alignment/bundle algorithm."""
-        from openhcs.core.aligned_image_payload import compose_aligned_image_payload
 
         return compose_aligned_image_payload(
             owner_name,
@@ -305,7 +308,6 @@ class CallableSignature(inspect.Signature):
         return_annotation=inspect.Signature.empty,
         __validate_parameters__=True
     ):
-        from openhcs.core.vfs_protocol import DatasetPathDeclaration
 
         super().__init__(
             parameters,
@@ -957,15 +959,6 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     ) -> Any:
         """Attach the compiled canonical ABI to one exact returned image axis."""
 
-        from openhcs.core.aligned_image_payload import (
-            AlignedImageSliceContext,
-            AlignedImageStack,
-            pack_aligned_image_outputs,
-        )
-        from openhcs.core.runtime_image_values import owned_runtime_value
-        from openhcs.core.runtime_output_matching import split_runtime_output
-        from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         canonical_specs = self.canonical_return_output_specs.specs
         if len(canonical_specs) <= 1:
@@ -1035,8 +1028,6 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     ) -> dict[ArtifactSpecRef, Any]:
         """Resolve every output in the callable ABI."""
 
-        from openhcs.core.aligned_image_payload import AlignedImageStack
-        from openhcs.core.runtime_output_matching import split_runtime_output
 
         canonical_output, trailing_values = split_runtime_output(returned_output)
         trailing_specs = self.trailing_return_output_specs.specs
@@ -1293,7 +1284,6 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         A bare array enters the payload family here; a parameter that does not
         declare the payload's type receives the payload's array.
         """
-        from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
 
         signature = self.canonical_signature
         primary_name = self.primary_input_name(signature.parameters)

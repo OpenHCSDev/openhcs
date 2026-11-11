@@ -24,6 +24,7 @@ from openhcs.core.source_metadata import (
 from openhcs.core.source_matching import source_component_metadata_items
 from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source_binding_selection import DeclaredSourceMetadataRecord, SourceIdentityResolutionContext
 
 
 
@@ -112,10 +113,6 @@ class RuntimeSourceResolutionSnapshot:
         metadata_rules: tuple[MetadataExtractionRule, ...],
     ) -> "RuntimeSourceResolutionSnapshot":
         """Resolve declared positions into one independently owned runtime view."""
-        from openhcs.core.source_binding_selection import (
-            DeclaredSourceMetadataRecord,
-            SourceIdentityResolutionContext,
-        )
 
         context = SourceIdentityResolutionContext.from_projection(
             parser=parser,

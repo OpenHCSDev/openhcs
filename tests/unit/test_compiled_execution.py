@@ -46,7 +46,8 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.materialization.options import CsvOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.component_group_scope import (

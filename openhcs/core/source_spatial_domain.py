@@ -25,6 +25,7 @@ from zmqruntime.viewer_protocol import (
 )
 
 from python_introspect import to_jsonable
+from openhcs.core.axes import AxisFamily
 
 SourceSpatialAliasValueT = TypeVar("SourceSpatialAliasValueT")
 
@@ -562,7 +563,6 @@ class LineSourceSpatialDomain(UnplacedSpatialDomainMixin, SourceSpatialDomain):
 
 def payload_spatial_domain() -> SourceSpatialDomain:
     """Return the spatial domain the active family declares for undeclared payloads."""
-    from openhcs.core.axes import AxisFamily
 
     return SourceSpatialDomain.for_rank(AxisFamily.active().payload_spatial_rank)()
 

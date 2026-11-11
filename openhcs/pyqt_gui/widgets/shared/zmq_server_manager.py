@@ -30,7 +30,8 @@ from formbridge.bridge.dto import (
     UiLiveOverviewSeverity,
 )
 from openhcs.agent.ui_bridge_identities import ZmqServerManagerWindowIdentity
-from openhcs.core.progress import ProgressEvent, registry
+from openhcs.core.progress.types import ProgressEvent
+from openhcs.core.progress.registry import registry
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from formbridge.bridge.contracts import UiLiveOverviewWidget
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId

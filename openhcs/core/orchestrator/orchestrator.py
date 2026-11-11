@@ -7,7 +7,7 @@ a two-phase (compile-all-then-execute-all) pipeline execution model.
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from openhcs.constants.constants import (
     Backend,
@@ -25,6 +25,7 @@ from openhcs.core.config import (
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
+from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 
@@ -48,14 +49,12 @@ from openhcs.core.debug import (
     DebugExecutionPolicy,
     NoOpDebugExecutionPolicy,
 )
-from openhcs.core.progress import ProgressExecutionContext, ProgressQueue
+from openhcs.core.progress.types import ProgressExecutionContext, ProgressQueue
 from python_introspect import project_dataclass
 from openhcs.core.viewer_streaming_service import StreamingViewerLifecycle
 from openhcs.runtime.viewer_protocol import ViewerPersistenceMode
 from polystore.filemanager import FileManager
 
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
 
 # Zarr backend is CPU-only; always import it (even in subprocess/no-GPU mode)
 from polystore.zarr import ZarrStorageBackend
@@ -65,6 +64,10 @@ from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.config import StreamingConfig
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataGenerator
+from openhcs.core.pipeline.path_planner import PipelinePathPlanner
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection, WorkspaceSourceProjections
 
 # Import generic component system - required for orchestrator functionality
 
@@ -185,7 +188,6 @@ class PipelineOrchestrator:
         self.transport_config = transport_config
         self._pipeline_config = None
 
-        from openhcs.core.config import PipelineConfig
 
         self.pipeline_config = (
             PipelineConfig() if pipeline_config is None else pipeline_config
@@ -289,7 +291,6 @@ class PipelineOrchestrator:
         Returns:
             Visualizer instance
         """
-        from openhcs.core.config import StreamingConfig
 
         # Streaming configs should be managed by the centralized ViewerStateManager
         if isinstance(config, StreamingConfig):
@@ -579,7 +580,6 @@ class PipelineOrchestrator:
         """
         from polystore.metadata_writer import get_subdirectory_name
 
-        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataGenerator
 
         source_role = self.microscope_handler.source_selection_role()
         if not source_role.requires_local_directory:
@@ -622,7 +622,6 @@ class PipelineOrchestrator:
         Returns:
             Path to results directory (absolute or relative to output dataset root)
         """
-        from openhcs.core.pipeline.path_planner import PipelinePathPlanner
 
         effective_config = self.get_effective_config()
         materialization_path = effective_config.materialization_results_path
@@ -703,10 +702,6 @@ class PipelineOrchestrator:
             raise RuntimeError("Orchestrator source workspace is not available.")
 
         dataset_root = Path(self.dataset_root)
-        from openhcs.core.source_workspace_projection import (
-            VirtualWorkspaceSourceProjection,
-            WorkspaceSourceProjections,
-        )
 
         projection = WorkspaceSourceProjections.from_dataset_metadata(
             dataset_root=dataset_root,
@@ -983,7 +978,6 @@ class PipelineOrchestrator:
         Saved inheritance is resolved without modifying global thread-local state.
         """
         # Import PipelineConfig at runtime for isinstance check
-        from openhcs.core.config import PipelineConfig
 
         if not isinstance(pipeline_config, PipelineConfig):
             raise TypeError(f"Expected PipelineConfig, got {type(pipeline_config)}")

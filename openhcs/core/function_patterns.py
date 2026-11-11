@@ -1151,7 +1151,6 @@ class CompiledFunctionGroup:
         unnamed replacement owns a new anonymous image flow, while named
         outputs retain their exact component-projected output declaration.
         """
-        from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 
         declared_refs = frozenset(
             plan.ref() for plan in self.resulting_main_flow_output_plans()

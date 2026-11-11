@@ -108,6 +108,7 @@ from openhcs.core.progress.types import (
     CompileProgressPhase,
     RunningProgressStatus,
 )
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -288,7 +289,6 @@ class PipelineCompiler:
 
         from polystore.metadata_writer import get_subdirectory_name
 
-        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
         openhcs_metadata_handler = OpenHCSMetadataHandler(context.filemanager)
         metadata = openhcs_metadata_handler._load_metadata_dict(dataset_root)

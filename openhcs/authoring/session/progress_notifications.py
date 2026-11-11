@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 
 from openhcs.core.debug import DebugProgressContext, DebugSnapshot
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.debug_projection import DebugProgressRecord
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload

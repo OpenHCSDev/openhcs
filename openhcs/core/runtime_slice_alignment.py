@@ -14,6 +14,8 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimeSliceProjectableValue,
 )
+from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
@@ -186,8 +188,6 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
             self.slice_count,
             value_name="Runtime-slice-aligned object-label output",
         )
-        from openhcs.core.runtime_image_values import ImagePayload
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         return self.map_indexed_slices(
             lambda index, output: ImagePayload.of(output).object_label_output(

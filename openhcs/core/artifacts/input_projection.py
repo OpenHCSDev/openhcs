@@ -55,7 +55,6 @@ class ArtifactInputProjectionPlan:
     ) -> ComponentGroupScope:
         """Keep declaration-owned consumption separate from invocation dispatch."""
 
-        from openhcs.core.callable_contract import FunctionStepExecutionScope
 
         declared = cls.declared_producer_selection_scope(input_spec, storage_plan)
         if declared is not None:

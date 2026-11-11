@@ -8,7 +8,7 @@ from pathlib import Path
 
 import openhcs
 from openhcs.core.orchestrator import worker_execution
-from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
+from openhcs.core.progress.types import ProgressEvent, ProgressExecutionContext
 from openhcs.core.progress.types import (
     StartedProgressStatus,
     StepStartedProgressPhase,

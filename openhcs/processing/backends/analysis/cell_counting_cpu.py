@@ -31,12 +31,8 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.materialization import (
-    MaterializationSpec,
-    CsvOptions,
-    JsonOptions,
-    ROIOptions,
-)
+from openhcs.core.materialization.core import MaterializationSpec
+from openhcs.core.materialization.options import CsvOptions, JsonOptions, ROIOptions
 from openhcs.processing.backends.analysis.cell_counting_common import (
     AreaFilter,
     AreaFilterRequest,

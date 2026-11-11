@@ -31,6 +31,7 @@ from openhcs.core.dataset_sources.interfaces import (
     MetadataHandler,
     FilenameParserCapability,
 )
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG, FIELDS, AtomicMetadataWriter, get_metadata_path
 
 logger = logging.getLogger(__name__)
 
@@ -433,7 +434,6 @@ class DatasetSource(
         """Register (or reuse) the virtual workspace backend for this dataset."""
         from polystore.virtual_workspace import VirtualWorkspaceBackend
 
-        from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 
         root = absolute_source_path(dataset_root)
         registered = filemanager.registry.get(Backend.VIRTUAL_WORKSPACE.value)
@@ -471,11 +471,6 @@ class DatasetSource(
         workspace_mapping: Mapping[str, SourcePixelRef],
     ) -> None:
         """Write a virtual workspace mapping and this source's facts to metadata."""
-        from openhcs.core.virtual_workspace_metadata import (
-            FIELDS,
-            AtomicMetadataWriter,
-            get_metadata_path,
-        )
 
         metadata_path = get_metadata_path(dataset_root)
         metadata_dict = {

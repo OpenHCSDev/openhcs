@@ -1,4 +1,5 @@
-from openhcs.core.progress import ProgressEvent, ProgressPhase, ProgressStatus, registry
+from openhcs.core.progress.types import ProgressEvent, ProgressPhase, ProgressStatus
+from openhcs.core.progress.registry import registry
 from openhcs.core.progress.types import (
     PatternGroupProgressPhase,
     RunningProgressStatus,

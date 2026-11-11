@@ -7,7 +7,7 @@ from typing import Callable, List, Mapping, Sequence
 from pyqt_reactive.widgets.shared import TreeNode
 from zmqruntime.messages import QueuedExecutionInfo, RunningExecutionInfo
 
-from openhcs.core.progress import ProgressEvent
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.progress.projection import build_execution_runtime_projection
 from openhcs.core.progress.runtime_tree import (
     RuntimeTreeNode,

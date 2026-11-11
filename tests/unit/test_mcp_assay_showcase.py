@@ -15,7 +15,7 @@ from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )

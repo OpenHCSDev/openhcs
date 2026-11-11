@@ -30,11 +30,8 @@ from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
     UneditedLabels,
 )
-from openhcs.core.materialization import (
-    ImageFileOptions,
-    TerminalMaterializationSpec,
-    NameByArtifactName,
-)
+from openhcs.core.materialization.options import ImageFileOptions, NameByArtifactName
+from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 
 @dataclass(frozen=True, slots=True)
 class DiagnosticPlaneSource:

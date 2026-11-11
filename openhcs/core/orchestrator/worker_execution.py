@@ -56,12 +56,7 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
-from openhcs.core.progress import (
-    ProgressContextPayload,
-    ProgressEvent,
-    ProgressQueue,
-    set_progress_queue,
-)
+from openhcs.core.progress.types import ProgressContextPayload, ProgressEvent, ProgressQueue, set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
 from openhcs.core.runtime_stores import (

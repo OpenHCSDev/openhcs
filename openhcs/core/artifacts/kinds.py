@@ -50,6 +50,12 @@ from openhcs.core.runtime_slice_alignment import (
 from openhcs.core.runtime_spatial_grid import SpatialGrid
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.source_image_provenance import SourceImageProvenance
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection, preserve_declared_image_payload_axis
+from openhcs.core.runtime_image_values import owned_runtime_value, as_runtime_value
+from openhcs.core.runtime_array_values import RuntimeArrayPayload
+from openhcs.core.runtime_object_label_aggregation import ObjectLabelPure2DSliceAggregator
+from openhcs.core.measurement_row_materialization import MeasurementRowOwnership, measurement_rows_with_source_provenance
+from openhcs.core.runtime_spatial_graph import SpatialGraph
 
 if TYPE_CHECKING:
     from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
@@ -225,7 +231,6 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     ) -> object:
         """Give one returned value the source context ``target`` declares."""
 
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         return RuntimeSliceProjection.contextualized_output(
             cls,
@@ -320,8 +325,6 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     ) -> object:
         """Resolve plane projection only after the artifact strategy is selected."""
 
-        from openhcs.core.runtime_slice_projection import preserve_declared_image_payload_axis
-        from openhcs.core.runtime_image_values import owned_runtime_value
 
         output_value = owned_runtime_value(output_value)
         plane_projection = (
@@ -430,7 +433,6 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     ) -> None:
         """Validate one nominal payload, or each payload it stores per slice."""
 
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         members = RuntimeSliceProjection.stored_slices(data)
         invalid = tuple(
@@ -454,7 +456,6 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def materialization_image_metadata(cls, value: RuntimeValue) -> ImagePayloadMetadata:
         """Return the image metadata this kind's payload carries for naming."""
-        from openhcs.core.runtime_image_values import ImagePayloadMetadata
 
         del value
         return ImagePayloadMetadata()
@@ -628,7 +629,6 @@ class ImagePayloadArtifactKind(SourceContextKind, ArtifactType):
 
     @classmethod
     def owned_output(cls, output_value: object) -> object:
-        from openhcs.core.runtime_image_values import owned_runtime_value
 
         return owned_runtime_value(output_value)
 
@@ -638,7 +638,6 @@ class ImagePayloadArtifactKind(SourceContextKind, ArtifactType):
 
     @classmethod
     def materialization_image_metadata(cls, value: RuntimeValue) -> ImagePayloadMetadata:
-        from openhcs.core.runtime_image_values import as_runtime_value
 
         return as_runtime_value(cls.materialization_payload(value)).image_metadata
 
@@ -659,7 +658,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     ) -> bool:
         """Return whether an image result already carries complete source identity."""
 
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         if not output_value.owns_complete_source_context(plane_projection):
             return False
@@ -702,7 +700,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
         from openhcs.core.runtime_artifact_values import RuntimeValue
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         projection = RuntimePlaneAxisValueProjection.require_runtime_slice_axis(
             plane_projection,
@@ -728,7 +725,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         target: OutputTarget,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         if (
             target.variable_components
@@ -817,7 +813,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     def runtime_parameter_types(cls) -> tuple[type, ...]:
         import numpy as np
 
-        from openhcs.core.runtime_array_values import RuntimeArrayPayload
 
         return (np.ndarray, RuntimeArrayPayload)
 
@@ -829,7 +824,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     ) -> object:
         """Apply the declared image identity without discarding payload context."""
 
-        from openhcs.core.runtime_image_values import owned_runtime_value
 
         def named_payload(payload: object) -> object:
             metadata = payload.metadata
@@ -890,7 +884,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     ) -> object:
         """Consume the singleton image axis represented by the artifact key."""
 
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         projection = RuntimeSliceProjection.preserved_context_for_value(value)
         if projection is None:
@@ -1073,7 +1066,6 @@ class ObjectLabelsArtifactType(NominalPayloadKind, ImagePayloadArtifactKind):
     ) -> object:
         """Bind scalar object labels to their compiled artifact identity."""
 
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         return RuntimeSliceProjection.match_alignment(
             value,
@@ -1094,9 +1086,6 @@ class ObjectLabelsArtifactType(NominalPayloadKind, ImagePayloadArtifactKind):
 
     @classmethod
     def _aggregated(cls, name: str, labels: tuple[object, ...]) -> object:
-        from openhcs.core.runtime_object_label_aggregation import (
-            ObjectLabelPure2DSliceAggregator,
-        )
 
         aggregated = ObjectLabelPure2DSliceAggregator.aggregate(
             labels,
@@ -1164,7 +1153,6 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
 
     @classmethod
     def runtime_payload_type(cls) -> type:
-        from openhcs.core.runtime_measurements import MeasurementTable
 
         return MeasurementTable
 
@@ -1195,10 +1183,6 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
         subject: MeasurementSubject,
         source_provenance: SourceImageProvenance,
     ) -> ColumnarRows:
-        from openhcs.core.measurement_row_materialization import (
-            MeasurementRowOwnership,
-            measurement_rows_with_source_provenance,
-        )
 
         owned_rows = MeasurementRowOwnership(
             object_name=subject.object_name,
@@ -1224,8 +1208,6 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
     ) -> object:
         """Own returned rows as this output's table, in the source's context."""
 
-        from openhcs.core.runtime_image_values import as_runtime_value
-        from openhcs.core.runtime_measurements import MeasurementTable
 
         del plane_projection
         subject = target.require_measurement_subject()
@@ -1307,7 +1289,6 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
 
     @classmethod
     def runtime_parameter_types(cls) -> tuple[type, ...]:
-        from openhcs.core.runtime_tabular_values import ColumnarRows
 
         return (ColumnarRows,)
 
@@ -1324,7 +1305,6 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
     ) -> object:
         """Concatenate exact producer-group measurement tables."""
 
-        from openhcs.core.runtime_measurements import MeasurementTable
 
         return MeasurementTable.join(
             values[0].name, tuple(value.data for value in values)
@@ -1358,7 +1338,6 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
     ) -> tuple[StoredRuntimeValue, ...]:
         from openhcs.constants.constants import Backend
         from openhcs.core.runtime_artifact_values import RuntimeValue
-        from openhcs.core.runtime_measurements import MeasurementTable
         from openhcs.core.runtime_stores import (
             RuntimeArtifactLocation,
             StoredRuntimeValue,
@@ -1448,7 +1427,6 @@ class SpatialGridArtifactType(
 
     @classmethod
     def runtime_payload_type(cls) -> type:
-        from openhcs.core.runtime_spatial_grid import SpatialGrid
 
         return SpatialGrid
 
@@ -1460,7 +1438,6 @@ class SpatialGridArtifactType(
     def measurement_tables(
         cls, value: RuntimeValue, dialect: MeasurementDialect
     ) -> tuple[MeasurementTable, ...]:
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         return RuntimeSliceProjection.match_alignment(
             value.data,
@@ -1514,8 +1491,6 @@ class SpatialGridArtifactType(
     ) -> object:
         """Normalize scalar or runtime-slice grid returns to nominal values."""
 
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-        from openhcs.core.runtime_spatial_grid import SpatialGrid
 
         def grid(item: object) -> SpatialGrid:
             return SpatialGrid.from_runtime_value(name, item)
@@ -1535,7 +1510,6 @@ class SpatialGridArtifactType(
     ) -> object:
         """Compose only spatial grids with identical declared slice domains."""
 
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         grids = tuple(value.data for value in values)
 
@@ -1563,7 +1537,6 @@ class SpatialGridArtifactType(
 
     @classmethod
     def materialization_payload(cls, value: RuntimeValue) -> object:
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
         from python_introspect import to_jsonable
 
         def mapping(grid: SpatialGrid) -> dict[str, object]:
@@ -1590,7 +1563,6 @@ class SpatialGraphArtifactType(NominalPayloadKind, SourceContextKind, ArtifactTy
 
     @classmethod
     def runtime_payload_type(cls) -> type:
-        from openhcs.core.runtime_spatial_graph import SpatialGraph
 
         return SpatialGraph
 

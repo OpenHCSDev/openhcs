@@ -32,16 +32,9 @@ from openhcs.core.runtime_spatial_graph import (
 
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.materialization import (
-    BackendSaver,
-    MaterializationSpec,
-    Output,
-    SpatialGraphROIOptions,
-    SWCOptions,
-    WriteMode,
-    materialization_outputs,
-    registered_materialization_option_types,
-)
+from openhcs.core.materialization.core import BackendSaver, MaterializationSpec, Output, materialization_outputs, registered_materialization_option_types
+from openhcs.core.materialization.options import SpatialGraphROIOptions, SWCOptions
+from openhcs.core.materialization.constants import WriteMode
 from tests.materialization_plans import output_plan as materialization_output_plan
 from openhcs.core.artifacts.plans import MAIN_FLOW
 

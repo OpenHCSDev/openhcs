@@ -1,6 +1,6 @@
 """Canonical callable twice through document, compiler, execution and publication."""
 
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from csv import DictReader
 from inspect import unwrap
 

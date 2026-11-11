@@ -111,6 +111,10 @@ from openhcs.core.axes import Axis
 from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.runtime_image_values import ImagePayload
 from openhcs.core.runtime_image_values import as_runtime_value
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.runtime_measurements import MeasurementTable
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows, is_structural_missing_measurement_cell, ConcatenatedColumnarRows, MEASUREMENT_SPARSE_CELL
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -440,7 +444,6 @@ class ROIOutput(Output):
 
     @property
     def source_component_domain(self) -> tuple[SourceComponentMetadata, ...] | None:
-        from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
         if self.metadata is None:
             return None
@@ -466,7 +469,6 @@ class ROIOutput(Output):
         return StreamSourceComponentMetadataItems.from_values(domain)
 
     def viewer_item_fields(self) -> dict[str, ViewerWireValue]:
-        from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
         return ROIArchiveSourceMetadata.stream_item_fields(
             self.content, self.metadata, super().viewer_item_fields(),
@@ -479,7 +481,6 @@ class PointROIOutput(ROIOutput):
 
     @property
     def source_component_domain(self) -> tuple[SourceComponentMetadata, ...]:
-        from openhcs.core.roi_point_metadata import ROIFractionalZ
 
         if self.metadata is None:
             raise ValueError("Point ROI output requires exact source metadata.")
@@ -571,10 +572,6 @@ class ColumnarCsvOutput(Output):
     ) -> RenderedColumnarCsvOutput:
         """Retain formatting, identity and physical scalar laws for composition."""
         from numbers import Real
-        from openhcs.core.measurement_row_materialization import (
-            MeasurementSparseColumnarRows,
-            is_structural_missing_measurement_cell,
-        )
 
         if not partition_fields or any(
             name not in self.content.columns for name in partition_fields
@@ -681,10 +678,6 @@ class ColumnarCsvOutput(Output):
         authority. This method does not infer independence from filenames, row
         count, subject names or an opaque byte stream.
         """
-        from openhcs.core.measurement_row_materialization import (
-            ConcatenatedColumnarRows,
-            is_structural_missing_measurement_cell,
-        )
 
         values = tuple(outputs)
         if not values or not partition_fields:
@@ -873,7 +866,6 @@ class RenderedColumnarCsvOutput(
         ).astype(bool)
 
     def __getitem__(self, name: str) -> Sequence[object]:
-        from openhcs.core.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
 
         if name not in self:
             raise KeyError(name)
@@ -945,9 +937,6 @@ class RenderedColumnarCsvOutput(
         return self._decoded_columns[name]
 
     def iter_row_mappings(self):
-        from openhcs.core.measurement_row_materialization import (
-            is_structural_missing_measurement_cell,
-        )
 
         names = tuple(self)
         vectors = tuple(self[name] for name in names)
@@ -3726,7 +3715,6 @@ def _write_roi_zip(
     ctx: MaterializationContext,
 ) -> list[Output]:
     from polystore.roi import extract_rois_from_labeled_mask
-    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
     request = ROIMaterializationTargetRequest.from_context(data, options, ctx)
     materialization_input = request.materialization_input
@@ -3966,9 +3954,6 @@ def _write_point_roi_zip(
     """Write 3D measurement centres through the native ROI ZIP backend."""
     from math import isfinite
     from polystore.roi import PointShape, ROI
-    from openhcs.core.roi_point_metadata import ROIFractionalZ
-    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-    from openhcs.core.runtime_measurements import MeasurementTable
 
     payload = MaterializationInput.from_value(data, options).data
     if not isinstance(payload, MeasurementTable):
@@ -4053,7 +4038,6 @@ def _write_spatial_graph_roi_zip(
 
     from polystore.roi import ROI, PolylineShape
 
-    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
     materialization_input = MaterializationInput.from_value(data, options)
     graph = materialization_input.data

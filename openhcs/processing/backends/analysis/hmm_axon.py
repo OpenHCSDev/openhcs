@@ -21,13 +21,8 @@ from skimage.morphology import skeletonize
 from openhcs.constants.constants import Backend
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.materialization import (
-    CsvOptions,
-    JsonOptions,
-    MaterializationSpec,
-    TextOptions,
-    TiffStackOptions,
-)
+from openhcs.core.materialization.options import CsvOptions, JsonOptions, TextOptions, TiffStackOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.utils.import_utils import optional_import_placeholder
 
 # Import alvahmm from its optional dependency without granting it root logging.

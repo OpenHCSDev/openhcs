@@ -30,7 +30,8 @@ from openhcs.core.source_matching import (
     source_component_metadata_items,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.materialization import Output
+from openhcs.core.materialization.core import Output
+from openhcs.core.steps.function_artifact_materialization import runtime_artifact_materializations_from_records
 
 RuntimeArtifactViewerComponentIdentity = tuple[tuple[str, str], ...]
 
@@ -222,9 +223,6 @@ def runtime_artifact_viewer_expectations(
         for plan in context.step_plans.values():
             if not plan.streaming_configs or not plan.owns_runtime_outputs:
                 continue
-            from openhcs.core.steps.function_artifact_materialization import (
-                runtime_artifact_materializations_from_records,
-            )
 
             for materialization in runtime_artifact_materializations_from_records(
                 plan,

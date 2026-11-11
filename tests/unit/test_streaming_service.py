@@ -88,11 +88,8 @@ from openhcs.runtime.viewer_component_system import (
     ViewerObjectDisplayConfigInput,
     ViewerRouteComponentValueTracker,
 )
-from openhcs.core.materialization import (
-    MaterializationSpec,
-    PointROIOptions,
-    materialize,
-)
+from openhcs.core.materialization.core import MaterializationSpec, materialize
+from openhcs.core.materialization.options import PointROIOptions
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 from tests.materialization_plans import output_plan as materialization_output_plan

@@ -32,6 +32,7 @@ from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     SourceSpatialDomainAdapter,
 )
+from openhcs.core.memory import MemoryType
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,7 +175,6 @@ class ObjectLabelPure2DSliceAggregator:
         )
 
     def aggregate_values(self) -> ObjectLabelValue:
-        from openhcs.core.memory import MemoryType
 
         if (
             self.representation is ObjectLabelRepresentation.DENSE_LABELS

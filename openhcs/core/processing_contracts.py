@@ -69,6 +69,9 @@ from openhcs.core.variable_component_stack_requirement import (
     SemanticControlVariableComponentStackRequirement,
     VariableComponentStackRequirement,
 )
+from openhcs.core.callable_contract import CallableDeclaration
+from openhcs.core.runtime_batch_contracts import runtime_batch_executors_from_callable
+from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 
 
 PURE2D_VALUE_TYPE_REGISTRY_KEY = "value_type"
@@ -101,7 +104,6 @@ class RawCallableView(RuntimeCallableView):
 
     @classmethod
     def resolve(cls, func: Callable[..., Any]) -> Callable[..., Any]:
-        from openhcs.core.callable_contract import CallableContract
 
         return CallableContract.from_callable(func).resolve_raw_runtime_callable()
 
@@ -147,7 +149,6 @@ class SignatureFilteredKwargs(RuntimeInvocationKwargPolicy):
         *,
         signature: inspect.Signature | None = None,
     ) -> dict[str, Any]:
-        from openhcs.core.callable_contract import CallableDeclaration
 
         parameters = (
             CallableDeclaration.callable_signature(func) if signature is None else signature
@@ -1078,7 +1079,6 @@ class ProcessingContract(ABC, metaclass=AutoRegisterMeta):
     ) -> dict[str, Any]:
         """Consume and return semantic selectors owned by this contract."""
         if parameters is None:
-            from openhcs.core.callable_contract import CallableDeclaration
 
             parameters = (
                 {} if func is None
@@ -1315,7 +1315,6 @@ class LibraryContractCall(ContractCall):
     """Registry wrappers: the callable's own contract binds its main flow."""
 
     def __init__(self, func: Callable[..., Any], args: tuple[Any, ...]) -> None:
-        from openhcs.core.callable_contract import CallableContract
 
         self.func = func
         self.args = tuple(args)
@@ -1327,15 +1326,11 @@ class LibraryContractCall(ContractCall):
 
     @property
     def parameters(self) -> Mapping[str, inspect.Parameter]:
-        from openhcs.core.callable_contract import CallableDeclaration
 
         return CallableDeclaration.callable_signature(self.func).parameters
 
     @property
     def batch_executors(self) -> Mapping[Any, Callable[..., Any]]:
-        from openhcs.core.runtime_batch_contracts import (
-            runtime_batch_executors_from_callable,
-        )
 
         return runtime_batch_executors_from_callable(self.func)
 
@@ -1373,9 +1368,6 @@ class LibraryContractCall(ContractCall):
 
     def _consumes_full_label_stack(self, kwargs: Mapping[str, Any]) -> bool:
         """Whether the callable measures labels over their whole stack."""
-        from openhcs.core.pipeline.function_contracts import (
-            object_label_input_execution_mode_from_callable,
-        )
 
         if not object_label_input_execution_mode_from_callable(
             self.func

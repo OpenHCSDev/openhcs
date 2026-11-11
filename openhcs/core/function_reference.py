@@ -19,6 +19,7 @@ from openhcs.core.callable_contract import (
     FunctionStepExecutionScope,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.callable_contract import CallableContract
 
 if TYPE_CHECKING:
     from openhcs.processing.backends.lib_registry.unified_registry import (
@@ -226,7 +227,6 @@ class FunctionReferenceTransportAuthority:
     @classmethod
     def callable_declaration(cls, func: Callable) -> CallableDeclaration:
         """Return the transport declaration of ``func``."""
-        from openhcs.core.callable_contract import CallableContract
 
         return cls.with_raw_function_reference(
             CallableContract.from_callable(func).declaration

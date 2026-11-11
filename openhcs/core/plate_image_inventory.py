@@ -851,7 +851,6 @@ class PlateResultFileInventory:
         )
         if not result_path.is_dir():
             return ()
-        from openhcs.core.dataset_sources.interfaces import AnalysisResultDirectory
 
         return (
             AnalysisResultDirectory(

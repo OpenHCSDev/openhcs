@@ -1,6 +1,6 @@
 """Channel selection must not relabel pixels from a different producer group."""
 
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from multiprocessing import SimpleQueue
 
 import numpy as np
@@ -19,7 +19,7 @@ from openhcs.core.config import (
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import crop
 from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple

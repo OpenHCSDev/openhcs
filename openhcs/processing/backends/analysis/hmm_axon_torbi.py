@@ -22,13 +22,8 @@ from openhcs.constants.constants import Backend
 from openhcs.core.lazy_gpu_imports import torch
 from openhcs.core.memory import torch as torch_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.materialization import (
-    CsvOptions,
-    JsonOptions,
-    MaterializationSpec,
-    TextOptions,
-    TiffStackOptions,
-)
+from openhcs.core.materialization.options import CsvOptions, JsonOptions, TextOptions, TiffStackOptions
+from openhcs.core.materialization.core import MaterializationSpec
 
 # Import torch using the established optional import pattern
 from openhcs.utils.import_utils import optional_import_placeholder

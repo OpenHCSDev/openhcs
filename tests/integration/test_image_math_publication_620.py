@@ -1,5 +1,5 @@
 """Default automatic/named publication through actual registered ImageMath."""
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 from dataclasses import replace
 from hashlib import sha256
 import json

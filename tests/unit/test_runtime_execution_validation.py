@@ -63,13 +63,9 @@ from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
-from openhcs.core.materialization import (
-    CsvOptions,
-    ImageFileOptions,
-    MaterializationSpec,
-    Output,
-    roi_zip,
-)
+from openhcs.core.materialization.options import CsvOptions, ImageFileOptions
+from openhcs.core.materialization.core import MaterializationSpec, Output
+from openhcs.core.materialization.presets import roi_zip
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )

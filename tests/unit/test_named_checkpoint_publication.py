@@ -43,9 +43,8 @@ from openhcs.core.virtual_workspace_metadata import MetadataWriteError
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.core.materialization import (
-    ImageFileOptions, MaterializationSpec,
-)
+from openhcs.core.materialization.options import ImageFileOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.axes import TileAxis
 from openhcs.domains.microscopy.axes import Microscopy
 

@@ -11,11 +11,8 @@ from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
-from openhcs.core.materialization import (
-    ImageFileOptions,
-    MaterializationSpec,
-    ROIOptions,
-)
+from openhcs.core.materialization.options import ImageFileOptions, ROIOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.persistence import TerminalMaterializationSpec
 
 

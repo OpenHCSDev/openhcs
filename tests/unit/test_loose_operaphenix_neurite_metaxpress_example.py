@@ -12,7 +12,7 @@ from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressCellBodySettings,

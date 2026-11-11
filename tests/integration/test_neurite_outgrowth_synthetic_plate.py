@@ -1,7 +1,7 @@
 """Synthetic-plate integration coverage for 2D neurite outgrowth."""
 
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 import csv
 import io
 import json
@@ -54,7 +54,7 @@ from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.progress.types import set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.source_metadata import SourceVoxelSpacing

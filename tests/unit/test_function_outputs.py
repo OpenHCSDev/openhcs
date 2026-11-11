@@ -101,11 +101,8 @@ from openhcs.core.dataset_sources.interfaces import MetadataHandler
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.materialization.core import Output
-from openhcs.core.materialization import (
-    ImageFileOptions,
-    MaterializationSpec,
-    NameBySourceIdentity,
-)
+from openhcs.core.materialization.options import ImageFileOptions, NameBySourceIdentity
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES

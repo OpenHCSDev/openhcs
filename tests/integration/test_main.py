@@ -618,7 +618,7 @@ def _execute_pipeline_phases(
     """Execute compilation and execution phases of the pipeline (direct mode)."""
     import multiprocessing
     import threading
-    from openhcs.core.progress import ProgressExecutionContext, set_progress_queue
+    from openhcs.core.progress.types import ProgressExecutionContext, set_progress_queue
     import logging
 
     logger = logging.getLogger(__name__)

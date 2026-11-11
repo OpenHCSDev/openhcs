@@ -33,7 +33,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.pipeline.path_planner import MissingArtifactInputError
 from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
-from openhcs.core.progress import ProgressEvent, ProgressQueue
+from openhcs.core.progress.types import ProgressEvent, ProgressQueue
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
@@ -114,7 +114,7 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
 
         from openhcs.core.config import GlobalPipelineConfig
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-        from openhcs.core.progress import set_progress_queue
+        from openhcs.core.progress.types import set_progress_queue
 
         ensure_global_config_context(
             GlobalPipelineConfig,

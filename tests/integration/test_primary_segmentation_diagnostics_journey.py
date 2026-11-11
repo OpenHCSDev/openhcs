@@ -4,7 +4,7 @@ Run only in the coordinator's serialized native-validation slot. There is no
 private plate, segmentation replacement, mocked runtime or biological verdict.
 """
 
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress.types import ProgressExecutionContext
 import numpy as np
 import pytest
 from openhcs.interop.cellprofiler.object_label_variants import (

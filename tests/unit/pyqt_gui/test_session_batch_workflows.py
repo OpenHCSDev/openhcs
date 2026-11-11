@@ -36,7 +36,7 @@ from openhcs.constants.constants import (
     OrchestratorCompiled,
     OrchestratorReady,
 )
-from openhcs.core.progress import ProgressExecutionContext, ProgressEvent
+from openhcs.core.progress.types import ProgressExecutionContext, ProgressEvent
 from openhcs.core.progress.live_measurements import (
     LiveMeasurementProgressPayload,
     LiveMeasurementTablePreview,

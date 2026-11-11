@@ -70,6 +70,9 @@ from openhcs.core.virtual_workspace_metadata import (
 )
 from openhcs.core.vfs_protocol import FileManagerLike
 from openhcs.core.axes import AxisFamily, ColourAxis, PartitionAxis
+from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
+from openhcs.core.dataset_sources.plane_stores import SourceMetadataEnricher
+from openhcs.core.dataset_sources.source import DeclaredFileSource
 
 
 
@@ -637,10 +640,6 @@ class SourceBindingWorkspaceProjector:
         self, projection: "VirtualWorkspaceSourceProjection"
     ) -> "VirtualWorkspaceSourceProjection":
         """Admit retained sources without rebuilding their paths or provenance."""
-        from openhcs.core.source_workspace_projection import (
-            VirtualWorkspacePathLookup,
-            VirtualWorkspaceSourceProjection,
-        )
 
         if not self.source_bindings.source_filter_declarations:
             return projection
@@ -705,7 +704,6 @@ class SourceBindingWorkspaceProjector:
     ) -> SourceProjectionSet:
         """Return projections for one already-resolved candidate universe."""
 
-        from openhcs.core.dataset_sources.plane_stores import SourceMetadataEnricher
 
         candidates = tuple(
             SourceMetadataEnricher.enrich_source_candidate(
@@ -858,7 +856,6 @@ class SourceBindingWorkspaceProjector:
             candidates,
             filemanager=filemanager,
         )
-        from openhcs.core.dataset_sources.source import DeclaredFileSource
 
         primary_metadata = projection_set.metadata_dict(
             parser=self.parser,
