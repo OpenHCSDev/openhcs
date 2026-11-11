@@ -37,7 +37,7 @@ from skimage.measure import regionprops
 from skimage.morphology import h_maxima
 from skimage.segmentation import expand_labels, watershed
 
-from .metaxpress_utils import HiddenPixelSize, local_background_response, odd_size
+from openhcs.processing.backends.analysis.metaxpress_utils import HiddenPixelSize, local_background_response, odd_size
 
 
 class ThresholdMethod(str, Enum):

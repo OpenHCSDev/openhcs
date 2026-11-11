@@ -14,9 +14,9 @@ from openhcs.core.memory import cupy as cupy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.utils.import_utils import optional_import_placeholder
 
-from .phase_correlation import phase_correlation_gpu_only, phase_correlation_nist_gpu
-from .position_reconstruction import build_mst_gpu, rebuild_positions_from_mst_gpu
-from .quality_metrics import (
+from openhcs.processing.backends.pos_gen.mist.phase_correlation import phase_correlation_gpu_only, phase_correlation_nist_gpu
+from openhcs.processing.backends.pos_gen.mist.position_reconstruction import build_mst_gpu, rebuild_positions_from_mst_gpu
+from openhcs.processing.backends.pos_gen.mist.quality_metrics import (
     compute_adaptive_quality_threshold,
     compute_correlation_quality_gpu_aligned,
     log_coordinate_transformation,

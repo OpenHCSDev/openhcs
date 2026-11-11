@@ -75,18 +75,18 @@ from openhcs.core.source.source_image_provenance import (
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source.source_metadata import SourceMetadataScalar
 
-from .database_column_dialect import (
+from openhcs.interop.cellprofiler.database_column_dialect import (
     CellProfilerDatabaseColumnDialect,
     CellProfilerExperimentProjectionField,
     CellProfilerImageAggregateStatistic,
     CellProfilerProjectedTable,
     CellProfilerSourceImageProjectionField,
 )
-from .image_set_numbering import CellProfilerImageSetNumbering
-from .measurement_dialect import (
+from openhcs.interop.cellprofiler.image_set_numbering import CellProfilerImageSetNumbering
+from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
-from .module_declarations import CellProfilerModule
+from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 
 
 class CellProfilerObjectTableMode(str, Enum):

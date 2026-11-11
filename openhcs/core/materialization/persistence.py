@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from .core import MaterializationSpec
+from openhcs.core.materialization.core import MaterializationSpec
 
 
 class TerminalMaterializationSpec(MaterializationSpec):
