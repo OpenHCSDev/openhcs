@@ -22,7 +22,7 @@ from openhcs.core.config.pipeline_config import (
     ProcessingConfig,
 )
 from openhcs.core.execution.execution_state import ExecutionOutputSummary
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionResults,
 )

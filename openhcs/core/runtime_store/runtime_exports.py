@@ -17,7 +17,7 @@ from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservati
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, StoredRuntimeValue
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 
 
 def observation_paths_for(

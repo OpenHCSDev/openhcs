@@ -65,7 +65,7 @@ from openhcs.core.runtime_store.runtime_stores import (
     RuntimeArtifactLocation,
 )
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     preview_reused_step_outputs,
 )

@@ -1,6 +1,6 @@
 from openhcs.core.dataset_sources.source import DatasetSourceChoice
 from openhcs.core.source.source_metadata import SourceFilterClause
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from pathlib import Path
 from types import SimpleNamespace
 
