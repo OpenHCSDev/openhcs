@@ -12,12 +12,12 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.plans import ArtifactPlan
 from openhcs.core.artifacts.relations import ArtifactSpecRelation
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
-from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, ObjectLineageArtifactType
+from openhcs.core.artifacts.kinds import (
+    ArtifactType,
+    ObjectLabelsArtifactType,
+    ObjectLineageArtifactType,
+)
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.kinds import ArtifactType
 
 from openhcs.core.callable.processing_contracts import Pure2DAuxiliaryOutputAggregator
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis, RuntimeSliceIndexedValue

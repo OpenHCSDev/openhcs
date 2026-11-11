@@ -7,17 +7,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
 
-from typing import TYPE_CHECKING
 
+from openhcs.core.artifact_store.runtime_stores import (
+    RuntimeArtifactAddress,
+    RuntimeArtifactLocation,
+    StoredRuntimeValue,
+)
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
-
-if TYPE_CHECKING:
-    from openhcs.core.artifact_store.runtime_stores import (
-        RuntimeArtifactAddress,
-        RuntimeArtifactLocation,
-        StoredRuntimeValue,
-    )
-
 
 @dataclass(frozen=True, slots=True)
 class StepExecutionObservation:

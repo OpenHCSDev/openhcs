@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from types import ModuleType
-from typing import TYPE_CHECKING, ClassVar, TypeVar
+from typing import ClassVar, TypeVar
 
 from pycodify import FormatContext, PythonSourceLiteral, SourceFragment, imported_name
 
@@ -20,11 +20,7 @@ from openhcs.core.callable.callable_declarations import (
 )
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.callable.callable_contract import CallableContract
-
-if TYPE_CHECKING:
-    from openhcs.processing.backends.lib_registry.unified_registry import (
-        FunctionMetadata,
-    )
+from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 
 DeclarationT = TypeVar("DeclarationT", bound=CallableDeclaration)
 

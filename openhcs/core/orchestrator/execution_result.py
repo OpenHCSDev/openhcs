@@ -13,16 +13,12 @@ from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import ClassVar, Mapping
 
-from typing import TYPE_CHECKING
 
 from openhcs.constants.constants import Backend
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
 from openhcs.core.progress.types import AxisErrorProgressPhase, CancelledProgressPhase, CancelledProgressStatus, ErrorProgressStatus
 from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactQuery
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
-
-if TYPE_CHECKING:
-    from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
-
 
 class RuntimeExecutionTransportSerialization:
     """Pickle reducers required for worker-to-parent execution results."""

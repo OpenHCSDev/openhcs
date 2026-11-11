@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.core.dataset_sources.interfaces import MetadataHandler
+
 _registered_openhcs_metadata_handler_type = None
 
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
@@ -32,13 +34,8 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.source.source_image_provenance import SourceImageIdentity
 
-from typing import TYPE_CHECKING
 
 from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
-
-if TYPE_CHECKING:
-    from openhcs.core.dataset_sources.interfaces import MetadataHandler
-
 
 LookupValueT = TypeVar("LookupValueT")
 

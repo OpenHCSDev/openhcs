@@ -5,7 +5,10 @@ from openhcs.core.object_labels.label_declarations import (
     ObjectLabelRepresentation,
     ObjectLabelVariant,
 )
-from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope
+from openhcs.core.object_labels.runtime_object_label_domains import (
+    ObjectLabelDomainDeclaration,
+    PayloadLabelScope,
+)
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
@@ -35,10 +38,7 @@ from metaclass_registry.strategies import (
 )
 from openhcs.core.object_labels.runtime_object_label_domains import DenseIntegerObjectLabelIdDomain, ObjectLabelDomain, ObjectLabelDomainMetadata, ObjectLabelDomainMetadataStrategy, ObjectLabelIdDomainStrategy
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainDeclaration
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection, RuntimeSliceIdentityProjectableValue
 from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.source.source_image_provenance import (

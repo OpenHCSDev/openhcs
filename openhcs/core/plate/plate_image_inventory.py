@@ -8,10 +8,11 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field, is_dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
 from polystore.base import ImageSamplingRequest, ImageSamplingResult
+from polystore.filemanager import FileManager
+from polystore.roi import ROI, ROIShape
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
@@ -28,11 +29,6 @@ from python_introspect import JsonValue, to_jsonable
 
 import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
-
-if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-    from polystore.roi import ROI, ROIShape
-
 
 JsonLike = str | int | float | bool | None
 

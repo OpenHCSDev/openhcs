@@ -4,15 +4,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.runtime.viewer.viewer_protocol import (
-        ViewerControlResponse,
-        ViewerPersistenceMode,
-        ViewerSettleProgress,
-    )
-
+from openhcs.runtime.viewer.viewer_protocol import (
+    ViewerControlResponse,
+    ViewerPersistenceMode,
+    ViewerSettleProgress,
+)
 
 class ExecutionVisualizerABC(ABC):
     """Application viewer contract consumed by compiled plate execution."""

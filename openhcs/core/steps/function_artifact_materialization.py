@@ -7,10 +7,11 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 import logging
 from metaclass_registry import AutoRegisterMeta
+from polystore.filemanager import FileManager
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 
@@ -40,10 +41,6 @@ from openhcs.core.steps.stream_component_semantics import (
 from openhcs.core.materialization.core import BackendKwargsAuthority, MaterializationSpec, SavedMaterializationOutputs, RawBackendKwargs, ViewerStreamBackendCallKwargs, materialization_outputs, prepare_materialization
 from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis
 from openhcs.core.payload.runtime_image_values import as_runtime_value
-
-if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-
 
 logger = logging.getLogger(__name__)
 
