@@ -1459,3 +1459,8 @@ class LibraryContractCall(ContractCall):
                 for values in batch.auxiliary_groups
             ),
         )
+
+
+import openhcs.core.callable.callable_contract as _cc
+
+_cc._registered_processing_contract_family = ProcessingContract

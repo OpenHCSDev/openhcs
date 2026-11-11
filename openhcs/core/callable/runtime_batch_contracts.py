@@ -438,3 +438,8 @@ def measurement_image_batch_executor(executor: Callable) -> Callable[[F], F]:
         RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES,
         executor,
     )
+
+
+import openhcs.core.callable.callable_contract as _cc
+
+_cc._registered_batch_callable_family = RuntimeBatchCallableFamily
