@@ -1289,6 +1289,10 @@ from openhcs.core.dataset_sources.source import (
 from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.config.pipeline_config import source_bindings_defaults_to_base
 from openhcs.core.source.source_workspace_projection import WorkspaceSourceProjections
+from dataclasses import replace
+from pathlib import PurePosixPath
+from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer, SourceProjectionSet
+
 
 
 class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
@@ -1747,3 +1751,122 @@ def build_metadata_view_document(
             ),
         ),
     )
+
+def update_metadata_for_zarr_conversion(
+    dataset_root: Path,
+    original_subdir: str,
+    zarr_subdir: str | None,
+    context: ExecutingContext,
+) -> None:
+    """Update OpenHCS metadata after a Zarr input conversion."""
+    from openhcs.core.dataset_sources.openhcs_format import (
+        OpenHCSMetadataGenerator,
+        OpenHCSMetadataHandler,
+    )
+
+    metadata_path = get_metadata_path(dataset_root)
+    writer = AtomicMetadataWriter()
+
+    if zarr_subdir:
+        zarr_dir = dataset_root / zarr_subdir
+        metadata_handler = OpenHCSMetadataHandler(context.filemanager)
+        metadata_document = metadata_handler.load_metadata_document(dataset_root)
+        subdirectories = dict(OpenHCSMetadataSubdirectories(metadata_document).items())
+        if original_subdir not in subdirectories:
+            raise ValueError(
+                "Zarr conversion metadata is missing original subdirectory "
+                f"{original_subdir!r}."
+            )
+        source_dir = dataset_root / original_subdir
+        grid_dimensions = metadata_handler.get_metadata_grid_dimensions(source_dir)
+        pixel_size = metadata_handler.get_metadata_pixel_size(source_dir)
+        source_projections = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+            subdirectories[original_subdir]
+        )
+        if source_projections.entries:
+            from polystore.virtual_workspace import SourcePixelRef
+
+
+            materialized_projections = []
+            for output_path in context.filemanager.list_image_files(
+                str(zarr_dir), Backend.ZARR.value
+            ):
+                try:
+                    store_path = PurePosixPath(
+                        Path(output_path).relative_to(zarr_dir).as_posix()
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        "Zarr conversion output lies outside its declared store: "
+                        f"{output_path!r}."
+                    ) from exc
+                # Conversion mirrors the source subdirectory's layout inside the
+                # store, while virtual paths are plate-relative.
+                source_virtual_text = str(PurePosixPath(original_subdir) / store_path)
+                if source_virtual_text not in source_projections.entries:
+                    raise ValueError(
+                        "Zarr conversion output has no declared source projection: "
+                        f"{source_virtual_text!r}."
+                    )
+                materialized_path = str(PurePosixPath(zarr_subdir) / store_path)
+                materialized_projections.append(
+                    replace(
+                        source_projections.entries[source_virtual_text],
+                        ref=SourcePixelRef(
+                            backend=Backend.ZARR.value,
+                            backend_address=materialized_path,
+                        ),
+                    )
+                )
+            if not materialized_projections:
+                raise ValueError(
+                    f"Zarr conversion produced no image planes in {zarr_dir}."
+                )
+            zarr_metadata = SourceProjectionMetadataSerializer(
+                parser=context.microscope_handler.parser,
+                path_prefix=zarr_subdir,
+            ).metadata_dict(
+                SourceProjectionSet(tuple(materialized_projections)),
+                microscope_handler_name=context.microscope_handler.source_name,
+                source_filename_parser_name=type(
+                    context.microscope_handler.parser
+                ).__name__,
+                grid_dimensions=list(grid_dimensions),
+                pixel_size=pixel_size,
+                available_backends={Backend.ZARR.value: True},
+                main=True,
+            )
+            writer.merge_subdirectory_metadata(
+                metadata_path,
+                {
+                    zarr_subdir: zarr_metadata,
+                    original_subdir: {"main": False},
+                },
+            )
+        else:
+            OpenHCSMetadataGenerator(context.filemanager).create_metadata(
+                context,
+                str(zarr_dir),
+                Backend.ZARR.value,
+                is_main=True,
+                dataset_root=str(dataset_root),
+                sub_dir=zarr_subdir,
+                grid_dimensions=grid_dimensions,
+                pixel_size=pixel_size,
+            )
+            writer.merge_subdirectory_metadata(
+                metadata_path, {original_subdir: {"main": False}}
+            )
+        logger.info(
+            "Ensured complete metadata for %s, set %s main=false",
+            zarr_subdir,
+            original_subdir,
+        )
+        return
+
+    writer.merge_subdirectory_metadata(
+        metadata_path,
+        {original_subdir: {"available_backends": {Backend.ZARR.value: True}}},
+    )
+    logger.info("Updated metadata: %s now has zarr backend", original_subdir)
+
