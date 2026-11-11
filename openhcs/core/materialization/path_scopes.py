@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 from openhcs.core.context.processing_context import ExecutingContext
+from openhcs.core.source_projection import OpenHCSPlaneAddress
 
 
 
@@ -47,7 +48,6 @@ class ExecutionAxisMaterializationRelativePathScope(MaterializationRelativePathS
         if context is None or context.execution_axis_count() <= 1:
             return relative_path
 
-        from openhcs.core.source_projection import OpenHCSPlaneAddress
 
         axis_token = OpenHCSPlaneAddress.component_token(context.require_axis_id())
         return PurePosixPath(axis_token) / relative_path

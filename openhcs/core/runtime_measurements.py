@@ -38,6 +38,7 @@ from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     VolumeSourceSpatialDomain,
 )
+from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
 
 @dataclass(slots=True, kw_only=True)
@@ -124,7 +125,6 @@ class MeasurementTable(
             return self.source_provenance.source_plane_count
         if self.source_provenance.addressable:
             return None
-        from openhcs.core.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
         raise RuntimeSliceProjectionDeclarationError(
             "Runtime-slice measurement table requires declared source-plane "

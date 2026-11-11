@@ -19,6 +19,7 @@ from openhcs.core.source_metadata import (
     SourceMetadataScalar,
 )
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis, is_axis
+from openhcs.core.source_matching import semantic_source_metadata_value, source_component_metadata_value, with_source_component_metadata
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -348,7 +349,6 @@ class DynamicGroupScope(GroupedScope):
         return self.component is not execution_component or record_key == component_key
 
     def value_for_plane(self, metadata, component):
-        from openhcs.core.source_matching import semantic_source_metadata_value
 
         value = semantic_source_metadata_value(metadata, component.name)
         return None if value is None else str(value)
@@ -739,10 +739,6 @@ class RuntimeExecutionAxisScope:
         metadata is supplied by this scope. Axis and fixed coordinates must
         agree, and unrepresented coordinates are never invented.
         """
-        from openhcs.core.source_matching import (
-            source_component_metadata_value,
-            with_source_component_metadata,
-        )
 
         merged = SourceMetadataFields.composition_snapshot(
             metadata if metadata is not None else {}
@@ -781,7 +777,6 @@ class RuntimeExecutionAxisScope:
     def source_axis_metadata_scope(self) -> "SourceAxisMetadataScope":
         """Return metadata constraints for this runtime axis."""
 
-        from openhcs.core.source_matching import SourceAxisMetadataScope
 
         component_values = tuple(
             (component.name, value)
@@ -805,7 +800,6 @@ class RuntimeExecutionAxisScope:
     ) -> "SourceImageSetIdentity":
         """Project typed coordinates through declared image-set membership."""
 
-        from openhcs.core.source_matching import SourceImageSetIdentity
 
         return SourceImageSetIdentity(
             tuple(
@@ -838,10 +832,6 @@ class RuntimeExecutionAxisScope:
         if not self.has_value or not component_metadata:
             return None
 
-        from openhcs.core.source_matching import (
-            SourceAxisMetadataScope,
-            semantic_source_metadata_value,
-        )
 
         component_name = self.require_component_name()
         values = tuple(

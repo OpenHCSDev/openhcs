@@ -83,9 +83,6 @@ class ArtifactSpec(DeclaredRelations):
             ),
         )
         if self.measurement_feature_owner is not None:
-            from openhcs.core.runtime_measurements import (
-                RuntimeMeasurementFeatureOwner,
-            )
 
             if self.artifact_type is not MeasurementsArtifactType or not issubclass(
                 self.measurement_feature_owner,

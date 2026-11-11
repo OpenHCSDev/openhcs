@@ -80,6 +80,8 @@ from openhcs.core.step_dependencies import (
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration, Ungrouped
+from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
+from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 
 logger = logging.getLogger(__name__)
 
@@ -491,9 +493,6 @@ class PathPlannerExecutionGroups:
     @staticmethod
     def normalized_group_by(step: AbstractStep) -> type[GroupingDeclaration]:
         """Use the same group_by normalization as compiled execution plans."""
-        from openhcs.core.pipeline.funcstep_contract_validator import (
-            FuncStepContractValidator,
-        )
 
         return FuncStepContractValidator.normalized_group_by(
             step.processing_config.group_by,
@@ -2219,7 +2218,6 @@ def _cached_output_dataset_root(
     output_dir_suffix: str,
 ) -> str:
     """Return the output plate root for one normalized path config."""
-    from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 
     path = Path(dataset_root)
     base = DatasetRootRule.for_dataset(dataset_root).output_base(

@@ -14,6 +14,8 @@ from typing import Any
 
 import arraybridge as _arraybridge
 from arraybridge import MemoryType
+from openhcs.core.runtime_image_values import ImagePayload, PlainImagePayload
+from openhcs.core.runtime_array_values import is_array_payload
 
 
 def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
@@ -93,7 +95,6 @@ def _admits_plain_image_payload(annotation: Any) -> bool:
     from python_introspect import is_union_type, resolve_annotated
     from typing import get_args
 
-    from openhcs.core.runtime_image_values import ImagePayload
 
     annotation = resolve_annotated(annotation)
     if is_union_type(annotation):
@@ -112,8 +113,6 @@ def image_payload_boundary(wrapped: Any) -> Any:
     parameter is wrapped when it declares ``ImagePayload`` itself and receives
     a bare array.
     """
-    from openhcs.core.runtime_array_values import is_array_payload
-    from openhcs.core.runtime_image_values import ImagePayload, PlainImagePayload
 
     raw_signature = inspect.signature(inspect.unwrap(wrapped), eval_str=True)
     parameters = tuple(raw_signature.parameters.values())

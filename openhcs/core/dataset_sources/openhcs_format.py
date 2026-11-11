@@ -60,7 +60,6 @@ logger = logging.getLogger(__name__)
 
 def _get_available_filename_parsers():
     """Return registered source filename parsers keyed by nominal class name."""
-    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
     return {
         parser_type.__name__: parser_type
@@ -1288,6 +1287,8 @@ from openhcs.core.dataset_sources.source import (
     PreparedWorkspaceSource,
 )
 from openhcs.core.dataset_sources.interfaces import FilenameParser
+from openhcs.core.config import source_bindings_defaults_to_base
+from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 
 
 class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
@@ -1309,7 +1310,6 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         source_bindings_config=None,
     ) -> "OpenHCSDatasetSource":
         """Keep the prepared source while applying the declared source bindings."""
-        from openhcs.core.config import source_bindings_defaults_to_base
 
         handler = super().create(
             filemanager=filemanager, pattern_format=pattern_format,
@@ -1568,7 +1568,6 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         # The caller's declared projection selects facts; storage stays root-relative.
         self.dataset_root = dataset_root
         if self._source_bindings_config is not None:
-            from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 
             projection = WorkspaceSourceProjections.from_dataset_metadata(
                 dataset_root=dataset_root,

@@ -35,6 +35,7 @@ from arraybridge.types import (
 # OpenHCS wraps ArrayBridge decorators to preserve compiler metadata while
 # leaving conversion semantics in ArrayBridge.
 from . import decorators as decorators
+from openhcs.core.runtime_array_values import array_geometry
 
 for _memory_type in MemoryType:
     _memory_type.prepare_import()
@@ -65,7 +66,6 @@ def stack_runtime_slices(
 
 def runtime_slice_stack_geometry(slices: Sequence[Any]) -> ArrayGeometry:
     """Validate the geometry shared by deferred and concrete slice stacks."""
-    from openhcs.core.runtime_array_values import array_geometry
 
     shapes = tuple(array_geometry(value).shape for value in slices)
     if not shapes:

@@ -16,6 +16,7 @@ from typing import (
 
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.config_document import ConfigDocumentCodec
+from openhcs.core.xdg_paths import get_config_file_path
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +140,6 @@ def _establish_global_pipeline_config(config: GlobalPipelineConfig) -> None:
 
 
 def global_pipeline_config_cache_spec() -> ConfigCacheSpec[GlobalPipelineConfig]:
-    from openhcs.core.xdg_paths import get_config_file_path
 
     return ConfigCacheSpec(
         config_type=GlobalPipelineConfig,

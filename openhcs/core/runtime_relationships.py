@@ -40,6 +40,7 @@ from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_label_domains import dense_object_label_id_domain
 from openhcs.core.runtime_plane_projection import RuntimeSliceIdentityProjectableValue
 import numpy as np
+from openhcs.core.runtime_object_labels import object_label_dense_array, object_label_storage_is_sparse_ijv, object_label_sparse_ijv_rows
 
 
 
@@ -691,9 +692,6 @@ class DenseObjectRelationshipPayloadStrategy(ObjectRelationshipPayloadStrategy):
     def payload(
         self, context: ObjectRelationshipPayloadRequest
     ) -> DirectedObjectRelationshipPayload:
-        from openhcs.core.runtime_object_labels import (
-            object_label_dense_array,
-        )
 
         slice_count = self.relationship_slice_count(context)
         if slice_count is not None:
@@ -808,9 +806,6 @@ class SparseIJVObjectRelationshipPayloadStrategy(
     strategy_key = "sparse_ijv"
 
     def matches(self, context: ObjectRelationshipPayloadRequest) -> bool:
-        from openhcs.core.runtime_object_labels import (
-            object_label_storage_is_sparse_ijv,
-        )
 
         return any(
             (
@@ -822,9 +817,6 @@ class SparseIJVObjectRelationshipPayloadStrategy(
     def payload(
         self, context: ObjectRelationshipPayloadRequest
     ) -> DirectedObjectRelationshipPayload:
-        from openhcs.core.runtime_object_labels import (
-            object_label_sparse_ijv_rows,
-        )
 
         parent_rows = object_label_sparse_ijv_rows(context.parent_labels)
         child_rows = object_label_sparse_ijv_rows(context.child_labels)

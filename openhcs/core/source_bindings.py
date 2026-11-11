@@ -48,6 +48,10 @@ from openhcs.core.source_path_identity import source_path_posix, source_paths_eq
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.axis_boundaries import AxisChoices
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.source_matching import source_filters_match, semantic_source_metadata_value, source_component_metadata_values, source_metadata_values_equal
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.runtime_image_values import ImagePayload, ImageUnitIntervalIntensityMetadata
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
@@ -799,7 +803,6 @@ class SourceSelector:
 
     def path_filters_match(self, identities: tuple[str, ...]) -> bool:
         """Match store-owned path provenance, without guessing decoded identity."""
-        from openhcs.core.source_matching import source_filters_match
 
         return any(source_filters_match(path, self.filters) for path in identities)
 
@@ -808,11 +811,6 @@ class SourceSelector:
         candidates: Iterable[SourceMetadataMapping],
     ) -> bool:
         """Match declared coordinates in store or current-payload metadata."""
-        from openhcs.core.source_matching import (
-            semantic_source_metadata_value,
-            source_component_metadata_values,
-            source_metadata_values_equal,
-        )
 
         candidates = tuple(candidates)
         return all(
@@ -1180,13 +1178,6 @@ class NamedSourceBinding(SourceAssignmentBase):
         """Apply this declaration to one freshly loaded source payload."""
         import numpy as np
 
-        from openhcs.core.axes import ColourAxis
-        from openhcs.core.payload_axes import PayloadAxes
-        from openhcs.core.runtime_image_values import (
-            ImagePayload,
-            ImagePayloadMetadata,
-            ImageUnitIntervalIntensityMetadata,
-        )
 
         payload = ImagePayload.of(payload)
         if source_context is None:
@@ -1313,7 +1304,6 @@ class NamedSourceBinding(SourceAssignmentBase):
         if realized_source_metadata is None:
             return ()
 
-        from openhcs.core.source_matching import source_component_metadata_values
 
         values: list[str] = []
         for metadata in realized_source_metadata:

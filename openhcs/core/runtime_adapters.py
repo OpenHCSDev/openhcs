@@ -125,7 +125,6 @@ class RuntimeAdapterRequest:
     def require_callable_contract(self) -> "CallableContract":
         """Return the exact compiled callable contract for this invocation."""
 
-        from openhcs.core.callable_contract import CallableContract
 
         contract = self.callable_contract
         if not isinstance(contract, CallableContract):
@@ -225,7 +224,6 @@ class RuntimeAdapterRequest:
         backend: str,
     ) -> "RuntimeArtifactInput":
         """Bind an exact compiled input to this request's declared source context."""
-        from openhcs.core.runtime_stores import RuntimeArtifactInput
 
         return RuntimeArtifactInput(
             edge_plan=edge,

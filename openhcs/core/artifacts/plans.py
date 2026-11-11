@@ -29,6 +29,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope, UngroupedSco
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementSubject
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts.relations import (
@@ -528,7 +529,6 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
         """Normalize a produced payload through this compiled storage scope."""
 
         from openhcs.core.runtime_artifact_values import RuntimeValue
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         kind = self.artifact_type
         returned = RuntimeSliceProjection.match_alignment(

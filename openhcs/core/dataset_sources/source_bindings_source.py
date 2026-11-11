@@ -14,6 +14,8 @@ from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.dataset_sources.source import DeclaredFileSource
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
+from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector, materialize_source_binding_workspace
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
 class SourceBindingsSource(DeclaredFileSource, DatasetSource):
@@ -79,9 +81,6 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
             parser=parser,
             metadata_handler=OpenHCSMetadataHandler(filemanager),
         )
-        from openhcs.core.source_binding_workspace import (
-            SourceBindingWorkspaceProjector,
-        )
 
         self._source_bindings_config = source_bindings_config
         self._projector = SourceBindingWorkspaceProjector(
@@ -126,9 +125,6 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
         metadata_path = dataset_root / OpenHCSMetadataHandler.METADATA_FILENAME
         if not filemanager.exists(str(metadata_path), Backend.DISK.value):
             return False
-        from openhcs.core.source_workspace_projection import (
-            VirtualWorkspaceSourceProjection,
-        )
 
         metadata = self.metadata_handler.source_workspace_metadata_document(dataset_root)
         workspace_metadata = self.metadata_handler.workspace_mapping_metadata(
@@ -161,9 +157,6 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
         This handler resolves current declarations and physical source files.
         Replaying persisted projection metadata belongs to the OpenHCS handler.
         """
-        from openhcs.core.source_binding_workspace import (
-            materialize_source_binding_workspace,
-        )
 
         dataset_root = Path(dataset_root)
         self.dataset_root = dataset_root

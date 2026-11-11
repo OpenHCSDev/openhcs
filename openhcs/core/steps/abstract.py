@@ -67,9 +67,6 @@ class StepExecutionObservation:
         projections = dict(self.source_projection_entries_by_target)
         if projections:
             from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
-            from openhcs.core.virtual_workspace_metadata import (
-                VirtualWorkspaceSourceProjectionEntries,
-            )
 
             for target, entries in projections.items():
                 if not isinstance(target, OpenHCSMetadataTarget):
@@ -146,9 +143,6 @@ class StepExecutionObservation:
                 entries,
             ) in observation.source_projection_entries_by_target.items():
                 source_projections.setdefault(target, []).append(entries)
-        from openhcs.core.virtual_workspace_metadata import (
-            VirtualWorkspaceSourceProjectionEntries,
-        )
 
         return cls(
             MappingProxyType(locations),

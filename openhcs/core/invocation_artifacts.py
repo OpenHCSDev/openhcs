@@ -36,7 +36,6 @@ def unnamed_main_flow_artifact_name(
 ) -> str:
     """Return the deterministic compiler-only identity for unnamed main flow."""
 
-    from openhcs.core.function_patterns import FunctionInvocationKey
 
     if not isinstance(step_index, int) or step_index < 0:
         raise TypeError(

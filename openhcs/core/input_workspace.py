@@ -12,6 +12,7 @@ from openhcs.core.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
 )
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +117,6 @@ def mirror_input_workspace(source_root: Path, workspace_root: Path) -> Path:
     exist yet and must not lie inside the source.
     """
 
-    from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 
     source = Path(source_root).resolve()
     workspace = Path(workspace_root).resolve()

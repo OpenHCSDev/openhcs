@@ -772,7 +772,6 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
 
     def source_path_filters_match(self, identities: tuple[str, ...]) -> bool:
         """Match the declared source universe against physical path identities."""
-        from openhcs.core.source_matching import source_filters_match
 
         return any(
             source_filters_match(identity, self.source_filter_declarations)
@@ -1470,6 +1469,7 @@ register_namespace_provider(
 
 from objectstate import config_context
 from objectstate.lazy_factory import resolve_lazy_configurations_for_serialization
+from openhcs.core.source_matching import source_filters_match
 
 with config_context(PipelineConfig()):
     EMPTY_SOURCE_BINDINGS: StepSourceBindingsConfig = (

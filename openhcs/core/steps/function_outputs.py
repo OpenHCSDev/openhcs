@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, TypeVar
+from typing import Any, ClassVar, TypeVar
 
 import numpy as np
 from metaclass_registry import (
@@ -34,6 +34,7 @@ from openhcs.core.image_file_serialization import (
     ImageFileFormat,
     ImageFileSourceMetadata,
 )
+from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -86,9 +87,8 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.core.dataset_sources.interfaces import FilenameParser
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
-if TYPE_CHECKING:
-    from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 
 logger = logging.getLogger(__name__)
 StreamPayload = RuntimeArrayData
@@ -1206,7 +1206,6 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
         accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Use durable typed projections, without reloading cleaned artifact values."""
-        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
         if (document is None) != (accepted_entries is None):
             raise ValueError("Reconciliation requires one document and its admitted entries.")

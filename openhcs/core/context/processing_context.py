@@ -184,7 +184,6 @@ class ExecutingContext(CompiledContext):
         compiled: CompiledContext,
         execution_runtime: "WorkerLaneExecutionContext | None" = None,
     ):
-        from openhcs.core.steps.abstract import StepExecutionObservation
 
         CompiledContext.__init__(self, compiled.compiled_facts())
         self.runtime_value_store = RuntimeValueStore()
@@ -230,7 +229,6 @@ class ExecutingContext(CompiledContext):
         self, observation: "StepExecutionObservation"
     ) -> None:
         """Own completed persisted facts across step cleanup and worker transfer."""
-        from openhcs.core.steps.abstract import StepExecutionObservation
 
         if observation is self.completed_step_outputs:
             return
@@ -272,7 +270,6 @@ class ExecutingContext(CompiledContext):
         self, observation: "StepExecutionObservation"
     ) -> None:
         """Retain exporter-owned output facts within the active step only."""
-        from openhcs.core.steps.abstract import StepExecutionObservation
 
         values = self._runtime_step_values
         if values is None:
@@ -292,7 +289,6 @@ class ExecutingContext(CompiledContext):
     @property
     def runtime_step_outputs(self) -> "StepExecutionObservation | None":
         """Return derived output facts admitted during the active step."""
-        from openhcs.core.steps.abstract import StepExecutionObservation
 
         if self._runtime_step_values is None:
             return None

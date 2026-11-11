@@ -58,6 +58,7 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_spatial_grid import (
     SpatialGrid,
 )
+from openhcs.core.measurement_dialect import MeasurementDialect
 
 
 
@@ -191,7 +192,6 @@ def runtime_measurement_tables(
     cached = store_cache.cached_value(cache_key) if stored_tables_only else None
     if cached is not None:
         return cached
-    from openhcs.core.measurement_dialect import MeasurementDialect
 
     tables = tuple(
         table

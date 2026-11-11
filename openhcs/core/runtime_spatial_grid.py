@@ -25,6 +25,9 @@ from openhcs.core.source_image_provenance import (
 
 from enum import Enum
 from openhcs.core.alias_property import AliasProperty
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementRowAxisField
+from openhcs.core.runtime_tabular_values import FieldSpec
 
 SPATIAL_GRID_DEFAULT_SLICE_INDEX = 0
 
@@ -342,16 +345,6 @@ class SpatialGrid(SourceImageProvenanceFields, NamedArtifactPayload):
         slice_indices: tuple[int, ...] | None = None,
     ) -> "MeasurementTable":
         """Expose this grid's current geometry as image measurements."""
-        from openhcs.core.measurement_row_materialization import (
-            MeasurementSparseColumnarRows,
-        )
-        from openhcs.core.runtime_measurements import (
-            MeasurementTable,
-            MeasurementScope,
-            MeasurementSubject,
-            MeasurementRowAxisField,
-        )
-        from openhcs.core.runtime_tabular_values import FieldSpec
 
         row = {
             dialect.spatial_grid_measurement_feature_name(self.name, field): value

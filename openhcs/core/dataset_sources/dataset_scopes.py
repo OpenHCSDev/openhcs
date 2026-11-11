@@ -186,7 +186,6 @@ class PreparedWorkspaceScope(DatasetScopeKind):
         cls,
         scope: DatasetScope,
     ) -> "InputWorkspacePreparationResult":
-        from openhcs.core.input_workspace import InputWorkspacePreparationResult
 
         return InputWorkspacePreparationResult(
             original_source_root=scope.root,

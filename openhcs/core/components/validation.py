@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence
 
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
+from openhcs.core.function_patterns import NormalizedFunctionPattern
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,6 @@ class GenericValidator:
         Returns:
             ValidationResult indicating success or failure
         """
-        from openhcs.core.function_patterns import NormalizedFunctionPattern
 
         try:
             # The orchestrator decodes the grouping axis itself
