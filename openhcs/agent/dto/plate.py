@@ -972,25 +972,8 @@ class SyntheticPlateGenerationRequest:
         )
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
-        return {
-            "output_dir": self.output_dir,
-            "grid_rows": self.grid_rows,
-            "grid_cols": self.grid_cols,
-            "tile_width": self.tile_width,
-            "tile_height": self.tile_height,
-            "overlap_percent": self.overlap_percent,
-            "stage_error_px": self.stage_error_px,
-            "wavelengths": self.wavelengths,
-            "z_stack_levels": self.z_stack_levels,
-            "num_cells": self.num_cells,
-            "shared_cell_fraction": self.shared_cell_fraction,
-            "partition_values": list(self.partition_values),
-            "format": self.format.value,
-            "openhcs_format": self.openhcs_format,
-            "include_all_components": self.include_all_components,
-            "random_seed": self.random_seed,
-            "sample_file_limit": self.sample_file_limit,
-        }
+        from openhcs.agent.dto import _dto_wire_value
+        return {f.name: _dto_wire_value(getattr(self, f.name)) for f in dataclasses.fields(self)}
 
 
 @dataclass(frozen=True, slots=True)

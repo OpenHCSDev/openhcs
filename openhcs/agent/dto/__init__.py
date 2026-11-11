@@ -178,3 +178,35 @@ __all__ = lazy_exports(
         ),
     },
 )
+
+
+def _dto_wire_value(value: object) -> object:
+    """Convert one field value to its JSON-serializable wire form.
+
+    Handles the common DTO transforms: Enum -> value, tuple -> list,
+    ComponentFilters -> mapping, None passthrough, and to_jsonable fallback.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (int, float, bool)):
+        return value
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, tuple):
+        return [_dto_wire_value(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _dto_wire_value(v) for k, v in value.items()}
+    if isinstance(value, Mapping):
+        return {k: _dto_wire_value(v) for k, v in value.items()}
+    if hasattr(value, "as_mapping"):
+        return value.as_mapping()
+    if hasattr(value, "to_jsonable"):
+        return value.to_jsonable()
+    from python_introspect import to_jsonable
+    return to_jsonable(value)
+
+
+from collections.abc import Mapping
+from enum import Enum
