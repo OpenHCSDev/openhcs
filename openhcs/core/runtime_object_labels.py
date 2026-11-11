@@ -27,8 +27,7 @@ from openhcs.core import (
     runtime_array_values,
     runtime_image_values,
 )
-from openhcs.core.artifacts.payloads import NamedArtifactPayload
-from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
+from openhcs.core.artifacts.payloads import ArrayPayloadShape, NamedArtifactPayload, PayloadShape
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     NominalTypeStrategyFamilyMixin,
@@ -557,6 +556,7 @@ class ObjectLabelValue(
 ):
     """Nominal object-label carrier with dense labels and domain metadata."""
 
+    payload_shape: ClassVar[type[PayloadShape]] = ArrayPayloadShape
     variant_data: ObjectLabelVariantData
     representation: ObjectLabelRepresentation
     domain: ObjectLabelDomain
@@ -2269,7 +2269,7 @@ def object_label_value_with_dense_labels(
         )
     if not isinstance(
         source, ObjectLabelDomainMetadata
-    ) and not ObjectLabelsArtifactType.payload_shape.accepts(source):
+    ) and not ObjectLabelValue.payload_shape.accepts(source):
         raise TypeError(
             "Object-label replacement requires nominal object-label domain "
             "metadata or declared label data, got "

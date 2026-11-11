@@ -21,7 +21,7 @@ from openhcs.core.source_metadata import (
     MetadataExtractionRule,
     MetadataSource,
 )
-from openhcs.core.steps import FunctionStep
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
 from openhcs.processing.backends.cellprofiler.intensity import measure_image_intensity

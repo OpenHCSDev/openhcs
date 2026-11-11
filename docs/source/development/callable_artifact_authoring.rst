@@ -235,7 +235,7 @@ normal plate compilation/execution supplies image-source and runtime context.
    :name: callable-artifact-reference-check
 
    from openhcs.core.callable_contract import CallableContract
-   from openhcs.core.steps import FunctionStep
+   from openhcs.core.steps.function_step import FunctionStep
 
    fixture = np.zeros((8, 8), dtype=np.uint16)
    fixture[2:6, 3:7] = 1

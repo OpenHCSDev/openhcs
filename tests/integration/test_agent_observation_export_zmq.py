@@ -35,7 +35,7 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.authoring.session.session import CallerThread
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig, PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.steps import FunctionStep
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext

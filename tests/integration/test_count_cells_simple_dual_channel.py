@@ -33,7 +33,7 @@ from openhcs.core.config import (
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
-from openhcs.core.steps import FunctionStep
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.count_cells_simple import (
     MetaXpressW2Settings,
     MetaXpressWavelengthSettings,

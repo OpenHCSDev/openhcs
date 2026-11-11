@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from objectstate import ObjectStateRegistry
 
 from openhcs.constants.constants import OrchestratorReady
-from openhcs.core.orchestrator import PipelineOrchestrator
+from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.pyqt_gui.services.reactor_providers import (
     OpenHCSComponentSelectionProvider,
 )
