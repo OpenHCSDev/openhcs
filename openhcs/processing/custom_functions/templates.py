@@ -493,12 +493,7 @@ def get_analysis_template(memory_type: str = "numpy") -> str:
     Returns:
         Template string with analysis pattern
     """
-    if memory_type == "numpy":
-        return NUMPY_ANALYSIS_TEMPLATE
-    else:
-        # For other memory types, return the basic analysis template
-        # Users can adapt the numpy pattern
-        return NUMPY_ANALYSIS_TEMPLATE
+    return NUMPY_ANALYSIS_TEMPLATE
 
 
 def get_multi_output_template() -> str:
