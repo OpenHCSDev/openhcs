@@ -4,6 +4,8 @@ Key idea: the abstraction boundary is the output *format* (writers), not per-ana
 """
 from __future__ import annotations
 
+from polystore.filemanager import FileManager
+
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import copy
@@ -20,7 +22,7 @@ from dataclasses import dataclass, field, fields as dataclass_fields, is_datacla
 from functools import lru_cache, singledispatch
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, TypeAlias
+from typing import ClassVar, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -69,10 +71,24 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamScopedDisplayConfig,
 )
 from openhcs.core.materialization.constants import WriteMode
-from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, FileOutputOptions, ImageFileOptions, JsonOptions, NameByArtifactName, NameBySourceIdentity, PointROIOptions, ROIOptions, SpatialGraphROIOptions, SWCOptions, TabularExtractionOptions, TextOptions, TiffStackOptions
+from openhcs.core.materialization.options import (
+    CsvOptions,
+    FileBundleOptions,
+    FileOutputOptions,
+    ImageFileOptions,
+    JsonOptions,
+    NameByArtifactName,
+    NameBySourceIdentity,
+    PointROIOptions,
+    ROIOptions,
+    SourceOptions,
+    SpatialGraphROIOptions,
+    SWCOptions,
+    TabularExtractionOptions,
+    TextOptions,
+    TiffStackOptions,
+)
 
-if TYPE_CHECKING:
-    from openhcs.core.materialization.options import SourceOptions
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_image_values import as_runtime_value
@@ -80,10 +96,6 @@ from openhcs.core.io.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.io.roi_point_metadata import ROIFractionalZ
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.measurements.measurement_row_materialization import MeasurementSparseColumnarRows, is_structural_missing_measurement_cell, ConcatenatedColumnarRows, MEASUREMENT_SPARSE_CELL
-
-if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-
 
 logger = logging.getLogger(__name__)
 

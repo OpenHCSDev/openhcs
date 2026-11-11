@@ -15,9 +15,10 @@ from dataclasses import dataclass, field, replace
 from hashlib import sha256
 from json import dumps
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from objectstate import spawn_thread_with_context
+from polystore.filemanager import FileManager
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
@@ -41,15 +42,11 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
     StreamSourceComponentMetadataItems,
 )
+from openhcs.runtime.viewer.viewer_protocol import (
+    ManagedViewerLifecycleMixin,
+    ViewerLaunchContext,
+)
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
-
-if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-
-    from openhcs.runtime.viewer.viewer_protocol import (
-        ManagedViewerLifecycleMixin,
-        ViewerLaunchContext,
-    )
 
 logger = logging.getLogger(__name__)
 

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import ClassVar, cast
 
-from openhcs.core.debug.debug_runtime import DebugArtifactRef, DebugInvocationParameter
+from openhcs.core.debug.debug_runtime import (
+    DebugArtifactRef,
+    DebugInvocationParameter,
+    DebugSnapshot,
+)
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.core.debug.debug_runtime import DebugSnapshot
 from openhcs.core.debug.debug_view_models import AvailableEmptySection, AvailableEmptyTable, DebugViewModel, DebugViewSectionDeclarationBase, DebugViewTableProjectionDeclarationBase, ReportedEmptySection
 from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactAddress, StoredRuntimeValue
 

@@ -37,13 +37,13 @@ from openhcs.core.axes.component_group_scope import (
     UngroupedScope,
 )
 from openhcs.core.axes.component_set import ComponentSet
-from openhcs.core.pipeline.artifact_declarations import MissingArtifactInputError
+from openhcs.core.pipeline.artifact_declarations import (
+    ArtifactProducer,
+    MissingArtifactInputError,
+)
 from openhcs.core.pipeline.artifact_planning import ArtifactOutputMaterializationPlanner
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.core.pipeline.artifact_declarations import ArtifactProducer
 from openhcs.core.pipeline.compilation_session import CompilationDatasetScope
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan, CompiledSourceUniversePlan, source_binding_group_keys_for_group_by
 from openhcs.core.util.step_dependencies import StepOutputInput, UnresolvedStepInput
