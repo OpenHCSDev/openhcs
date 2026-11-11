@@ -23,6 +23,7 @@ from typing import (
 )
 
 from arraybridge import MemoryContractAttribute, MemoryType
+from pycodify import PythonSourceLiteral
 from python_introspect import (
     RuntimeParameterDeclarationABC,
     add_parameter_exclusions,
@@ -1951,9 +1952,7 @@ def creates_payload_axis(role: type[AxisRole]) -> Any:
 
 def _is_function_reference(func: Any) -> bool:
     """Return whether func is the compiler's nominal picklable reference."""
-    from openhcs.core.callable.function_reference import FunctionReference
-
-    return isinstance(func, FunctionReference)
+    return isinstance(func, PythonSourceLiteral)
 
 
 def _resolve_declared_callable(func: Any) -> Callable[..., object]:
