@@ -281,7 +281,6 @@ class RobustBackgroundCenterStrategy(
     """Nominal center estimator for CP robust-background thresholding."""
 
     __registry_key__ = "averaging_method_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "averaging_method"
     averaging_method: ClassVar[CellProfilerAveragingMethod | None] = None
     averaging_method_label: ClassVar[str | None] = None
@@ -385,7 +384,6 @@ class RobustBackgroundSpreadStrategy(
     """Nominal spread estimator for CP robust-background thresholding."""
 
     __registry_key__ = "variance_method_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "variance_method"
     variance_method: ClassVar[CellProfilerVarianceMethod | None] = None
     variance_method_label: ClassVar[str | None] = None
@@ -2794,7 +2792,6 @@ class ThresholdMethodRowSelectionPolicy(
     """Own setting and result-row semantics for one threshold scope."""
 
     __registry_key__ = "scope_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "scope"
     scope: ClassVar[CellProfilerThresholdScope | None] = None
     scope_label: ClassVar[str | None] = None

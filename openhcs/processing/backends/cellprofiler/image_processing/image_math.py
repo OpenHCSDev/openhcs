@@ -432,7 +432,6 @@ class ImageMathOperationStrategy(
     """Nominal owner for ImageMath operation arity, literals, and execution."""
 
     __registry_key__ = "operation_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "operation"
     operation: ClassVar[MathOperation | None] = None
     operation_label: ClassVar[str | None] = None

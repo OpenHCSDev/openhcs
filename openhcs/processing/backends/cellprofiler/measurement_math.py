@@ -968,7 +968,6 @@ class MathOperationStrategy(
     """Nominal strategy for the closed CalculateMath operation family."""
 
     __registry_key__ = "operation_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "operation"
     operation: ClassVar[MathOperation | None] = None
     operation_label: ClassVar[str | None] = None
@@ -1028,7 +1027,6 @@ class RoundingStrategy(
     """Nominal strategy for the closed CalculateMath rounding family."""
 
     __registry_key__ = "rounding_label"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "rounding"
     rounding: ClassVar[RoundingMethod | None] = None
     rounding_label: ClassVar[str | None] = None

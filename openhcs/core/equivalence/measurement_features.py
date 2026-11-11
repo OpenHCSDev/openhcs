@@ -728,7 +728,6 @@ class SparseObjectBoundaryStatisticEquivalence(
     __enum_member_attr__ = "statistic"
 
     statistic: ClassVar[MeasurementStatistic]
-    strategy_label: ClassVar[str | None] = None
 
     @abstractmethod
     def values_equivalent(

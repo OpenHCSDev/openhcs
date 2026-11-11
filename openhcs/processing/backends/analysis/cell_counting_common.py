@@ -493,7 +493,6 @@ class WatershedThresholdMethodStrategy(
     """Nominal watershed threshold method dispatcher shared by backends."""
 
     __registry_key__ = "method_value"
-    __skip_if_no_key__ = True
     __enum_member_attr__ = "method"
 
     method: ClassVar[ThresholdMethod]
