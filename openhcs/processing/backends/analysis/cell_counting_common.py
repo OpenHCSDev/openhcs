@@ -412,7 +412,7 @@ class ColocalizationAnalysis:
         self,
         chan_1_result: CellCountResult,
         chan_2_result: CellCountResult,
-        method: str,
+        method: ColocalizationMethod,
     ) -> MultiChannelResult:
         return MultiChannelResult(
             slice_index=chan_1_result.slice_index,
