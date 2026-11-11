@@ -11,7 +11,6 @@ from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import (
-    TYPE_CHECKING,
     ClassVar,
     Dict,
     List,

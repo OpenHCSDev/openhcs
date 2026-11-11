@@ -49,7 +49,6 @@ from zmqruntime.config import (
 from zmqruntime.viewer_protocol import ViewerWireValue
 from zmqruntime.transport import get_default_transport_mode
 
-from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.dataset_sources.source import (
     AutoDetectedSource,
     DatasetSourceChoice,

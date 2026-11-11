@@ -17,7 +17,6 @@ from pathlib import Path
 from threading import Lock
 from types import MappingProxyType
 from typing import (
-    TYPE_CHECKING,
     Any,
     ClassVar,
     Mapping,
@@ -63,6 +62,7 @@ from openhcs.core.payload.aligned_image_payload import compose_aligned_image_pay
 from openhcs.core.payload.runtime_image_values import owned_runtime_value, RuntimeSliceProjectionDeclarationError, ImagePayload
 from openhcs.core.payload.runtime_output_matching import split_runtime_output
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.config.pipeline_config import runtime_config_parameter
 
 
 
@@ -1161,8 +1161,6 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     @property
     def config_bound_parameters(self) -> tuple[inspect.Parameter, ...]:
         """PipelineConfig-owned parameters declared by the callable signature."""
-
-        from openhcs.core.config.pipeline_config import runtime_config_parameter
 
         signature = self.canonical_signature
         return tuple(
