@@ -461,9 +461,7 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     ObjectFeatureValueTable,
 )
-from openhcs.core.object_labels.runtime_object_labels import (
-    ObjectLabelRepresentation,
-)
+from openhcs.core.object_labels.label_declarations import ObjectLabelRepresentation
 from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     ObjectMeasurementColumnarRows,
