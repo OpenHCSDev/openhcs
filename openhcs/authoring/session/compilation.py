@@ -22,9 +22,7 @@ from openhcs.runtime.zmq.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
 )
 
-if TYPE_CHECKING:
-    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
-
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
 

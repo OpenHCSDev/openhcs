@@ -57,14 +57,11 @@ from openhcs.core.pipeline.function_contracts import (
     MatchImageStackLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.callable_contract import CallableContract
-    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-
-
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
 class DecimationMethod(Enum):
     KMEANS = "kmeans"
     SKELETON = "skeleton"

@@ -206,13 +206,9 @@ from openhcs.agent.dto.viewer import (
 from openhcs.runtime.viewer.viewer_controls import ViewerNavigationControlOptions
 from python_introspect import to_jsonable
 
-if TYPE_CHECKING:
-    from argparse import ArgumentParser, Namespace
-
-    from openhcs.mcp.dev_client_commanding import McpDevCliProjection
-    from openhcs.mcp.server import McpCapabilityBinder
-
-
+from argparse import ArgumentParser, Namespace
+from openhcs.mcp.dev_client_commanding import McpDevCliProjection
+from openhcs.mcp.server import McpCapabilityBinder
 class CapabilityKind(Enum):
     RESOURCE = "resource"
     TOOL = "tool"

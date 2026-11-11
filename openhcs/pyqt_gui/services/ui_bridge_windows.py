@@ -22,9 +22,7 @@ from pyqt_reactive.bridge.windows import (
 )
 from openhcs.agent.ui_bridge_identities import MainWindowWidgetIdentity
 
-if TYPE_CHECKING:
-    from openhcs.pyqt_gui.main import OpenHCSMainWindow
-
+from openhcs.pyqt_gui.main import OpenHCSMainWindow
 MAIN_WINDOW_ACTION_PROVIDER_IDENTITY = UiActionProviderIdentity.from_widget_declaration(
     MainWindowWidgetIdentity,
     title="Main window actions",

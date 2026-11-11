@@ -55,14 +55,11 @@ from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.runtime.invocation import (
-        CellProfilerMeasurementImage,
-    )
-
-
+from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.runtime.invocation import (
+CellProfilerMeasurementImage,
+)
 class ZeroFilledShapeFeature(RuntimeMeasurementFeatureSemanticMarker, NumbaNumpyDefaultBackend):
     """Shape feature that is zero, not missing, for an empty label below the
     largest measured label."""

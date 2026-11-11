@@ -41,10 +41,7 @@ from openhcs.core.measurements.measurement_feature_queries import (
     ColumnarMeasurementTableSchema,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-
-
+from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
     """Nominal context for one object-feature measurement lookup."""

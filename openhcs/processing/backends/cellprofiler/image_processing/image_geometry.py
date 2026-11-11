@@ -61,12 +61,9 @@ from openhcs.interop.cellprofiler.setting_names import (
 )
 from openhcs.core.callable.callable_contract import CallableContract
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 class MaskSource(Enum):
     """Mask source domains exposed by MaskImage settings."""
 

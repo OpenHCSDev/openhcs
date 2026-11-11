@@ -105,13 +105,10 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-
-
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
 # What the runtime binds to an operand: one image-level number, one vector of
 # per-object values, or either of those carried once per slice.
 MathOperandSliceValue = float | np.ndarray

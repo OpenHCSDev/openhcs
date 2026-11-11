@@ -82,11 +82,8 @@ from openhcs.core.pipeline.function_contracts import (
     MatchImageStackLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.callable_contract import CallableContract
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 class CombineObjectsMethod(Enum, NumbaNumpyDefaultBackend):
     """Overlap policies exposed by CombineObjects settings."""
 

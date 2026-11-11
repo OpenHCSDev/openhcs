@@ -16,9 +16,7 @@ from openhcs.core.execution.execution_state import (
     ExecutionCancelled, ExecutionFailed,
 )
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
+from openhcs.authoring.session.session import Session
 logger = logging.getLogger(__name__)
 
 

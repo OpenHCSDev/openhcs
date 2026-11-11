@@ -84,26 +84,24 @@ from openhcs.runtime.zmq.zmq_execution_signature import (
     ZMQExecutionRequestPayload,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.debug.debug_runtime import DebugCommandType
-    from openhcs.agent.dto.functions import (
-        CustomFunctionRegistrationDestination,
-        CustomFunctionRegistrationDestinationRequest,
-        CustomFunctionRegistrationRequest,
-        CustomFunctionRegistrationResult,
-        CustomFunctionRegistrationHandle,
-        CustomFunctionRegistrationObservation,
-        FunctionCatalogControlRequest,
-        FunctionCatalogControlRequestABC,
-        FunctionCatalogPage,
-        FunctionCatalogPreparationState,
-        FunctionDetail,
-        FunctionDetailControlRequest,
-        FunctionReferenceControlRequest,
-        FunctionSearchRequest,
-    )
-    from openhcs.core.callable.function_reference import FunctionReference
-
+from openhcs.core.debug.debug_runtime import DebugCommandType
+from openhcs.agent.dto.functions import (
+CustomFunctionRegistrationDestination,
+CustomFunctionRegistrationDestinationRequest,
+CustomFunctionRegistrationRequest,
+CustomFunctionRegistrationResult,
+CustomFunctionRegistrationHandle,
+CustomFunctionRegistrationObservation,
+FunctionCatalogControlRequest,
+FunctionCatalogControlRequestABC,
+FunctionCatalogPage,
+FunctionCatalogPreparationState,
+FunctionDetail,
+FunctionDetailControlRequest,
+FunctionReferenceControlRequest,
+FunctionSearchRequest,
+)
+from openhcs.core.callable.function_reference import FunctionReference
 logger = logging.getLogger(__name__)
 
 

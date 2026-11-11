@@ -17,9 +17,7 @@ from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConf
 from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.session import NoArgumentsRequest, SessionOperationResult
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
+from openhcs.authoring.session.session import Session
 _SESSION_OPERATIONS = LazyDiscoveryDict(enable_cache=False)
 
 

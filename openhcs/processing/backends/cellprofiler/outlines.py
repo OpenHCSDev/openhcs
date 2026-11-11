@@ -77,14 +77,11 @@ from openhcs.core.pipeline.function_contracts import (
     MatchImageStackLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
-    )
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-
-
+from openhcs.core.callable.function_patterns import (
+FunctionInvocationKey,
+NormalizedFunctionItem,
+)
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 class OutlineSourceKind(str, Enum):
     """Nominal source kind for one OverlayOutlines row."""
 

@@ -103,9 +103,7 @@ from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
 from openhcs.core.payload.runtime_image_values import PlainImagePayload
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
 

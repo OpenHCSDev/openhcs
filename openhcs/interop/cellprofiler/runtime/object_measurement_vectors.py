@@ -58,10 +58,7 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
 )
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-
-
+from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 @dataclass(slots=True)
 class CellProfilerMeasurementVector:
     """CellProfiler-facing projection of one object/image measurement vector."""

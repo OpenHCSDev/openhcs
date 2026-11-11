@@ -27,16 +27,13 @@ from openhcs.processing.backends.analysis.consolidate_analysis_results import (
 
 logger = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-    from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.steps.function_artifact_materialization import (
-        MaterializedRuntimeArtifact,
-        RuntimeArtifactMaterialization,
-    )
-    from openhcs.core.materialization.core import Output
-
-
+from polystore.filemanager import FileManager
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.steps.function_artifact_materialization import (
+MaterializedRuntimeArtifact,
+RuntimeArtifactMaterialization,
+)
+from openhcs.core.materialization.core import Output
 @dataclass(frozen=True, slots=True)
 class RuntimeAnalysisSummaryDestination:
     """Compiled persistent destination shared by runtime analysis outputs."""

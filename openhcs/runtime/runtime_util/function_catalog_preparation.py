@@ -15,17 +15,14 @@ from threadpoolctl import threadpool_info
 from zmqruntime import OperationCancellation
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
-if TYPE_CHECKING:
-    from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
-    from openhcs.agent.dto.functions import (
-        FunctionCatalogPreparationHandle,
-        FunctionCatalogPreparationState,
-    )
-    from openhcs.agent.services.function_catalog_service import (
-        FunctionCatalogServiceABC,
-    )
-
-
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+from openhcs.agent.dto.functions import (
+FunctionCatalogPreparationHandle,
+FunctionCatalogPreparationState,
+)
+from openhcs.agent.services.function_catalog_service import (
+FunctionCatalogServiceABC,
+)
 class FunctionCatalogPreparation:
     """Own one lazily started endpoint catalog preparation operation."""
 

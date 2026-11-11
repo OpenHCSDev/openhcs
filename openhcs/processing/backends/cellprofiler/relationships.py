@@ -77,14 +77,11 @@ from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
     RelationshipMeasurementRows,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.callable_contract import CallableContract
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 @dataclass(frozen=True)
 class RelateObjectsDistanceParentInputRelation(ArtifactSpecRelation, NumbaNumpyDefaultBackend):
     """Mark an object input as a repeated distance-parent role."""

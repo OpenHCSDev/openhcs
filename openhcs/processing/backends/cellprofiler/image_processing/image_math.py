@@ -52,11 +52,8 @@ from openhcs.core.callable.processing_contracts import (
 from openhcs.core.payload.runtime_array_values import array_geometry
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 class ImageMathOperation(Enum):
     """ImageMath operation literals exposed by CellProfiler settings."""
 

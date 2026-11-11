@@ -150,17 +150,14 @@ from openhcs.core.debug.debug_runtime import (
     StopDebugCommand,
 )
 
-if TYPE_CHECKING:
-    from formbridge.contracts import AgentError
-    from openhcs.authoring.session.operations import SessionOperation
-    from openhcs.authoring.session.views import SessionView
-    from zmqruntime.messages import PongResponse
-
-    from openhcs.runtime.zmq.zmq_execution_client import (
-        ZMQExecutionClient,
-        ZMQExecutionRequestBuilder,
-    )
-
+from formbridge.contracts import AgentError
+from openhcs.authoring.session.operations import SessionOperation
+from openhcs.authoring.session.views import SessionView
+from zmqruntime.messages import PongResponse
+from openhcs.runtime.zmq.zmq_execution_client import (
+ZMQExecutionClient,
+ZMQExecutionRequestBuilder,
+)
 logger = logging.getLogger(__name__)
 ResultT = TypeVar("ResultT")
 

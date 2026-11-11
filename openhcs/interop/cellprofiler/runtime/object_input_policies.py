@@ -25,10 +25,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-
-
+from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 class CellProfilerObjectInputPolicyMixin(CellProfilerModuleAuthority):
     """Nominal owner for declared object-label input binding."""
 

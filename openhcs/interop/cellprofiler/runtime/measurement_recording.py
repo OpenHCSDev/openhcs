@@ -46,17 +46,14 @@ from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.payload.runtime_image_values import as_runtime_value
 
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.specs import ArtifactSpec
-    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-        CellProfilerResultMeasurementRows,
-    )
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-    from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
-
-
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+CellProfilerResultMeasurementRows,
+)
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
+from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 def measurement_table_for_module(
     request: CellProfilerOutputRecordRequest,
 ) -> MeasurementTable:

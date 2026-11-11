@@ -23,9 +23,7 @@ from typing import TYPE_CHECKING
 
 from openhcs.mcp.execution import McpTransportExecutor
 
-if TYPE_CHECKING:
-    from mcp.server.fastmcp import FastMCP
-
+from mcp.server.fastmcp import FastMCP
 MCP_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE = "OPENHCS_MCP_SOCKET_DIRECTORY"
 MCP_SOCKET_IDLE_EXIT_SECONDS_DEFAULT = 1800.0
 MCP_SOCKET_CONNECT_PROBE_TIMEOUT_SECONDS = 0.5

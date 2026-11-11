@@ -115,9 +115,7 @@ from openhcs.desktop.zmq_version_restart import (
     ZMQVersionRestartWorkflow,
 )
 
-if TYPE_CHECKING:
-    from zmqruntime.startup import EndpointStartupStatus
-
+from zmqruntime.startup import EndpointStartupStatus
 logger = logging.getLogger(__name__)
 
 

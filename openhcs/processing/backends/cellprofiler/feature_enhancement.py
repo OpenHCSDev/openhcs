@@ -37,10 +37,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 class OperationMethod(Enum):
     ENHANCE = "Enhance"
     SUPPRESS = "Suppress"

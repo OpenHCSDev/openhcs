@@ -55,12 +55,9 @@ from openhcs.core.callable.processing_contracts import (
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 class CropMask(ArtifactSidecarRole):
     """The cropping mask CellProfiler's Crop module publishes beside a cropped image."""
 

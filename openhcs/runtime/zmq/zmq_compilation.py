@@ -18,11 +18,8 @@ from openhcs.runtime.zmq.zmq_progress import (
 )
 from openhcs.runtime.zmq.zmq_execution_signature import OpenHCSExecutionConfigBundle
 
-if TYPE_CHECKING:
-    from openhcs.core.config.pipeline_config import GlobalPipelineConfig
-    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-
-
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 logger = logging.getLogger(__name__)
 
 

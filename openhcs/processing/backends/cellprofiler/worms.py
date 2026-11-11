@@ -154,16 +154,14 @@ from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
-    )
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-
+from openhcs.core.callable.function_patterns import (
+FunctionInvocationKey,
+NormalizedFunctionItem,
+)
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
 MAX_CLUSTER_PATHS = 400
 MAX_CLUSTER_PATH_SETS_CONSIDERED = 50_000
 

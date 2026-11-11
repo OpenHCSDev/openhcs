@@ -49,10 +49,7 @@ from openhcs.ui.shared.plate_manager_code_document import (
 )
 from formbridge.bridge.in_process import UiCodeDocumentValidationError
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.session import Session
-
-
+from openhcs.authoring.session.session import Session
 _ORCHESTRATOR_CODE_DOCUMENT_EXAMPLE = PlateManagerDocumentAssignments(
     plate_paths="['/path/to/plate']",
     global_config="GlobalPipelineConfig(...)",

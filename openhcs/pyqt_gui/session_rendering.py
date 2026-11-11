@@ -27,9 +27,7 @@ from openhcs.pyqt_gui.widgets.shared.services.qt_widget_edit_commit import (
     commit_focused_widget_edits,
 )
 
-if TYPE_CHECKING:
-    from openhcs.authoring.session.views import SessionView
-
+from openhcs.authoring.session.views import SessionView
 logger = logging.getLogger(__name__)
 
 

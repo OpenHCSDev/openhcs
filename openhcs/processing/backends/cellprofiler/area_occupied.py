@@ -101,17 +101,14 @@ from openhcs.core.pipeline.function_contracts import (
     FullStackLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
-    )
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-        RuntimeInputBindingRequest,
-    )
-
-
+from openhcs.core.callable.function_patterns import (
+FunctionInvocationKey,
+NormalizedFunctionItem,
+)
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.interop.cellprofiler.runtime.artifact_binding import (
+RuntimeInputBindingRequest,
+)
 class OperandChoice(Enum):
     BINARY_IMAGE = "binary_image"
     OBJECTS = "objects"

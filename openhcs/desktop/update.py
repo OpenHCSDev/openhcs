@@ -47,9 +47,7 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
 
-if TYPE_CHECKING:
-    from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
-
+from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
 LATEST_RELEASE_API_URL = (
     "https://api.github.com/repos/OpenHCSDev/openhcs/releases/latest"
 )

@@ -52,12 +52,9 @@ from openhcs.interop.cellprofiler.setting_names import (
     split_symbol_names,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.core.callable.callable_contract import CallableContract
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 def parse_watershed_border_exclusion(value: str) -> bool:
     """Parse legacy and current Watershed border-exclusion settings."""
     normalized = value.strip().lower()

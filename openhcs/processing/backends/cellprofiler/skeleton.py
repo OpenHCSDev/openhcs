@@ -64,9 +64,7 @@ SeedObjectLabelsInput = Annotated[
     ),
 ]
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 EIGHT_NEIGHBOR_KERNEL = np.array([[1, 1, 1], [1, 0, 1], [1, 1, 1]], dtype=np.uint8)
 
 

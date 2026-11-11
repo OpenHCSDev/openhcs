@@ -67,15 +67,12 @@ from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.constants import WriteMode
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
-    )
-    from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
-
+from openhcs.core.callable.function_patterns import (
+FunctionInvocationKey,
+NormalizedFunctionItem,
+)
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 class SaveImagesImageKind(str, Enum):
     """Image payload kind supported by the OpenHCS SaveImages callable."""
 

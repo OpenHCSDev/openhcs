@@ -13,18 +13,15 @@ from zmqruntime.messages import MessageFields, ResponseType
 
 from openhcs.agent.dto.functions import FunctionCatalogControlRequestABC
 
-if TYPE_CHECKING:
-    from openhcs.agent.dto.functions import (
-        FunctionCatalogPreparationCancelRequest,
-        FunctionCatalogPreparationStartRequest,
-        FunctionCatalogPreparationState,
-        FunctionCatalogPreparationStatusRequest,
-    )
-    from openhcs.agent.services.function_catalog_service import FunctionCatalogService
-    from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
-    from openhcs.runtime.zmq.zmq_compilation import ZMQCompileArtifactRecord
-
-
+from openhcs.agent.dto.functions import (
+FunctionCatalogPreparationCancelRequest,
+FunctionCatalogPreparationStartRequest,
+FunctionCatalogPreparationState,
+FunctionCatalogPreparationStatusRequest,
+)
+from openhcs.agent.services.function_catalog_service import FunctionCatalogService
+from openhcs.runtime.runtime_util.function_catalog_preparation import FunctionCatalogPreparation
+from openhcs.runtime.zmq.zmq_compilation import ZMQCompileArtifactRecord
 @dataclass(frozen=True, slots=True)
 class ZMQControlRequestContext:
     """Server-owned resources available to registered control strategies."""

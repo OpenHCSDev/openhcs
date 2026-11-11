@@ -71,12 +71,9 @@ from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.function_patterns import FunctionInvocationKey
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-
-
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 def _parse_image_intensity_percentiles(value: str) -> tuple[int, ...]:
     """Parse CellProfiler's comma-delimited percentile setting."""
 

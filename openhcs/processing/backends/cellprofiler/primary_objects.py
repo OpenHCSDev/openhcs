@@ -99,9 +99,7 @@ from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifact
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-
+from openhcs.interop.cellprofiler.parser import ModuleBlock
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
 

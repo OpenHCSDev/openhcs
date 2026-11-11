@@ -63,9 +63,7 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.callable_contract import CallableContract
-
+from openhcs.core.callable.callable_contract import CallableContract
 RelationshipIdVector = np.ndarray | Sequence[int]
 
 

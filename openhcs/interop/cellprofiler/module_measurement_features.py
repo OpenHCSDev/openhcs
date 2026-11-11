@@ -28,22 +28,19 @@ from openhcs.core.measurements.runtime_measurements import (
 )
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-        FormattingMeasurementFeatureTemplate,
-    )
-    from openhcs.core.artifacts.specs import ArtifactSpec
-    from openhcs.core.callable.callable_contract import CallableContract
-    from openhcs.core.measurements.runtime_measurements import MeasurementTable
-    from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
-    from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
-        RelationshipMeasurementRows,
-    )
-
-
+from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+FormattingMeasurementFeatureTemplate,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.callable.callable_contract import CallableContract
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+CellProfilerOutputRecordRequest,
+)
+from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
+RelationshipMeasurementRows,
+)
 class CellProfilerModuleAuthority:
     """Nominal semantic capability inherited by CellProfiler module declarations."""
 
