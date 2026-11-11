@@ -1438,9 +1438,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     def validate_artifact_input_parameter_bindings(self) -> None:
         """Validate exact artifact occurrences against the normalized callable ABI."""
 
-        from openhcs.core.pipeline.function_contracts import (
-            special_input_parameter_accepts_sequence,
-        )
+        from openhcs.core.pipeline.annotation_checks import special_input_parameter_accepts_sequence
 
         artifact_parameters = {}
         parameters = self.canonical_signature.parameters
@@ -2069,12 +2067,12 @@ class CallableProjection:
         return tuple(targets)
 
 
+_PROCESSING_CONTEXT_PARAMETER_NAME = "context"
+
+
 def _signature_context_parameter(signature: inspect.Signature) -> str | None:
     """Inject processing context into a callable that names its parameter."""
-    from openhcs.core.context.processing_context import ProcessingContext
-
-    parameter_name = ProcessingContext.require_parameter_name()
-    return parameter_name if parameter_name in signature.parameters else None
+    return _PROCESSING_CONTEXT_PARAMETER_NAME if _PROCESSING_CONTEXT_PARAMETER_NAME in signature.parameters else None
 
 
 def _nominal_argument_types(annotation: object) -> tuple[type, ...]:

@@ -81,9 +81,7 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     def accepts_parameter_annotation(cls, annotation: object) -> bool:
         """Return whether an annotation accepts this artifact's runtime payload."""
 
-        from openhcs.core.pipeline.function_contracts import (
-            annotation_accepts_runtime_type,
-        )
+        from openhcs.core.pipeline.annotation_checks import annotation_accepts_runtime_type
 
         return any(
             annotation_accepts_runtime_type(annotation, runtime_type)

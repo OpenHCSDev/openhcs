@@ -23,7 +23,7 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
-from openhcs.core.pipeline.function_contracts import (
+from openhcs.core.pipeline.annotation_checks import (
     annotation_accepts_runtime_type,
     annotation_produces_runtime_type,
 )
