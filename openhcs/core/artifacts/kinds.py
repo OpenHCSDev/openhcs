@@ -7,16 +7,9 @@ a kind with one nominal payload type declares it once.
 """
 from __future__ import annotations
 
-from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
-from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.measurements.measurement_dialect import MeasurementDialect
-from openhcs.core.payload.projected_image_output import SourceProjectedImageOutput
-from openhcs.core.payload.runtime_image_values import ImagePayload, ImagePayloadMetadata
-from openhcs.core.measurements.runtime_measurements import MeasurementSubject, MeasurementTable
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxisProjector,
-    RuntimeSlicePlaneAxis,
-)
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.runtime_measurements import MeasurementTable
+from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -25,14 +18,7 @@ from typing import ClassVar, cast
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.artifacts.payloads import (
-    AnyPayloadShape,
-    ArrayPayloadShape,
-    MappingPayloadShape,
-    NamedArtifactPayload,
-    PayloadShape,
-    TablePayloadShape,
-)
+from openhcs.core.artifacts.payloads import AnyPayloadShape, ArrayPayloadShape, MappingPayloadShape, NamedArtifactPayload, TablePayloadShape
 from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
@@ -43,20 +29,15 @@ from openhcs.core.memory import detect_memory_type
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.payload.runtime_slice_alignment import (
-    RuntimeSliceAlignedValues,
-    RuntimeSliceAlignedValueSet,
-)
+from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
-from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection, preserve_declared_image_payload_axis
 from openhcs.core.payload.runtime_image_values import owned_runtime_value, as_runtime_value
 from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.object_labels.runtime_object_label_aggregation import ObjectLabelPure2DSliceAggregator
 from openhcs.core.measurements.measurement_row_materialization import MeasurementRowOwnership, join_measurement_tables, join_measurement_tables_artifact, measurement_rows_with_source_provenance
 from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
-
 
 
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):

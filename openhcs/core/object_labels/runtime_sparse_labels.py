@@ -11,9 +11,6 @@ import numpy as np
 from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelIdDomainStrategy
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxisValueProjection,
-)
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain, SpatialShapeYX
 
 SINGLETON_AXIS_LENGTH = 1

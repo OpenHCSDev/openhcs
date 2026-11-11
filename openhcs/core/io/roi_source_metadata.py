@@ -12,7 +12,6 @@ from zmqruntime.viewer_protocol import ViewerWireValue
 
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.payload.runtime_slice_projection import RuntimeProjectionPlaneMetadata
-from openhcs.core.source.source_image_provenance import SourceComponentMetadata
 from python_introspect import to_jsonable
 from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.io.roi_point_metadata import ROIFractionalZ

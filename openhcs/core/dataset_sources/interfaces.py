@@ -9,16 +9,9 @@ from pathlib import Path
 import re
 from typing import ClassVar, Dict, Mapping, Optional, Tuple, Union
 from openhcs.constants.constants import Backend
-from openhcs.core.components.parser_metaprogramming import (
-    FilenameParseResult,
-    GenericFilenameParser,
-)
+from openhcs.core.components.parser_metaprogramming import GenericFilenameParser
 from openhcs.core.components.component_values import AxisValues
-from openhcs.core.source.source_metadata import (
-    SourceMetadataValue,
-    SourceVoxelSpacing,
-    source_metadata_dict,
-)
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, source_metadata_dict
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.viewer_transport import (
     ViewerFilenameParserABC,
@@ -27,9 +20,7 @@ from polystore.streaming.viewer_transport import (
 )
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily
-
-
+from openhcs.core.axes.axis_declarations import AxisFamily
 
 
 @dataclass(frozen=True, slots=True, init=False, eq=False)
@@ -678,7 +669,6 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
             if values:
                 result[component.name] = dict(values)
         return result
-
 
 
 class DiskImageFileListingMetadataHandler(MetadataHandler):

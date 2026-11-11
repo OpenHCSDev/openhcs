@@ -13,26 +13,12 @@ from polystore.zarr_batch import ZarrBatchAxis, ZarrBatchAxisRole, ZarrBatchLayo
 
 from openhcs.constants.constants import LOADABLE_IMAGE_EXTENSIONS, Backend
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config.pipeline_config import ZarrConfig
-from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.payload.image_file_serialization import (
     ImageFileFormat,
     prepare_disk_image_payloads,
 )
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData
-from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
-from openhcs.core.axes.axis_declarations import (
-    Axis,
-    AxisFamily,
-    AxisRoleKeyedStrategyMixin,
-    ColourAxis,
-    StackAxis,
-    TileAxis,
-    TimeAxis,
-)
+from openhcs.core.axes.axis_declarations import AxisFamily, AxisRoleKeyedStrategyMixin, ColourAxis, StackAxis, TileAxis, TimeAxis
 from openhcs.core.payload.runtime_image_values import ImagePayload
-from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter, OpenHCSMetadataSubdirectories, VirtualWorkspaceSourceProjectionEntries, get_metadata_path
-from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer, SourceProjectionSet
 
 
 logger = logging.getLogger(__name__)

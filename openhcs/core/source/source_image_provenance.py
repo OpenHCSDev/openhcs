@@ -16,25 +16,9 @@ from metaclass_registry import AutoRegisterMeta
 from python_introspect.validation import validate_annotation_value
 from python_introspect import to_jsonable
 
-from openhcs.core.dataset_sources.interfaces import FilenameParser
-from openhcs.core.source.source_metadata import (
-    SOURCE_PLANE_COUNT_FIELD,
-    SOURCE_PLANE_INDEX_FIELD,
-    OwnedSourceMetadataFields,
-    SourceMetadataFields,
-    SourceMetadataMapping,
-    SourceMetadataScalar,
-    SourceMetadataValue,
-)
-from openhcs.core.source.source_matching import (
-    SourceImageSetIdentity,
-    SourceImageSetIdentityPolicy,
-    source_component_metadata_raw_value,
-    source_component_metadata_value,
-    source_metadata_value,
-    with_source_component_metadata,
-)
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, StackAxis
+from openhcs.core.source.source_metadata import SOURCE_PLANE_COUNT_FIELD, SOURCE_PLANE_INDEX_FIELD, OwnedSourceMetadataFields, SourceMetadataFields, SourceMetadataMapping
+from openhcs.core.source.source_matching import SourceImageSetIdentity, source_component_metadata_raw_value, source_component_metadata_value, source_metadata_value, with_source_component_metadata
+from openhcs.core.axes.axis_declarations import AxisFamily, StackAxis
 
 SourceComponentMetadata = SourceMetadataMapping
 SourceImageProvenancePlanePathValues = tuple[str | None, ...]
@@ -60,7 +44,6 @@ SourceProvenanceInitValues = tuple[
 
 SourceImageProvenanceAliasValueT = TypeVar("SourceImageProvenanceAliasValueT")
 SourceImageProvenancePlaneValueT = TypeVar("SourceImageProvenancePlaneValueT")
-
 
 
 def normalize_source_path(source_path: str | None) -> str | None:

@@ -10,7 +10,6 @@ from openhcs.core.callable.function_step_transport import (
     FunctionStepTransportAuthority,
     PipelineStepsDocument,
 )
-from openhcs.core.steps.function_step import FunctionStep
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

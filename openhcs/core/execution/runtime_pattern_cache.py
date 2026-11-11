@@ -7,11 +7,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Hashable
 
-from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.callable.function_patterns import FunctionGroupKey
 from openhcs.core.source.source_binding_selection import SourceCandidatePath
-from openhcs.core.axes.axis_declarations import Axis, GroupingDeclaration
 
 
 DiscoveredPatternCollection = (

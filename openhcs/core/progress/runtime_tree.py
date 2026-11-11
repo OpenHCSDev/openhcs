@@ -9,20 +9,7 @@ from typing import Callable, ClassVar, Dict, List, Mapping, Optional, Sequence
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.progress.types import ProgressStream, ProgressEvent
-from openhcs.core.progress.projection import (
-    ExecutionRuntimeProjection,
-    SubjectRuntimeIdentity,
-    SubjectRuntimeProjection,
-    SubjectRuntimeState,
-    QueuedSubjectRuntimeState,
-    CompilingSubjectRuntimeState,
-    CompiledSubjectRuntimeState,
-    ExecutingSubjectRuntimeState,
-    CompleteSubjectRuntimeState,
-    FailedSubjectRuntimeState,
-    build_execution_runtime_projection,
-)
+from openhcs.core.progress.projection import SubjectRuntimeIdentity, QueuedSubjectRuntimeState, CompilingSubjectRuntimeState, CompiledSubjectRuntimeState, ExecutingSubjectRuntimeState, CompleteSubjectRuntimeState, FailedSubjectRuntimeState, build_execution_runtime_projection
 from metaclass_registry.strategies import (
     AlwaysMatchesContextMixin,
     MostDerivedContextStrategyMixin,

@@ -4,9 +4,6 @@ Key idea: the abstraction boundary is the output *format* (writers), not per-ana
 """
 from __future__ import annotations
 
-from openhcs.core.artifacts.plans import ArtifactOutputPlan
-from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import copy
@@ -41,7 +38,6 @@ import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsona
 from openhcs.core.source.source_path_identity import source_path_identity
 from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
 from openhcs.core.axes.component_set import ComponentSet
-from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
 from metaclass_registry.strategies import (
     AlwaysMatchesContextMixin,
@@ -54,27 +50,10 @@ from openhcs.core.payload.runtime_image_values import (
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.payload.runtime_slice_projection import (
-    RuntimeProjectedPayloadItem,
-    RuntimeProjectionPlaneMetadata,
-    RuntimeProjectionSourceIdentityRequest,
-    OptionalSourceIdentity,
-)
-from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
-from openhcs.core.payload.runtime_tabular_values import (
-    ColumnarRows,
-    FieldSpec,
-    MeasurementObjectRowIdentity,
-    measurement_row_mapping,
-    supports_measurement_row_mapping,
-)
-from openhcs.core.source.source_image_provenance import (
-    SourceComponentMetadata,
-    SourceImageIdentity,
-    SourceImageProvenance,
-    SourcePlaneIndexedMetadata,
-    VariableComponentAxisProjection,
-)
+from openhcs.core.payload.runtime_slice_projection import RuntimeProjectedPayloadItem, RuntimeProjectionSourceIdentityRequest, OptionalSourceIdentity
+from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows, FieldSpec, measurement_row_mapping, supports_measurement_row_mapping
+from openhcs.core.source.source_image_provenance import SourceImageIdentity, SourceImageProvenance, SourcePlaneIndexedMetadata, VariableComponentAxisProjection
 from openhcs.core.source.source_matching import (
     source_component_metadata_value,
     source_metadata_value,
@@ -94,7 +73,6 @@ from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, 
 
 if TYPE_CHECKING:
     from openhcs.core.materialization.options import SourceOptions
-from openhcs.core.axes.axis_declarations import Axis
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_image_values import as_runtime_value

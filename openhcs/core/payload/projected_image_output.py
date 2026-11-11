@@ -6,11 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 
 from openhcs.core.axes.axis_declarations import AxisFamily
-from openhcs.core.payload.runtime_array_values import (
-    DataBackedRuntimeArrayPayload,
-    RuntimeArrayData,
-)
-from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_array_values import DataBackedRuntimeArrayPayload
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimeSliceInvariantValue,

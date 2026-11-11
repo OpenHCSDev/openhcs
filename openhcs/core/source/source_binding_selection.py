@@ -1,7 +1,6 @@
 """Shared source-binding candidate selection for planning and runtime."""
 
 from __future__ import annotations
-from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
@@ -16,59 +15,25 @@ from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 
 from openhcs.constants.constants import Backend
 from openhcs.core.util.path_pattern_matching import PathPatternTemplateMatcher
-from openhcs.core.source.source_bindings import (
-    CompiledSourceBindingPlan,
-    NamedSourceBinding,
-    PairByMetadata,
-    PairByOrder,
-    SourceSetPairing,
-    FromPipelineStart,
-    FromStepInput,
-    MatchedSource,
-    SourceBindingOrigin,
-)
+from openhcs.core.source.source_bindings import PairByMetadata, PairByOrder, FromPipelineStart, FromStepInput, MatchedSource
 from openhcs.core.source.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
 )
-from openhcs.core.source.source_metadata import (
-    MetadataExtractionRule,
-    SourceMetadataFields,
-    SourceMetadataMapping,
-    SourceMetadataRecord,
-    SourceMetadataValue,
-)
-from openhcs.core.source.source_matching import (
-    SourceImageSetIdentity,
-    SourceImageSetIdentityCompatibility,
-    SourceImageSetIdentityPolicy,
-    merge_source_metadata,
-    metadata_from_rules,
-    semantic_source_metadata_value,
-    source_component_metadata_items,
-    source_component_metadata_value,
-    source_filters_match,
-    source_metadata_value,
-    source_metadata_values_equal,
-)
+from openhcs.core.source.source_metadata import SourceMetadataFields, SourceMetadataRecord
+from openhcs.core.source.source_matching import SourceImageSetIdentity, SourceImageSetIdentityCompatibility, merge_source_metadata, metadata_from_rules, semantic_source_metadata_value, source_component_metadata_items, source_component_metadata_value, source_filters_match, source_metadata_value, source_metadata_values_equal
 from openhcs.core.source.source_path_identity import (
     source_path_identity,
     source_path_identity_key,
     source_path_posix,
     source_paths_equal,
 )
-from openhcs.core.source.source_projection import SourceProjection
-from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspaceSourceProjection,
-)
 from openhcs.core.payload.aligned_image_payload import stack_image_payloads
 from openhcs.core.steps.function_io import get_all_image_paths
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_image_values import as_runtime_value
-
 
 
 SourceCandidatePath = str

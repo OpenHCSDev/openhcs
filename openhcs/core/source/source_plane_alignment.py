@@ -5,11 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
 
-from openhcs.core.source.source_matching import (
-    SourceImageSetIdentity,
-    SourceImageSetIdentityCompatibility,
-    SourceImageSetIdentityPairPredicate,
-)
+from openhcs.core.source.source_matching import SourceImageSetIdentity, SourceImageSetIdentityCompatibility
 
 SourcePlaneIdentitySequence = tuple[frozenset[SourceImageSetIdentity], ...]
 

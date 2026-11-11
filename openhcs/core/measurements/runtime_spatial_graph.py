@@ -11,7 +11,6 @@ from typing import ClassVar, Self
 import numpy as np
 
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
-from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingFields
 from openhcs.core.source.source_image_provenance import (

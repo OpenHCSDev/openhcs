@@ -19,7 +19,6 @@ from arraybridge import ArrayGeometry
 
 
 from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
-from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.memory import (
     MemoryType,
     convert_memory,
@@ -33,12 +32,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openhcs.core.payload.runtime_image_values import ImageMaskDomain
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData, array_geometry
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisProjector,
-    RuntimePlaneAxisValueProjection,
-)
+from openhcs.core.payload.runtime_array_values import array_geometry
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.payload.runtime_slice_projection import preserved_image_plane_projection
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.source.source_spatial_domain import (
@@ -48,7 +43,6 @@ from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
-
 
 
 class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):

@@ -19,14 +19,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
-from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.callable.function_reference import FunctionReference
 from openhcs.core.callable.runtime_adapters import RuntimeImageExecutionContext
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
-
 
 
 F = TypeVar("F", bound=Callable)

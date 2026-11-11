@@ -25,7 +25,7 @@ from python_introspect import RegisteredClassChoices
 from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.core.source.source_path_identity import source_path_identity_key
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, ColourAxis, PartitionAxis, StackAxis
+from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis, PartitionAxis, StackAxis
 from openhcs.core.source.common_runtime_value import CommonRuntimeValue
 
 SourceBindingValue = TypeVar("SourceBindingValue")
@@ -184,7 +184,6 @@ class MetadataExtractionRule:
         """Return named metadata fields in their regex declaration order."""
 
         return tuple(re.compile(self.pattern).groupindex)
-
 
 
 DECLARED_SOURCE_METADATA_FIELD = "OpenHCSOriginalSourceMetadata"

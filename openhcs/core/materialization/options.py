@@ -16,12 +16,8 @@ from typing import Any, Callable, ClassVar, Dict, List, Optional
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeature
-from openhcs.core.materialization.path_scopes import (
-    MaterializationRelativePathScope,
-    SharedMaterializationRelativePathScope,
-)
+from openhcs.core.materialization.path_scopes import SharedMaterializationRelativePathScope
 
 
 class MaterializedFilenameIdentity(ABC, metaclass=AutoRegisterMeta):
@@ -118,7 +114,6 @@ class CsvOptions(FileOutputOptions, SourceOptions, TabularExtractionOptions):
     def read_csv(self, text: str):
         """Read formatting-ready lexemes with this writer's dialect."""
         return csv.reader(io.StringIO(text, newline=""))
-
 
 
 @dataclass(frozen=True)

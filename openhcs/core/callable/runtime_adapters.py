@@ -9,10 +9,7 @@ from typing import Any, TypeVar
 
 from python_introspect import add_parameter_exclusions
 
-from openhcs.core.payload.aligned_image_payload import (
-    ImagePayloadExecutionMode,
-    NaturalExecution,
-)
+from openhcs.core.payload.aligned_image_payload import NaturalExecution
 from openhcs.core.util.artifact_key_selection import (
     ArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,
@@ -24,27 +21,17 @@ from openhcs.core.artifacts.plans import (
 )
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.callable.callable_contract import CallableContract
-from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.callable.function_patterns import (
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput
-from openhcs.core.source.source_bindings import (
-    CompiledSourceBindingPlan,
-    NamedSourceBinding,
-)
+from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source.source_binding_selection import (
     SourceUniverseRequest,
 )
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxisValueProjection,
-    RuntimePlaneProjection,
-)
-from openhcs.core.axes.axis_declarations import Axis
-
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])

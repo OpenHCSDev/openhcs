@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 
 
 @dataclass(frozen=True, slots=True)

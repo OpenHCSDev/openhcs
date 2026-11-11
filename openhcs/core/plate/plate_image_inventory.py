@@ -15,29 +15,15 @@ from polystore.base import ImageSamplingRequest, ImageSamplingResult
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
-from openhcs.core.dataset_sources.interfaces import (
-    AnalysisResultDirectory,
-    FilenameParser,
-    MetadataHandler,
-)
-from openhcs.core.dataset_sources.source import DatasetSource
+from openhcs.core.dataset_sources.interfaces import AnalysisResultDirectory
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
-from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.plate.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
+from openhcs.core.plate.plate_file_inventory import PlateFileKind
 from openhcs.core.io.result_file_formats import (
     ResultFileFormat,
     ResultFilePreviewReader,
 )
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
-from openhcs.core.source.source_projection import (
-    SourceCandidate,
-    SourcePlaneDataset,
-    SourceProjection,
-)
-from openhcs.core.source.source_workspace_projection import (
-    VirtualWorkspaceSourceProjection,
-    WorkspaceSourceProjections,
-)
+from openhcs.core.source.source_workspace_projection import WorkspaceSourceProjections
 from python_introspect import JsonValue, to_jsonable
 
 import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)

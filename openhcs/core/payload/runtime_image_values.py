@@ -24,39 +24,16 @@ from zmqruntime.viewer_protocol import (
 )
 from collections.abc import Mapping
 
-from openhcs.core.payload.payload_axes import (
-    AxisSpec,
-    PayloadAxes,
-    RuntimePlaneAxisSpec,
-    SpatialAxisSpec,
-    UndeclaredAxisSpec,
-)
-from openhcs.core.payload.runtime_array_values import (
-    DataBackedRuntimeArrayPayload,
-    RuntimeArrayData,
-    RuntimeArrayPayload,
-    array_geometry,
-    is_array_payload,
-    mask_array,
-    runtime_array_operand,
-)
+from openhcs.core.payload.payload_axes import PayloadAxes, RuntimePlaneAxisSpec, SpatialAxisSpec, UndeclaredAxisSpec
+from openhcs.core.payload.runtime_array_values import DataBackedRuntimeArrayPayload, RuntimeArrayPayload, array_geometry, is_array_payload, mask_array, runtime_array_operand
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimeSliceInvariantValue,
     RuntimeSliceProjectableValue,
 )
-from openhcs.core.source.source_image_provenance import (
-    SourceComponentMetadata,
-    SourceImageProvenance,
-    SourceImageProvenanceFields,
-    SourcePlaneIndexedProvenanceExpansion,
-)
-from openhcs.core.source.source_metadata import (
-    SourceMetadataScalar,
-    SourceVoxelSpacing,
-    SourceVoxelSpacingFields,
-)
+from openhcs.core.source.source_image_provenance import SourceImageProvenance, SourceImageProvenanceFields, SourcePlaneIndexedProvenanceExpansion
+from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingFields
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain, SourceSpatialDomainAdapter, SourceSpatialDomainFields, SpatiallyPlacedValue
 
 from typing import TYPE_CHECKING
@@ -66,7 +43,7 @@ if TYPE_CHECKING:
 from openhcs.core.source.source_spatial_domain import (
     _spatial_shape_pair as _source_spatial_shape_pair,
 )
-from openhcs.core.axes.axis_declarations import AxisFamily, AxisRole, ColourAxis
+from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
 from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
 
 
@@ -1135,7 +1112,6 @@ class ImagePayloadMetadata(
                 )
             return metadata
         return metadata.for_source_planes(source_plane_indices)
-
 
 
     def without_spatial_domain(self) -> "ImagePayloadMetadata":

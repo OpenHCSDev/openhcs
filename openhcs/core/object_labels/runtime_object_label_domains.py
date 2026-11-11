@@ -11,16 +11,11 @@ from metaclass_registry import AutoRegisterMeta
 from metaclass_registry import RegistryFamily
 from metaclass_registry import RegistryKeyAttribute
 from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
-from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisProjector
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.payload.runtime_tabular_values import MeasurementObjectRowIdentity
 from typing import Any
 from typing import ClassVar
 import numpy as np
-
-from openhcs.core.source.source_image_provenance import SourceImageProvenance
-
 
 
 DeclaredObjectIds = tuple[int, ...] | list[int] | None

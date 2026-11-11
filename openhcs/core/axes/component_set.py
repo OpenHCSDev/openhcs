@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
-from openhcs.core.axes.axis_declarations import Axis, AxisFamily, PartitionAxis, is_axis
+from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis, is_axis
 
 
 @dataclass(slots=True)

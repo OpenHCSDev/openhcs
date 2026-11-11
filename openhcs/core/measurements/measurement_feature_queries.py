@@ -11,13 +11,7 @@ from typing import Any, ClassVar
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
-from openhcs.core.measurements.measurement_dialect import (
-    EXECUTING_MEASUREMENT_DIALECT,
-    MeasurementDialect,
-    MeasurementDialectLike,
-    RuntimeMeasurementFeatureLookup,
-    resolve_measurement_dialect,
-)
+from openhcs.core.measurements.measurement_dialect import EXECUTING_MEASUREMENT_DIALECT, MeasurementDialect, resolve_measurement_dialect
 from openhcs.core.measurements.measurement_row_materialization import (
     MeasurementRowOwnership,
     columnar_row_values,
@@ -52,7 +46,6 @@ from openhcs.core.payload.runtime_tabular_values import (
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
 MeasurementValueIndexResult = tuple[dict[int, float], list[float]]
 OptionalMeasurementValueIndexResult = MeasurementValueIndexResult | None

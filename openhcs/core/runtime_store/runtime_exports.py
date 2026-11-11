@@ -13,10 +13,9 @@ from openhcs.core.artifacts.payloads import TablePayloadShape
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.payload.image_file_serialization import ImageFileFormat
-from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress, StoredRuntimeValue
+from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactAddress
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
 
 
@@ -29,10 +28,9 @@ def observation_paths_for(
         Path(location.path)
         for location in observation.materialized_locations_by_address.get(address, ())
     )
-from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, FileOutputOptions, ImageFileOptions
+from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, ImageFileOptions
 from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.core import materialization_is_empty
-
 
 
 @dataclass(frozen=True, slots=True)

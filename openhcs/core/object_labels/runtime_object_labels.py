@@ -27,27 +27,19 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.core.payload import (
-    runtime_array_values,
-    runtime_image_values,
-)
-from openhcs.core.artifacts.payloads import ArrayPayloadShape, NamedArtifactPayload, PayloadShape
+from openhcs.core.payload import runtime_image_values
+from openhcs.core.artifacts.payloads import ArrayPayloadShape, NamedArtifactPayload
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     NominalTypeStrategyFamilyMixin,
 )
-from openhcs.core.object_labels.runtime_object_label_domains import DenseIntegerObjectLabelIdDomain, ObjectLabelDomain, ObjectLabelDomainMetadata, ObjectLabelDomainMetadataStrategy, ObjectLabelIdDomainStrategy, PreserveSourceObjectLabelDomainDeclaration
+from openhcs.core.object_labels.runtime_object_label_domains import DenseIntegerObjectLabelIdDomain, ObjectLabelDomain, ObjectLabelDomainMetadata, ObjectLabelDomainMetadataStrategy, ObjectLabelIdDomainStrategy
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainDeclaration
-from openhcs.core.payload.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisValueProjection,
-    RuntimeSliceIdentityProjectableValue,
-)
-from openhcs.core.payload.runtime_tabular_values import MeasurementObjectRowIdentity
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection, RuntimeSliceIdentityProjectableValue
 from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,

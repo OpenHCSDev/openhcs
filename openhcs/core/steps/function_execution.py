@@ -18,25 +18,12 @@ from openhcs.core.axes.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.callable.callable_declarations import ImagePayloadConsumption
-from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactInput
 from openhcs.core.payload.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import ExecutingContext
-from openhcs.core.callable.function_patterns import (
-    CompiledFunctionGroup,
-    FunctionGroupKey,
-    GroupedPatternMap,
-    InvocationArtifactInputEdgePlan,
-    RuntimeInvocationDomain,
-)
+from openhcs.core.callable.function_patterns import FunctionGroupKey, RuntimeInvocationDomain
 from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
-from openhcs.core.source.source_binding_selection import (
-    SourceBoundAnchorPatternPolicy,
-    SourceCandidatePath,
-    SourcePatternResolutionContext,
-)
-from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source.source_binding_selection import SourceBoundAnchorPatternPolicy, SourceCandidatePath
 from openhcs.core.util.step_dependencies import PipelineStartInput
 from openhcs.core.steps.function_io import (
     generate_materialized_paths,
@@ -48,7 +35,6 @@ from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     step_output_manifest,
 )
-from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_outputs import finalize_function_step_outputs
 from openhcs.core.steps.function_runtime import (
     ArtifactPatternGroupExecutionRequest,
@@ -60,7 +46,6 @@ from openhcs.core.progress.types import (
     PatternGroupProgressPhase,
     RunningProgressStatus,
 )
-
 
 
 logger = logging.getLogger(__name__)

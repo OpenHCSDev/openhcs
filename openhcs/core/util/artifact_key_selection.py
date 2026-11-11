@@ -6,15 +6,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import ClassVar, TypeVar
 
-from openhcs.core.artifacts.plans import (
-    ArtifactOutputPlan,
-    ArtifactPlan,
-    ArtifactSpecRef,
-)
-from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactPlan
 
 ArtifactPlanT = TypeVar("ArtifactPlanT", bound=ArtifactPlan)
-
 
 
 class ArtifactOutputPolicy(ABC):

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from openhcs.core.artifacts.plans import ArtifactOutputPlan
-
 
 from .core import MaterializationSpec
 

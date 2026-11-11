@@ -18,8 +18,6 @@ from __future__ import annotations
 import logging
 from typing import Any, Mapping
 
-from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
-
 
 logger = logging.getLogger(__name__)
 
