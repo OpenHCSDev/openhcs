@@ -57,13 +57,12 @@ from openhcs.core.source.source_metadata import (
     SourceVoxelSpacing,
     SourceVoxelSpacingFields,
 )
-from openhcs.core.source.source_spatial_domain import (
-    FillValue,
-    SourceSpatialDomain,
-    SourceSpatialDomainAdapter,
-    SourceSpatialDomainFields,
-    SpatiallyPlacedValue,
-)
+from openhcs.core.source.source_spatial_domain import SourceSpatialDomain, SourceSpatialDomainAdapter, SourceSpatialDomainFields, SpatiallyPlacedValue
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.source.source_spatial_domain import FillValue
 from openhcs.core.source.source_spatial_domain import (
     _spatial_shape_pair as _source_spatial_shape_pair,
 )

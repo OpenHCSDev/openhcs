@@ -90,23 +90,10 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamScopedDisplayConfig,
 )
 from openhcs.core.materialization.constants import WriteMode
-from openhcs.core.materialization.options import (
-    CsvOptions,
-    FileBundleOptions,
-    FileOutputOptions,
-    ImageFileOptions,
-    JsonOptions,
-    NameByArtifactName,
-    NameBySourceIdentity,
-    PointROIOptions,
-    ROIOptions,
-    SourceOptions,
-    SpatialGraphROIOptions,
-    SWCOptions,
-    TabularExtractionOptions,
-    TextOptions,
-    TiffStackOptions,
-)
+from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, FileOutputOptions, ImageFileOptions, JsonOptions, NameByArtifactName, NameBySourceIdentity, PointROIOptions, ROIOptions, SpatialGraphROIOptions, SWCOptions, TabularExtractionOptions, TextOptions, TiffStackOptions
+
+if TYPE_CHECKING:
+    from openhcs.core.materialization.options import SourceOptions
 from openhcs.core.axes.axis_declarations import Axis
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.core.payload.runtime_image_values import ImagePayload

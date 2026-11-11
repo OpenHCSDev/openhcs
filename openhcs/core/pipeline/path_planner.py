@@ -57,11 +57,12 @@ from openhcs.core.config.pipeline_config import (
     EMPTY_SOURCE_BINDINGS,
     StepSourceBindingsConfig,
 )
-from openhcs.core.pipeline.artifact_planning import (
-    ArtifactGraph,
-    ArtifactOutputMaterializationPlanner,
-    ArtifactProducer,
-)
+from openhcs.core.pipeline.artifact_planning import ArtifactGraph, ArtifactOutputMaterializationPlanner
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.pipeline.artifact_planning import ArtifactProducer
 from openhcs.core.pipeline.compilation_session import (
     CompilationDatasetScope,
     CompilationSession,

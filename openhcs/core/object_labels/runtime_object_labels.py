@@ -32,15 +32,12 @@ from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     NominalTypeStrategyFamilyMixin,
 )
-from openhcs.core.object_labels.runtime_object_label_domains import (
-    DenseIntegerObjectLabelIdDomain,
-    ObjectLabelDomain,
-    ObjectLabelDomainDeclaration,
-    ObjectLabelDomainMetadata,
-    ObjectLabelDomainMetadataStrategy,
-    ObjectLabelIdDomainStrategy,
-    PreserveSourceObjectLabelDomainDeclaration,
-)
+from openhcs.core.object_labels.runtime_object_label_domains import DenseIntegerObjectLabelIdDomain, ObjectLabelDomain, ObjectLabelDomainMetadata, ObjectLabelDomainMetadataStrategy, ObjectLabelIdDomainStrategy, PreserveSourceObjectLabelDomainDeclaration
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainDeclaration
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,

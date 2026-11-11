@@ -42,9 +42,10 @@ from openhcs.core.payload.runtime_tabular_values import (
 from openhcs.core.payload.runtime_tabular_values import (
     ColumnarRows,
 )
-from openhcs.core.measurements.runtime_measurements import (
-    MeasurementTable,
-)
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.measurements.runtime_measurements import MeasurementTable
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
 from openhcs.core.source.source_matching import source_component_metadata_value
 
