@@ -4,6 +4,8 @@ Registers all OpenHCS-specific scope patterns with the generic WindowFactory.
 Called during application initialization.
 """
 
+from __future__ import annotations
+
 from objectstate import ScopeKey
 import logging
 import re
@@ -323,7 +325,7 @@ class OpenHCSWindowCreationAuthority:
 
     def _select_step_editor_tab(
         self,
-        window: "DualEditorWindow",
+        window: DualEditorWindow,
         editor_scope: StepEditorScope,
     ) -> None:
         """Select the tab implied by the scope's nominal editor target."""

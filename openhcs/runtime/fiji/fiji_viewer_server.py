@@ -5,6 +5,8 @@ ZMQ-based server that receives images from FijiStreamingBackend and displays the
 via PyImageJ. Inherits from ZMQServer ABC for ping/pong handshake and dual-channel pattern.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 import time
@@ -267,7 +269,7 @@ class FijiWireItem(WindowProjectionPayloadProvider):
     transfer: ImageTransferIdentity | None = field(default=None, kw_only=True)
 
     @classmethod
-    def from_payload(cls, payload: FijiWireValue) -> "FijiWireItem":
+    def from_payload(cls, payload: FijiWireValue) -> FijiWireItem:
         if not isinstance(payload, Mapping):
             raise TypeError("Fiji batch item must be a mapping.")
         return cls(dict(payload), transfer=ImageTransferIdentity.from_item(payload))
@@ -328,7 +330,7 @@ class FijiWireItem(WindowProjectionPayloadProvider):
             dtype=np.dtype(self.payload["dtype"]),
         )
 
-    def with_local_data(self, data: np.ndarray) -> "FijiWireItem":
+    def with_local_data(self, data: np.ndarray) -> FijiWireItem:
         copied = self.payload.copy()
         copied["data"] = data
         copied.pop("shm_name", None)
@@ -503,18 +505,18 @@ class FijiImageItemCollection:
     def from_images(
         cls,
         images: Sequence[FijiImagePayload],
-    ) -> "FijiImageItemCollection":
+    ) -> FijiImageItemCollection:
         return cls(tuple(images))
 
     def coordinate_payload_lookup(
         self,
-        coordinates: "FijiHyperstackCoordinates",
+        coordinates: FijiHyperstackCoordinates,
     ) -> dict[FijiCoordinateKey, FijiImagePayload]:
         return {coordinates.key(item.metadata): item for item in self.items}
 
     def coordinate_data_lookup(
         self,
-        coordinates: "FijiHyperstackCoordinates",
+        coordinates: FijiHyperstackCoordinates,
     ) -> dict[FijiCoordinateKey, np.ndarray]:
         return {coordinates.key(item.metadata): item.data for item in self.items}
 
@@ -529,8 +531,8 @@ class FijiImagePlaneLookup:
     def from_images(
         cls,
         images: Sequence[FijiImagePayload],
-        coordinates: "FijiHyperstackCoordinates",
-    ) -> "FijiImagePlaneLookup":
+        coordinates: FijiHyperstackCoordinates,
+    ) -> FijiImagePlaneLookup:
         return cls(
             FijiImageItemCollection.from_images(images).coordinate_data_lookup(
                 coordinates
@@ -599,7 +601,7 @@ class FijiImageIntensityRange:
     def from_images(
         cls,
         images: Sequence[FijiImagePayload],
-    ) -> "FijiImageIntensityRange":
+    ) -> FijiImageIntensityRange:
         minimum = float("inf")
         maximum = float("-inf")
         for image in FijiImageItemCollection.from_images(images).items:
@@ -613,7 +615,7 @@ class FijiImageIntensityRange:
 class FijiStackSliceLabelBuilder:
     """Build ImageJ slice labels from Fiji hyperstack coordinates."""
 
-    coordinates: "FijiHyperstackCoordinates"
+    coordinates: FijiHyperstackCoordinates
 
     def label_for(self, key: FijiCoordinateKey) -> str:
         label_parts = [
@@ -633,7 +635,7 @@ class FijiImageStackBuilder:
     PLANES_PER_WORK_UNIT: ClassVar[int] = 32
 
     image_lookup: FijiImagePlaneLookup
-    coordinates: "FijiHyperstackCoordinates"
+    coordinates: FijiHyperstackCoordinates
     width: int
     height: int
 
@@ -757,7 +759,7 @@ class FijiDimensionAxis:
         name: str,
         components: FijiDimensionComponents,
         items: Sequence[FijiWireItem],
-    ) -> "FijiDimensionAxis":
+    ) -> FijiDimensionAxis:
         if not components:
             return cls(name=name, components=components, values=[()])
         values = {
@@ -777,7 +779,7 @@ class FijiDimensionAxis:
         name: str,
         components: FijiDimensionComponents,
         images: Sequence[FijiImagePayload],
-    ) -> "FijiDimensionAxis":
+    ) -> FijiDimensionAxis:
         if not components:
             return cls(name=name, components=components, values=[()])
         values = {
@@ -790,14 +792,14 @@ class FijiDimensionAxis:
             values=sorted(values, key=ViewerComponentValueOrdering.tuple_key),
         )
 
-    def with_values(self, values: FijiDimensionValues) -> "FijiDimensionAxis":
+    def with_values(self, values: FijiDimensionValues) -> FijiDimensionAxis:
         return FijiDimensionAxis(
             name=self.name,
             components=self.components,
             values=values,
         )
 
-    def merge_values(self, values: FijiDimensionValues) -> "FijiDimensionAxis":
+    def merge_values(self, values: FijiDimensionValues) -> FijiDimensionAxis:
         return self.with_values(
             ViewerDimensionValues.merge(
                 self.values,
@@ -855,7 +857,7 @@ class FijiHyperstackCoordinateComponents:
     z: FijiDimensionComponents
     t: FijiDimensionComponents
 
-    def collect(self, items: Sequence[FijiWireItem]) -> "FijiHyperstackCoordinates":
+    def collect(self, items: Sequence[FijiWireItem]) -> FijiHyperstackCoordinates:
         return FijiHyperstackCoordinates(
             c=FijiDimensionAxis.collect(
                 name="c",
@@ -877,7 +879,7 @@ class FijiHyperstackCoordinateComponents:
     def collect_images(
         self,
         images: Sequence[FijiImagePayload],
-    ) -> "FijiHyperstackCoordinates":
+    ) -> FijiHyperstackCoordinates:
         return FijiHyperstackCoordinates(
             c=FijiDimensionAxis.collect_from_images(
                 name="c",
@@ -913,7 +915,7 @@ class FijiHyperstackCoordinates:
     def merge_storage(
         self,
         stored: FijiDimensionStorage,
-    ) -> "FijiHyperstackCoordinates":
+    ) -> FijiHyperstackCoordinates:
         return FijiHyperstackCoordinates(
             c=self.c.merge_values(stored.c),
             z=self.z.merge_values(stored.z),
@@ -1168,7 +1170,7 @@ class FijiWindowProcessingRequest(FijiDisplayItemContext):
     """Inputs for processing one Fiji window projection."""
 
     window_key: str
-    projection: "FijiWindowItemProjection"
+    projection: FijiWindowItemProjection
 
     @property
     def items(self) -> list[FijiWireItem]:
@@ -1213,7 +1215,7 @@ class FijiRunMacroControlAction(FijiControlAction):
 class FijiPayloadHandlerRequest(FijiDisplayItemContext):
     """Typed execution request for one Fiji payload handler."""
 
-    server: "FijiViewerServer"
+    server: FijiViewerServer
     window_key: str
     items: list[FijiWireItem]
     coordinates: FijiHyperstackCoordinates
@@ -1244,7 +1246,7 @@ class FijiBatchWireParser:
 
     payload: Mapping[str, FijiWireValue]
 
-    def batch_message(self) -> "FijiBatchMessage":
+    def batch_message(self) -> FijiBatchMessage:
         fields = ViewerBatchPayloadFields(self.payload, "Fiji batch message")
         fields.require_batch_message()
         fields.require_fields(FIJI_BATCH_REQUIRED_FIELDS)
@@ -1280,7 +1282,7 @@ class FijiBatchMessage(FijiItemBatch):
 
     images_dir: str | None
 
-    def processing_context(self) -> "FijiBatchProcessingContext":
+    def processing_context(self) -> FijiBatchProcessingContext:
         return FijiBatchProcessingContext(
             viewer_display_config=self.viewer_display_config,
             images_dir=self.images_dir,
@@ -1312,7 +1314,7 @@ class FijiPayloadKindItemBuckets:
     groups: tuple[FijiPayloadKindItemGroup, ...]
 
     @classmethod
-    def for_registered_handlers(cls) -> "FijiPayloadKindItemBuckets":
+    def for_registered_handlers(cls) -> FijiPayloadKindItemBuckets:
         return cls(
             tuple(
                 FijiPayloadKindItemGroup(data_type)
@@ -1338,7 +1340,7 @@ class FijiPayloadKindGroups:
     buckets: FijiPayloadKindItemBuckets
 
     @classmethod
-    def from_items(cls, items: Sequence[FijiWireItem]) -> "FijiPayloadKindGroups":
+    def from_items(cls, items: Sequence[FijiWireItem]) -> FijiPayloadKindGroups:
         buckets = FijiPayloadKindItemBuckets.for_registered_handlers()
         for item in items:
             payload_kind = item.payload_kind
@@ -1353,7 +1355,7 @@ class FijiPayloadKindGroups:
 
     def dispatch(
         self,
-        server: "FijiViewerServer",
+        server: FijiViewerServer,
         request: FijiWindowProcessingRequest,
         coordinates: FijiHyperstackCoordinates,
         *,
@@ -1388,7 +1390,7 @@ class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
         cls,
         items: Sequence[FijiWireItem],
         component_axis_semantics: ViewerComponentAxisSemantics,
-    ) -> "FijiWindowItemProjection":
+    ) -> FijiWindowItemProjection:
         projected_items = FijiPayloadLocalPlaneExpander(
             component_axis_semantics.layout.declared_axes
         ).expand_items(items)
@@ -1424,7 +1426,7 @@ class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
 class FijiBatchDispatcher:
     """Own Fiji batch ingestion, debouncing, and window dispatch."""
 
-    server: "FijiViewerServer"
+    server: FijiViewerServer
     engine: DebouncedBatchEngine = field(init=False)
     settlement: FijiBatchSettlementState = field(
         default_factory=FijiBatchSettlementState

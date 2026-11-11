@@ -5,6 +5,8 @@ widget displays the step objects it last read from the session and re-reads
 them on every pipeline event; every change goes through the session.
 """
 
+from __future__ import annotations
+
 from formbridge.forms.ui_utils import FieldDisplayText
 from formbridge.services.window_code_document import use_external_code_editor
 from objectstate import ScopeKey
@@ -201,7 +203,7 @@ class StepTooltipBuilder:
     def for_function_presentation(
         cls,
         function_presentation: PipelineEditorFunctionPresentation,
-    ) -> "StepTooltipBuilder":
+    ) -> StepTooltipBuilder:
         return cls(
             function_section=StepFunctionTooltipSection(function_presentation),
         )

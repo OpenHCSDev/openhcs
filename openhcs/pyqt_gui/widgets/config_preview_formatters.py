@@ -1,5 +1,7 @@
 """OpenHCS config preview projections derived from config declarations."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from formbridge.utils.preview_formatters import check_enabled_field, resolve_preview_label
@@ -9,7 +11,7 @@ if TYPE_CHECKING:
 
 
 def format_partition_filter_config(
-    config: "PartitionFilterConfig",
+    config: PartitionFilterConfig,
     _config_attr: str,
 ) -> str | None:
     """Project one well-filter declaration into its compact preview text."""

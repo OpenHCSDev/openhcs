@@ -5,6 +5,8 @@ This module defines all constants related to backends, defaults, I/O, memory, an
 These constants are governed by various doctrinal clauses.
 """
 
+from __future__ import annotations
+
 from abc import ABC
 from typing import ClassVar, Set
 
@@ -66,7 +68,7 @@ class OrchestratorState(ABC, metaclass=AutoRegisterMeta):
     status_prefix: ClassVar[str]
 
     @staticmethod
-    def named(name: str) -> "type[OrchestratorState] | None":
+    def named(name: str) -> type[OrchestratorState] | None:
         """The state spelled ``name``, or ``None`` for an unknown spelling."""
         return OrchestratorState.__registry__.get(name)
 

@@ -4,6 +4,8 @@ Listed in ``Microscopy.config_modules``: the kernel config adds every
 :class:`GlobalConfigSection` declared here as a ``GlobalPipelineConfig`` field.
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
@@ -42,7 +44,7 @@ class NormalizationMethod(Enum):
         cls,
         serialized_value: str,
         operation: Callable[[float, float, float], float | None],
-    ) -> "NormalizationMethod":
+    ) -> NormalizationMethod:
         member = object.__new__(cls)
         member._value_ = serialized_value
         member._operation = operation

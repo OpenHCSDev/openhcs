@@ -13,6 +13,8 @@ Usage:
     FunctionStep(func=consolidate_analysis_results_pipeline, ...)
 """
 
+from __future__ import annotations
+
 import csv
 import logging
 import re
@@ -123,8 +125,8 @@ class AnalysisSummaryWriter(ABC):
         *,
         output_path: Path,
         results_dir: Path,
-        analysis_consolidation_config: "AnalysisConsolidationConfig",
-        plate_metadata_config: "PlateMetadataConfig",
+        analysis_consolidation_config: AnalysisConsolidationConfig,
+        plate_metadata_config: PlateMetadataConfig,
     ) -> None:
         """Persist one summary through the destination's storage semantics."""
 
@@ -138,8 +140,8 @@ class FileSystemAnalysisSummaryWriter(AnalysisSummaryWriter):
         *,
         output_path: Path,
         results_dir: Path,
-        analysis_consolidation_config: "AnalysisConsolidationConfig",
-        plate_metadata_config: "PlateMetadataConfig",
+        analysis_consolidation_config: AnalysisConsolidationConfig,
+        plate_metadata_config: PlateMetadataConfig,
     ) -> None:
         write_consolidated_analysis_summary(
             summary_df,
@@ -162,7 +164,7 @@ class AnalysisWellResolver(ABC):
 class FilenameParserWellResolver(AnalysisWellResolver):
     """Resolve wells through an OpenHCS microscope filename parser."""
 
-    filename_parser: "FilenameParser"
+    filename_parser: FilenameParser
 
     def well_id_for(self, filename: str) -> str | None:
         parsed = self.filename_parser.parse_filename(filename)
@@ -181,7 +183,7 @@ class AutoDetectFilenameParserWellResolver(AnalysisWellResolver):
     parser_types: tuple[type["FilenameParser"], ...]
 
     @classmethod
-    def from_registered_parsers(cls) -> "AutoDetectFilenameParserWellResolver":
+    def from_registered_parsers(cls) -> AutoDetectFilenameParserWellResolver:
         from openhcs.core.dataset_sources.interfaces import FilenameParser
 
         return cls(tuple(FilenameParser.__registry__.values()))
@@ -217,7 +219,7 @@ class CsvAnalysisTableSource(AnalysisTableSource):
 
     file_paths: tuple[Path, ...]
     well_resolver: AnalysisWellResolver
-    analysis_consolidation_config: "AnalysisConsolidationConfig"
+    analysis_consolidation_config: AnalysisConsolidationConfig
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -276,7 +278,7 @@ class MaterializedCsvAnalysisTableSource(AnalysisTableSource):
     """CSV source whose identity comes from the runtime materialization ledger."""
 
     files: tuple[MaterializedAnalysisTableFile, ...]
-    analysis_consolidation_config: "AnalysisConsolidationConfig"
+    analysis_consolidation_config: AnalysisConsolidationConfig
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "files", tuple(self.files))
@@ -302,7 +304,7 @@ class RuntimeCsvAnalysisTableSource(AnalysisTableSource):
     """CSV source backed by execution-ledger content instead of path readback."""
 
     outputs: tuple[RuntimeAnalysisTableOutput, ...]
-    analysis_consolidation_config: "AnalysisConsolidationConfig"
+    analysis_consolidation_config: AnalysisConsolidationConfig
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "outputs", tuple(self.outputs))
@@ -325,7 +327,7 @@ class RuntimeCsvAnalysisTableSource(AnalysisTableSource):
 
 def discover_analysis_file_paths(
     results_directory: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
 ) -> tuple[Path, ...]:
     """Discover configured files for an explicitly requested directory."""
 
@@ -342,7 +344,7 @@ def discover_analysis_file_paths(
 
 
 def _exclude_patterns(
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
 ) -> tuple[str, ...]:
     """Return typed exclude regex patterns from consolidation config."""
     patterns = analysis_consolidation_config.exclude_patterns
@@ -358,7 +360,7 @@ def _exclude_patterns(
 
 def analysis_file_path_is_included(
     file_path: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
 ) -> bool:
     """Return whether one materialized path is a configured analysis table."""
 
@@ -638,7 +640,7 @@ def summarize_analysis_file(
 
 def consolidate_analysis_table_records(
     records: tuple[AnalysisTableRecord, ...],
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
 ) -> pd.DataFrame:
     """Create the per-well summary table from typed analysis records."""
     records_by_well: dict[str, dict[str, AnalysisTableRecord]] = {}
@@ -710,7 +712,7 @@ def order_consolidated_summary_columns(
 def consolidated_plate_metadata(
     results_dir: Path,
     summary_df: pd.DataFrame,
-    plate_metadata_config: "PlateMetadataConfig",
+    plate_metadata_config: PlateMetadataConfig,
 ) -> dict[str, str]:
     """Return MetaXpress-compatible metadata for a consolidated summary."""
     return plate_metadata_config.to_metadata_dict(results_dir.name, len(summary_df))
@@ -720,8 +722,8 @@ def write_consolidated_analysis_summary(
     summary_df: pd.DataFrame,
     output_path: str,
     results_dir: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
 ) -> None:
     """Persist one consolidated analysis summary."""
     Path(output_path).write_text(
@@ -739,8 +741,8 @@ def write_consolidated_analysis_summary(
 def consolidated_analysis_summary_csv(
     summary_df: pd.DataFrame,
     results_dir: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
 ) -> str:
     """Render one configured summary independently of its storage backend."""
 
@@ -758,7 +760,7 @@ def consolidated_analysis_summary_csv(
 
 def analysis_well_resolver(
     *,
-    filename_parser: "FilenameParser | None" = None,
+    filename_parser: FilenameParser | None = None,
     well_ids: tuple[str, ...] = (),
 ) -> AnalysisWellResolver:
     """Return the explicit well resolver for an analysis consolidation run."""
@@ -771,12 +773,12 @@ def analysis_well_resolver(
 
 def consolidate_analysis_results(
     results_directory: str,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
     *,
     well_ids: list[str] | None = None,
     output_path: str | None = None,
-    filename_parser: "FilenameParser | None" = None,
+    filename_parser: FilenameParser | None = None,
 ) -> pd.DataFrame:
     """
     Consolidate analysis results into a single summary table using configuration objects.
@@ -823,8 +825,8 @@ def consolidate_analysis_table_source(
     source: AnalysisTableSource,
     *,
     results_directory: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
     output_path: str | None,
 ) -> pd.DataFrame:
     """Consolidate a caller-selected typed analysis-table source."""
@@ -871,8 +873,8 @@ def consolidate_analysis_table_source(
 def consolidate_analysis_results_pipeline(
     image_stack: np.ndarray,
     results_directory: PlateInputDirectory,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
 ) -> tuple[np.ndarray, pd.DataFrame]:
     """
     Pipeline-compatible version of consolidate_analysis_results.
@@ -1082,9 +1084,9 @@ def consolidate_multi_plate_summaries(
 def consolidate_results_directories(
     results_dirs: list[Path],
     plate_path: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
-    filename_parser: "FilenameParser",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
+    filename_parser: FilenameParser,
 ) -> tuple[list[str], list[tuple[str, str]]]:
     """Discover configured files for an explicitly requested directory operation."""
 
@@ -1107,9 +1109,9 @@ def consolidate_results_directories(
 def consolidate_analysis_file_groups(
     analysis_files_by_directory: Mapping[Path, tuple[Path, ...]],
     plate_path: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
-    filename_parser: "FilenameParser",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
+    filename_parser: FilenameParser,
 ) -> tuple[list[str], list[tuple[str, str]]]:
     """Consolidate caller-owned materialized-file groups without discovery."""
 
@@ -1136,8 +1138,8 @@ def consolidate_materialized_analysis_table_file_groups(
         tuple[MaterializedAnalysisTableFile, ...],
     ],
     plate_path: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
 ) -> tuple[list[str], list[tuple[str, str]]]:
     """Consolidate runtime-ledger file groups through their typed identities."""
 
@@ -1162,8 +1164,8 @@ def consolidate_runtime_analysis_table_output_groups(
         tuple[RuntimeAnalysisTableOutput, ...],
     ],
     plate_path: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
     summary_writer: AnalysisSummaryWriter,
 ) -> tuple[list[str], list[tuple[str, str]]]:
     """Consolidate execution-ledger CSV content without backend readback."""
@@ -1210,8 +1212,8 @@ def merge_analysis_summary_tables(
 def consolidate_analysis_source_groups(
     analysis_sources_by_directory: Mapping[Path, AnalysisTableSource],
     plate_path: Path,
-    analysis_consolidation_config: "AnalysisConsolidationConfig",
-    plate_metadata_config: "PlateMetadataConfig",
+    analysis_consolidation_config: AnalysisConsolidationConfig,
+    plate_metadata_config: PlateMetadataConfig,
     summary_writer: AnalysisSummaryWriter,
 ) -> tuple[list[str], list[tuple[str, str]]]:
     """Consolidate groups through the nominal analysis-table source boundary."""

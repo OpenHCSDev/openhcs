@@ -107,7 +107,7 @@ class CellProfilerObjectTableMode(str, Enum):
         return self._cellprofiler_literal
 
     @classmethod
-    def from_cellprofiler(cls, value: str) -> CellProfilerObjectTableMode:
+    def from_cellprofiler(cls, value: str) -> "CellProfilerObjectTableMode":
         """Parse a public enum value or CellProfiler UI literal."""
 
         normalized = value.strip().casefold()
@@ -317,7 +317,7 @@ class CellProfilerDatabaseExportSettings:
     @classmethod
     def from_export_parameters(
         cls, parameters: Mapping[str, Any]
-    ) -> CellProfilerDatabaseExportSettings:
+    ) -> "CellProfilerDatabaseExportSettings":
         """Bind the public export controls to the declared settings schema."""
         values = {
             field.name: parameters[field.name]

@@ -13,6 +13,8 @@ Supports:
 - Excel-based configuration and output
 """
 
+from __future__ import annotations
+
 import copy
 import string
 from statistics import fmean, pstdev
@@ -35,13 +37,13 @@ class ExcludedWellSet:
     wells: frozenset[str]
 
     @classmethod
-    def from_wells(cls, wells) -> "ExcludedWellSet":
+    def from_wells(cls, wells) -> ExcludedWellSet:
         if wells is None:
             return cls(frozenset())
         return cls(frozenset(str(well).upper() for well in wells))
 
     @classmethod
-    def from_positions(cls, excluded_positions, replicate) -> "ExcludedWellSet":
+    def from_positions(cls, excluded_positions, replicate) -> ExcludedWellSet:
         if not excluded_positions or replicate not in excluded_positions:
             return cls(frozenset())
         return cls.from_wells(
@@ -214,7 +216,7 @@ class PlateLayoutRow:
     row_name: str
 
     @classmethod
-    def from_pandas_row(cls, row) -> "PlateLayoutRow":
+    def from_pandas_row(cls, row) -> PlateLayoutRow:
         return cls(
             row=row,
             row_content=str(row.iloc[0]) if pd.notna(row.iloc[0]) else "",
@@ -1087,7 +1089,7 @@ class ControlNormalizationReference:
     std: float
 
     @classmethod
-    def from_values(cls, values) -> "ControlNormalizationReference | None":
+    def from_values(cls, values) -> ControlNormalizationReference | None:
         numeric_values = tuple(float(value) for value in values if value is not None)
         if not numeric_values:
             return None

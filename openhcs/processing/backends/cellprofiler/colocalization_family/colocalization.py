@@ -227,7 +227,7 @@ class ColocalizationThresholdMaskRuntimeOutput(RuntimeSliceIndexedValue):
 
     def project_runtime_slice(
         self, slice_index: int
-    ) -> ColocalizationThresholdMaskRuntimeOutput:
+    ) -> "ColocalizationThresholdMaskRuntimeOutput":
         """Project the optional object-label domain through its declared axis."""
         if self.object_labels is None:
             return self
@@ -526,7 +526,7 @@ class MeasureColocalizationModule(
 
     @classmethod
     def shared_object_measurement_runtime_kwargs(
-        cls, adapter: CellProfilerRuntimeAdapter
+        cls, adapter: "CellProfilerRuntimeAdapter"
     ) -> RuntimeCallableKwargs:
         """Share exact Costes image-pair thresholds across object sets in one step."""
         del cls
@@ -713,7 +713,7 @@ class MeasureColocalizationModule(
 
     @classmethod
     def ignored_settings_for(
-        cls, module: ModuleBlock
+        cls, module: "ModuleBlock"
     ) -> tuple[str | "SettingNameFamily", ...]:
         from openhcs.interop.cellprofiler.setting_names import is_blank_symbol_name
 
@@ -1092,10 +1092,10 @@ class MeasureColocalizationModule(
     @classmethod
     def bind_settings(
         cls,
-        module: ModuleBlock,
+        module: "ModuleBlock",
         *,
-        binder: SettingsBinder,
-    ) -> BoundModuleSettings:
+        binder: "SettingsBinder",
+    ) -> "BoundModuleSettings":
         bound = cls._bind_declared_settings(module, binder=binder)
         kwargs = dict(bound.kwargs)
         unmapped_kwargs = dict(bound.unmapped_kwargs)
@@ -1559,7 +1559,7 @@ class ColocalizationCostesThresholds:
     @classmethod
     def from_thresholds(
         cls, first: float, second: float
-    ) -> ColocalizationCostesThresholds:
+    ) -> "ColocalizationCostesThresholds":
         return cls(first=float(first), second=float(second))
 
 
@@ -1594,7 +1594,7 @@ class ColocalizationObjectLabelCacheKey:
         *,
         measurement_shape: tuple[int, ...] | None,
         slice_index: int = 0,
-    ) -> ColocalizationObjectLabelCacheKey:
+    ) -> "ColocalizationObjectLabelCacheKey":
         label_identity = (
             label_payload.object_label_dense_projection_identity()
             if isinstance(label_payload, ObjectLabelValue)
@@ -1676,7 +1676,7 @@ class ColocalizationImagePairContext:
     @classmethod
     def from_request(
         cls, image: object, *, channel_1: int, channel_2: int
-    ) -> ColocalizationImagePairContext:
+    ) -> "ColocalizationImagePairContext":
         image = ImagePayload.of(image)
         image_data = cls.measurement_pixels(image)
         image_float = np.asarray(image_data, dtype=np.float32)
@@ -1741,7 +1741,7 @@ class ColocalizationObjectLabelContext:
         pair_valid_mask: np.ndarray | None,
         measurement_shape: tuple[int, ...] | None = None,
         slice_index: int = 0,
-    ) -> ColocalizationObjectLabelContext:
+    ) -> "ColocalizationObjectLabelContext":
         return cls.from_dense_labels(
             object_label_dense_array(labels, dtype=np.int32),
             pair_valid_mask=pair_valid_mask,
@@ -1757,7 +1757,7 @@ class ColocalizationObjectLabelContext:
         pair_valid_mask: np.ndarray | None,
         measurement_shape: tuple[int, ...] | None = None,
         slice_index: int = 0,
-    ) -> ColocalizationObjectLabelContext:
+    ) -> "ColocalizationObjectLabelContext":
         """Build reductions from an already-resolved dense label array."""
         label_array = np.asarray(label_array, dtype=np.int32)
         if label_array.ndim != 2:
@@ -1841,7 +1841,7 @@ class ObjectColocalizationBaseStage:
     @classmethod
     def from_context(
         cls, context: ObjectColocalizationRequestContext
-    ) -> ObjectColocalizationBaseStage:
+    ) -> "ObjectColocalizationBaseStage":
         labels = context.labels
         first_pixels = context.image_pair.first_image[labels.object_mask]
         second_pixels = context.image_pair.second_image[labels.object_mask]
@@ -1980,7 +1980,7 @@ class ObjectColocalizationMetricArrays:
     costes_threshold_2: np.ndarray
 
     @classmethod
-    def empty(cls, max_label: int) -> ObjectColocalizationMetricArrays:
+    def empty(cls, max_label: int) -> "ObjectColocalizationMetricArrays":
         axis_field_names = MeasurementRowAxisField.field_names()
         return cls(
             **{
@@ -1994,7 +1994,7 @@ class ObjectColocalizationMetricArrays:
 
     def rows_for(
         self, label_range: np.ndarray, *, slice_index: int = 0
-    ) -> ObjectColocalizationColumnarMeasurements:
+    ) -> "ObjectColocalizationColumnarMeasurements":
         return ObjectColocalizationColumnarMeasurements(
             object_labels=np.asarray(label_range, dtype=np.int32),
             metrics=self,
@@ -2093,7 +2093,7 @@ class ObjectColocalizationThresholdStage:
         context: ObjectColocalizationRequestContext,
         base: ObjectColocalizationBaseStage,
         costes_thresholds: ColocalizationCostesThresholds | None,
-    ) -> ObjectColocalizationThresholdStage:
+    ) -> "ObjectColocalizationThresholdStage":
         max_label = context.labels.max_label
         options = context.options
         threshold_metrics_requested = any(
@@ -3023,7 +3023,7 @@ class ColocalizationCostesThresholdRequest:
     @classmethod
     def from_object_context(
         cls, context: ObjectColocalizationRequestContext
-    ) -> ColocalizationCostesThresholdRequest:
+    ) -> "ColocalizationCostesThresholdRequest":
         """Use the object call's already-selected full image-pair pixels."""
         return cls(
             image=context.image,
@@ -3070,7 +3070,7 @@ class ColocalizationCostesThresholdRequest:
         cls,
         request: RuntimeBatchInvocationRequest,
         image_pair_context: ColocalizationImagePairContext | None = None,
-    ) -> ColocalizationCostesThresholdRequest | None:
+    ) -> "ColocalizationCostesThresholdRequest | None":
         """Build a Costes request from runtime invocation metadata."""
         kwargs = request.kwargs
         if not bool(kwargs.get("do_costes", True)):

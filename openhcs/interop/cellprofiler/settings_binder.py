@@ -1,5 +1,7 @@
 """Convert CellProfiler .cppipe settings to absorbed-function kwargs."""
 
+from __future__ import annotations
+
 import logging
 import re
 from collections.abc import Callable, Mapping
@@ -232,7 +234,7 @@ class SettingToKeywordBinding:
         parse: SettingParser | None = None,
         repeated: bool = False,
         sidecar_role: type[ArtifactSidecarRole] | None = None,
-    ) -> "SettingToKeywordBinding":
+    ) -> SettingToKeywordBinding:
         """Declare one setting-backed artifact input."""
 
         return cls(
@@ -253,7 +255,7 @@ class SettingToKeywordBinding:
         parameter_name: str | None = None,
         parse: SettingParser | None = None,
         repeated: bool = False,
-    ) -> "SettingToKeywordBinding":
+    ) -> SettingToKeywordBinding:
         """Declare one setting-backed artifact output."""
 
         return cls(
@@ -373,7 +375,7 @@ class SettingToKeywordBinding:
         self,
         module: ModuleBlock,
         kwargs: dict[str, CellProfilerSettingValue],
-        binder: "SettingsBinder",
+        binder: SettingsBinder,
     ) -> None:
         parameter_name = self.bound_parameter_name()
         if parameter_name is None:
@@ -414,7 +416,7 @@ class SourceFileSettingBinding(SettingToKeywordBinding):
         self,
         module: ModuleBlock,
         kwargs: dict[str, CellProfilerSettingValue],
-        binder: "SettingsBinder",
+        binder: SettingsBinder,
     ) -> None:
         value = optional_setting_value(module, self.setting_name)
         if value is not None:
@@ -438,7 +440,7 @@ class MeasurementFeatureSettingBinding(SettingToKeywordBinding):
         self,
         module: ModuleBlock,
         kwargs: dict[str, CellProfilerSettingValue],
-        binder: "SettingsBinder",
+        binder: SettingsBinder,
     ) -> None:
         """Bind only a genuine measurement feature, not CP blank sentinels."""
 

@@ -5,6 +5,8 @@ registers them for pyclesperanto and holds the operations built from
 pyclesperanto's own kernels (min/max normalization, CLAHE, top-hat sphere).
 """
 
+from __future__ import annotations
+
 from typing import List, Optional
 
 from arraybridge import MemoryType
@@ -25,7 +27,7 @@ cle = optional_import_placeholder("pyclesperanto")
 OPERATIONS = ArrayOperations.for_memory(MemoryType.PYCLESPERANTO)
 
 
-def _gpu_minmax_normalize_range(image: "cle.Array") -> tuple:
+def _gpu_minmax_normalize_range(image: cle.Array) -> tuple:
     """Return the image's (min, max), computed on the device."""
     return (
         float(cle.minimum_of_all_pixels(image)),
@@ -35,12 +37,12 @@ def _gpu_minmax_normalize_range(image: "cle.Array") -> tuple:
 
 @pyclesperanto_func
 def per_slice_minmax_normalize(
-    image: "cle.Array",
+    image: cle.Array,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: int = 0,
     target_max: int = 65535,
-) -> "cle.Array":
+) -> cle.Array:
     """
     Normalize image intensities using per-slice min/max values - GPU accelerated.
 
@@ -101,8 +103,8 @@ def per_slice_minmax_normalize(
 
 @pyclesperanto_func
 def stack_minmax_normalize(
-    image: "cle.Array", target_min: int = 0, target_max: int = 65535
-) -> "cle.Array":
+    image: cle.Array, target_min: int = 0, target_max: int = 65535
+) -> cle.Array:
     """
     Normalize image intensities using global stack min/max values - GPU accelerated.
 
@@ -146,8 +148,8 @@ def stack_minmax_normalize(
 
 @pyclesperanto_func
 def sharpen(
-    image: "cle.Array", radius: float = 1.0, amount: float = 1.0
-) -> "cle.Array":
+    image: cle.Array, radius: float = 1.0, amount: float = 1.0
+) -> cle.Array:
     """
     Apply unsharp mask sharpening to a 3D image - GPU accelerated.
 
@@ -182,7 +184,7 @@ def sharpen(
 
 
 @pyclesperanto_func
-def max_projection(stack: "cle.Array") -> "cle.Array":
+def max_projection(stack: cle.Array) -> cle.Array:
     """
     Create a maximum intensity projection from a Z-stack - GPU accelerated.
 
@@ -200,7 +202,7 @@ def max_projection(stack: "cle.Array") -> "cle.Array":
 
 
 @pyclesperanto_func
-def mean_projection(stack: "cle.Array") -> "cle.Array":
+def mean_projection(stack: cle.Array) -> cle.Array:
     """
     Create a mean intensity projection from a Z-stack - GPU accelerated.
 
@@ -221,9 +223,9 @@ def mean_projection(stack: "cle.Array") -> "cle.Array":
 
 @pyclesperanto_func
 def create_projection(
-    stack: "cle.Array",
+    stack: cle.Array,
     method: StackProjectionMethod = StackProjectionMethod.MAX,
-) -> "cle.Array":
+) -> cle.Array:
     """
     Create a projection from a stack using the specified method - GPU accelerated.
 
@@ -245,12 +247,12 @@ def create_projection(
 
 @pyclesperanto_func
 def tophat(
-    image: "cle.Array",
+    image: cle.Array,
     selem_radius: int = 50,
     downsample_factor: int = 4,
     downsample_interpolate: bool = True,
     upsample_interpolate: bool = False,
-) -> "cle.Array":
+) -> cle.Array:
     """
     Apply white top-hat filter to a 3D image for background removal - GPU accelerated.
 
@@ -318,7 +320,7 @@ def tophat(
 
 @artifact_inputs(ArtifactSpec.input("mask", ImageArtifactType, parameter_name="mask"))
 @pyclesperanto_func
-def apply_mask(image: "cle.Array", mask: "cle.Array") -> "cle.Array":
+def apply_mask(image: cle.Array, mask: cle.Array) -> cle.Array:
     """
     Apply a mask to a 3D image - GPU accelerated.
 
@@ -356,8 +358,8 @@ def apply_mask(image: "cle.Array", mask: "cle.Array") -> "cle.Array":
 
 @pyclesperanto_func
 def create_composite(
-    stack: "cle.Array", weights: Optional[List[float]] = None
-) -> "cle.Array":
+    stack: cle.Array, weights: Optional[List[float]] = None
+) -> cle.Array:
     """
     Create a composite image from a 3D stack where each slice is a channel - GPU accelerated.
 
@@ -404,12 +406,12 @@ def create_composite(
 
 @pyclesperanto_func
 def equalize_histogram_3d(
-    stack: "cle.Array",
+    stack: cle.Array,
     tile_size: int = 8,
     clip_limit: float = 0.01,
     range_min: float = 0.0,
     range_max: float = 65535.0,
-) -> "cle.Array":
+) -> cle.Array:
     """
     Apply 3D CLAHE histogram equalization to a volume - GPU accelerated.
 
@@ -442,12 +444,12 @@ def equalize_histogram_3d(
 
 @pyclesperanto_func
 def equalize_histogram_per_slice(
-    stack: "cle.Array",
+    stack: cle.Array,
     tile_size: int = 8,
     clip_limit: float = 0.01,
     range_min: float = 0.0,
     range_max: float = 65535.0,
-) -> "cle.Array":
+) -> cle.Array:
     """
     Apply 2D CLAHE histogram equalization to each slice independently - GPU accelerated.
 
@@ -493,11 +495,11 @@ def equalize_histogram_per_slice(
 
 @pyclesperanto_func
 def stack_equalize_histogram(
-    stack: "cle.Array",
+    stack: cle.Array,
     bins: int = 65536,
     range_min: float = 0.0,
     range_max: float = 65535.0,
-) -> "cle.Array":
+) -> cle.Array:
     """
     Apply histogram equalization to a stack - GPU accelerated.
 
@@ -523,12 +525,12 @@ def stack_equalize_histogram(
 
 @pyclesperanto_func
 def percentile_normalize(
-    image: "cle.Array",
+    image: cle.Array,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: int = 0,
     target_max: int = 65535,
-) -> "cle.Array":
+) -> cle.Array:
     """Normalize each plane through the pyclesperanto min/max implementation.
 
     Args:
@@ -550,12 +552,12 @@ def percentile_normalize(
 
 @pyclesperanto_func
 def stack_percentile_normalize(
-    image: "cle.Array",
+    image: cle.Array,
     low_percentile: float = 1.0,
     high_percentile: float = 99.0,
     target_min: int = 0,
     target_max: int = 65535,
-) -> "cle.Array":
+) -> cle.Array:
     """Normalize a full stack through the pyclesperanto min/max implementation.
 
     Args:
@@ -575,7 +577,7 @@ def stack_percentile_normalize(
 
 def create_linear_weight_mask(
     height: int, width: int, margin_ratio: float = 0.1
-) -> "cle.Array":
+) -> cle.Array:
     """
     Create a linear weight mask for blending images - GPU accelerated.
 
@@ -632,7 +634,7 @@ def create_linear_weight_mask(
     return mask
 
 
-def create_weight_mask(shape: tuple, margin_ratio: float = 0.1) -> "cle.Array":
+def create_weight_mask(shape: tuple, margin_ratio: float = 0.1) -> cle.Array:
     """
     Create a weight mask for blending images - GPU accelerated.
 

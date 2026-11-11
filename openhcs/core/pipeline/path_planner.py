@@ -66,7 +66,7 @@ class PathPlannerComponentScopes:
     scopes: Mapping[type[Axis], ComponentGroupScope]
 
     @classmethod
-    def empty(cls) -> PathPlannerComponentScopes:
+    def empty(cls) -> "PathPlannerComponentScopes":
         return cls({})
 
     def scope_for_group_by(
@@ -83,7 +83,7 @@ class PathPlannerComponentScopes:
         step: AbstractStep,
         execution_scope: ComponentGroupScope,
         compiled_pattern: CompiledFunctionPattern | None,
-    ) -> PathPlannerComponentScopes:
+    ) -> "PathPlannerComponentScopes":
         if not isinstance(step, FunctionStep):
             return self
         if compiled_pattern is None:

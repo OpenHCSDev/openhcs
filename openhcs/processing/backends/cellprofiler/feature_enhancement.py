@@ -1,5 +1,7 @@
 """Converted from CellProfiler: EnhanceOrSuppressFeatures."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -139,7 +141,7 @@ class EnhanceOrSuppressFeaturesModule(CellProfilerModule, ValidatedHighConfidenc
 
     @classmethod
     def postprocess_bound_settings(
-        cls, module: "ModuleBlock", bound: BoundModuleSettings
+        cls, module: ModuleBlock, bound: BoundModuleSettings
     ) -> BoundModuleSettings:
         kwargs = dict(bound.kwargs)
         hole_sizes = kwargs.pop("dark_hole_radius_range", None)
@@ -233,7 +235,7 @@ class FeatureOperationStrategy(
     method_label: ClassVar[str | None] = None
 
     @classmethod
-    def for_method(cls, method: OperationMethod) -> "FeatureOperationStrategy":
+    def for_method(cls, method: OperationMethod) -> FeatureOperationStrategy:
         return cls.for_enum_member(method)
 
     @abstractmethod
@@ -275,7 +277,7 @@ class FeatureEnhanceMethodStrategy(
     method_label: ClassVar[str | None] = None
 
     @classmethod
-    def for_method(cls, method: EnhanceMethod) -> "FeatureEnhanceMethodStrategy":
+    def for_method(cls, method: EnhanceMethod) -> FeatureEnhanceMethodStrategy:
         return cls.for_enum_member(method)
 
     @abstractmethod

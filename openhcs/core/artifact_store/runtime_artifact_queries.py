@@ -268,7 +268,7 @@ class MeasurementLabelSliceAxisSelection:
         row_axis: MeasurementRowAxisField,
         labels: ObjectLabelValue,
         plane_projector: RuntimePlaneAxisProjector,
-    ) -> MeasurementLabelSliceAxisSelection:
+    ) -> "MeasurementLabelSliceAxisSelection":
         """Bind label-domain semantics to the invocation's exact runtime axis."""
         domain_strategy = labels.object_label_domain().scope
         projection = domain_strategy.measurement_projection(labels, plane_projector)

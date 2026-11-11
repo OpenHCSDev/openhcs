@@ -5,6 +5,8 @@ Main application class that initializes the PyQt6 application and
 manages global configuration and services.
 """
 
+from __future__ import annotations
+
 import logging
 import sys
 from collections.abc import Callable
@@ -36,40 +38,40 @@ class StartupReadinessState:
     """
 
     @staticmethod
-    def deferred_initialization_complete(readiness: "MainWindowStartupReadiness") -> None:
+    def deferred_initialization_complete(readiness: MainWindowStartupReadiness) -> None:
         return None
 
     @staticmethod
-    def painted(readiness: "MainWindowStartupReadiness") -> None:
+    def painted(readiness: MainWindowStartupReadiness) -> None:
         return None
 
     @staticmethod
-    def report_painted_ready(readiness: "MainWindowStartupReadiness") -> None:
+    def report_painted_ready(readiness: MainWindowStartupReadiness) -> None:
         return None
 
     @staticmethod
-    def fail(readiness: "MainWindowStartupReadiness", error: BaseException) -> None:
+    def fail(readiness: MainWindowStartupReadiness, error: BaseException) -> None:
         readiness._finish()
         readiness._report_failure(error)
 
 
 class WaitingForDeferredInitialization(StartupReadinessState):
     @staticmethod
-    def deferred_initialization_complete(readiness: "MainWindowStartupReadiness") -> None:
+    def deferred_initialization_complete(readiness: MainWindowStartupReadiness) -> None:
         readiness._state = WaitingForInitializedPaint
         readiness._main_window.update()
 
 
 class WaitingForInitializedPaint(StartupReadinessState):
     @staticmethod
-    def painted(readiness: "MainWindowStartupReadiness") -> None:
+    def painted(readiness: MainWindowStartupReadiness) -> None:
         readiness._state = PaintCompletionQueued
         QtCore.QTimer.singleShot(0, readiness._report_painted_ready)
 
 
 class PaintCompletionQueued(StartupReadinessState):
     @staticmethod
-    def report_painted_ready(readiness: "MainWindowStartupReadiness") -> None:
+    def report_painted_ready(readiness: MainWindowStartupReadiness) -> None:
         readiness._finish()
         logger.info("OpenHCS main window painted and ready")
         readiness._report_ready()
@@ -77,7 +79,7 @@ class PaintCompletionQueued(StartupReadinessState):
 
 class StartupReadinessFinished(StartupReadinessState):
     @staticmethod
-    def fail(readiness: "MainWindowStartupReadiness", error: BaseException) -> None:
+    def fail(readiness: MainWindowStartupReadiness, error: BaseException) -> None:
         return None
 
 
@@ -279,7 +281,7 @@ class OpenHCSPyQtApp(QApplication):
         # Setup exception handling
         sys.excepthook = self.handle_exception
 
-    def create_main_window(self) -> "OpenHCSMainWindow":
+    def create_main_window(self) -> OpenHCSMainWindow:
         """
         Create and show the main window.
 
