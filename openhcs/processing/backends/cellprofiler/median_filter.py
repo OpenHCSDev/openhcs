@@ -26,6 +26,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_int,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
+    NativeNumpyBackend,
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -42,7 +43,7 @@ from openhcs.core.callable.processing_contracts import (
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
-class MedianFilterModule(CellProfilerModule):
+class MedianFilterModule(CellProfilerModule, NativeNumpyBackend):
     module_name = "MedianFilter"
     function_name = "medianfilter"
     validated = True
@@ -159,8 +160,7 @@ class NumpyMedianFilterBackendStrategy(MedianFilterBackendStrategy):
             max_window_bytes=1024**3, max_chunk_bytes=16 * 1024**2
         )
     )
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
+
     is_default_backend = True
 
     def prepare_backend(self) -> None:

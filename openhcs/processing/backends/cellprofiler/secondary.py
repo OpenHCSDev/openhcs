@@ -490,7 +490,7 @@ class DistanceOnlySegmentationStrategy(SecondarySegmentationStrategy, NumbaNumpy
         )
 
 
-class DistanceMaskedSegmentationStrategy(SecondarySegmentationStrategy):
+class DistanceMaskedSegmentationStrategy(SecondarySegmentationStrategy, NativeNumpyBackend):
     method = SecondaryMethod.DISTANCE_B
     default_propagation_backend_provider = NumbaBackendProvider
 
@@ -557,8 +557,6 @@ class NumpySecondaryDistanceTransformBackendStrategy(
 ):
     """Reference NumPy/SciPy secondary distance-transform backend."""
 
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
     is_default_backend = True
 
     def distance_to_foreground(self, labels: np.ndarray) -> np.ndarray:
@@ -677,7 +675,7 @@ class SecondaryPropagationBackendStrategy(
         )
 
 
-class NumbaSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrategy):
+class NumbaSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrategy, NativeNumpyBackend):
     """Numba implementation of regularized secondary-label propagation."""
     def prepare_backend(self) -> None:
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
@@ -756,11 +754,6 @@ class NativeSecondaryPropagationBackendStrategy(
     NumbaSecondaryPropagationBackendStrategy
 ):
     """Native compatibility key backed by absorbed propagation semantics."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-    is_default_backend = False
-
 
 def secondary_propagation_backend(
     *, backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION

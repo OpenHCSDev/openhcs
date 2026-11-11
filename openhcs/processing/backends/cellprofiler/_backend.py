@@ -442,16 +442,25 @@ def _prepare_cellprofiler_backend_family_cached(
 
 
 class NumbaNumpyDefaultBackend:
-    """Mixin declaring the Numba+NumPy default backend configuration.
-
-    Compose this with a concrete ``*BackendStrategy`` to declare all three
-    shared class variables in one base list instead of restating them in
-    every subclass.
-    """
+    """Mixin: Numba+NumPy default backend (memory_type, provider, is_default)."""
 
     memory_type: ClassVar[MemoryType] = MemoryType.NUMPY
     backend_provider: ClassVar[type[BackendProvider]] = NumbaBackendProvider
     is_default_backend: ClassVar[bool] = True
+
+
+class NativeNumpyBackend:
+    """Mixin: native NumPy backend (memory_type, provider)."""
+
+    memory_type: ClassVar[MemoryType] = MemoryType.NUMPY
+    backend_provider: ClassVar[type[BackendProvider]] = NativeBackendProvider
+
+
+class CentrosomeNumpyBackend:
+    """Mixin: Centrosome NumPy backend (memory_type, provider)."""
+
+    memory_type: ClassVar[MemoryType] = MemoryType.NUMPY
+    backend_provider: ClassVar[type[BackendProvider]] = CentrosomeBackendProvider
 
 
 __all__ = [
@@ -464,11 +473,13 @@ __all__ = [
     "CellProfilerBackendSelection",
     "CellProfilerBackendStrategyMixin",
     "CentrosomeBackendProvider",
+    "CentrosomeNumpyBackend",
     "CppBackendProvider",
     "CucimBackendProvider",
     "DefaultBackendSelection",
     "LegacyFastBackendProvider",
     "NativeBackendProvider",
+    "NativeNumpyBackend",
     "NumbaNumpyDefaultBackend",
     "NumbaBackendProvider",
     "OpencvBackendProvider",

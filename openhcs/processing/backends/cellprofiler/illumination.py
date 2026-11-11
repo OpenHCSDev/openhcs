@@ -59,6 +59,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_int,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
+    NativeNumpyBackend,
     BackendProviderInput,
     BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
@@ -98,7 +99,7 @@ if TYPE_CHECKING:
     from openhcs.core.callable.function_patterns import FunctionInvocationKey
 
 
-class IntensityChoice(Enum):
+class IntensityChoice(Enum, NativeNumpyBackend):
     """CellProfiler CorrectIlluminationCalculate intensity source."""
 
     REGULAR = "regular"
@@ -1561,8 +1562,6 @@ class NumbaNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStr
 class NativeNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStrategy):
     """Compact-domain skimage rank-median backend for NumPy planes."""
 
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:

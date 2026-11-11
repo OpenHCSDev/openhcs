@@ -251,7 +251,7 @@ class HaralickTextureBackendStrategy(
         """Return one Haralick feature row per 2-D direction."""
 
 
-class NumbaNumpyObjectTextureCropBackendStrategy(ObjectTextureCropBackendStrategy):
+class NumbaNumpyObjectTextureCropBackendStrategy(ObjectTextureCropBackendStrategy, NativeNumpyBackend):
     """Numba-accelerated NumPy backend for object texture crop extraction."""
     def prepare_backend(self) -> None:
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
@@ -308,10 +308,6 @@ class NumbaNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy, N
 
 class NativeNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy):
     """Explicit mahotas backend used as the native reference implementation."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-
     def haralick_features(
         self, pixel_data: np.ndarray, *, scale: int, ignore_zeros: bool
     ) -> np.ndarray:

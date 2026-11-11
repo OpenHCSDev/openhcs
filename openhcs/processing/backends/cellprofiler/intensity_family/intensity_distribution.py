@@ -194,7 +194,7 @@ class IntensityDistributionHeatmapGroup:
             )
 
 
-class IntensityDistributionSettingSchema(Enum):
+class IntensityDistributionSettingSchema(Enum, NativeNumpyBackend):
     """Exact repeating-group count layout for one CellProfiler revision."""
 
     def __new__(
@@ -1870,11 +1870,6 @@ class RadialDistributionBackendStrategy(
 
 class NativeNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrategy):
     """CellProfiler-native NumPy radial-distribution backend."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-    is_default_backend = False
-
     def measure(
         self, request: RadialDistributionMeasureRequest
     ) -> RadialDistributionArrays:

@@ -84,6 +84,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_int,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
+    NativeNumpyBackend,
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     CppBackendProvider,
@@ -223,7 +224,7 @@ class MeasureGranularityModule(
     confidence = 1.0
     measurement_category_prefixes = (("granularity",),)
 
-    class MeasurementFeature(RuntimeMeasurementFeature):
+    class MeasurementFeature(RuntimeMeasurementFeature, NativeNumpyBackend):
         """Indexed granularity spectrum family emitted by MeasureGranularity."""
 
         SPECTRUM = (
@@ -765,11 +766,6 @@ class NativeGranularityReconstructionBackendStrategy(
     GranularityReconstructionBackendStrategy
 ):
     """Reference skimage reconstruction backend for granularity."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-    is_default_backend = False
-
     def reconstruct_radius_one(
         self,
         seed: np.ndarray,

@@ -147,7 +147,7 @@ class ImageQualityThresholdMethod(Enum, NumbaNumpyDefaultBackend):
         return f"{class_token}{otsu_objective.descriptor_token}"
 
 
-class ImageQualityOtsuObjective(Enum):
+class ImageQualityOtsuObjective(Enum, NativeNumpyBackend):
     """Objective used to select a CellProfiler image-quality Otsu threshold."""
 
     WEIGHTED_VARIANCE = ("Weighted variance", "W")
@@ -165,7 +165,7 @@ class ImageQualityOtsuObjective(Enum):
         return self._descriptor_token
 
 
-class ImageQualityThresholdAggregate(Enum):
+class ImageQualityThresholdAggregate(Enum, CentrosomeNumpyBackend):
     """Experiment-level reductions declared by MeasureImageQuality."""
 
     def __new__(cls, value: str, reducer: Callable[[np.ndarray], np.floating]):
@@ -1007,11 +1007,6 @@ class YenImageQualityThresholdStrategy(PrimitiveImageQualityThresholdStrategy):
 
 class NumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
     """Independent NumPy implementation of image-quality primitives."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = NativeBackendProvider
-    is_default_backend = False
-
     def haralick_h3(self, image: np.ndarray, *, scale: int) -> float:
         image_array = np.asarray(image, dtype=np.float32)
         if image_array.ndim != 2:
@@ -1080,11 +1075,6 @@ class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
 
 class CentrosomeNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
     """Compatibility provider backed by absorbed image-quality primitives."""
-
-    memory_type = MemoryType.NUMPY
-    backend_provider = CentrosomeBackendProvider
-    is_default_backend = False
-
 
 def image_quality_backend(
     *, backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION
