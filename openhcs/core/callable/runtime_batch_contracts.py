@@ -14,10 +14,7 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.callable.callable_contract import CallableDeclaration
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.callable.function_reference import FunctionReference
 from openhcs.core.callable.runtime_adapters import RuntimeImageExecutionContext

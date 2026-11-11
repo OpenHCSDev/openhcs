@@ -6,7 +6,7 @@ from collections import OrderedDict
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
+from typing import Any, ClassVar, Mapping, Sequence
 
 from polystore.streaming.identity import StreamProducerIdentity
 
@@ -23,10 +23,7 @@ from openhcs.core.source.source_bindings import (
 )
 from openhcs.core.util.step_dependencies import UnresolvedStepInput
 
-if TYPE_CHECKING:
-    pass
-else:
-    StreamingConfig = Any
+StreamingConfig = Any
 
 ArtifactInputPlans = Mapping[ArtifactSpecRef, ArtifactInputPlan]
 ArtifactOutputPlans = Mapping[ArtifactSpecRef, ArtifactOutputPlan]
