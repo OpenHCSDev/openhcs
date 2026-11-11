@@ -146,6 +146,13 @@ MeasurementFeatureNameProjection: TypeAlias = Callable[
 class ObjectMeasurementColumnarRows(ColumnarRows, ABC):
     """Object measurement columns spanning their declared label domain."""
 
+    def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
+        if context.axis.one_plane_per_runtime_slice:
+            return MeasurementRowsAxisProjection.from_rows(
+                self
+            ).project_runtime_slice_index(context.require_plane_index())
+        return self
+
     @property
     def covers_declared_object_measurement_domain(self) -> bool:
         """Object-measurement carriers span their declared label domain."""
@@ -398,6 +405,13 @@ class MeasurementProjectedColumnarRows(ColumnarRows):
     fields: tuple[FieldSpec, ...] = ()
     declared_object_measurement_domain_covered: bool = False
     object_row_identity: MeasurementObjectRowIdentity | None = None
+
+    def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
+        if context.axis.one_plane_per_runtime_slice:
+            return MeasurementRowsAxisProjection.from_rows(
+                self
+            ).project_runtime_slice_index(context.require_plane_index())
+        return self
 
     def __post_init__(self) -> None:
         self.validate_fields()
