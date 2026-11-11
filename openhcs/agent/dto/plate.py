@@ -239,6 +239,14 @@ class SelectedPlateTargetOptions(DatasetTarget):
     def target_from_value(value: str) -> type[SelectedPlateFileQueryTarget]:
         return SelectedPlateFileQueryTarget.named(value)
 
+    def _target_tool_arguments(self) -> dict[str, JsonValue]:
+        """Wire projection of the shared target controls."""
+        return {
+            "source_format": self.source_format,
+            "pattern_format": self.pattern_format,
+            "target": self.target.name,
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class SelectedPlateFileFilterOptions(SelectedPlateTargetOptions):
@@ -252,6 +260,15 @@ class SelectedPlateFileFilterOptions(SelectedPlateTargetOptions):
     )
     limit: int = 1
 
+    def _filter_tool_arguments(self) -> dict[str, JsonValue]:
+        """Wire projection of the shared filter controls."""
+        return {
+            **self._target_tool_arguments(),
+            "kind": PlateFileInventoryQuery.kind_value(self.kind),
+            "path_contains": self.path_contains,
+            "component_filters": self.component_filters.as_mapping(),
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class PlateInspectionBounds:
@@ -263,6 +280,9 @@ class PlateInspectionBounds:
         PlateInspectionDefaults.DEFAULT_MAX_PARSE_FAILURE_SAMPLES
     )
     max_files_to_parse: int = PlateInspectionDefaults.DEFAULT_MAX_FILES_TO_PARSE
+
+    def tool_arguments(self) -> dict[str, JsonValue]:
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
     def normalized(self) -> "PlateInspectionBounds":
         return PlateInspectionBounds(
@@ -589,9 +609,7 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
-            "source_format": self.source_format,
-            "pattern_format": self.pattern_format,
-            "target": self.target.name,
+            **self._target_tool_arguments(),
             "max_sample_files": self.max_sample_files,
             "max_component_values": self.max_component_values,
             "max_parse_failure_samples": self.max_parse_failure_samples,
@@ -657,12 +675,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
-            "source_format": self.source_format,
-            "pattern_format": self.pattern_format,
-            "kind": PlateFileInventoryQuery.kind_value(self.kind),
-            "target": self.target.name,
-            "path_contains": self.path_contains,
-            "component_filters": self.component_filters.as_mapping(),
+            **self._filter_tool_arguments(),
             "offset": self.offset,
             "limit": self.limit,
             "include_previews": self.include_previews,
@@ -744,9 +757,7 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "image_path": self.image_path,
-            "source_format": self.source_format,
-            "pattern_format": self.pattern_format,
-            "target": self.target.name,
+            **self._target_tool_arguments(),
             "y": self.y,
             "x": self.x,
             "height": self.height,
@@ -830,13 +841,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "file_paths": list(self.file_paths) if self.file_paths else None,
-            "source_format": self.source_format,
-            "pattern_format": self.pattern_format,
-            "kind": PlateFileInventoryQuery.kind_value(self.kind),
-            "target": self.target.name,
-            "path_contains": self.path_contains,
-            "component_filters": self.component_filters.as_mapping(),
-            "limit": self.limit,
+            **self._filter_tool_arguments(),
             "viewer_config_key": self.viewer_config_key,
             **self.connection.tool_arguments(),
             "fresh_viewer": self.fresh_viewer,
