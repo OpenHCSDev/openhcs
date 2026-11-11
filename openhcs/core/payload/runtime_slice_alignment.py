@@ -42,6 +42,15 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
         """Return the value of every runtime slice, in slice order."""
         return tuple(self.value_at(index) for index in range(self.slice_count))
 
+    def debug_value_facts(
+        self,
+        plane_projector: object | None,
+    ) -> tuple[list[str], RuntimePlaneAxisValueProjection | None]:
+        return [
+            f"slice_count={self.slice_count}",
+            f"declared_cardinality={self.slice_count}",
+        ], None
+
     def map_slices(
         self, transform: Callable[[SliceValueT], MappedValueT],
     ) -> RuntimeSliceAlignedValues[MappedValueT]:

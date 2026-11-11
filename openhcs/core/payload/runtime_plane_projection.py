@@ -565,6 +565,12 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
         object.__setattr__(self, "source_aliases", source_aliases)
         object.__setattr__(self, "axis_size", axis_size)
 
+    def debug_value_facts(
+        self,
+        plane_projector: RuntimePlaneAxisProjector | None,
+    ) -> tuple[list[str], RuntimePlaneAxisValueProjection | None]:
+        return [f"declared_cardinality={self.axis_size}"], self
+
     @property
     def selects_one_plane(self) -> bool:
         """Whether this projection selects one plane of its axis."""

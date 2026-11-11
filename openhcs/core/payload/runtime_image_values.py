@@ -28,7 +28,9 @@ from openhcs.core.payload.payload_axes import PayloadAxes, RuntimePlaneAxisSpec,
 from openhcs.core.payload.runtime_array_values import DataBackedRuntimeArrayPayload, RuntimeArrayPayload, array_geometry, is_array_payload, mask_array, runtime_array_operand
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
+    RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
+    RuntimePlaneProjection,
     RuntimeSliceInvariantValue,
     RuntimeSliceProjectableValue,
 )
@@ -1373,6 +1375,47 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
     def invocation_plane_axis(self) -> type[RuntimePlaneAxis]:
         """Return the plane axis a callable invocation iterates over."""
         return self.metadata.plane_axis
+
+    def debug_value_facts(
+        self,
+        plane_projector: RuntimePlaneAxisProjector | None,
+    ) -> tuple[list[str], RuntimePlaneAxisValueProjection | None]:
+        array_facts, _ = self.debug_array_facts()
+        facts = list(array_facts)
+        projection: RuntimePlaneAxisValueProjection | None = None
+        metadata = self.metadata
+        if metadata.has_values:
+            facts.extend(
+                (
+                    f"source_dtype={metadata.source_dtype!r}",
+                    f"axes={metadata.axes!r}",
+                    f"source_plane_count={metadata.source_provenance.source_plane_count}",
+                    f"source_image_name_count={len(metadata.source_image_names)}",
+                )
+            )
+        if metadata.plane_axis.leads_data:
+            payload_shape = tuple(int(axis_size) for axis_size in self.shape)
+            if plane_projector is not None and (
+                metadata.plane_axis.one_plane_per_runtime_slice
+                or not isinstance(plane_projector, RuntimePlaneProjection)
+            ):
+                projection = RuntimePlaneAxisValueProjection.from_projector(
+                    plane_projector,
+                    metadata.plane_axis,
+                    metadata.source_image_names,
+                )
+            if projection is None:
+                facts.append(f"plane_axis={metadata.plane_axis.name!r}")
+            declared_cardinality = payload_shape[0]
+        else:
+            declared_cardinality = None
+        facts.extend(
+            (
+                f"declared_plane_axis={metadata.plane_axis.name!r}",
+                f"declared_cardinality={declared_cardinality}",
+            )
+        )
+        return facts, projection
 
     def copied(self, *, memory_type: str, device_id: int | None) -> ImagePayload:
         """Copy pixels, mask and metadata into an independent buffer."""

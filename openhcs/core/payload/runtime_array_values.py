@@ -68,6 +68,21 @@ class RuntimeArrayPayload(ArrayPayload, ABC):
             return self.with_data(result)
         return result
 
+    def debug_array_facts(self) -> tuple[list[str], str | None]:
+        facts = [f"shape={self.shape!r}"]
+        dtype: str | None = None
+        payload_data = self.array_payload_data()
+        if isinstance(payload_data, np.ndarray):
+            dtype = str(payload_data.dtype)
+            facts.append(f"dtype={dtype!r}")
+        return facts, dtype
+
+    def debug_shape(self) -> tuple[tuple[int, ...] | None, str | None]:
+        shape = tuple(int(axis_size) for axis_size in self.shape)
+        payload_data = self.array_payload_data()
+        dtype = str(payload_data.dtype) if isinstance(payload_data, np.ndarray) else None
+        return shape, dtype
+
     def compare_array_payload(self, other: Any, ufunc: Any) -> Any:
         return ufunc(np.asarray(self), runtime_array_operand(other))
 

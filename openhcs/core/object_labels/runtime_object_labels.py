@@ -39,7 +39,7 @@ from metaclass_registry.strategies import (
 from openhcs.core.object_labels.runtime_object_label_domains import DenseIntegerObjectLabelIdDomain, ObjectLabelDomain, ObjectLabelDomainMetadata, ObjectLabelDomainMetadataStrategy, ObjectLabelIdDomainStrategy
 
 
-from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection, RuntimeSliceIdentityProjectableValue
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisProjector, RuntimePlaneAxisValueProjection, RuntimeSliceIdentityProjectableValue
 from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,
@@ -624,6 +624,31 @@ class ObjectLabelValue(
         """Return the exact runtime plane axis declared by this label value."""
         domain = self.object_label_domain()
         return domain.scope.value_projection(self)
+
+    def debug_value_facts(
+        self,
+        plane_projector: RuntimePlaneAxisProjector | None,
+    ) -> tuple[list[str], RuntimePlaneAxisValueProjection | None]:
+        domain = self.object_label_domain()
+        facts: list[str] = [
+            f"representation={self.representation.value!r}",
+            f"domain_scope={domain.scope.name!r}",
+            f"declared_object_count={domain.declared_object_count!r}",
+            f"declared_object_id_count={len(domain.declared_object_ids)}",
+            f"declared_object_plane_count={len(domain.declared_object_id_domains)}",
+            f"source_plane_count={self.source_provenance.source_plane_count}",
+            f"source_image_name_count={len(self.source_image_names)}",
+        ]
+        projection = self.declared_plane_projection()
+        facts.extend(
+            (
+                f"declared_plane_axis={self.plane_axis.name!r}",
+                f"declared_cardinality={None if projection is None else projection.axis_size!r}",
+            )
+        )
+        array_facts, _ = self.debug_array_facts()
+        facts.extend(array_facts)
+        return facts, projection
 
     def measurement_planes(self) -> tuple["ObjectLabelValue", ...]:
         """Return values projected through the declared label-plane domain."""
