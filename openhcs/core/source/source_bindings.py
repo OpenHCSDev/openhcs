@@ -168,7 +168,12 @@ class SourceExtension(SourceFilterSubject):
 class TextMatchType(SourceFilterMatchType):
     """Compares the subject text with the clause's value."""
 
-    requires_value = True
+    def normalize_clause_value(self, clause: SourceFilterClause) -> None:
+        if clause.value is None:
+            raise ValueError(
+                f"SourceFilterClause.value is required for {self.name}."
+            )
+        object.__setattr__(clause, "value", str(clause.value))
 
     @staticmethod
     @abstractmethod
@@ -270,8 +275,6 @@ class TextDoesNotEndWith(NegatedTextMatch):
 
 class PathMatchType(SourceFilterMatchType):
     """A predicate of the whole path; the clause carries no value."""
-
-    requires_value = False
 
     @staticmethod
     @abstractmethod

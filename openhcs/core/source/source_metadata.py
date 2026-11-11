@@ -73,7 +73,8 @@ class SourceFilterMatchType(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
 
-    requires_value: ClassVar[bool]
+    def normalize_clause_value(self, clause: SourceFilterClause) -> None:
+        object.__setattr__(clause, "value", None)
     """The clause carries a comparison operand."""
 
     @classmethod
@@ -112,14 +113,7 @@ class SourceFilterClause:
                 raise ValueError(
                     "SourceFilterClause.any_group must be a nonnegative integer."
                 )
-        if not self.match_type.requires_value:
-            object.__setattr__(self, "value", None)
-            return
-        if self.value is None:
-            raise ValueError(
-                f"SourceFilterClause.value is required for {self.match_type.name}."
-            )
-        object.__setattr__(self, "value", str(self.value))
+        self.match_type.normalize_clause_value(self)
 
     def matches(self, file_path: str) -> bool:
         """Whether one source path satisfies this clause."""
