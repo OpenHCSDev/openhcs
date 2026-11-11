@@ -9,7 +9,6 @@ from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 from typing import Self
 
-from openhcs.core.axes.axis_declarations import AxisFamily
 
 
 
@@ -785,6 +784,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
 
     def dense_shape_carries_axis(self, shape: Sequence[int]) -> bool:
         """Return whether a dense shape carries this declared leading axis."""
+        from openhcs.core.axes.axis_declarations import AxisFamily
 
         shape = tuple(int(size) for size in shape)
         spatial_rank = AxisFamily.active().payload_spatial_rank
