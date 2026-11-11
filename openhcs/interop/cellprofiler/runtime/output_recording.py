@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from functools import lru_cache
 from graphlib import TopologicalSorter
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import ClassVar, cast
 
 from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
@@ -68,10 +68,9 @@ from openhcs.core.payload.runtime_image_values import as_runtime_value
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+    CellProfilerOutputRecordRequest,
+)
 
 
 class CellProfilerOutputRecorder(
@@ -213,9 +212,6 @@ class CellProfilerOutputRecorder(
         current_image: RuntimeCallableArgument,
     ) -> Mapping[ArtifactSpecRef, RuntimeCallableArgument]:
         """Record one module invocation's returned artifacts."""
-        from openhcs.interop.cellprofiler.runtime.output_record_request import (
-            CellProfilerOutputRecordRequest,
-        )
         function_name = callable_contract.function_name
         active_output_plans = tuple(plan for plan, _spec, _value in matched_outputs)
         active_output_refs = frozenset(plan.ref() for plan in active_output_plans)
