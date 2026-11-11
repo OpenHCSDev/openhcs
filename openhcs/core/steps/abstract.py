@@ -37,7 +37,7 @@ from openhcs.core.runtime_store.runtime_stores import (
     StoredRuntimeValue,
 )
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 
 
 # def get_step_id(step: 'AbstractStep') -> str:

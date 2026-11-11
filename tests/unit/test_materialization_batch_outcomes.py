@@ -31,7 +31,7 @@ from openhcs.core.orchestrator.worker_execution import (
 )
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_store.runtime_exports import RuntimeExportObservation
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.materialization.options import CsvOptions, JsonOptions
 from openhcs.core.materialization.core import MaterializationSpec, SavedMaterializationOutputs, prepare_materialization

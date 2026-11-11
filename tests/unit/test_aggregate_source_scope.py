@@ -34,7 +34,7 @@ from openhcs.core.source.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.materialization.options import CsvOptions
 from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.materialization.core import Output, materialization_outputs

@@ -29,7 +29,7 @@ from openhcs.core.source.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     WorkspaceSourceProjections,
 )
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_outputs import PrimaryImageMetadataTarget
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser

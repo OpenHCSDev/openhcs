@@ -930,7 +930,7 @@ def test_database_measurements_keep_complete_relationship_cohort(tmp_path: Path)
 def test_repeated_assignment_database_projection_preserves_complete_relationships(
     tmp_path: Path,
 ) -> None:
-    from openhcs.core.steps.step_observation import StepExecutionObservation
+    from openhcs.core.context.step_execution_observation import StepExecutionObservation
 
     native = tmp_path / "native"
     candidate = tmp_path / "candidate"

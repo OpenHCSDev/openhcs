@@ -34,7 +34,7 @@ from openhcs.core.source.source_workspace_projection import (
     WorkspaceSourceProjections,
 )
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.config.streaming_config_declarations import ViewerFamily
 from openhcs.core.axes.axis_filter import StepAxisFilterMap
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache

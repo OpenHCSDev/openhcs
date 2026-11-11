@@ -127,7 +127,7 @@ from openhcs.core.source.source_metadata import (
     SOURCE_PLANE_INDEX_FIELD,
 )
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationTargetPlan,
     PersistentArtifactMaterializationTargetPlan,

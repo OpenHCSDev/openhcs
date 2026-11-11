@@ -11,7 +11,7 @@ from python_introspect import callable_declaration_kwargs
 
 from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_execution import FunctionStepExecutor
 
 

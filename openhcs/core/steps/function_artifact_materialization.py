@@ -41,7 +41,7 @@ from openhcs.core.source.source_matching import (
 )
 from openhcs.core.source.source_metadata import SourceMetadataFields
 from openhcs.core.source.source_projection import OpenHCSPlaneAddress
-from openhcs.core.steps.step_observation import StepExecutionObservation
+from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     IncompleteFunctionOutputFilenameIdentityError,
