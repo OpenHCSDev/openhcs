@@ -94,7 +94,7 @@ class RuntimeValue:
         """Compose records through their shared artifact-type owner."""
 
         runtime_values = cls._one_artifact_type(values)
-        return runtime_values[0].artifact_type.compose_runtime_values(runtime_values)
+        return runtime_values[0].key.artifact_type.compose_runtime_values(runtime_values)
 
     @classmethod
     def compose_groups(
@@ -118,7 +118,7 @@ class RuntimeValue:
                     "Runtime producer-group composition received a value outside "
                     f"the declared scope {producer_scope!r}."
                 )
-        return runtime_values[0].artifact_type.compose_runtime_groups(runtime_values)
+        return runtime_values[0].key.artifact_type.compose_runtime_groups(runtime_values)
 
     @staticmethod
     def _one_artifact_type(
@@ -127,11 +127,11 @@ class RuntimeValue:
         runtime_values = tuple(values)
         if not runtime_values:
             raise ValueError("Cannot compose an empty runtime value group.")
-        artifact_type = runtime_values[0].artifact_type
+        artifact_type = runtime_values[0].key.artifact_type
         mismatched_types = tuple(
-            value.artifact_type
+            value.key.artifact_type
             for value in runtime_values
-            if value.artifact_type is not artifact_type
+            if value.key.artifact_type is not artifact_type
         )
         if mismatched_types:
             raise TypeError(
