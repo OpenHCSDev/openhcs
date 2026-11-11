@@ -1,6 +1,9 @@
 """Project OpenHCS virtual-workspace metadata for runtime source binding."""
 
 from __future__ import annotations
+
+_registered_openhcs_metadata_handler_type = None
+
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from collections.abc import Mapping, Sequence
@@ -881,8 +884,9 @@ class WorkspaceSourceProjections:
 
     def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
         """Observe workspace eligibility live while retaining admitted providers."""
-        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
-
+        OpenHCSMetadataHandler = _registered_openhcs_metadata_handler_type
+        if OpenHCSMetadataHandler is None:
+            return (self.metadata_handler,)
         if isinstance(self.metadata_handler, OpenHCSMetadataHandler):
             return (self.metadata_handler,)
         metadata_path = self.dataset_root / OpenHCSMetadataHandler.METADATA_FILENAME

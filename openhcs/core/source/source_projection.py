@@ -1410,3 +1410,8 @@ def _normalize_projection(projection: SourceProjection) -> None:
             }
         ),
     )
+
+
+import openhcs.core.artifacts.kinds as _ak
+
+_ak._registered_OpenHCSPlaneAddress = OpenHCSPlaneAddress

@@ -40,6 +40,9 @@ from openhcs.core.measurements.measurement_row_materialization import Measuremen
 from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 
 
+_registered_OpenHCSPlaneAddress = None
+
+
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     """Registered runtime artifact payload category."""
 
@@ -883,7 +886,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         records: tuple[StoredRuntimeValue, ...],
         output_plan: ArtifactOutputPlan,
     ) -> tuple[StoredRuntimeValue, ...]:
-        from openhcs.core.source.source_projection import OpenHCSPlaneAddress
+        OpenHCSPlaneAddress = _registered_OpenHCSPlaneAddress
 
         if not output_plan.materialization_uses_source_identity_filename():
             return records

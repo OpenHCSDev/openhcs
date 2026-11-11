@@ -1869,3 +1869,8 @@ def update_metadata_for_zarr_conversion(
     )
     logger.info("Updated metadata: %s now has zarr backend", original_subdir)
 
+
+import openhcs.core.source.source_workspace_projection as _swp
+
+_swp._registered_openhcs_metadata_handler_type = OpenHCSMetadataHandler
+

@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+_registered_Pure2DAuxiliaryOutputAggregator = None
+_registered_Pure2DSliceResultBatch = None
+_registered_Pure2DSliceBatchExecutor = None
+_registered_RuntimePure2DSliceBatchRequest = None
+
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
@@ -196,14 +201,10 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             AlignedImageStack,
             aligned_image_stack_kwargs,
         )
-        from openhcs.core.callable.processing_contracts import (
-            Pure2DAuxiliaryOutputAggregator,
-            Pure2DSliceResultBatch,
-        )
-        from openhcs.core.callable.runtime_batch_contracts import (
-            Pure2DSliceBatchExecutor,
-            RuntimePure2DSliceBatchRequest,
-        )
+        Pure2DAuxiliaryOutputAggregator = _registered_Pure2DAuxiliaryOutputAggregator
+        Pure2DSliceResultBatch = _registered_Pure2DSliceResultBatch
+        Pure2DSliceBatchExecutor = _registered_Pure2DSliceBatchExecutor
+        RuntimePure2DSliceBatchRequest = _registered_RuntimePure2DSliceBatchRequest
 
         callable_contract = call.callable_contract
         owner = (

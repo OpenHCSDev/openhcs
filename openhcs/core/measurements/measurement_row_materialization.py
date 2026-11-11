@@ -2760,3 +2760,8 @@ def join_measurement_tables_artifact(
         subject=MeasurementSubject(MeasurementScope.ARTIFACT, name),
         source_provenance=joined_measurement_source_provenance(name, tables),
     )
+
+
+import openhcs.core.measurements.runtime_measurements as _rm
+
+_rm._registered_shared_measurement_row_axis_domain = shared_measurement_row_axis_domain
