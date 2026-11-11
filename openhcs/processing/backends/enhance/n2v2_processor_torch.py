@@ -340,7 +340,8 @@ def n2v2_denoise_torch(
         batch_size: Maximum number of random patches in each training batch.
         patch_size: Square random-patch width for training and overlapping large-image inference.
         learning_rate: Initial AdamW learning rate used during training.
-        save_model_path: Optional destination for newly trained model weights.
+        save_model_path: Optional destination for newly trained model weights;
+            a relative path lies in the output dataset.
         verbose: Emit periodic epoch loss and learning-rate messages when true.
     """
     device = image.device

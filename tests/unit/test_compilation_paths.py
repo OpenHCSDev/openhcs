@@ -26,11 +26,13 @@ from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
     CompilationDatasetScope,
+    InputDatasetPathResolver,
     resolve_declared_dataclass_paths,
 )
 from openhcs.core.pipeline.path_planner import _cached_output_dataset_root
 from openhcs.core.vfs_protocol import (
     FileManagerLike,
+    OutputParentDirectoryDeclaration,
     PlateInputDirectoryDeclaration,
     PlateInputFile,
     PlateInputFileDeclaration,
@@ -136,9 +138,10 @@ def _resolver() -> tuple[CompilationPathResolver, RecordingFileManager]:
     )
     return (
         CompilationPathResolver(
-            dataset_scope=CompilationDatasetScope.from_path(dataset_root),
+            input_dataset=CompilationDatasetScope.from_path(dataset_root),
             filemanager=filemanager,
             backend="disk",
+            output_dataset=CompilationDatasetScope.from_path("/plates/plate-a_out"),
         ),
         filemanager,
     )
@@ -186,8 +189,34 @@ def test_input_declarations_validate_kind_and_output_declarations_do_not_probe()
         PlateOutputFileDeclaration(),
         owner="test output",
     )
-    assert output == Path("/plates/plate-a/new/output.tif")
+    assert output == Path("/plates/plate-a_out/new/output.tif")
     assert filemanager.validation_calls == []
+
+
+def test_error_note_names_the_declaration_and_the_root_it_resolved_against() -> None:
+    resolver, _filemanager = _resolver()
+
+    with pytest.raises(FileNotFoundError) as raised:
+        resolver.resolve("absent.tif", PlateInputFileDeclaration(), owner="test input")
+
+    (note,) = raised.value.__notes__
+    assert "test input" in note
+    assert "PlateInputFileDeclaration root=/plates/plate-a," in note
+
+
+def test_output_root_is_unknown_while_resolving_the_config_that_defines_it() -> None:
+    resolver, filemanager = _resolver()
+    input_dataset_only = InputDatasetPathResolver(
+        input_dataset=resolver.input_dataset, filemanager=filemanager, backend="disk"
+    )
+
+    assert input_dataset_only.resolve(
+        "elsewhere", OutputParentDirectoryDeclaration(), owner="output folder"
+    ) == Path("/plates/plate-a/elsewhere")
+    with pytest.raises(TypeError, match="output dataset root is not known"):
+        input_dataset_only.resolve(
+            "new/output.tif", PlateOutputFileDeclaration(), owner="test output"
+        )
 
 
 def test_dataclass_resolution_returns_absolute_copy_and_preserves_authored_value() -> (
@@ -204,8 +233,8 @@ def test_dataclass_resolution_returns_absolute_copy_and_preserves_authored_value
 
     assert compiled is not authored
     assert compiled.template == Path("/plates/plate-a/templates/template.tif")
-    assert compiled.output_root == Path("/plates/plate-a/exports")
-    assert compiled.nested.debug_bundle == Path("/plates/plate-a/debug/bundle.pkl")
+    assert compiled.output_root == Path("/plates/plate-a_out/exports")
+    assert compiled.nested.debug_bundle == Path("/plates/plate-a_out/debug/bundle.pkl")
     assert compiled.ordinary_path == Path("owned/by/another/subsystem")
     assert authored == DeclaredPathConfig()
 
@@ -240,7 +269,9 @@ def test_callable_compilation_resolves_authored_and_default_declared_paths() -> 
     restored = pickle.loads(pickle.dumps(captured))
     assert restored.prepared_canonical_signature == captured.prepared_canonical_signature
     assert restored.declared_path_parameters == captured.declared_path_parameters
-    assert restored.resolve_declared_paths({}, resolver) == {"template_path": expected}
+    (declared,) = restored.declared_files({}, resolver, owner="callable")
+    assert (declared.parameter, declared.path) == ("template_path", expected)
+    assert next(compiled_default.iter_invocations()).declared_files == (declared,)
 
 
 def test_path_declarations_follow_live_or_captured_signature_epoch() -> None:
@@ -285,7 +316,7 @@ def test_config_annotations_delegate_to_nominal_path_declarations() -> None:
         DatasetPathDeclaration.from_annotation(
             path_planning_annotations["global_output_folder"]
         ),
-        PlateOutputDirectoryDeclaration,
+        OutputParentDirectoryDeclaration,
     )
     assert DatasetPathDeclaration.from_annotation(
         debug_annotations["compiled_execution_bundle_path"]

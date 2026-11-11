@@ -58,9 +58,9 @@ from openhcs.core.axis_filter import (
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
-    CompilationDatasetScope,
     CompilationSession,
     ResolvedPipelineDefinition,
+    require_one_writer_per_declared_file,
     resolve_declared_dataclass_paths,
 )
 from openhcs.core.source_workspace_projection import (
@@ -1568,15 +1568,11 @@ class PipelineCompiler:
                         server_mode=is_zmq_execution,
                     ),
                 )
-            path_resolver = CompilationPathResolver(
-                dataset_scope=CompilationDatasetScope.from_path(orchestrator.dataset_root),
+            path_resolver, effective_config = CompilationPathResolver.for_dataset(
+                orchestrator.dataset_root,
+                effective_config,
                 filemanager=orchestrator.filemanager,
                 backend=Backend.DISK.value,
-            )
-            effective_config = resolve_declared_dataclass_paths(
-                effective_config,
-                path_resolver,
-                owner="PipelineConfig",
             )
             num_workers = effective_config.num_workers
             num_workers = debug_execution_policy.compile_worker_count(num_workers)
@@ -1592,6 +1588,7 @@ class PipelineCompiler:
                 pipeline_inputs,
                 steps=resolved_steps,
             )
+            path_resolver = path_resolver.reading_files_of(pipeline_inputs)
             PipelineCompiler.validate_backend_compatibility(
                 orchestrator,
                 effective_config.vfs_config,
@@ -1632,6 +1629,7 @@ class PipelineCompiler:
                 axis_request,
                 axis_values_to_process,
             )
+            require_one_writer_per_declared_file(compiled_contexts)
             worker_assignments = PipelineCompiler._calculate_worker_assignments(
                 list(compiled_contexts.keys()),
                 num_workers,

@@ -232,7 +232,6 @@ RUNTIME_MODULE_GLOBS = ("openhcs/runtime/zmq_*.py",)
 # P renames them with processing.
 RUNTIME_FOREIGN_NAMES = frozenset(
     {
-        ("openhcs/core/config.py", "PlateOutputDirectory"),
         ("openhcs/core/config.py", "PlateOutputFile"),
         ("openhcs/core/orchestrator/bundle_execution.py", "PLATE"),
         ("openhcs/core/orchestrator/worker_execution.py", "PLATE"),
@@ -324,7 +323,6 @@ KERNEL_DOMAIN_REFERENCES = frozenset(
         ("openhcs/core/callable_contract.py", "plate"),
         ("openhcs/core/components/parser_metaprogramming.py", "include_site"),
         ("openhcs/core/components/parser_metaprogramming.py", "plate_name"),
-        ("openhcs/core/config.py", "PlateOutputDirectory"),
         ("openhcs/core/config.py", "PlateOutputFile"),
         ("openhcs/core/dataset_sources/openhcs_format.py", "PLATE_NAME"),
         ("openhcs/core/dataset_sources/openhcs_format.py", "get_plate_acquisition_datetime"),

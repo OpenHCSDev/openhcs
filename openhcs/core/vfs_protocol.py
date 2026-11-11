@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, Any, get_args, get_origin
+from typing import Annotated, Any, ClassVar, get_args, get_origin
 
 
 class FileManagerLike(ABC):
@@ -100,8 +100,143 @@ class FileManagerLike(ABC):
         """Ensure a directory exists in the selected backend."""
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OutputFileOf:
+    """The file an earlier step writes through one of its output-file parameters.
+
+    A pipeline author writes it as the argument of an input-file parameter in
+    place of a path: ``OutputFileOf(step="fit", parameter="model_file")``.
+    """
+
+    step: str
+    parameter: str
+
+
+class DeclaredFileLinkError(ValueError):
+    """An ``OutputFileOf`` argument names no file an earlier step writes."""
+
+
+class SeveralWritersOfDeclaredFileError(ValueError):
+    """More than one call would write the same declared output file."""
+
+
+class DeclaredFileWrites:
+    """The declared output files the calls of one execution have claimed."""
+
+    def __init__(self) -> None:
+        self._writer_by_path: dict[Path, str] = {}
+
+    def claim(self, path: Path, writer: str) -> None:
+        """Record ``writer`` as the one call that writes ``path``."""
+
+        if path in self._writer_by_path:
+            raise SeveralWritersOfDeclaredFileError(
+                f"Declared output file {path} would be written twice in one "
+                f"execution: first by {self._writer_by_path[path]}, again by "
+                f"{writer}. A declared output file has one writer; run the step "
+                "once for the plate, or give each call its own file."
+            )
+        self._writer_by_path[path] = writer
+
+
+@dataclass(frozen=True, slots=True)
+class DeclaredFile:
+    """One declared path parameter of a compiled invocation, resolved."""
+
+    parameter: str
+    path: Path
+    backend: str
+    declaration: "DatasetPathDeclaration"
+
+    def require_produced_before(self, step_index: int, *, owner: str) -> None:
+        """Check that whatever writes this path runs before ``step_index``."""
+
+        del step_index, owner
+
+    def before_call(
+        self,
+        *,
+        filemanager: FileManagerLike,
+        writes: DeclaredFileWrites,
+        call: str,
+    ) -> None:
+        """Check, just before the callable runs, what compilation could not."""
+
+        if self.declaration.writes_file:
+            writes.claim(self.path, f"{call} parameter {self.parameter!r}")
+            filemanager.ensure_directory(self.path.parent, self.backend)
+
+
+@dataclass(frozen=True, slots=True)
+class LinkedInputFile(DeclaredFile):
+    """A declared input file that an earlier step of the same pipeline writes."""
+
+    producer_step_index: int
+    producer_step_name: str
+    producer_parameter: str
+
+    def require_produced_before(self, step_index: int, *, owner: str) -> None:
+        if self.producer_step_index >= step_index:
+            raise DeclaredFileLinkError(
+                f"{owner} reads the file step {self.producer_step_name!r} (index "
+                f"{self.producer_step_index}) writes through "
+                f"{self.producer_parameter!r}, but that step does not run earlier "
+                f"than step index {step_index}."
+            )
+
+    def before_call(
+        self,
+        *,
+        filemanager: FileManagerLike,
+        writes: DeclaredFileWrites,
+        call: str,
+    ) -> None:
+        del writes
+        if not filemanager.exists(self.path, self.backend):
+            raise FileNotFoundError(
+                f"{call} parameter {self.parameter!r} reads {self.path}, which "
+                f"step {self.producer_step_name!r} (index "
+                f"{self.producer_step_index}) declares it writes through "
+                f"{self.producer_parameter!r}, but the file does not exist."
+            )
+
+
+class ProducedFileLookup(ABC):
+    """The compiler's table of files that steps of one pipeline write."""
+
+    @abstractmethod
+    def linked_input_file(
+        self,
+        parameter: str,
+        link: OutputFileOf,
+        declaration: "DatasetPathDeclaration",
+        *,
+        owner: str,
+    ) -> LinkedInputFile:
+        """Return the consumer's record for the file ``link`` names."""
+
+
+class PathRoots(ABC):
+    """The roots relative declared paths of one compilation resolve against."""
+
+    @abstractmethod
+    def input_dataset_root(self) -> Path:
+        """Return the plate being processed."""
+
+    @abstractmethod
+    def output_dataset_root(self) -> Path:
+        """Return the dataset this compilation writes."""
+
+
 class DatasetPathDeclaration(ABC):
     """Nominal declaration for a path resolved against one compilation plate."""
+
+    writes_file: ClassVar[bool] = False
+    """Whether the callable creates one file at the path (so it has one writer)."""
+
+    @abstractmethod
+    def root(self, roots: PathRoots) -> Path:
+        """Return the root a relative path of this declaration resolves against."""
 
     @abstractmethod
     def validate_target(
@@ -112,6 +247,22 @@ class DatasetPathDeclaration(ABC):
         backend: str,
     ) -> None:
         """Validate the resolved target without creating it."""
+
+    def linked_file(
+        self,
+        parameter: str,
+        link: OutputFileOf,
+        produced_files: ProducedFileLookup,
+        *,
+        owner: str,
+    ) -> LinkedInputFile:
+        """Return the record for an argument that names an earlier step's file."""
+
+        del parameter, produced_files
+        raise TypeError(
+            f"{owner} is declared {type(self).__name__} and received {link!r}; "
+            "only an input file parameter can read a file another step writes."
+        )
 
     @classmethod
     def from_annotation(cls, annotation: Any) -> "DatasetPathDeclaration | None":
@@ -142,9 +293,32 @@ class DatasetPathDeclaration(ABC):
         )
 
 
+class InputDatasetPathDeclaration(DatasetPathDeclaration):
+    """A path that, when relative, lies in the plate being processed."""
+
+    def root(self, roots: PathRoots) -> Path:
+        return roots.input_dataset_root()
+
+
+class OutputDatasetPathDeclaration(DatasetPathDeclaration):
+    """A path that, when relative, lies in the dataset this compilation writes."""
+
+    def root(self, roots: PathRoots) -> Path:
+        return roots.output_dataset_root()
+
+    def validate_target(
+        self,
+        target: Path,
+        *,
+        filemanager: FileManagerLike,
+        backend: str,
+    ) -> None:
+        del target, filemanager, backend
+
+
 @dataclass(frozen=True, slots=True)
-class PlateInputFileDeclaration(DatasetPathDeclaration):
-    """Existing plate-relative input file."""
+class PlateInputFileDeclaration(InputDatasetPathDeclaration):
+    """Existing input file, or the file an earlier step writes."""
 
     def validate_target(
         self,
@@ -158,9 +332,19 @@ class PlateInputFileDeclaration(DatasetPathDeclaration):
         if filemanager.is_dir(target, backend):
             raise IsADirectoryError(f"Declared input file is a directory: {target}")
 
+    def linked_file(
+        self,
+        parameter: str,
+        link: OutputFileOf,
+        produced_files: ProducedFileLookup,
+        *,
+        owner: str,
+    ) -> LinkedInputFile:
+        return produced_files.linked_input_file(parameter, link, self, owner=owner)
+
 
 @dataclass(frozen=True, slots=True)
-class PlateInputDirectoryDeclaration(DatasetPathDeclaration):
+class PlateInputDirectoryDeclaration(InputDatasetPathDeclaration):
     """Existing plate-relative input directory."""
 
     def validate_target(
@@ -181,22 +365,24 @@ class PlateInputDirectoryDeclaration(DatasetPathDeclaration):
 
 
 @dataclass(frozen=True, slots=True)
-class PlateOutputFileDeclaration(DatasetPathDeclaration):
-    """Plate-relative output file whose writer owns creation."""
+class PlateOutputFileDeclaration(OutputDatasetPathDeclaration):
+    """File in the output dataset that exactly one call of the callable writes."""
 
-    def validate_target(
-        self,
-        target: Path,
-        *,
-        filemanager: FileManagerLike,
-        backend: str,
-    ) -> None:
-        del target, filemanager, backend
+    writes_file: ClassVar[bool] = True
 
 
 @dataclass(frozen=True, slots=True)
-class PlateOutputDirectoryDeclaration(DatasetPathDeclaration):
-    """Plate-relative output directory whose writer owns creation."""
+class PlateOutputDirectoryDeclaration(OutputDatasetPathDeclaration):
+    """Directory in the output dataset; its writers create it and share it."""
+
+
+@dataclass(frozen=True, slots=True)
+class OutputParentDirectoryDeclaration(InputDatasetPathDeclaration):
+    """Directory under which output datasets are created.
+
+    It defines the output dataset root, so a relative value resolves against the
+    input plate.
+    """
 
     def validate_target(
         self,
@@ -212,3 +398,4 @@ PlateInputFile = Annotated[Path, PlateInputFileDeclaration()]
 PlateInputDirectory = Annotated[Path, PlateInputDirectoryDeclaration()]
 PlateOutputFile = Annotated[Path, PlateOutputFileDeclaration()]
 PlateOutputDirectory = Annotated[Path, PlateOutputDirectoryDeclaration()]
+OutputParentDirectory = Annotated[Path, OutputParentDirectoryDeclaration()]

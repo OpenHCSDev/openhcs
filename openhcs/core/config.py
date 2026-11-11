@@ -71,7 +71,7 @@ from openhcs.runtime.viewer_display import (
     NapariSlots,
     ViewerSlotFamily,
 )
-from openhcs.core.vfs_protocol import PlateOutputDirectory, PlateOutputFile
+from openhcs.core.vfs_protocol import OutputParentDirectory, PlateOutputFile
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.component_set import ComponentSet
@@ -1106,14 +1106,15 @@ class PathPlanningConfig(PartitionFilterConfig):
     """Non-empty suffix appended to the input dataset name to form the output dataset root."""
 
     global_output_folder: Annotated[
-        Optional[PlateOutputDirectory], abbreviation("global_folder")
+        Optional[OutputParentDirectory], abbreviation("global_folder")
     ] = None
     """
     Optional parent directory for output dataset roots.
 
     ``None`` creates the output root beside the input dataset. An explicit path is
-    resolved to an absolute directory during compilation, then combined with the
-    input dataset name and ``output_dir_suffix``.
+    resolved to an absolute directory during compilation (a relative one against
+    the input dataset, because this folder defines the output root), then combined
+    with the input dataset name and ``output_dir_suffix``.
     """
 
     sub_dir: Annotated[str, abbreviation("subdir")] = "images"
@@ -1401,6 +1402,7 @@ class CompilationDebugConfig(AnnotatedDataclassValidationMixin, Enableable):
     ] = None
     """Destination for a pickle of the immutable compiled execution bundle.
 
+    A relative path lies in the output dataset root.
     No bundle is written when this path is ``None``. The pickle is diagnostic
     state for reproducing or inspecting compilation, not a normal pipeline result.
     """
