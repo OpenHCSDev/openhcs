@@ -24,7 +24,7 @@ from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectInstanceKey,
 )
 

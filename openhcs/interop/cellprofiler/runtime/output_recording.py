@@ -24,6 +24,11 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable.callable_contract import CallableContract
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
+from openhcs.core.object_labels.runtime_relationships import (
+    DirectedObjectRelationshipPayload,
+    ObjectRelationship,
+    ObjectRelationshipDeclaration,
+)
 from openhcs.core.payload.aligned_image_payload import (
     AlignedImageSliceContext,
     ImageOutputBundle,
@@ -44,11 +49,6 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
 )
 from openhcs.core.payload.runtime_output_matching import RuntimeMatchedOutput
-from openhcs.core.runtime_relationships import (
-    DirectedObjectRelationshipPayload,
-    ObjectRelationship,
-    ObjectRelationshipDeclaration,
-)
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.invocation import (

@@ -55,7 +55,7 @@ from openhcs.core.pipeline.artifact_planning import (
 from openhcs.core.util.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.callable.runtime_adapters import runtime_adapter
 from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
+from openhcs.core.object_labels.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.materialization.presets import csv_only
 from openhcs.domains.microscopy.axes import Microscopy

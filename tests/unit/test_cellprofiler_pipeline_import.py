@@ -220,7 +220,7 @@ def test_adjacent_filters_preserve_original_named_object_lineage(
     from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
     from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
     from openhcs.core.io.pipeline_document import PipelineDocumentCodec
-    from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
+    from openhcs.core.object_labels.runtime_relationships import ObjectRelationshipDeclaration
 
     cppipe_path = Path("pipelines/repeated-filters.cppipe")
     filemanager = _MemoryFileManager(

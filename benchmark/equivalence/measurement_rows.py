@@ -69,7 +69,7 @@ from openhcs.core.payload.runtime_tabular_values import (
     MeasurementObjectRowIdentity,
     measurement_row_mapping,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectInstanceKey,
 )
 

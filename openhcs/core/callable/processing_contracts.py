@@ -56,7 +56,6 @@ from openhcs.core.payload.runtime_output_matching import (
     runtime_output_tuple,
 )
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
@@ -544,35 +543,6 @@ class Pure2DAuxiliaryOutputAggregator(
         plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         """Aggregate compatible per-slice auxiliary values."""
-
-
-class DirectedRelationshipPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator):
-    """Aggregate directed relationships over one declared PURE_2D plane axis."""
-
-    value_type = DirectedObjectRelationshipPayload
-
-    def aggregate_values(
-        self,
-        values: list[Any],
-        memory_type: str,
-        *,
-        plane_axis: type[RuntimePlaneAxis],
-    ) -> DirectedObjectRelationshipPayload:
-        del memory_type, plane_axis
-        return DirectedObjectRelationshipPayload(
-            source_ids=tuple(
-                source_id for value in values for source_id in value.source_ids
-            ),
-            target_ids=tuple(
-                target_id for value in values for target_id in value.target_ids
-            ),
-            slice_indices=tuple(
-                slice_index
-                for slice_index, value in enumerate(values)
-                for _target_id in value.target_ids
-            ),
-            slice_count=len(values),
-        )
 
 
 class SpatialGridPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator):

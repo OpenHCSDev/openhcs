@@ -64,7 +64,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
 )
 from openhcs.core.payload.runtime_tabular_values import measurement_row_mapping

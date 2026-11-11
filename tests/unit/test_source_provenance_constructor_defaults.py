@@ -18,7 +18,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationship,
     ObjectRelationshipDeclaration,

@@ -72,7 +72,7 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
     ObjectCoreMeasurementFeature,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectInstanceKey,
     ObjectInstanceRelationship,

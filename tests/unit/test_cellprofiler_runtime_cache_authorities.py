@@ -34,13 +34,13 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
 from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomain
-from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
+from openhcs.core.object_labels.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.core.measurements.measurement_feature_queries import (

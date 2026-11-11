@@ -74,7 +74,7 @@ from openhcs.core.equivalence.cells import (
 from openhcs.core.equivalence.measurement_features import (
     object_measurement_feature_matches_marker,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     ObjectInstanceKey,
     ObjectLabelInstanceDomains,
 )

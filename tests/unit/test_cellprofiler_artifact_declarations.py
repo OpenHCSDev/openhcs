@@ -47,7 +47,7 @@ from openhcs.core.callable.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     PipelineInvocationContractProviderAuthority,
 )
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
+from openhcs.core.object_labels.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,

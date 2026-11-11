@@ -55,7 +55,7 @@ from openhcs.core.runtime_store.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.measurements.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
     ObjectRelationship,

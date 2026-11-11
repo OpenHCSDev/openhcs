@@ -29,7 +29,7 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipDeclaration,
 )

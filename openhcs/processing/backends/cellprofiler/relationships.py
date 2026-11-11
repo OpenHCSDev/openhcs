@@ -5,8 +5,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import TYPE_CHECKING, Annotated
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectParentReferenceFeatureMarker,
+    ObjectRelationshipDeclaration,
 )
 from openhcs.core.axes.alias_property import AliasProperty
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
@@ -31,7 +32,6 @@ from openhcs.core.callable.runtime_batch_contracts import (
     SliceIndexRuntimeParameter,
     runtime_callable_defaults,
 )
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementStatistic,
@@ -832,7 +832,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
 )
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationshipPayloadKernel,
     object_label_parent_child_payload,
@@ -853,9 +853,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_value_with_dense_labels,
 )
-from openhcs.core.runtime_relationships import (
-    ObjectRelationship,
-)
+from openhcs.core.object_labels.runtime_relationships import ObjectRelationship
 from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,

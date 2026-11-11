@@ -11,6 +11,10 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
+from openhcs.core.object_labels.runtime_relationships import (
+    DirectedObjectRelationshipPayload,
+    ObjectRelationshipDeclaration,
+)
 from openhcs.interop.cellprofiler.object_label_variants import SmallRemovedLabels
 from openhcs.constants.constants import MemoryType
 from openhcs.core.payload.runtime_profile import RuntimeProfiler
@@ -34,9 +38,6 @@ from openhcs.core.pipeline.function_contracts import (
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.core.callable.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.runtime_relationships import (
-    DirectedObjectRelationshipPayload,
-)
 from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
@@ -44,7 +45,6 @@ from openhcs.core.payload.runtime_tabular_values import (
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,

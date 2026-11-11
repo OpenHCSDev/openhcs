@@ -698,7 +698,7 @@ from openhcs.core.object_labels.runtime_object_label_domains import (
     ObjectLabelIdDomainStrategy,
     PresentObjectLabelIdsDomainDeclaration,
 )
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     object_label_identity_lineage_payload,
     object_label_parent_child_payload,

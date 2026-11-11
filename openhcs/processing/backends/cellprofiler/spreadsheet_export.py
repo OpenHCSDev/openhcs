@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
+from openhcs.core.object_labels.runtime_relationships import (
+    ObjectRelationship,
+    ObjectRelationshipDeclaration,
+)
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CellProfilerMeasurementDialect,
 )
@@ -66,10 +70,6 @@ from openhcs.core.callable.runtime_batch_contracts import (
 )
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
-)
-from openhcs.core.runtime_relationships import (
-    ObjectRelationship,
-    ObjectRelationshipDeclaration,
 )
 from openhcs.core.source.source_image_provenance import (
     source_component_metadata_consensus,

@@ -15,16 +15,16 @@ from openhcs.core.measurements.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQuery,
     RuntimeObjectSliceMeasurementQuery,
 )
+from openhcs.core.object_labels.runtime_relationships import (
+    ObjectRelationship,
+    ObjectRelationshipDeclaration,
+)
 from openhcs.core.runtime_store.runtime_artifact_queries import MeasurementLabelSliceFeatureQuery
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
-)
-from openhcs.core.runtime_relationships import (
-    ObjectRelationship,
-    ObjectRelationshipDeclaration,
 )
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,

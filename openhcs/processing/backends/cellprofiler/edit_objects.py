@@ -18,12 +18,12 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.interop.cellprofiler.module_artifact_declarations import (
-    ObjectLineageTransformContractModule,
-)
-from openhcs.core.runtime_relationships import (
+from openhcs.core.object_labels.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     object_label_parent_child_payload,
+)
+from openhcs.interop.cellprofiler.module_artifact_declarations import (
+    ObjectLineageTransformContractModule,
 )
 from openhcs.core.object_labels.runtime_object_label_domains import (
     PresentObjectLabelIdsDomainDeclaration,
