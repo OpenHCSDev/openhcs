@@ -52,16 +52,6 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.source.source_image_provenance import SourceImageIdentity
 
-OpenHCSMetadataHandler = None  # registration slot
-def _register_OpenHCSMetadataHandler(val):
-    global OpenHCSMetadataHandler
-    OpenHCSMetadataHandler = val
-
-SourceBindingWorkspaceProjector = None  # registration slot
-def _register_SourceBindingWorkspaceProjector(val):
-    global SourceBindingWorkspaceProjector
-    SourceBindingWorkspaceProjector = val
-
 
 
 LookupValueT = TypeVar("LookupValueT")
@@ -723,6 +713,7 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
             return self
         admitted = self.source_accepted_entries.get(declarations)
         if admitted is None:
+            from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
 
             admitted = VirtualWorkspaceSourceProjectionCacheEntry(
                 self.metadata,
@@ -892,6 +883,7 @@ class WorkspaceSourceProjections:
 
     def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
         """Observe workspace eligibility live while retaining admitted providers."""
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
         if isinstance(self.metadata_handler, OpenHCSMetadataHandler):
             return (self.metadata_handler,)
@@ -942,6 +934,7 @@ class WorkspaceSourceProjections:
                     metadata,
                 )
                 if projection is not None and self.source_bindings is not None:
+                    from openhcs.core.source.source_binding_workspace import SourceBindingWorkspaceProjector
 
                     projection = SourceBindingWorkspaceProjector(
                         self.source_bindings
@@ -1131,6 +1124,3 @@ class VirtualWorkspaceSourceProjectionBuilder:
             ),
             workspace_root=str(self.dataset_root),
         )
-
-from openhcs.core.dataset_sources.interfaces import _register_VirtualWorkspacePathLookup
-_register_VirtualWorkspacePathLookup(VirtualWorkspacePathLookup)

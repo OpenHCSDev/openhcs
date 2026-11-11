@@ -40,31 +40,6 @@ from openhcs.core.source.source_spatial_domain import (
 )
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
-MeasurementDialect = None  # registration slot
-def _register_MeasurementDialect(val):
-    global MeasurementDialect
-    MeasurementDialect = val
-
-ConcatenatedColumnarRows = None  # registration slot
-def _register_ConcatenatedColumnarRows(val):
-    global ConcatenatedColumnarRows
-    ConcatenatedColumnarRows = val
-
-MeasurementRowOwnership = None  # registration slot
-def _register_MeasurementRowOwnership(val):
-    global MeasurementRowOwnership
-    MeasurementRowOwnership = val
-
-MeasurementRowsAxisProjection = None  # registration slot
-def _register_MeasurementRowsAxisProjection(val):
-    global MeasurementRowsAxisProjection
-    MeasurementRowsAxisProjection = val
-
-MeasurementTableAxisProjection = None  # registration slot
-def _register_MeasurementTableAxisProjection(val):
-    global MeasurementTableAxisProjection
-    MeasurementTableAxisProjection = val
-
 
 @dataclass(slots=True, kw_only=True)
 class MeasurementTable(
@@ -165,6 +140,9 @@ class MeasurementTable(
         )
         if not selects_slice_rows:
             return self
+        from openhcs.core.runtime_store.runtime_artifact_queries import (
+            MeasurementTableAxisProjection,
+        )
 
         return MeasurementTableAxisProjection(
             axis=MeasurementRowAxisField.SLICE_INDEX,
@@ -232,6 +210,9 @@ class MeasurementTable(
                 "Measurement table unions require one exact source-image owner; "
                 f"got {source_names!r}."
             )
+        from openhcs.core.measurements.measurement_row_materialization import (
+            ConcatenatedColumnarRows,
+        )
 
         return cls(
             name=name,
@@ -248,6 +229,10 @@ class MeasurementTable(
     ) -> MeasurementTable:
         """Re-own mixed subject rows as one lossless artifact-level export table."""
         cls._require_join(name, tables)
+        from openhcs.core.measurements.measurement_row_materialization import (
+            ConcatenatedColumnarRows,
+            MeasurementRowOwnership,
+        )
 
         return cls(
             name=name,
@@ -384,6 +369,9 @@ class MeasurementTable(
     def _row_axis_domains(
         name: str, tables: tuple[MeasurementTable, ...], axis: MeasurementRowAxisField
     ) -> tuple[tuple[int, ...], ...] | None:
+        from openhcs.core.measurements.measurement_row_materialization import (
+            MeasurementRowsAxisProjection,
+        )
 
         projections = tuple(
             MeasurementRowsAxisProjection.from_rows(table.rows) for table in tables
@@ -1666,6 +1654,7 @@ class MeasurementSubject:
         """Return the concrete source image represented by this subject, if any."""
         if self.scope is not MeasurementScope.SAMPLE or self.name is None:
             return None
+        from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 
         if normalize_runtime_identifier(self.name) in (
             MeasurementDialect.unqualified_sample_names()

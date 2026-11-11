@@ -27,11 +27,6 @@ from zmqruntime.viewer_protocol import (
 from python_introspect import to_jsonable
 from openhcs.core.axes.axis_declarations import AxisFamily
 
-PlainImagePayload = None  # registration slot
-def _register_PlainImagePayload(val):
-    global PlainImagePayload
-    PlainImagePayload = val
-
 SourceSpatialAliasValueT = TypeVar("SourceSpatialAliasValueT")
 
 # The scalar written outside a crop. numpy casts it to the array's dtype, and the
@@ -690,6 +685,7 @@ class SourceSpatialDomainAdapter(ABC):
     ) -> "SourceSpatialDomainAdapter | None":
         """Return the placement adapter of a placed value or a bare NumPy array."""
         if isinstance(value, np.ndarray):
+            from openhcs.core.payload.runtime_image_values import PlainImagePayload
 
             value = PlainImagePayload(value)
         if not isinstance(value, SpatiallyPlacedValue):

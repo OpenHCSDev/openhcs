@@ -20,7 +20,6 @@ from openhcs.core.callable.callable_contract import (
 )
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.callable.callable_contract import CallableContract
-from openhcs.core.callable.callable_contract import register_function_reference_type
 
 if TYPE_CHECKING:
     from openhcs.processing.backends.lib_registry.unified_registry import (
@@ -374,5 +373,3 @@ class FunctionReferenceTransportAuthority:
             if exc.name == f"{module_name}.{function_name}":
                 return None
             raise
-
-register_function_reference_type(FunctionReference)

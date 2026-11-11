@@ -40,7 +40,6 @@ from openhcs.core.callable.variable_component_stack_requirement import (
 from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.core.axes.axis_declarations import AxisRole
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.callable.callable_contract import register_special_input_parameter_accepts_sequence
 
 F = TypeVar("F", bound=Callable)
 
@@ -562,8 +561,3 @@ def special_input_parameter_accepts_sequence(
     """Return whether one callable parameter declares an ordered value sequence."""
 
     return get_origin(parameter.annotation) in (Sequence, tuple, list)
-
-register_special_input_parameter_accepts_sequence(special_input_parameter_accepts_sequence)
-
-from openhcs.core.artifacts.kinds import _register_annotation_accepts_runtime_type
-_register_annotation_accepts_runtime_type(annotation_accepts_runtime_type)

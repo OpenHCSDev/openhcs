@@ -2348,8 +2348,3 @@ def object_label_variant_matching_labels(
         variant,
         labels,
     )
-
-from openhcs.core.object_labels.runtime_object_label_domains import _register_object_label_project_plane
-_register_object_label_project_plane(object_label_project_plane)
-from openhcs.core.object_labels.runtime_object_label_domains import _register_object_label_validate_plane_count
-_register_object_label_validate_plane_count(object_label_validate_plane_count)

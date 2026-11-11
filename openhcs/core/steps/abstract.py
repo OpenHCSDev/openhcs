@@ -38,16 +38,6 @@ from openhcs.core.runtime_store.runtime_stores import (
 )
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 
-OpenHCSMetadataTarget = None  # registration slot
-def _register_OpenHCSMetadataTarget(val):
-    global OpenHCSMetadataTarget
-    OpenHCSMetadataTarget = val
-
-PostExecuteHook = None  # registration slot
-def _register_PostExecuteHook(val):
-    global PostExecuteHook
-    PostExecuteHook = val
-
 # ExecutingContext is used in type hints
 
 
@@ -74,6 +64,7 @@ class StepExecutionObservation:
     def __post_init__(self) -> None:
         projections = dict(self.source_projection_entries_by_target)
         if projections:
+            from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 
             for target, entries in projections.items():
                 if not isinstance(target, OpenHCSMetadataTarget):
@@ -119,6 +110,7 @@ class StepExecutionObservation:
     def combine(
         cls, observations: Iterable["StepExecutionObservation"]
     ) -> "StepExecutionObservation":
+        from openhcs.core.util.post_execute import PostExecuteHook
 
         locations = {}
         paths = []

@@ -34,16 +34,6 @@ from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.io.virtual_workspace_metadata import AtomicMetadataWriter, OpenHCSMetadataSubdirectories, VirtualWorkspaceSourceProjectionEntries, get_metadata_path
 from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer, SourceProjectionSet
 
-OpenHCSMetadataGenerator = None  # registration slot
-def _register_OpenHCSMetadataGenerator(val):
-    global OpenHCSMetadataGenerator
-    OpenHCSMetadataGenerator = val
-
-OpenHCSMetadataHandler = None  # registration slot
-def _register_OpenHCSMetadataHandler(val):
-    global OpenHCSMetadataHandler
-    OpenHCSMetadataHandler = val
-
 
 logger = logging.getLogger(__name__)
 
@@ -385,6 +375,10 @@ def update_metadata_for_zarr_conversion(
     context: ExecutingContext,
 ) -> None:
     """Update OpenHCS metadata after a Zarr input conversion."""
+    from openhcs.core.dataset_sources.openhcs_format import (
+        OpenHCSMetadataGenerator,
+        OpenHCSMetadataHandler,
+    )
 
     metadata_path = get_metadata_path(dataset_root)
     writer = AtomicMetadataWriter()

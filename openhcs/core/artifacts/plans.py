@@ -31,11 +31,6 @@ from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurements.runtime_measurements import MeasurementSubject
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
-RuntimeValue = None  # registration slot
-def _register_RuntimeValue(val):
-    global RuntimeValue
-    RuntimeValue = val
-
 
 AnswerT = TypeVar("AnswerT")
 
@@ -527,6 +522,7 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
     def normalize_payload(self, value: object, *, axis_id: str) -> object:
         """Normalize a produced payload through this compiled storage scope."""
 
+        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 
         kind = self.artifact_type
         returned = RuntimeSliceProjection.match_alignment(

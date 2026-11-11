@@ -27,11 +27,6 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 from openhcs.core.config.streaming_config_declarations import ViewerFamily
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 
-StreamingConfig = None  # registration slot
-def _register_StreamingConfig(val):
-    global StreamingConfig
-    StreamingConfig = val
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -235,6 +230,7 @@ def get_all_streaming_ports(
 
     from objectstate.global_config import get_current_global_config
 
+    from openhcs.core.config.pipeline_config import StreamingConfig
 
     ports: list[int] = []
     base_config_type = get_base_config_type()

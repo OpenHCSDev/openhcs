@@ -519,25 +519,10 @@ def _declared_fields(cls: type) -> tuple[tuple[str, str, DeclaredValue], ...]:
     )
 
 
-_runtime_adapter_spec_cls: type | None = None
-_runtime_batch_callable_family: type | None = None
-
-
-def register_runtime_batch_callable_family(cls: type) -> None:
-    """Called by runtime_batch_contracts at import time."""
-    global _runtime_batch_callable_family
-    _runtime_batch_callable_family = cls
-
-
-def register_runtime_adapter_spec_type(cls: type) -> None:
-    """Called by runtime_adapters at import time."""
-    global _runtime_adapter_spec_cls
-    _runtime_adapter_spec_cls = cls
-
-
 def _runtime_adapter_spec_type() -> type:
-    assert _runtime_adapter_spec_cls is not None
-    return _runtime_adapter_spec_cls
+    from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
+
+    return RuntimeAdapterSpec
 
 
 def _request_binding_type() -> type:
@@ -919,6 +904,8 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         func: Callable[..., object] | "FunctionReference",
     ) -> "CallableContract":
         """Build a contract from callable attributes once at compiler boundary."""
+        from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchCallableFamily
+
         projection = CallableProjection.from_callable(func)
         declaration = CallableDeclaration.from_namespace(
             projection.namespace, projection.name,
@@ -936,7 +923,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
             func=func,
             function_name=projection.name,
             module_name=projection.module_name,
-            runtime_batch_executors=_runtime_batch_callable_family(
+            runtime_batch_executors=RuntimeBatchCallableFamily(
                 func=func,
                 raw_processing_function=declaration.raw_processing_function,
             ).executors(),
@@ -1175,11 +1162,13 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     def config_bound_parameters(self) -> tuple[inspect.Parameter, ...]:
         """PipelineConfig-owned parameters declared by the callable signature."""
 
+        from openhcs.core.config.pipeline_config import runtime_config_parameter
+
         signature = self.canonical_signature
         return tuple(
             normalized
             for parameter in signature.parameters.values()
-            for normalized in (_runtime_config_parameter_fn(parameter),) if _runtime_config_parameter_fn is not None
+            for normalized in (runtime_config_parameter(parameter),)
             if normalized is not None
         )
 
@@ -1588,6 +1577,10 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     def validate_artifact_input_parameter_bindings(self) -> None:
         """Validate exact artifact occurrences against the normalized callable ABI."""
 
+        from openhcs.core.pipeline.function_contracts import (
+            special_input_parameter_accepts_sequence,
+        )
+
         artifact_parameters = {}
         parameters = self.canonical_signature.parameters
         for parameter_name in self.artifact_input_parameter_names:
@@ -1639,7 +1632,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
                     self.runtime_adapter is not None
                     and self.runtime_adapter.manages_artifact_inputs
                 )
-                and not _special_input_parameter_accepts_sequence_fn(parameter)
+                and not special_input_parameter_accepts_sequence(parameter)
                 and any(
                     spec.artifact_type is not ImageArtifactType for spec in bound_specs
                 )
@@ -1953,18 +1946,10 @@ def _project_runtime_owned_parameter_exclusions(func: Any) -> None:
     )
 
 
-_processing_contract_type: type | None = None
+def _processing_contract_family() -> type["ProcessingContract"]:
+    from openhcs.core.callable.processing_contracts import ProcessingContract
 
-
-def register_processing_contract_type(cls: type) -> None:
-    """Called by processing_contracts at import time."""
-    global _processing_contract_type
-    _processing_contract_type = cls
-
-
-def _processing_contract_family() -> type:
-    assert _processing_contract_type is not None
-    return _processing_contract_type
+    return ProcessingContract
 
 
 def _attach_runtime_bound_parameter_metadata(
@@ -2104,18 +2089,11 @@ def creates_payload_axis(role: type[AxisRole]) -> Any:
     return decorator
 
 
-_function_reference_type: type | None = None
-
-
-def register_function_reference_type(cls: type) -> None:
-    """Called by function_reference at import time."""
-    global _function_reference_type
-    _function_reference_type = cls
-
-
 def _is_function_reference(func: Any) -> bool:
     """Return whether func is the compiler's nominal picklable reference."""
-    return _function_reference_type is not None and isinstance(func, _function_reference_type)
+    from openhcs.core.callable.function_reference import FunctionReference
+
+    return isinstance(func, FunctionReference)
 
 
 def _resolve_declared_callable(func: Any) -> Callable[..., object]:
@@ -2232,34 +2210,12 @@ class CallableProjection:
         return tuple(targets)
 
 
-_context_parameter_name: str | None = None
-_runtime_config_parameter_fn = None
-_special_input_parameter_accepts_sequence_fn = None
-
-
-def register_special_input_parameter_accepts_sequence(fn) -> None:
-    """Called by function_contracts at import time."""
-    global _special_input_parameter_accepts_sequence_fn
-    _special_input_parameter_accepts_sequence_fn = fn
-
-
-def register_runtime_config_parameter(fn) -> None:
-    """Called by pipeline_config at import time."""
-    global _runtime_config_parameter_fn
-    _runtime_config_parameter_fn = fn
-
-
-def register_context_parameter_name(name: str) -> None:
-    """Called by processing_context at import time."""
-    global _context_parameter_name
-    _context_parameter_name = name
-
-
 def _signature_context_parameter(signature: inspect.Signature) -> str | None:
     """Inject processing context into a callable that names its parameter."""
-    if _context_parameter_name is None:
-        return None
-    return _context_parameter_name if _context_parameter_name in signature.parameters else None
+    from openhcs.core.context.processing_context import ProcessingContext
+
+    parameter_name = ProcessingContext.require_parameter_name()
+    return parameter_name if parameter_name in signature.parameters else None
 
 
 def _nominal_argument_types(annotation: object) -> tuple[type, ...]:

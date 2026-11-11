@@ -19,16 +19,6 @@ from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS, StepSourc
 from openhcs.core.axes.axis_declarations import GroupingDeclaration, Ungrouped, is_grouping_declaration
 from openhcs.core.callable.function_patterns import FunctionInvocationKey, NormalizedFunctionItem
 
-ArtifactProducer = None  # registration slot
-def _register_ArtifactProducer(val):
-    global ArtifactProducer
-    ArtifactProducer = val
-
-ArtifactGraph = None  # registration slot
-def _register_ArtifactGraph(val):
-    global ArtifactGraph
-    ArtifactGraph = val
-
 _ClaimValue = TypeVar("_ClaimValue")
 
 PIPELINE_INPUT_ARTIFACT = ArtifactSpec.input(
@@ -116,6 +106,7 @@ class ArtifactDeclarationStepContext:
             )
         producers = tuple(self.available_artifact_producers)
         if producers:
+            from openhcs.core.pipeline.artifact_planning import ArtifactProducer
 
             invalid = tuple(
                 producer
@@ -151,6 +142,7 @@ class ArtifactDeclarationStepContext:
                 spec for spec in declared_sources if spec.ref() in primary_source_refs
             )
             if not main_flow_artifacts:
+                from openhcs.core.pipeline.artifact_planning import ArtifactProducer
 
                 main_flow_artifacts = ArtifactSpecCollection((PIPELINE_INPUT_ARTIFACT,))
                 declared_sources = declared_sources.rebind(main_flow_artifacts.specs)
@@ -229,6 +221,7 @@ class ArtifactDeclarationStepContext:
     ) -> "ArtifactDeclarationStepContext":
         """Return the forward declaration context after one artifact graph."""
 
+        from openhcs.core.pipeline.artifact_planning import ArtifactGraph
 
         if not isinstance(graph, ArtifactGraph):
             raise TypeError(

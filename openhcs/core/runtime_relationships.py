@@ -1173,6 +1173,3 @@ def object_label_identity_lineage_payload(
 def _require_name(value: str, field_name: str) -> None:
     if not value:
         raise ValueError(f"{field_name} cannot be empty.")
-
-from openhcs.core.artifacts.kinds import _register_ObjectRelationship
-_register_ObjectRelationship(ObjectRelationship)

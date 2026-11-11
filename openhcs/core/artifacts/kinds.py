@@ -57,41 +57,6 @@ from openhcs.core.object_labels.runtime_object_label_aggregation import ObjectLa
 from openhcs.core.measurements.measurement_row_materialization import MeasurementRowOwnership, measurement_rows_with_source_provenance
 from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 
-stack_image_payloads = None  # registration slot
-def _register_stack_image_payloads(val):
-    global stack_image_payloads
-    stack_image_payloads = val
-
-annotation_accepts_runtime_type = None  # registration slot
-def _register_annotation_accepts_runtime_type(val):
-    global annotation_accepts_runtime_type
-    annotation_accepts_runtime_type = val
-
-ObjectRelationship = None  # registration slot
-def _register_ObjectRelationship(val):
-    global ObjectRelationship
-    ObjectRelationship = val
-
-RuntimeValue = None  # registration slot
-def _register_RuntimeValue(val):
-    global RuntimeValue
-    RuntimeValue = val
-
-RuntimeArtifactLocation = None  # registration slot
-def _register_RuntimeArtifactLocation(val):
-    global RuntimeArtifactLocation
-    RuntimeArtifactLocation = val
-
-StoredRuntimeValue = None  # registration slot
-def _register_StoredRuntimeValue(val):
-    global StoredRuntimeValue
-    StoredRuntimeValue = val
-
-OpenHCSPlaneAddress = None  # registration slot
-def _register_OpenHCSPlaneAddress(val):
-    global OpenHCSPlaneAddress
-    OpenHCSPlaneAddress = val
-
 
 
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):
@@ -116,6 +81,9 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     def accepts_parameter_annotation(cls, annotation: object) -> bool:
         """Return whether an annotation accepts this artifact's runtime payload."""
 
+        from openhcs.core.pipeline.function_contracts import (
+            annotation_accepts_runtime_type,
+        )
 
         return any(
             annotation_accepts_runtime_type(annotation, runtime_type)
@@ -724,6 +692,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         target: OutputTarget,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
+        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
 
         projection = RuntimePlaneAxisValueProjection.require_runtime_slice_axis(
             plane_projection,
@@ -881,6 +850,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         *,
         keeps_memory_type: bool,
     ) -> object:
+        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
 
         components = {value.key.scope.component for value in values}
         if None in components or len(components) != 1:
@@ -929,6 +899,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         records: tuple[StoredRuntimeValue, ...],
         output_plan: ArtifactOutputPlan,
     ) -> tuple[StoredRuntimeValue, ...]:
+        from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
         if not output_plan.materialization_uses_source_identity_filename():
             return records
@@ -1359,6 +1330,11 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
         group_key: str | None,
     ) -> tuple[StoredRuntimeValue, ...]:
         from openhcs.constants.constants import Backend
+        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
+        from openhcs.core.runtime_store.runtime_stores import (
+            RuntimeArtifactLocation,
+            StoredRuntimeValue,
+        )
 
         if len(records) <= 1:
             return records
@@ -1391,6 +1367,7 @@ class ObjectLineageArtifactType(NominalPayloadKind, ArtifactType):
 
     @classmethod
     def runtime_payload_type(cls) -> type:
+        from openhcs.core.runtime_relationships import ObjectRelationship
 
         return ObjectRelationship
 
