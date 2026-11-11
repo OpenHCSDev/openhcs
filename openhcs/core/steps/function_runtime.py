@@ -550,28 +550,29 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             self.context.microscope_handler.parser,
         )
 
-    def load_input_stack(
+    def _resolve_matching_files(
         self,
-    ) -> tuple[list[str], RuntimeArrayData]:
+    ) -> tuple[
+        list[str],
+        tuple[str, ...],
+        VirtualWorkspaceSourceProjection | None,
+        ProducedOutputRecordIndex | None,
+        tuple[ProducedOutputSemantics, ...] | None,
+    ]:
         context = self.context
         plan = self.execution_plan
-        request = self
         if not context.microscope_handler:
             raise RuntimeError("DatasetSource not available in context.")
-
         output_manifest = step_output_manifest(context)
         producer_index = output_manifest.producer_record_index_for(
-            plan,
-            context.microscope_handler.parser,
+            plan, context.microscope_handler.parser,
         )
         producer_records = (
-            None
-            if producer_index is None
-            else producer_index.matching_records(str(request.pattern_group_info))
+            None if producer_index is None
+            else producer_index.matching_records(str(self.pattern_group_info))
         )
         producer_matching_files = (
-            ()
-            if producer_records is None
+            () if producer_records is None
             else tuple(record.output_path for record in producer_records)
         )
         matching_files = list(producer_matching_files)
@@ -581,7 +582,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         if not matching_files:
             matching_files = context.microscope_handler.path_list_from_pattern(
                 str(plan.input_dir),
-                request.pattern_group_info,
+                self.pattern_group_info,
                 context.filemanager,
                 plan.read_backend,
                 list(plan.variable_components) if plan.variable_components else None,
@@ -594,7 +595,6 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             if matching_files and not selected_paths:
                 raise NoStepOutputManifestMatch
             matching_files = selected_paths
-
         if producer_index is not None:
             producer_records = producer_index.source_binding_members(
                 matching_files,
@@ -604,7 +604,6 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             )
             matching_files = [record.output_path for record in producer_records]
             producer_matching_files = tuple(matching_files)
-
         if not matching_files:
             raise ValueError(
                 f"No matching files found for pattern group {self.pattern_repr} "
@@ -613,17 +612,13 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 f"(2) files don't match the pattern, or (3) pattern parsing failed. "
                 f"Check that input files exist and match the expected naming convention."
             )
-
         matching_files = self._filter_matching_files_for_group(matching_files)
-
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(
                 "Pattern %s matched %d files: %s",
-                self.pattern_repr,
-                len(matching_files),
+                self.pattern_repr, len(matching_files),
                 [Path(f).name for f in matching_files],
             )
-
         if not producer_matching_files:
             matching_files.sort()
         if logger.isEnabledFor(logging.DEBUG):
@@ -633,6 +628,16 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 [Path(f).name for f in matching_files],
             )
         matching_files = self._filter_matching_files_for_source_bindings(matching_files)
+        return matching_files, producer_matching_files, source_projection, producer_index, producer_records
+
+    def load_input_stack(
+        self,
+    ) -> tuple[list[str], RuntimeArrayData]:
+        context = self.context
+        plan = self.execution_plan
+        matching_files, producer_matching_files, source_projection, producer_index, producer_records = (
+            self._resolve_matching_files()
+        )
 
         full_file_paths = [
             self._input_memory_path(plan.input_dir, file_path)
