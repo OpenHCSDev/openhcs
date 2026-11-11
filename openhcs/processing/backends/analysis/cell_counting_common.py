@@ -75,8 +75,8 @@ class ThresholdMethod(Enum):
 
 
 @dataclass
-class CellCountResult:
-    """Results for single-channel cell counting."""
+class CellCountMeasurementFields:
+    """Shared measurement fields for cell counting results and serializable rows."""
 
     slice_index: int
     method: str
@@ -86,6 +86,12 @@ class CellCountResult:
     cell_intensities: list[float]
     detection_confidence: list[float]
     parameters_used: dict[str, Any]
+
+
+@dataclass
+class CellCountResult(CellCountMeasurementFields):
+    """Results for single-channel cell counting."""
+
     binary_mask: Any | None = None
 
     @classmethod

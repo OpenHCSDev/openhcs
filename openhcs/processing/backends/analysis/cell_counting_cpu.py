@@ -38,6 +38,7 @@ from openhcs.core.materialization.options import CsvOptions, JsonOptions, ROIOpt
 from openhcs.processing.backends.analysis.cell_counting_common import (
     AreaFilter,
     AreaFilterRequest,
+    CellCountMeasurementFields,
     CellCountResult,
     ColocalizationAnalysis,
     ColocalizationMethod,
@@ -61,17 +62,8 @@ WATERSHED_THRESHOLD_BACKEND = WatershedThresholdBackend(
 
 
 @dataclass(frozen=True)
-class CellCountMeasurementRow:
+class CellCountMeasurementRow(CellCountMeasurementFields):
     """Serializable per-plane measurements without the label-array payload."""
-
-    slice_index: int
-    method: str
-    cell_count: int
-    cell_positions: list[tuple[float, float]]
-    cell_areas: list[float]
-    cell_intensities: list[float]
-    detection_confidence: list[float]
-    parameters_used: dict[str, Any]
 
     @classmethod
     def from_result(cls, result: CellCountResult) -> CellCountMeasurementRow:
