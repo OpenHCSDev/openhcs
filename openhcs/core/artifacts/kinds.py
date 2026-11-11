@@ -50,6 +50,13 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     payload_shape: ClassVar[type[PayloadShape]] = AnyPayloadShape
     participates_in_measurement_source_names: ClassVar[bool] = False
     participates_in_main_flow_output: ClassVar[bool] = False
+    _runtime_value_type: ClassVar[type | None] = None
+
+    @staticmethod
+    def unwrap_runtime_value(value: object) -> object:
+        """Unwrap a RuntimeValue to its data; pass through raw payloads."""
+        rt = ArtifactType._runtime_value_type
+        return value.data if rt is not None and isinstance(value, rt) else value
     carries_source_image_context: ClassVar[bool] = False
 
     @classmethod
@@ -671,8 +678,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         target: OutputTarget,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
-        from openhcs.core.runtime_store.runtime_artifact_values import RuntimeValue
-
         projection = RuntimePlaneAxisValueProjection.require_runtime_slice_axis(
             plane_projection,
             output_value.slice_count,
@@ -683,7 +688,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
                 RuntimeSliceProjection.value_for_slice(
                     source_payload, projection.selected_plane(slice_index),
                 ),
-                RuntimeValue.payload_of(item),
+                ArtifactType.unwrap_runtime_value(item),
                 target,
                 None,
             )
