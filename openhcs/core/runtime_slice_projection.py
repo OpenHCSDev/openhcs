@@ -1,6 +1,7 @@
 """Nominal runtime-slice projection contracts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_plane_projection import (
     NoPlaneAxis,
     RuntimePlaneAxisProjector,
@@ -110,7 +111,6 @@ def preserve_declared_image_payload_axis(
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
-    from openhcs.core.runtime_object_labels import ObjectLabelValue
 
 RuntimeProjectionPrimitive: TypeAlias = str | bytes | int | float | bool | None
 RuntimeProjectionMapping: TypeAlias = Mapping[str, "RuntimeProjectionData"]

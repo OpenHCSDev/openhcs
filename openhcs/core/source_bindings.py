@@ -20,7 +20,11 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.core.artifacts.plans import ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
+from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from polystore.formats import get_format_from_extension
 from python_introspect import FieldLabel, RegisteredClassChoices
@@ -46,15 +50,11 @@ from openhcs.core.axis_boundaries import AxisChoices
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
 
 if TYPE_CHECKING:
-    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-    from openhcs.core.runtime_array_values import RuntimeArrayData
     from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.source_binding_selection import (
         SourceBoundAnchorPatternPolicy,
         SourcePatternResolutionContext,
     )
-    from openhcs.core.source_image_provenance import SourceImageProvenance
 
 SOURCE_ALIAS_PART_SEPARATOR = "__"
 SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"

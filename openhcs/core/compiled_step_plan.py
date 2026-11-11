@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
 from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.constants.constants import Backend, GPU_MEMORY_TYPES, MemoryType
+from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -21,6 +22,7 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,
 )
+from openhcs.core.config import StreamingConfig
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionPattern,
@@ -34,8 +36,7 @@ from openhcs.core.step_dependencies import StepInputDependency, UnresolvedStepIn
 from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
-    from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-    from openhcs.core.config import StreamingConfig
+    pass
 else:
     StreamingConfig = Any
 

@@ -11,11 +11,11 @@ from typing import Self
 from typing import TYPE_CHECKING
 
 from openhcs.core.axes import AxisFamily
+from openhcs.core.source_image_provenance import SourceImageProvenance
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.source_image_provenance import SourceImageProvenance
 
 
 class RuntimeSliceProjectableValue(ABC):

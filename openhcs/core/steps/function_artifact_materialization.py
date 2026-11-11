@@ -17,6 +17,7 @@ from polystore.streaming.viewer_transport import ViewerStreamProducer
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.axis_filter import step_axis_allows_config
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
@@ -68,7 +69,6 @@ from openhcs.core.runtime_image_values import as_runtime_value
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
-    from openhcs.core.context.processing_context import ExecutingContext
 
 
 logger = logging.getLogger(__name__)

@@ -19,9 +19,10 @@ from typing import TYPE_CHECKING, Any
 from typing import ClassVar
 import numpy as np
 
+from openhcs.core.source_image_provenance import SourceImageProvenance
+
 if TYPE_CHECKING:
     from openhcs.core.runtime_object_labels import ObjectLabelValue
-    from openhcs.core.source_image_provenance import SourceImageProvenance
 
 
 DeclaredObjectIds = tuple[int, ...] | list[int] | None

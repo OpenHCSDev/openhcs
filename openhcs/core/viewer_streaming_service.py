@@ -29,6 +29,8 @@ from polystore.streaming.viewer_transport import (
 from zmqruntime.config import ZMQConfig
 from zmqruntime.viewer_protocol import ViewerWireMapping
 
+from openhcs.core.config import StreamingConfig
+from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -54,8 +56,6 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
-    from openhcs.core.config import StreamingConfig
-    from openhcs.core.dataset_sources.source import DatasetSource
     from openhcs.runtime.viewer_protocol import (
         ManagedViewerLifecycleMixin,
         ViewerLaunchContext,

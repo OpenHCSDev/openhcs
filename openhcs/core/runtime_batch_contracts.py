@@ -13,16 +13,16 @@ from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration, KeywordRuntimeParameter
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.runtime_adapters import RuntimeImageExecutionContext
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
+from openhcs.core.runtime_stores import RuntimeArtifactBatch
 
 if TYPE_CHECKING:
     from openhcs.core.processing_contracts import ProcessingContract
-    from openhcs.core.runtime_stores import RuntimeArtifactBatch
-    from openhcs.core.context.processing_context import ExecutingContext
 
 
 F = TypeVar("F", bound=Callable)

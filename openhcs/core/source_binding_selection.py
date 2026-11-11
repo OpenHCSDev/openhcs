@@ -1,6 +1,7 @@
 """Shared source-binding candidate selection for planning and runtime."""
 
 from __future__ import annotations
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
@@ -73,7 +74,6 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
     from polystore.filemanager import FileManager
     from openhcs.core.context.processing_context import ExecutingContext
-    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 SourceCandidatePath = str

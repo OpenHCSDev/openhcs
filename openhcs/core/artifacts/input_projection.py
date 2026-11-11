@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.axes import Axis
+from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import FunctionStepExecutionScope
     from openhcs.core.function_patterns import FunctionInvocationKey
 
 

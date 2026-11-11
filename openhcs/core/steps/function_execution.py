@@ -7,7 +7,6 @@ import time
 import traceback
 from collections.abc import Callable, Mapping, Sequence
 from itertools import zip_longest
-from typing import TYPE_CHECKING
 
 from openhcs.constants.constants import (
     LOADABLE_IMAGE_EXTENSIONS,
@@ -18,6 +17,7 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.runtime_stores import RuntimeArtifactInput
 from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.core.callable_contract import ImagePayloadConsumption
@@ -61,8 +61,6 @@ from openhcs.core.progress.types import (
     RunningProgressStatus,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 logger = logging.getLogger(__name__)

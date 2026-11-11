@@ -8,6 +8,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar
 
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.source_matching import (
+    SourceAxisMetadataScope,
+    SourceImageSetIdentity,
+    SourceImageSetIdentityPolicy,
+)
 from openhcs.core.source_metadata import (
     SourceMetadataFields,
     SourceMetadataMapping,
@@ -17,11 +22,6 @@ from openhcs.core.axes import Axis, AxisFamily, PartitionAxis, is_axis
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.source_matching import (
-        SourceAxisMetadataScope,
-        SourceImageSetIdentity,
-        SourceImageSetIdentityPolicy,
-    )
 
 ComponentGroupKey = str | None
 RuntimeFixedComponentValues = tuple[tuple[type[Axis], str], ...]

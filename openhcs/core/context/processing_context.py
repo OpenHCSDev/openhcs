@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, TypeVar, cast
 if TYPE_CHECKING:
     from openhcs.core.post_execute import PostExecuteHook
     from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
-    from openhcs.core.steps.abstract import StepExecutionObservation
 
 from polystore.filemanager import FileManager
 from zmqruntime.config import ZMQConfig
@@ -38,6 +37,7 @@ from openhcs.core.source_workspace_projection import (
     WorkspaceSourceProjections,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.streaming_config_declarations import ViewerFamily
 from openhcs.core.axis_filter import StepAxisFilterMap
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache

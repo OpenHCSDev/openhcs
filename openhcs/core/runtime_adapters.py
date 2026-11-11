@@ -23,12 +23,15 @@ from openhcs.core.artifacts.plans import (
     ArtifactSpecRef,
 )
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
+from openhcs.core.runtime_stores import RuntimeArtifactInput
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
@@ -43,9 +46,6 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
-    from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.context.processing_context import ExecutingContext
-    from openhcs.core.runtime_stores import RuntimeArtifactInput
     from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 

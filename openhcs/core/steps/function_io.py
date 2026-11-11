@@ -13,6 +13,8 @@ from polystore.zarr_batch import ZarrBatchAxis, ZarrBatchAxisRole, ZarrBatchLayo
 
 from openhcs.constants.constants import LOADABLE_IMAGE_EXTENSIONS, Backend
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
+from openhcs.core.config import ZarrConfig
+from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.image_file_serialization import (
     ImageFileFormat,
     prepare_disk_image_payloads,
@@ -33,9 +35,7 @@ from openhcs.core.runtime_image_values import ImagePayload
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
-    from openhcs.core.config import ZarrConfig
     from openhcs.core.context.processing_context import ExecutingContext
-    from openhcs.core.dataset_sources.source import DatasetSource
 
 logger = logging.getLogger(__name__)
 

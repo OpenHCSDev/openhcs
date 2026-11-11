@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec
@@ -13,12 +13,9 @@ from openhcs.core.component_group_scope import (
     GroupedScope,
     RuntimeExecutionAxisScope,
 )
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisProjector
 
-if TYPE_CHECKING:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.runtime_plane_projection import (
-        RuntimePlaneAxisProjector,
-    )
 
 
 @dataclass(frozen=True, slots=True)

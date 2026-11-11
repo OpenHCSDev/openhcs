@@ -55,11 +55,11 @@ from openhcs.core.progress.types import (
     StartedProgressStatus,
     SuccessProgressStatus,
 )
+from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.vfs_protocol import FileManagerLike
 
 if TYPE_CHECKING:
     from openhcs.core.pipeline.compiler import CompiledRuntimeEnvironmentPlan
-    from openhcs.core.runtime_stores import RuntimeValueStore
 
 
 class DebugCommandType(ABC, metaclass=AutoRegisterMeta):

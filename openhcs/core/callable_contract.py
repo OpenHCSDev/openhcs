@@ -37,7 +37,11 @@ from python_introspect import (
     validate_annotation_value,
 )
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    ImagePayloadComposition,
+    ImagePayloadExecutionMode,
+)
 from openhcs.core.artifact_key_selection import (
     ArtifactOutputPolicy,
     ArtifactPlanKeySelector,
@@ -47,25 +51,21 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.runtime_output_matching import RuntimeMatchedOutput
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
 )
 from metaclass_registry.caches import IdentityBoundProcessCache
 from openhcs.core.axes import AxisRole
+from openhcs.core.vfs_protocol import DatasetPathDeclaration
 
 if TYPE_CHECKING:
-    from openhcs.core.aligned_image_payload import (
-        AlignedImageSliceContext,
-        ImagePayloadComposition,
-    )
     from openhcs.core.function_reference import FunctionReference
     from openhcs.core.image_file_serialization import ImageFileSourceMetadata
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
     from openhcs.core.runtime_adapters import RuntimeAdapterSpec
-    from openhcs.core.runtime_output_matching import RuntimeMatchedOutput
-    from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
-    from openhcs.core.vfs_protocol import DatasetPathDeclaration
     from openhcs.core.processing_contracts import (
         ProcessingContract,
     )

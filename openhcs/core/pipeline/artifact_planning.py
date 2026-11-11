@@ -4,7 +4,7 @@ import inspect
 from collections import Counter, OrderedDict, defaultdict
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
-from typing import Any, ClassVar, Iterable, Mapping, Optional, TYPE_CHECKING
+from typing import Any, ClassVar, Iterable, Mapping, Optional
 
 from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts.plans import (
@@ -60,10 +60,9 @@ from openhcs.core.step_dependencies import (
     StepOutputInput,
     UnresolvedStepInput,
 )
+from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 
-if TYPE_CHECKING:
-    from openhcs.core.steps.abstract import AbstractStep
 
 class AutomaticArtifactOutputMaterializationStrategy(
     ArtifactTypeStrategyMatchMixin,

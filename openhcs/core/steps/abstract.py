@@ -34,13 +34,11 @@ from openhcs.core.runtime_stores import (
     RuntimeArtifactLocation,
     StoredRuntimeValue,
 )
+from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 
 # ExecutingContext is used in type hints
 if TYPE_CHECKING:
     from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
-    from openhcs.core.virtual_workspace_metadata import (
-        VirtualWorkspaceSourceProjectionEntries,
-    )
     from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.post_execute import HookObservations
 

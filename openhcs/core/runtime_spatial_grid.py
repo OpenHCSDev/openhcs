@@ -7,11 +7,13 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass
-from typing import Any, Self, TYPE_CHECKING
+from typing import Any, Self
 
 import numpy as np
 
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
+from openhcs.core.measurement_dialect import MeasurementDialect
+from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.source_spatial_domain import SpatialShapeYX
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
@@ -20,9 +22,6 @@ from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.measurement_dialect import MeasurementDialect
-    from openhcs.core.runtime_measurements import MeasurementTable
 
 from enum import Enum
 from openhcs.core.alias_property import AliasProperty

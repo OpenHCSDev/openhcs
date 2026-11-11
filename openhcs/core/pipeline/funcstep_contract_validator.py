@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from functools import lru_cache
 from types import MappingProxyType
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     List,
@@ -29,6 +28,7 @@ from typing import (
 )
 
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     CompiledFunctionPattern,
     FunctionPatternSyntax,
@@ -46,8 +46,6 @@ from openhcs.core.variable_component_stack_requirement import (
 from openhcs.core.components.validation import GenericValidator
 from openhcs.core.axes import AxisFamily, Ungrouped
 
-if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
 
 logger = logging.getLogger(__name__)
 

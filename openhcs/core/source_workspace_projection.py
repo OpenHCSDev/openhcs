@@ -1,6 +1,7 @@
 """Project OpenHCS virtual-workspace metadata for runtime source binding."""
 
 from __future__ import annotations
+from openhcs.core.dataset_sources.interfaces import MetadataHandler
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
@@ -35,6 +36,7 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.source_projection import SourceProjection, SourceProjectionMetadataSerializer
+from openhcs.core.vfs_protocol import FileManagerLike
 from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataPayload,
     OpenHCSMetadataSubdirectories,
@@ -49,8 +51,6 @@ from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ExecutingContext
-    from openhcs.core.dataset_sources.interfaces import MetadataHandler
-    from openhcs.core.vfs_protocol import FileManagerLike
     from polystore.filemanager import FileManager
     from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 

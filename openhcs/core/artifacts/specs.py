@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Self, TypeVar
+from typing import Self, TypeVar
 
 from openhcs.core.artifacts.kinds import (
     ArtifactType,
@@ -35,9 +35,8 @@ from openhcs.core.artifacts.relations import (
 )
 from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
 from openhcs.core.artifacts.streaming import AutomaticStreaming, ViewerStreaming
+from openhcs.core.runtime_measurements import RuntimeMeasurementFeatureOwner
 
-if TYPE_CHECKING:
-    from openhcs.core.runtime_measurements import RuntimeMeasurementFeatureOwner
 
 MergedT = TypeVar("MergedT")
 

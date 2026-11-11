@@ -1,10 +1,9 @@
 """Shared persistence and export-observation policies for materialized artifacts."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+
 
 from .core import MaterializationSpec
 
