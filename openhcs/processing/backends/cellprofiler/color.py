@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
-from typing import Any, ClassVar, TYPE_CHECKING
+from typing import Any, ClassVar
 
 import numpy as np
 from matplotlib.colors import CSS4_COLORS, to_rgb
@@ -79,9 +79,8 @@ from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
-    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
+from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
 
 class ColorToGrayScalarOutputProjection(ABC):
