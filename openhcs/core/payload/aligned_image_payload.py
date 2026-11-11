@@ -33,10 +33,7 @@ from openhcs.core.memory import (
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload, ImagePayloadMetadata, ImagePayloadSliceProjector, ImagePayloadSourceSpatialDomainAdapter, project_image_mask_to_data_domain
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.core.payload.runtime_image_values import ImageMaskDomain
 from openhcs.core.payload.runtime_array_values import array_geometry
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.payload.runtime_slice_projection import preserved_image_plane_projection

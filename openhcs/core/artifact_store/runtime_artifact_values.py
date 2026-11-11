@@ -9,11 +9,6 @@ from typing import Any
 from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.plans import ArtifactOutputPlan
-
 
 @dataclass(frozen=True, slots=True)
 class ArtifactKey:

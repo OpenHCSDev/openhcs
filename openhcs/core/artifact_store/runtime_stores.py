@@ -33,11 +33,6 @@ from openhcs.core.source.source_matching import (
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.axes.axis_declarations import PartitionAxis
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from openhcs.core.artifacts.kinds import ArtifactType
-
 
 @dataclass(frozen=True, slots=True)
 class RuntimeArtifactLocation:

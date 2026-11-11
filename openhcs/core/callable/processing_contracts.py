@@ -35,10 +35,7 @@ from openhcs.core.memory import stack_runtime_slices, unstack_runtime_slices
 from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.callable.runtime_batch_contracts import Pure2DSliceBatchExecutor, RuntimePure2DSliceBatchRequest
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchInvocationRequest
 from openhcs.core.payload.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayload,
