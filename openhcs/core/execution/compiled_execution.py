@@ -17,11 +17,6 @@ from openhcs.core.execution.worker_start_policy import (
     resolve_worker_start_context,
 )
 
-FunctionStepTransportAuthority = None  # registration slot
-def _register_FunctionStepTransportAuthority(val):
-    global FunctionStepTransportAuthority
-    FunctionStepTransportAuthority = val
-
 
 @dataclass(frozen=True, slots=True)
 class CompiledWorkerStartPlan:
@@ -170,6 +165,7 @@ class CompiledExecutionBundle:
         worker_assignments: Mapping[str, list[str]],
         runtime_environment: CompiledRuntimeEnvironmentPlan,
     ) -> "CompiledExecutionBundle":
+        from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 
         transport_contexts = FunctionStepTransportAuthority.normalize_contexts(
             resolve_lazy_configurations_for_serialization(dict(runtime_contexts.items()))
@@ -208,6 +204,7 @@ class CompiledExecutionBundle:
     ) -> "CompiledExecutionBundle":
         """Derive pickle-safe contexts while retaining shared declarations."""
 
+        from openhcs.core.callable.function_step_transport import FunctionStepTransportAuthority
 
         contexts = (
             self.transport_contexts

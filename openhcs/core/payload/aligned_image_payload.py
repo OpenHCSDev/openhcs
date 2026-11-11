@@ -51,26 +51,6 @@ from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
 
-Pure2DAuxiliaryOutputAggregator = None  # registration slot
-def _register_Pure2DAuxiliaryOutputAggregator(val):
-    global Pure2DAuxiliaryOutputAggregator
-    Pure2DAuxiliaryOutputAggregator = val
-
-Pure2DSliceResultBatch = None  # registration slot
-def _register_Pure2DSliceResultBatch(val):
-    global Pure2DSliceResultBatch
-    Pure2DSliceResultBatch = val
-
-Pure2DSliceBatchExecutor = None  # registration slot
-def _register_Pure2DSliceBatchExecutor(val):
-    global Pure2DSliceBatchExecutor
-    Pure2DSliceBatchExecutor = val
-
-RuntimePure2DSliceBatchRequest = None  # registration slot
-def _register_RuntimePure2DSliceBatchRequest(val):
-    global RuntimePure2DSliceBatchRequest
-    RuntimePure2DSliceBatchRequest = val
-
 
 
 class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):
@@ -223,6 +203,14 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
         from openhcs.core.payload.aligned_image_payload import (
             AlignedImageStack,
             aligned_image_stack_kwargs,
+        )
+        from openhcs.core.callable.processing_contracts import (
+            Pure2DAuxiliaryOutputAggregator,
+            Pure2DSliceResultBatch,
+        )
+        from openhcs.core.callable.runtime_batch_contracts import (
+            Pure2DSliceBatchExecutor,
+            RuntimePure2DSliceBatchRequest,
         )
 
         callable_contract = call.callable_contract
@@ -2050,6 +2038,3 @@ def aligned_image_stack_kwargs(
         reference_payload=reference_payload,
     )
     return {name: resolver.resolve(value) for name, value in kwargs.items()}
-
-from openhcs.core.payload.runtime_slice_alignment import _register_stack_image_payloads
-_register_stack_image_payloads(stack_image_payloads)

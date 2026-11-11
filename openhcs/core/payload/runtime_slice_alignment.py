@@ -17,11 +17,6 @@ from openhcs.core.payload.runtime_plane_projection import (
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 
-stack_image_payloads = None  # registration slot
-def _register_stack_image_payloads(val):
-    global stack_image_payloads
-    stack_image_payloads = val
-
 
 SliceValueT = TypeVar("SliceValueT")
 MappedValueT = TypeVar("MappedValueT")
@@ -168,6 +163,7 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
             output_array.shape,
             value_name="Runtime-slice-aligned image output",
         )
+        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
 
         return stack_image_payloads(
             self.map_indexed_slices(

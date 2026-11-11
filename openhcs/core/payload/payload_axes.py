@@ -10,6 +10,7 @@ position or name.
 """
 
 from __future__ import annotations
+import dataclasses
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
@@ -47,7 +48,7 @@ class AxisSpec(ABC, metaclass=AutoRegisterMeta):
         return any(issubclass(declared, role) for declared in self.roles)
 
     def to_mapping(self) -> dict[str, Any]:
-        return {"kind": self.spec_kind}
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, Any]) -> "AxisSpec":

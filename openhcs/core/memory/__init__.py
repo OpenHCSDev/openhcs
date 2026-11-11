@@ -129,6 +129,3 @@ __all__ = [
     # Types
     "MemoryType",
 ]
-
-from openhcs.core.payload.runtime_array_values import _register_detect_memory_type
-_register_detect_memory_type(detect_memory_type)

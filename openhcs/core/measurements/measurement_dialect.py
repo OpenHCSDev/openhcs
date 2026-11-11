@@ -1130,6 +1130,3 @@ __all__ = declared_public_names(
     globals(),
     constant_prefixes=("EXECUTING_MEASUREMENT_DIALECT",),
 )
-
-from openhcs.core.measurements.runtime_measurements import _register_MeasurementDialect
-_register_MeasurementDialect(MeasurementDialect)

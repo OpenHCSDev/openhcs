@@ -716,6 +716,3 @@ class AxisFilteredMeasurementColumnarRows(MeasurementColumnarRowsView):
                 for column_name, column_values in columns.items()
             }
         self.validate_fields()
-
-from openhcs.core.measurements.runtime_measurements import _register_MeasurementTableAxisProjection
-_register_MeasurementTableAxisProjection(MeasurementTableAxisProjection)

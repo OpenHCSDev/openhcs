@@ -1,4 +1,3 @@
-import dataclasses
 """Viewer endpoint discovery across the local IPC directory.
 
 Detached viewer processes outlive the desktop application that spawned them,
@@ -10,6 +9,7 @@ report or close them explicitly.
 """
 
 from __future__ import annotations
+import dataclasses
 
 import re
 import socket

@@ -2547,10 +2547,3 @@ def _measurement_table_row_layout_from_field_names(
         if has_feature_field
         else MeasurementTableRowLayout.WIDE
     )
-
-from openhcs.core.measurements.runtime_measurements import _register_ConcatenatedColumnarRows
-_register_ConcatenatedColumnarRows(ConcatenatedColumnarRows)
-from openhcs.core.measurements.runtime_measurements import _register_MeasurementRowOwnership
-_register_MeasurementRowOwnership(MeasurementRowOwnership)
-from openhcs.core.payload.runtime_tabular_values import _register_MeasurementRowsAxisProjection
-_register_MeasurementRowsAxisProjection(MeasurementRowsAxisProjection)

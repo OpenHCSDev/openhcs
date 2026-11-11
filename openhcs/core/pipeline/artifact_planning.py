@@ -58,11 +58,6 @@ from openhcs.core.util.step_dependencies import (
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 
-MissingArtifactInputError = None  # registration slot
-def _register_MissingArtifactInputError(val):
-    global MissingArtifactInputError
-    MissingArtifactInputError = val
-
 
 class AutomaticArtifactOutputMaterializationStrategy(
     ArtifactTypeStrategyMatchMixin,
@@ -327,6 +322,7 @@ class ArtifactGraph:
                 )
             )
             if not candidate_indices:
+                from openhcs.core.pipeline.path_planner import MissingArtifactInputError
 
                 raise MissingArtifactInputError(
                     step_id=step_index,
@@ -788,8 +784,3 @@ def extract_artifact_declarations(
             if consumer.spec.ref() not in planned_input_refs
         ),
     )
-
-from openhcs.core.callable.invocation_artifacts import _register_ArtifactProducer
-_register_ArtifactProducer(ArtifactProducer)
-from openhcs.core.callable.invocation_artifacts import _register_ArtifactGraph
-_register_ArtifactGraph(ArtifactGraph)

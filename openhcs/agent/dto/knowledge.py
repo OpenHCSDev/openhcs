@@ -1,6 +1,7 @@
 """Knowledge-base DTOs for OpenHCS agent integrations."""
 
 from __future__ import annotations
+import dataclasses
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
@@ -240,10 +241,7 @@ class KnowledgeBaseSearchRequest(AgentCliRequest):
         )
 
     def as_tool_arguments(self) -> JsonObject:
-        return {
-            "query": self.query,
-            "limit": self.limit,
-        }
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
