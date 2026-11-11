@@ -2598,3 +2598,8 @@ class ImageMaskDomain:
             memory_type.reshape(candidate, tuple(broadcast_shape)),
             self.data_shape,
         )
+
+
+import openhcs.core.payload.runtime_plane_projection as _rpp
+
+_rpp._empty_image_metadata_factory = ImagePayloadMetadata
