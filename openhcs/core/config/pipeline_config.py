@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 from polystore import config as _polystore_config
 from openhcs.constants.constants import Backend
-from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis, PartitionAxis, StackAxis, TileAxis, TimeAxis
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, AxisRole, ColourAxis, PartitionAxis, StackAxis, TileAxis, TimeAxis
 from metaclass_registry import REPLACES_REGISTERED_ATTRIBUTE, AutoRegisterMeta
 from openhcs.constants.input_source import InputSource, ReadPreviousStep
 from python_introspect import (
