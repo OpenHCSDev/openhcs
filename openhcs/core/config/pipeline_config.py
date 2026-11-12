@@ -48,9 +48,15 @@ from openhcs.core.payload.vfs_protocol import PlateOutputDirectory, PlateOutputF
 class VariableAxisChoices(RegisteredClassChoices):
     """Validate variable-component axis choices against the active family."""
 
+    def __init__(self) -> None:
+        super().__init__(Axis)
+
 
 class GroupingChoices(RegisteredClassChoices):
     """Validate grouping declaration choices against the active family."""
+
+    def __init__(self) -> None:
+        super().__init__(GroupingDeclaration)
 from openhcs.core.config.streaming_config_declarations import (
     FijiViewer,
     NapariViewer,
