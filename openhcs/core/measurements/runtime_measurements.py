@@ -794,7 +794,6 @@ class MeasurementRowAxisField(str, Enum):
         )
 
 
-@dataclass(frozen=True, slots=True)
 @lru_cache(maxsize=32768)
 def _is_sample_number_reference(
     contract: RuntimeMeasurementRowIdentityContract,
