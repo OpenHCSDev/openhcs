@@ -41,6 +41,7 @@ from zmqruntime.viewer_protocol import ViewerWireValue
 from zmqruntime.transport import get_default_transport_mode
 
 from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice, DatasetSourceChoices
+from openhcs.core.source.source_metadata import SourceMetadataScalar
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.payload.vfs_protocol import PlateOutputDirectory, PlateOutputFile
 
