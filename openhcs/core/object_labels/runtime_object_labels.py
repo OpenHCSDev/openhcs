@@ -28,7 +28,13 @@ from typing import Any, ClassVar, Self, cast
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
-from numba import njit
+try:
+    from numba import njit
+except ModuleNotFoundError:
+    def njit(**kwargs):  # type: ignore[misc]
+        def _passthrough(func):
+            return func
+        return _passthrough
 
 from openhcs.core.payload import runtime_image_values
 from openhcs.core.artifacts.payloads import ArrayPayloadShape, NamedArtifactPayload

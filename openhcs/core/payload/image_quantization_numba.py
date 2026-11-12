@@ -3,7 +3,13 @@ from __future__ import annotations
 
 
 import numpy as np
-from numba import njit
+try:
+    from numba import njit
+except ModuleNotFoundError:
+    def njit(**kwargs):  # type: ignore[misc]
+        def _passthrough(func):
+            return func
+        return _passthrough
 
 
 @njit(cache=True)
