@@ -59,7 +59,6 @@ from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.callable.variable_component_stack_requirement import AlwaysRequiresVariableComponentStack, SemanticControlVariableComponentStackRequirement
 from openhcs.core.callable.callable_contract import CallableDeclaration
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.callable.runtime_batch_contracts import runtime_batch_executors_from_callable
 
 
 PURE2D_VALUE_TYPE_REGISTRY_KEY = "value_type"
@@ -1285,6 +1284,8 @@ class LibraryContractCall(ContractCall):
 
     @property
     def batch_executors(self) -> Mapping[Any, Callable[..., Any]]:
+
+        from openhcs.core.callable.runtime_batch_contracts import runtime_batch_executors_from_callable
 
         return runtime_batch_executors_from_callable(self.func)
 
