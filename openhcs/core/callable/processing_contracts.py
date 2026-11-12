@@ -51,7 +51,7 @@ from openhcs.core.payload.runtime_output_matching import (
     RuntimeOutputBundle,
     runtime_output_tuple,
 )
-from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection, RuntimeSlicePlaneAxis
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
