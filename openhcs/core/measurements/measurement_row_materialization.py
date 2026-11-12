@@ -561,7 +561,6 @@ class ColumnarRowColumnOverlay(Mapping[str, Sequence[Any]]):
         return len(self.column_names)
 
 
-@dataclass(frozen=True, slots=True)
 def _batch_aligns_with_segment(
     first_segment: tuple[list[int], dict[str, Sequence[object]]] | None,
     count: int,
