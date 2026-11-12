@@ -43,6 +43,14 @@ from zmqruntime.transport import get_default_transport_mode
 from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice, DatasetSourceChoices
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.payload.vfs_protocol import PlateOutputDirectory, PlateOutputFile
+
+
+class VariableAxisChoices(RegisteredClassChoices):
+    """Validate variable-component axis choices against the active family."""
+
+
+class GroupingChoices(RegisteredClassChoices):
+    """Validate grouping declaration choices against the active family."""
 from openhcs.core.config.streaming_config_declarations import (
     FijiViewer,
     NapariViewer,
