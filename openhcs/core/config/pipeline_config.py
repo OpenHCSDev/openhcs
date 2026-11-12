@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 from polystore import config as _polystore_config
 from openhcs.constants.constants import Backend
-from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis, PartitionAxis, StackAxis, TileAxis, TimeAxis
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily, AxisRole, ColourAxis, GroupingDeclaration, PartitionAxis, StackAxis, TileAxis, TimeAxis
 from metaclass_registry import REPLACES_REGISTERED_ATTRIBUTE, AutoRegisterMeta
 from openhcs.constants.input_source import InputSource, ReadPreviousStep
 from python_introspect import (
@@ -40,8 +40,23 @@ from zmqruntime.config import (
 from zmqruntime.viewer_protocol import ViewerWireValue
 from zmqruntime.transport import get_default_transport_mode
 
-from openhcs.core.dataset_sources.source import AutoDetectedSource
+from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourceChoice, DatasetSourceChoices
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceInvariantValue
+from openhcs.core.payload.vfs_protocol import PlateOutputDirectory, PlateOutputFile
+
+
+class VariableAxisChoices(RegisteredClassChoices):
+    """Validate variable-component axis choices against the active family."""
+
+    def __init__(self) -> None:
+        super().__init__(Axis)
+
+
+class GroupingChoices(RegisteredClassChoices):
+    """Validate grouping declaration choices against the active family."""
+
+    def __init__(self) -> None:
+        super().__init__(GroupingDeclaration)
 from openhcs.core.config.streaming_config_declarations import (
     FijiViewer,
     NapariViewer,

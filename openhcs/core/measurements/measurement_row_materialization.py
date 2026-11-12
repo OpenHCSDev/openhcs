@@ -24,6 +24,7 @@ import numpy as np
 
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.measurement_declarations import RuntimeMeasurementRowIdentityContract
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
@@ -31,7 +32,6 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
-    RuntimeMeasurementRowIdentityContract,
     measurement_axis_integer_domain,
     measurement_axis_integer_value,
 )
@@ -561,7 +561,6 @@ class ColumnarRowColumnOverlay(Mapping[str, Sequence[Any]]):
         return len(self.column_names)
 
 
-@dataclass(frozen=True, slots=True)
 def _batch_aligns_with_segment(
     first_segment: tuple[list[int], dict[str, Sequence[object]]] | None,
     count: int,

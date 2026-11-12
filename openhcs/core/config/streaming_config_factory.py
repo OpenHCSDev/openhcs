@@ -25,9 +25,10 @@ from zmqruntime.messages import WireMessage
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.core.config.streaming_config_declarations import ViewerFamily
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamingViewerSurface:
     """Viewer runtime, display, and source surface for one OpenHCS stream."""
 

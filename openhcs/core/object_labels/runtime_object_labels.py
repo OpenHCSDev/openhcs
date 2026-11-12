@@ -28,7 +28,13 @@ from typing import Any, ClassVar, Self, cast
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
-from numba import njit
+try:
+    from numba import njit
+except ModuleNotFoundError:
+    def njit(**kwargs):  # type: ignore[misc]
+        def _passthrough(func):
+            return func
+        return _passthrough
 
 from openhcs.core.payload import runtime_image_values
 from openhcs.core.artifacts.payloads import ArrayPayloadShape, NamedArtifactPayload
@@ -2252,13 +2258,16 @@ def object_label_value_with_dense_labels(
     source: ObjectLabelValueBuildSource,
     labels: ObjectLabelData,
     *,
-    domain_declaration: ObjectLabelDomainDeclaration = (
-        PreserveSourceObjectLabelDomainDeclaration()
-    ),
+    domain_declaration: ObjectLabelDomainDeclaration | None = None,
     representation: ObjectLabelRepresentation | None = None,
     source_spatial_domain: SourceSpatialDomain | None = None,
 ) -> ObjectLabelValue:
     """Build transformed object labels preserving the source value category."""
+    if domain_declaration is None:
+        from openhcs.core.object_labels.runtime_object_label_domains import (
+            PreserveSourceObjectLabelDomainDeclaration,
+        )
+        domain_declaration = PreserveSourceObjectLabelDomainDeclaration()
     declared_domain = domain_declaration.declared_domain(source, labels)
     if isinstance(source, ObjectLabelValue):
         return source.with_replacement_labels(
