@@ -46,18 +46,6 @@ from openhcs.core.payload.runtime_plane_projection import RuntimeSliceInvariantV
 from openhcs.core.payload.vfs_protocol import PlateOutputDirectory, PlateOutputFile
 
 
-class VariableAxisChoices(RegisteredClassChoices):
-    """Validate variable-component axis choices against the active family."""
-
-    def __init__(self) -> None:
-        super().__init__(Axis)
-
-
-class GroupingChoices(RegisteredClassChoices):
-    """Validate grouping declaration choices against the active family."""
-
-    def __init__(self) -> None:
-        super().__init__(GroupingDeclaration)
 from openhcs.core.config.streaming_config_declarations import (
     FijiViewer,
     NapariViewer,
@@ -563,7 +551,7 @@ class ProcessingConfig(AnnotatedDataclassValidationMixin):
     """Independent stack-axis, post-assembly grouping, and main-flow choices."""
 
     variable_components: Annotated[
-        List[type[Axis]], abbreviation("vars"), VariableAxisChoices()
+        List[type[Axis]], abbreviation("vars")
     ] = field(default_factory=lambda: list(AxisFamily.active().default_variable()))
     """Components whose values vary along the assembled array axis.
 
@@ -572,7 +560,7 @@ class ProcessingConfig(AnnotatedDataclassValidationMixin):
     """
 
     group_by: Annotated[
-        Optional[type[GroupingDeclaration]], abbreviation("group"), GroupingChoices()
+        Optional[type[GroupingDeclaration]], abbreviation("group")
     ] = field(default_factory=lambda: AxisFamily.active().default_group_by())
     """Component used to partition already assembled values.
 
@@ -1059,7 +1047,7 @@ class SequentialProcessingConfig(AnnotatedDataclassValidationMixin):
     """
 
     sequential_components: Annotated[
-        List[type[Axis]], abbreviation("seq_comp"), VariableAxisChoices()
+        List[type[Axis]], abbreviation("seq_comp")
     ] = field(default_factory=list)
     """Axes whose value combinations run through the whole pipeline in turn.
 
