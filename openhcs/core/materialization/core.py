@@ -361,9 +361,12 @@ class Output:
             self.metadata, self.variable_components,
         )
 
-    @property
-    def viewer_stream_requires_source_metadata(self) -> bool:
-        return True
+    def validate_viewer_stream_component_metadata(self, metadata: object) -> None:
+        if metadata is None:
+            raise ValueError(
+                "Viewer stream materialization requires output metadata with "
+                "source_component_metadata."
+            )
 
     def viewer_display_config(
         self, base: ViewerDisplayConfigABC
@@ -472,9 +475,8 @@ class TextOutput(Output):
 
     content: str
 
-    @property
-    def viewer_stream_requires_source_metadata(self) -> bool:
-        return False
+    def validate_viewer_stream_component_metadata(self, metadata: object) -> None:
+        pass
 
     def require_text_content(self) -> str:
         return self.content
@@ -504,9 +506,8 @@ class Utf8TextOutput(Output):
             sample_numbers_by_axis=sample_numbers_by_axis,
         )
 
-    @property
-    def viewer_stream_requires_source_metadata(self) -> bool:
-        return False
+    def validate_viewer_stream_component_metadata(self, metadata: object) -> None:
+        pass
 
     def require_text_content(self) -> str:
         return self.content.decode("utf-8")
@@ -2370,11 +2371,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
             source_identity.component_metadata if source_identity is not None else None
         )
         if component_metadata is None:
-            if output.viewer_stream_requires_source_metadata:
-                raise ValueError(
-                    "Viewer stream materialization requires output metadata with "
-                    "source_component_metadata."
-                )
+            output.validate_viewer_stream_component_metadata(component_metadata)
             return None
         item_fields = output.viewer_item_fields()
         display_config = output.viewer_display_config(

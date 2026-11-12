@@ -278,7 +278,6 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
     paths_by_group: Mapping[str | None, str] | None = None
     sidecar_role: type[ArtifactSidecarRole] | None = None
 
-    _missing_group_uses_default_path: ClassVar[bool] = False
     relations: tuple[ArtifactSpecRelation, ...] = ()
 
     def __post_init__(self) -> None:
@@ -418,6 +417,9 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
                     f"{artifact_plan.ref()!r}."
                 )
 
+    def _fallback_group_path(self) -> str | None:
+        return None
+
     def _path_for_group(self, group_key: str | None) -> str | None:
         if not self.paths_by_group:
             return self.path
@@ -430,9 +432,7 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
             return grouped_artifact_path(
                 self.paths_by_group[None], component, group_key
             )
-        if self._missing_group_uses_default_path:
-            return self.path
-        return None
+        return self._fallback_group_path()
 
     def _plan_for_group(self, group_key: str | None) -> Self | None:
         group_path = self._path_for_group(group_key)
@@ -456,8 +456,10 @@ class ArtifactOutputPlan(ArtifactPlan, OutputTarget):
     """Compiled storage plan for one produced artifact."""
 
     plan_role: ClassVar[str] = "output"
-    _missing_group_uses_default_path: ClassVar[bool] = True
     requires_source_slice_identity: ClassVar[bool] = True
+
+    def _fallback_group_path(self) -> str | None:
+        return self.path
 
     materialization: ArtifactMaterializationPayload | None = None
     viewer_streaming: type[ViewerStreaming] = AutomaticStreaming

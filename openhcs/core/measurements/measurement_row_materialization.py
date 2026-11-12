@@ -562,6 +562,38 @@ class ColumnarRowColumnOverlay(Mapping[str, Sequence[Any]]):
 
 
 @dataclass(frozen=True, slots=True)
+def _batch_aligns_with_segment(
+    first_segment: tuple[list[int], dict[str, Sequence[object]]] | None,
+    count: int,
+    identity_columns: tuple[tuple[str, Sequence[object]], ...],
+    identities: tuple[str, ...],
+) -> bool:
+    if first_segment is None or not identity_columns:
+        return False
+    if len(first_segment[0]) != count:
+        return False
+    seg_columns = first_segment[1]
+    if not all(
+        name in seg_columns and np.array_equal(values, seg_columns[name])
+        for name, values in identity_columns
+    ):
+        return False
+    if tuple(name for name in identities if name in seg_columns) != tuple(
+        name for name, _values in identity_columns
+    ):
+        return False
+    return any(
+        isinstance(values, np.ndarray) and not values.dtype.hasobject
+        for _name, values in identity_columns
+    ) or all(
+        any(
+            not is_structural_missing_measurement_cell(values[index])
+            for _name, values in identity_columns
+        )
+        for index in range(count)
+    )
+
+
 class MeasurementSparseColumnarRows(ColumnarRows):
     """Columnar measurement rows whose missing cells are structural, not values."""
 
@@ -683,33 +715,8 @@ class MeasurementSparseColumnarRows(ColumnarRows):
                     (name, columns[name]) for name in identities if name in columns
                 )
                 first_segment = segments[0] if segments else None
-                aligned = (
-                    first_segment is not None
-                    and len(first_segment[0]) == count
-                    and all(
-                        name in first_segment[1]
-                        and np.array_equal(values, first_segment[1][name])
-                        for name, values in identity_columns
-                    )
-                    and tuple(name for name in identities if name in first_segment[1])
-                    == tuple(name for name, _values in identity_columns)
-                    and bool(identity_columns)
-                    and (
-                        any(
-                            isinstance(values, np.ndarray)
-                            and not values.dtype.hasobject
-                            for _name, values in identity_columns
-                        )
-                        or all(
-                            any(
-                                not is_structural_missing_measurement_cell(
-                                    values[index]
-                                )
-                                for _name, values in identity_columns
-                            )
-                            for index in range(count)
-                        )
-                    )
+                aligned = _batch_aligns_with_segment(
+                    first_segment, count, identity_columns, identities,
                 )
                 if aligned:
                     destinations = first_segment[0]
@@ -2762,6 +2769,3 @@ def join_measurement_tables_artifact(
     )
 
 
-import openhcs.core.measurements.runtime_measurements as _rm
-
-_rm._registered_shared_measurement_row_axis_domain = shared_measurement_row_axis_domain

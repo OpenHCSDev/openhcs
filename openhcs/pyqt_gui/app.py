@@ -10,8 +10,6 @@ from __future__ import annotations
 import logging
 import sys
 from collections.abc import Callable
-from typing import TYPE_CHECKING
-
 from objectstate import spawn_thread_with_context
 from polystore.base import storage_registry
 from polystore.filemanager import FileManager
@@ -24,9 +22,7 @@ from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.pyqt_gui.branding import openhcs_application_icon
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
-
-if TYPE_CHECKING:
-    from openhcs.pyqt_gui.main import OpenHCSMainWindow
+from openhcs.pyqt_gui.main import OpenHCSMainWindow
 
 logger = logging.getLogger(__name__)
 

@@ -267,12 +267,7 @@ def contextualize_main_image_output(source_image: Any, result: Any) -> Any:
     if not isinstance(result, np.ndarray):
         return result
     source_image = owned_runtime_value(source_image)
-    if not isinstance(source_image, ImagePayload) or (
-        source_image.mask is None
-        and not source_image.metadata.has_values
-    ):
-        return result
-    return source_image.with_pixels(result)
+    return source_image.wrap_raw_output(result)
 
 
 class Pure2DRegisteredStrategyFamily(ABC):
@@ -1427,9 +1422,3 @@ class LibraryContractCall(ContractCall):
         )
 
 
-import openhcs.core.callable.callable_contract as _cc
-import openhcs.core.payload.aligned_image_payload as _aip
-
-_cc._registered_processing_contract_family = ProcessingContract
-_aip._registered_Pure2DAuxiliaryOutputAggregator = Pure2DAuxiliaryOutputAggregator
-_aip._registered_Pure2DSliceResultBatch = Pure2DSliceResultBatch

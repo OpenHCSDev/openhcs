@@ -9,7 +9,7 @@ from zmqruntime.messages import QueuedExecutionInfo, RunningExecutionInfo
 
 from openhcs.core.debug.debug_runtime import DebugProgressContext
 
-from .projection import (
+from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
     build_execution_runtime_projection,
 )

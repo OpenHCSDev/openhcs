@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from zmqruntime.startup import EndpointStartupPresentationTarget
 
@@ -32,9 +32,6 @@ from openhcs.constants.constants import (
     OrchestratorState,
 )
 from openhcs.core.execution.execution_state import TerminalExecutionStatus
-
-if TYPE_CHECKING:
-    pass
 
 
 class PromptedOperation(SessionOperation):

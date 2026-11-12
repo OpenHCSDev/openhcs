@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-from .cellprofiler_literals import decode_cellprofiler_setting_literal
-from .parser import ModuleBlock, ModuleSetting
+from openhcs.interop.cellprofiler.cellprofiler_literals import decode_cellprofiler_setting_literal
+from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 
 
 @dataclass(frozen=True, slots=True)

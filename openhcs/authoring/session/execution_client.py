@@ -9,7 +9,7 @@ import logging
 import threading
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TypeAlias
 
 from zmqruntime.client import (
     EndpointClientSession,
@@ -20,9 +20,8 @@ from zmqruntime.messages import EndpointApplicationCompatibility
 from zmqruntime.startup import EndpointStartupStatus, EndpointStartupStatusCallback
 from zmqruntime.transport import TransportEndpoint
 
-if TYPE_CHECKING:
-    from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
-    from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 ProgressCallback: TypeAlias = Callable[[dict], None]
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 from objectstate import ScopeKey
 import logging
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from PyQt6.QtWidgets import QWidget
 from pyqt_reactive.services.scope_window_factory import (
@@ -22,13 +22,8 @@ from openhcs.authoring.session.step_scopes import StepEditorScope
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
-
-if TYPE_CHECKING:
-    from objectstate.object_state import ObjectState
-
-    from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-
-# Import FunctionStep for type checking in tab selection
+from objectstate.object_state import ObjectState
+from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 from openhcs.core.steps.function_step import FunctionStep
 
 logger = logging.getLogger(__name__)

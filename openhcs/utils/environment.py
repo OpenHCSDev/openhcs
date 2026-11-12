@@ -18,6 +18,20 @@ if TYPE_CHECKING:
     from formbridge.runtime_platform import AgentRuntimePlatform
 
 
+BOOL_TRUE_STRINGS = frozenset({"1", "true", "yes", "on"})
+BOOL_FALSE_STRINGS = frozenset({"0", "false", "no", "off"})
+
+
+def parse_bool_string(value: str) -> bool | None:
+    """Parse a human-written boolean string, returning None for unrecognized values."""
+    normalized = value.strip().lower()
+    if normalized in BOOL_TRUE_STRINGS:
+        return True
+    if normalized in BOOL_FALSE_STRINGS:
+        return False
+    return None
+
+
 class OpenHCSProcessEnvironment:
     """Own process-mode environment variables that child processes inherit."""
 
@@ -79,7 +93,7 @@ class OpenHCSProcessEnvironment:
         """Return whether one owned boolean process flag is enabled."""
 
         values = os.environ if environment is None else environment
-        return values.get(key, "").strip().lower() in {"1", "true", "yes", "on"}
+        return values.get(key, "").strip().lower() in BOOL_TRUE_STRINGS
 
     @classmethod
     def cpu_only_mode(

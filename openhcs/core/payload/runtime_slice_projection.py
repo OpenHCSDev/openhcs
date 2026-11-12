@@ -640,6 +640,3 @@ class RuntimeSliceProjection:
         return next(iter(slice_counts))
 
 
-import openhcs.core.payload.runtime_image_values as _riv
-
-_riv._registered_RuntimeSliceProjection = RuntimeSliceProjection

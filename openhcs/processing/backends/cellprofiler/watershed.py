@@ -55,13 +55,15 @@ from openhcs.interop.cellprofiler.setting_names import (
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.utils.environment import parse_bool_string
+
+
 def parse_watershed_border_exclusion(value: str) -> bool:
     """Parse legacy and current Watershed border-exclusion settings."""
-    normalized = value.strip().lower()
-    if normalized in {"yes", "true", "1", "on"}:
-        return True
-    if normalized in {"no", "false", "0", "off"}:
-        return False
+
+    result = parse_bool_string(value)
+    if result is not None:
+        return result
     pixel_count = int(value)
     if pixel_count == 0:
         return False

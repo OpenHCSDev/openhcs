@@ -15,7 +15,7 @@ import numpy as np
 from openhcs.constants import MemoryType
 from openhcs.utils.import_utils import optional_import_placeholder
 
-from .unified_registry import LibraryRegistryBase, RuntimeTestingRegistryBase
+from openhcs.processing.backends.lib_registry.unified_registry import LibraryRegistryBase, RuntimeTestingRegistryBase
 
 skimage = optional_import_placeholder("skimage")
 

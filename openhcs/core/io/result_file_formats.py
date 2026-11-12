@@ -52,7 +52,9 @@ class ResultFileFormat(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
     name: ClassVar[str | None] = None
     suffixes: ClassVar[tuple[str, ...]] = ()
-    streams_rois: ClassVar[bool] = False
+    @classmethod
+    def roi_stream_path(cls, full_path: str | None, key: str) -> str | None:
+        return None
 
     @classmethod
     def names_path(cls, file_path: Path) -> bool:
@@ -129,7 +131,10 @@ class RoiArchiveResultFile(ResultFileFormat):
 
     name = "ROI"
     suffixes = (".roi.zip",)
-    streams_rois = True
+
+    @classmethod
+    def roi_stream_path(cls, full_path: str | None, key: str) -> str | None:
+        return full_path or key
 
     @classmethod
     def names_path(cls, file_path: Path) -> bool:

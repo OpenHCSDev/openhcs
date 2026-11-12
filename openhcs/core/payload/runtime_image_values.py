@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from openhcs.core.axes.alias_property import AliasProperty
+from openhcs.core.payload.plane_provenance import PlaneMetadata
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
@@ -28,7 +29,9 @@ from openhcs.core.payload.payload_axes import PayloadAxes, RuntimePlaneAxisSpec,
 from openhcs.core.payload.runtime_array_values import DataBackedRuntimeArrayPayload, RuntimeArrayPayload, array_geometry, is_array_payload, mask_array, runtime_array_operand
 from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxis,
+    RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
+    RuntimePlaneProjection,
     RuntimeSliceInvariantValue,
     RuntimeSliceProjectableValue,
 )
@@ -50,9 +53,6 @@ from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
 from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
 
 
-_registered_stack_image_payloads = None
-_registered_RuntimeSliceProjection = None
-_registered_SourceImageObjectLabelBuildRequest = None
 
 
 class RuntimeSliceProjectionDeclarationError(ValueError):
@@ -459,6 +459,7 @@ class ImagePayloadMetadata(
     ImagePayloadIntensityFields,
     SourceSpatialDomainFields,
     SourceVoxelSpacingFields,
+    PlaneMetadata,
 ):
     """Generic source-image metadata that should travel with runtime pixels."""
 
@@ -738,8 +739,7 @@ class ImagePayloadMetadata(
         # Read current source fields before deriving the output. This private
         # snapshot owns its stripped axes; no intermediate image is published.
         source_context = source_metadata.replace_fields(plane_axis=NoPlaneAxis)
-        if not data.inherits_source_axes:
-            source_context.axes = PayloadAxes()
+        data.strip_source_axes_if_not_inherited(source_context)
         # Take current output calibration and geometry before replacing stale
         # source identity. These fields belong to the returned pixel domain.
         metadata = output_metadata.with_source_spatial_context_from(source_context)
@@ -1075,7 +1075,9 @@ class ImagePayloadMetadata(
         )
         if len(projected_planes) == 1:
             return projected_planes[0]
-        return _registered_stack_image_payloads(
+        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
+
+        return stack_image_payloads(
             projected_planes,
             metadata_mode=self.plane_axis,
         )
@@ -1360,10 +1362,9 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         """Return one declared dimension per pixel axis."""
         return self.metadata.payload_axes(self)
 
-    @property
-    def inherits_source_axes(self) -> bool:
-        """Whether a derived output takes its declared axes from its source."""
-        return False
+    def strip_source_axes_if_not_inherited(self, source_context: ImagePayloadMetadata) -> None:
+        """Clear source axes when this payload does not inherit them."""
+        source_context.axes = PayloadAxes()
 
     @property
     def declared_plane_axis(self) -> type[RuntimePlaneAxis]:
@@ -1373,6 +1374,47 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
     def invocation_plane_axis(self) -> type[RuntimePlaneAxis]:
         """Return the plane axis a callable invocation iterates over."""
         return self.metadata.plane_axis
+
+    def debug_value_facts(
+        self,
+        plane_projector: RuntimePlaneAxisProjector | None,
+    ) -> tuple[list[str], RuntimePlaneAxisValueProjection | None]:
+        array_facts, _ = self.debug_array_facts()
+        facts = list(array_facts)
+        projection: RuntimePlaneAxisValueProjection | None = None
+        metadata = self.metadata
+        if metadata.has_values:
+            facts.extend(
+                (
+                    f"source_dtype={metadata.source_dtype!r}",
+                    f"axes={metadata.axes!r}",
+                    f"source_plane_count={metadata.source_provenance.source_plane_count}",
+                    f"source_image_name_count={len(metadata.source_image_names)}",
+                )
+            )
+        if metadata.plane_axis.leads_data:
+            payload_shape = tuple(int(axis_size) for axis_size in self.shape)
+            if plane_projector is not None and (
+                metadata.plane_axis.one_plane_per_runtime_slice
+                or not isinstance(plane_projector, RuntimePlaneProjection)
+            ):
+                projection = RuntimePlaneAxisValueProjection.from_projector(
+                    plane_projector,
+                    metadata.plane_axis,
+                    metadata.source_image_names,
+                )
+            if projection is None:
+                facts.append(f"plane_axis={metadata.plane_axis.name!r}")
+            declared_cardinality = payload_shape[0]
+        else:
+            declared_cardinality = None
+        facts.extend(
+            (
+                f"declared_plane_axis={metadata.plane_axis.name!r}",
+                f"declared_cardinality={declared_cardinality}",
+            )
+        )
+        return facts, projection
 
     def copied(self, *, memory_type: str, device_id: int | None) -> ImagePayload:
         """Copy pixels, mask and metadata into an independent buffer."""
@@ -1424,6 +1466,11 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
             metadata=resolved_metadata,
         )
         return resolved_metadata.payload_with(data, resolved_mask)
+
+    def wrap_raw_output(self, raw_data: object) -> object:
+        if self.mask is None and not self.metadata.has_values:
+            return raw_data
+        return self.with_pixels(raw_data)
 
     def mask_for_data(self, data: Any, *, mask: Any | None = None) -> Any | None:
         """Return this payload's mask, or ``mask``, broadcast onto ``data``."""
@@ -1518,7 +1565,9 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         output memory domain; it is used when no runtime-slice axis is declared.
         A context of None lets the runtime derive it from the step's outputs.
         """
-        projection = _registered_RuntimeSliceProjection.preserved_context_for_value(self)
+        from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+
+        projection = RuntimeSliceProjection.preserved_context_for_value(self)
         if projection is not None:
             return tuple(
                 (self.value_for_slice(projection.selected_plane(index)), None)
@@ -1621,7 +1670,9 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> Any:
         """Build object labels from these dense label pixels in ``source``'s domain."""
-        return _registered_SourceImageObjectLabelBuildRequest(
+        from openhcs.core.object_labels.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+
+        return SourceImageObjectLabelBuildRequest(
             image=source,
             labels=self.data,
             plane_projection=plane_projection,
@@ -1941,9 +1992,8 @@ class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     def metadata(self) -> ImagePayloadMetadata:
         return ImagePayloadMetadata()
 
-    @property
-    def inherits_source_axes(self) -> bool:
-        return True
+    def strip_source_axes_if_not_inherited(self, source_context: ImagePayloadMetadata) -> None:
+        pass
 
     @property
     def declares_whole_image_output(self) -> bool:
@@ -2600,6 +2650,3 @@ class ImageMaskDomain:
         )
 
 
-import openhcs.core.payload.runtime_plane_projection as _rpp
-
-_rpp._empty_image_metadata_factory = ImagePayloadMetadata

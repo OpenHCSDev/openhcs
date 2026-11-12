@@ -501,6 +501,28 @@ class PipelineOrchestrator:
         execution_bundle: CompiledExecutionBundle,
     ) -> PipelineOrchestrator:
         """Bind an admitted compiled source domain to this fresh runtime owner."""
+
+    def _validate_context_matches_source(
+        self,
+        context: ExecutingContext,
+        source: ExecutingContext,
+        source_registry: Mapping,
+    ) -> None:
+        if (
+            context.dataset_root != self.dataset_root
+            or context.input_dir != source.input_dir
+            or context.workspace_path != source.workspace_path
+            or context.microscope_handler is not source.microscope_handler
+            or context.filemanager is None
+            or context.filemanager.registry.keys() != source_registry.keys()
+            or any(
+                backend is not source_registry[name]
+                for name, backend in context.filemanager.registry.items()
+            )
+        ):
+            raise ValueError(
+                "Compiled execution source domain does not match this runtime."
+            )
         if self._initialized or self.state is not OrchestratorCreated:
             raise RuntimeError(
                 "Compiled execution can only be adopted before initialization."
@@ -517,21 +539,7 @@ class PipelineOrchestrator:
             raise ValueError("Compiled execution lacks its admitted source workspace.")
         source_registry = source.filemanager.registry
         for context in contexts:
-            if (
-                context.dataset_root != self.dataset_root
-                or context.input_dir != source.input_dir
-                or context.workspace_path != source.workspace_path
-                or context.microscope_handler is not source.microscope_handler
-                or context.filemanager is None
-                or context.filemanager.registry.keys() != source_registry.keys()
-                or any(
-                    backend is not source_registry[name]
-                    for name, backend in context.filemanager.registry.items()
-                )
-            ):
-                raise ValueError(
-                    "Compiled execution source domain does not match this runtime."
-                )
+            self._validate_context_matches_source(context, source, source_registry)
         if source_registry.get(Backend.MEMORY.value) is not self.registry.get(
             Backend.MEMORY.value
         ):
@@ -571,7 +579,7 @@ class PipelineOrchestrator:
 
 
         source_role = self.microscope_handler.source_selection_role()
-        if not source_role.requires_local_directory:
+        if not source_role.should_create_local_metadata():
             logger.debug("Skipping local metadata creation for %s", source_role.role_name)
             return
 

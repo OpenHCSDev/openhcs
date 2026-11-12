@@ -38,11 +38,15 @@ from openhcs.core.materialization.options import CsvOptions, JsonOptions, ROIOpt
 from openhcs.processing.backends.analysis.cell_counting_common import (
     AreaFilter,
     AreaFilterRequest,
+    CellCountMeasurementFields,
     CellCountResult,
     ColocalizationAnalysis,
+    ColocalizationAnalyzer,
     ColocalizationMethod,
     DetectionMethod,
     MultiChannelResult,
+    analyze_colocalization,
+    detect_cells_single_method,
     ThresholdMethod,
     WatershedThresholdBackend,
     WatershedThresholdMethodStrategy,
@@ -61,17 +65,8 @@ WATERSHED_THRESHOLD_BACKEND = WatershedThresholdBackend(
 
 
 @dataclass(frozen=True)
-class CellCountMeasurementRow:
+class CellCountMeasurementRow(CellCountMeasurementFields):
     """Serializable per-plane measurements without the label-array payload."""
-
-    slice_index: int
-    method: str
-    cell_count: int
-    cell_positions: list[tuple[float, float]]
-    cell_areas: list[float]
-    cell_intensities: list[float]
-    detection_confidence: list[float]
-    parameters_used: dict[str, Any]
 
     @classmethod
     def from_result(cls, result: CellCountResult) -> CellCountMeasurementRow:
@@ -197,7 +192,7 @@ def count_cells_single_channel(
 
         # Detect cells using specified method
         result = _detect_cells_single_method(
-            slice_img, z_idx, detection_method.value, parameters
+            slice_img, z_idx, detection_method, parameters
         )
 
         results.append(result)
@@ -416,7 +411,7 @@ def count_cells_multi_channel(
             _detect_cells_single_method(
                 channel_slice,
                 0,
-                method.value,
+                method,
                 parameters,
             )
         )
@@ -431,7 +426,7 @@ def count_cells_multi_channel(
     coloc_result = _analyze_colocalization(
         chan_1_result,
         chan_2_result,
-        colocalization_method.value,
+        colocalization_method,
         max_distance,
         min_overlap_area,
         intensity_threshold,
@@ -468,14 +463,11 @@ def _preprocess_image(
 
 
 def _detect_cells_single_method(
-    image: np.ndarray, slice_idx: int, method: str, params: Dict[str, Any]
+    image: np.ndarray, slice_idx: int, method: DetectionMethod, params: Dict[str, Any]
 ) -> CellCountResult:
-    """Detect cells using specified method."""
-    try:
-        detector = DETECTION_METHODS[method]
-    except KeyError:
-        raise ValueError(f"Unknown detection method: {method}")
-    return detector(image, slice_idx, params)
+    return detect_cells_single_method(
+        image, slice_idx, method, params, methods=DETECTION_METHODS,
+    )
 
 
 def _detect_cells_blob_log(
@@ -531,7 +523,7 @@ def _detect_cells_blob_log(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, "blob_log", *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_LOG.value, *filtered_data, params
     )
 
 
@@ -583,7 +575,7 @@ def _detect_cells_blob_dog(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, "blob_dog", *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_DOG.value, *filtered_data, params
     )
 
 
@@ -636,7 +628,7 @@ def _detect_cells_blob_doh(
     )
 
     return CellCountResult.from_measurements(
-        slice_idx, "blob_doh", *filtered_data, params
+        slice_idx, DetectionMethod.BLOB_DOH.value, *filtered_data, params
     )
 
 
@@ -792,7 +784,7 @@ def _detect_cells_watershed(
 
     return CellCountResult.from_measurements(
         slice_idx,
-        "watershed",
+        DetectionMethod.WATERSHED.value,
         positions,
         areas,
         intensities,
@@ -853,7 +845,7 @@ def _detect_cells_threshold(
 
     return CellCountResult.from_measurements(
         slice_idx,
-        "threshold",
+        DetectionMethod.THRESHOLD.value,
         positions,
         areas,
         intensities,
@@ -869,7 +861,7 @@ DetectionMethodHandler = Callable[
 ]
 
 
-DETECTION_METHODS: dict[str, DetectionMethodHandler] = detection_method_catalog(
+DETECTION_METHODS: dict[DetectionMethod, DetectionMethodHandler] = detection_method_catalog(
     blob_log=_detect_cells_blob_log,
     blob_dog=_detect_cells_blob_dog,
     blob_doh=_detect_cells_blob_doh,
@@ -881,32 +873,19 @@ DETECTION_METHODS: dict[str, DetectionMethodHandler] = detection_method_catalog(
 def _analyze_colocalization(
     chan_1_result: CellCountResult,
     chan_2_result: CellCountResult,
-    method: str,
+    method: ColocalizationMethod,
     max_distance: float,
     min_overlap_area: float,
     intensity_threshold: float,
 ) -> MultiChannelResult:
-    """Analyze colocalization between two channels."""
-    try:
-        analyzer = COLOCALIZATION_ANALYZERS[method]
-    except KeyError:
-        raise ValueError(f"Unknown colocalization method: {method}")
-    return analyzer(
-        chan_1_result,
-        chan_2_result,
-        max_distance,
-        min_overlap_area,
-        intensity_threshold,
+    return analyze_colocalization(
+        chan_1_result, chan_2_result, method,
+        max_distance, min_overlap_area, intensity_threshold,
+        analyzers=COLOCALIZATION_ANALYZERS,
     )
 
 
-ColocalizationAnalyzer = Callable[
-    [CellCountResult, CellCountResult, float, float, float],
-    MultiChannelResult,
-]
-
-
-COLOCALIZATION_ANALYZERS: dict[str, ColocalizationAnalyzer] = (
+COLOCALIZATION_ANALYZERS: dict[ColocalizationMethod, ColocalizationAnalyzer] = (
     colocalization_analyzer_catalog(
         distance_based=(
             lambda chan_1_result, chan_2_result, max_distance, _min_overlap_area, _intensity_threshold: ColocalizationAnalysis().distance_based(

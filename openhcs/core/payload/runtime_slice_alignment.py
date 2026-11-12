@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-_registered_stack_image_payloads = None
 
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 
@@ -41,6 +40,15 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
     def values(self) -> tuple[SliceValueT, ...]:
         """Return the value of every runtime slice, in slice order."""
         return tuple(self.value_at(index) for index in range(self.slice_count))
+
+    def debug_value_facts(
+        self,
+        plane_projector: object | None,
+    ) -> tuple[list[str], RuntimePlaneAxisValueProjection | None]:
+        return [
+            f"slice_count={self.slice_count}",
+            f"declared_cardinality={self.slice_count}",
+        ], None
 
     def map_slices(
         self, transform: Callable[[SliceValueT], MappedValueT],
@@ -166,7 +174,9 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
             output_array.shape,
             value_name="Runtime-slice-aligned image output",
         )
-        return _registered_stack_image_payloads(
+        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
+
+        return stack_image_payloads(
             self.map_indexed_slices(
                 lambda index, source: source.contextualize_image_output(
                     output.slice_payload(

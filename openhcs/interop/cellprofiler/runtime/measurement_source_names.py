@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
-
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.invocation import (
-        CellProfilerMeasurementImage,
-    )
+from openhcs.interop.cellprofiler.runtime.invocation import (
+    CellProfilerMeasurementImage,
+)
 
 
 def single_source_name(source_names: tuple[str, ...]) -> str | None:

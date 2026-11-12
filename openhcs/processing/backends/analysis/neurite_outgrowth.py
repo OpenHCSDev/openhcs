@@ -67,30 +67,30 @@ from openhcs.core.source.source_metadata import SourceVoxelSpacing, SourceVoxelS
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, NameByArtifactName, ROIOptions, SpatialGraphROIOptions, SWCOptions
 from openhcs.core.materialization.core import MaterializationSpec
 
-from ..cellprofiler.feature_enhancement import (
+from openhcs.processing.backends.cellprofiler.feature_enhancement import (
     EnhanceMethod,
     NeuriteMethod,
     OperationMethod,
     enhance_or_suppress_features,
 )
-from ..cellprofiler.medial_axis import medialaxis
-from ..cellprofiler.primary_objects import identify_primary_objects
-from ..cellprofiler.primary_object_diagnostics import SelectedDiagnosticPlaneImageOutput
-from ..cellprofiler.secondary import (
+from openhcs.processing.backends.cellprofiler.medial_axis import medialaxis
+from openhcs.processing.backends.cellprofiler.primary_objects import identify_primary_objects
+from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import SelectedDiagnosticPlaneImageOutput
+from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryMethod,
     identify_secondary_objects,
     secondary_propagation_backend,
 )
-from ..cellprofiler.thresholding_family.thresholding import (
+from openhcs.processing.backends.cellprofiler.thresholding_family.thresholding import (
     CellProfilerThresholdMethod,
     CellProfilerThresholdScope,
     threshold,
 )
-from .count_cells_simple import (
+from openhcs.processing.backends.analysis.count_cells_simple import (
     MetaXpressWavelengthSettings,
     segment_metaxpress_round_objects,
 )
-from .metaxpress_utils import HiddenPixelSize, local_background_response
+from openhcs.processing.backends.analysis.metaxpress_utils import HiddenPixelSize, local_background_response
 
 
 class NeuriteIllumination(str, Enum):

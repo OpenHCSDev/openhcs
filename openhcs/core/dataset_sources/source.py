@@ -44,10 +44,13 @@ class SourceSelectionRole(ABC):
     """
 
     role_name: ClassVar[str]
-    requires_local_directory: ClassVar[bool] = True
     allows_declared_source_override: ClassVar[bool] = True
     detection_rank: ClassVar[int] = 0
     """Detection order: metadata detectors (0), own detectors (1), broad stores (2)."""
+
+    @classmethod
+    def should_create_local_metadata(cls) -> bool:
+        return True
 
     @classmethod
     def bindings_may_select_source(cls, *, projects_bindings: bool) -> bool:
@@ -78,8 +81,6 @@ class SourceSelectionRole(ABC):
     def require_available_source(cls, source_path: Path) -> None:
         """Enforce the path availability owned by this role."""
 
-        if not cls.requires_local_directory:
-            return
         if not source_path.exists():
             raise FileNotFoundError(f"Plate path does not exist: {source_path}")
         if not source_path.is_dir():
@@ -118,7 +119,14 @@ class RemoteServiceSource(SourceSelectionRole):
     """Datasets addressed through a remote service, not a local directory."""
 
     role_name = "remote_service"
-    requires_local_directory = False
+
+    @classmethod
+    def should_create_local_metadata(cls) -> bool:
+        return False
+
+    @classmethod
+    def require_available_source(cls, source_path: Path) -> None:
+        pass
 
 
 class PreparedWorkspaceSource(SourceSelectionRole):

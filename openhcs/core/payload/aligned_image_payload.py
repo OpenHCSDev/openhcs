@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-_registered_Pure2DAuxiliaryOutputAggregator = None
-_registered_Pure2DSliceResultBatch = None
-_registered_Pure2DSliceBatchExecutor = None
-_registered_RuntimePure2DSliceBatchRequest = None
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -198,10 +194,14 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             AlignedImageStack,
             aligned_image_stack_kwargs,
         )
-        Pure2DAuxiliaryOutputAggregator = _registered_Pure2DAuxiliaryOutputAggregator
-        Pure2DSliceResultBatch = _registered_Pure2DSliceResultBatch
-        Pure2DSliceBatchExecutor = _registered_Pure2DSliceBatchExecutor
-        RuntimePure2DSliceBatchRequest = _registered_RuntimePure2DSliceBatchRequest
+        from openhcs.core.callable.processing_contracts import (
+            Pure2DAuxiliaryOutputAggregator,
+            Pure2DSliceResultBatch,
+        )
+        from openhcs.core.callable.runtime_batch_contracts import (
+            Pure2DSliceBatchExecutor,
+            RuntimePure2DSliceBatchRequest,
+        )
 
         callable_contract = call.callable_contract
         owner = (
@@ -2030,10 +2030,3 @@ def aligned_image_stack_kwargs(
     return {name: resolver.resolve(value) for name, value in kwargs.items()}
 
 
-import openhcs.core.payload.runtime_image_values as _riv
-import openhcs.core.payload.runtime_slice_alignment as _rsa
-import openhcs.core.artifacts.kinds as _ak
-
-_riv._registered_stack_image_payloads = stack_image_payloads
-_rsa._registered_stack_image_payloads = stack_image_payloads
-_ak._registered_stack_image_payloads = stack_image_payloads

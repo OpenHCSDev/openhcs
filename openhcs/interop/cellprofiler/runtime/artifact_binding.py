@@ -52,9 +52,6 @@ from openhcs.core.callable.variable_component_stack_requirement import (
 from openhcs.interop.cellprofiler.runtime.adapter import (
     CellProfilerRuntimeAdapter,
 )
-from openhcs.interop.cellprofiler.runtime.output_recording import (
-    CellProfilerOutputRecorder,
-)
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
     RuntimeCallableKwargs,
@@ -271,6 +268,8 @@ class RuntimeInputBindingRequest:
         if source_ref in self.declared_inputs.ref_set():
             source_spec = self.declared_inputs.by_ref(source_ref)
             source_edge = self.input_edge_for_spec(source_spec)
+            from openhcs.interop.cellprofiler.runtime.output_recording import CellProfilerOutputRecorder
+
             return CellProfilerOutputRecorder.for_artifact_type(
                 ImageArtifactType
             ).runtime_input_value(source_edge.spec, self.artifact_value(source_edge))
@@ -381,6 +380,8 @@ class RuntimeInputBindingRequest:
         return self.artifact_value(self.input_edge_for_spec(spec))
 
     def label_payload_for(self, spec: ArtifactSpec) -> ObjectLabelValue:
+        from openhcs.interop.cellprofiler.runtime.output_recording import CellProfilerOutputRecorder
+
         return CellProfilerOutputRecorder.for_artifact_type(
             ObjectLabelsArtifactType
         ).object_labels(
@@ -492,6 +493,8 @@ class RuntimeInputBindingRequest:
         parameter_name: str | None = None,
     ) -> RuntimeCallableArgument:
         """Load one declared runtime artifact for callable binding."""
+
+        from openhcs.interop.cellprofiler.runtime.output_recording import CellProfilerOutputRecorder
 
         spec = edge.spec
         if spec.artifact_type is ObjectLabelsArtifactType:

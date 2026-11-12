@@ -16,7 +16,7 @@ from zmqruntime.progress import (
     build_execution_projection,
 )
 
-from .types import (
+from openhcs.core.progress.types import (
     CompileProgressStream,
     PipelineProgressStream,
     ProgressStream,

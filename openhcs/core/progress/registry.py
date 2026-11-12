@@ -12,7 +12,7 @@ from zmqruntime.progress import (
 )
 from zmqruntime.subscription import SubscriptionABC
 
-from .types import ProgressStream, ProgressEvent
+from openhcs.core.progress.types import ProgressStream, ProgressEvent
 
 
 class ProgressRegistry:

@@ -29,6 +29,8 @@ from openhcs.processing.backends.analysis.cell_counting_common import (
     IntensityColocalizationMetrics,
     MultiChannelResult,
     ThresholdMethod,
+    detect_cells_single_method,
+    detection_method_catalog,
 )
 
 
@@ -126,7 +128,7 @@ def count_cells_single_channel(
 
         # Detect cells using specified method (slice_img stays as cle array)
         result = _detect_cells_single_method(
-            slice_img, z_idx, detection_method.value, parameters
+            slice_img, z_idx, detection_method, parameters
         )
 
         results.append(result)
@@ -326,7 +328,7 @@ def count_cells_multi_channel(
     coloc_result = _analyze_colocalization(
         chan_1_result,
         chan_2_result,
-        colocalization_method.value,
+        colocalization_method,
         max_distance,
         min_overlap_area,
         intensity_threshold,
@@ -367,22 +369,11 @@ def _preprocess_image(image, gaussian_sigma: float, median_disk_size: int):
 
 
 def _detect_cells_single_method(
-    image: np.ndarray, slice_idx: int, method: str, params: Dict[str, Any]
+    image: np.ndarray, slice_idx: int, method: DetectionMethod, params: Dict[str, Any]
 ) -> CellCountResult:
-    """Detect cells using specified method."""
-
-    if method == DetectionMethod.BLOB_LOG.value:
-        return _detect_cells_blob_log(image, slice_idx, params)
-    elif method == DetectionMethod.BLOB_DOG.value:
-        return _detect_cells_blob_dog(image, slice_idx, params)
-    elif method == DetectionMethod.BLOB_DOH.value:
-        return _detect_cells_blob_doh(image, slice_idx, params)
-    elif method == DetectionMethod.WATERSHED.value:
-        return _detect_cells_watershed(image, slice_idx, params)
-    elif method == DetectionMethod.THRESHOLD.value:
-        return _detect_cells_threshold(image, slice_idx, params)
-    else:
-        raise ValueError(f"Unknown detection method: {method}")
+    return detect_cells_single_method(
+        image, slice_idx, method, params, methods=_DETECTION_METHODS,
+    )
 
 
 def _detect_cells_blob_log(
@@ -958,29 +949,38 @@ def _detect_cells_threshold(
     )
 
 
+_DETECTION_METHODS = detection_method_catalog(
+    blob_log=_detect_cells_blob_log,
+    blob_dog=_detect_cells_blob_dog,
+    blob_doh=_detect_cells_blob_doh,
+    watershed=_detect_cells_watershed,
+    threshold=_detect_cells_threshold,
+)
+
+
 def _analyze_colocalization(
     chan_1_result: CellCountResult,
     chan_2_result: CellCountResult,
-    method: str,
+    method: ColocalizationMethod,
     max_distance: float,
     min_overlap_area: float,
     intensity_threshold: float,
 ) -> MultiChannelResult:
     """Analyze colocalization between two channels."""
 
-    if method == ColocalizationMethod.DISTANCE_BASED.value:
+    if method is ColocalizationMethod.DISTANCE_BASED:
         return _colocalization_distance_based(
             chan_1_result, chan_2_result, max_distance
         )
-    elif method == ColocalizationMethod.OVERLAP_AREA.value:
+    elif method is ColocalizationMethod.OVERLAP_AREA:
         return _colocalization_overlap_based(
             chan_1_result, chan_2_result, min_overlap_area
         )
-    elif method == ColocalizationMethod.INTENSITY_CORRELATION.value:
+    elif method is ColocalizationMethod.INTENSITY_CORRELATION:
         return _colocalization_intensity_based(
             chan_1_result, chan_2_result, intensity_threshold
         )
-    elif method == ColocalizationMethod.MANDERS_COEFFICIENTS.value:
+    elif method is ColocalizationMethod.MANDERS_COEFFICIENTS:
         return _colocalization_manders(
             chan_1_result, chan_2_result, intensity_threshold
         )
@@ -995,7 +995,7 @@ def _colocalization_distance_based(
 
     if not chan_1_result.cell_positions or not chan_2_result.cell_positions:
         return _create_empty_coloc_result(
-            chan_1_result, chan_2_result, "distance_based"
+            chan_1_result, chan_2_result, ColocalizationMethod.DISTANCE_BASED,
         )
 
     # Convert positions to arrays
@@ -1053,7 +1053,7 @@ def _colocalization_distance_based(
         slice_index=chan_1_result.slice_index,
         chan_1_results=chan_1_result,
         chan_2_results=chan_2_result,
-        colocalization_method="distance_based",
+        colocalization_method=ColocalizationMethod.DISTANCE_BASED,
         colocalized_count=colocalized_count,
         colocalization_percentage=colocalization_percentage,
         chan_1_only_count=chan_1_only,
@@ -1064,7 +1064,7 @@ def _colocalization_distance_based(
 
 
 def _create_empty_coloc_result(
-    chan_1_result: CellCountResult, chan_2_result: CellCountResult, method: str
+    chan_1_result: CellCountResult, chan_2_result: CellCountResult, method: ColocalizationMethod,
 ) -> MultiChannelResult:
     """Create empty colocalization result when no cells found."""
     return MultiChannelResult(
@@ -1096,7 +1096,7 @@ def _colocalization_overlap_based(
     result = _colocalization_distance_based(
         chan_1_result, chan_2_result, distance_threshold
     )
-    result.colocalization_method = "overlap_area"
+    result.colocalization_method = ColocalizationMethod.OVERLAP_AREA
     result.colocalization_metrics["min_overlap_threshold"] = min_overlap_area
     result.colocalization_metrics["note"] = "Approximated using distance-based method"
 
@@ -1112,7 +1112,7 @@ def _colocalization_intensity_based(
 
     if not chan_1_result.cell_positions or not chan_2_result.cell_positions:
         return _create_empty_coloc_result(
-            chan_1_result, chan_2_result, "intensity_correlation"
+            chan_1_result, chan_2_result, ColocalizationMethod.INTENSITY_CORRELATION,
         )
 
     # Use distance-based pairing first
@@ -1156,7 +1156,7 @@ def _colocalization_intensity_based(
         slice_index=chan_1_result.slice_index,
         chan_1_results=chan_1_result,
         chan_2_results=chan_2_result,
-        colocalization_method="intensity_correlation",
+        colocalization_method=ColocalizationMethod.INTENSITY_CORRELATION,
         colocalized_count=colocalized_count,
         colocalization_percentage=colocalization_percentage,
         chan_1_only_count=len(pos_1) - colocalized_count,
@@ -1175,7 +1175,7 @@ def _colocalization_manders(
 
     if not chan_1_result.cell_positions or not chan_2_result.cell_positions:
         return _create_empty_coloc_result(
-            chan_1_result, chan_2_result, "manders_coefficients"
+            chan_1_result, chan_2_result, ColocalizationMethod.MANDERS_COEFFICIENTS,
         )
 
     # Simplified Manders calculation based on detected cells
@@ -1205,7 +1205,7 @@ def _colocalization_manders(
     m1 = coloc_int_1 / total_int_1 if total_int_1 > 0 else 0
     m2 = coloc_int_1 / total_int_2 if total_int_2 > 0 else 0  # Simplified
 
-    intensity_result.colocalization_method = "manders_coefficients"
+    intensity_result.colocalization_method = ColocalizationMethod.MANDERS_COEFFICIENTS
     intensity_result.colocalization_metrics.update(
         {
             "manders_m1": m1,

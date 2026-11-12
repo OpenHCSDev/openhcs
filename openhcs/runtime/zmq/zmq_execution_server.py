@@ -517,8 +517,6 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
         self,
         request_context: ZMQExecutionContext,
     ):
-        from openhcs.core.debug.debug_runtime import DebugPausedWorkerRegistry
-
         auxiliary_params = request_context.auxiliary_params
         environment = ZMQOrchestratorEnvironmentRequest(
             execution_id=request_context.execution_id,
@@ -616,11 +614,8 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
             )
             raise
         finally:
-            if (
-                debug_execution_config is not None
-                and debug_execution_config.replay_mode.keeps_worker_paused
-            ):
-                DebugPausedWorkerRegistry.remove(
+            if debug_execution_config is not None:
+                debug_execution_config.replay_mode.cleanup_paused_worker(
                     debug_execution_config.debug_session_id
                 )
             self._worker_assignments_by_execution.pop(

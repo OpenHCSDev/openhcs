@@ -344,7 +344,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
     ) -> Iterator[FunctionMetadata]:
         """Supply catalog-owned claims; independent capabilities compose via super."""
 
-        from .registry_service import RegistryService
+        from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
         catalog = (
             RegistryService.get_all_functions_with_metadata()

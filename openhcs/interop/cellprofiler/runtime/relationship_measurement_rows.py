@@ -3,7 +3,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, replace
 import time
-from typing import TYPE_CHECKING
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.measurements.measurement_row_materialization import (
@@ -39,11 +38,9 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
 from openhcs.core.payload.runtime_image_values import as_runtime_value
-
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+    CellProfilerOutputRecordRequest,
+)
 
 
 @dataclass(frozen=True, slots=True)

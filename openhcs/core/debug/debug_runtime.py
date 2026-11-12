@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Mapping, Self
+from typing import Any, Callable, ClassVar, Mapping, Protocol, Self, runtime_checkable
 from uuid import uuid4
 
 from metaclass_registry import AutoRegisterMeta
@@ -30,11 +30,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection, RuntimePlaneProjection
-from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValueSet
-from openhcs.core.object_labels.runtime_object_labels import (
-    ObjectLabelValue,
-)
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisProjector, RuntimePlaneAxisValueProjection
 from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.progress.types import ProgressContextPayload, emit_event
 from openhcs.core.progress.types import (
@@ -43,6 +39,14 @@ from openhcs.core.progress.types import (
     StartedProgressStatus,
     SuccessProgressStatus,
 )
+
+
+@runtime_checkable
+class DebugValueFactProvider(Protocol):
+    def debug_value_facts(
+        self,
+        plane_projector: RuntimePlaneAxisProjector | None,
+    ) -> tuple[list[str], RuntimePlaneAxisValueProjection | None]: ...
 
 
 class DebugCommandType(ABC, metaclass=AutoRegisterMeta):
@@ -125,14 +129,37 @@ class DebugBoundary(ABC, metaclass=AutoRegisterMeta):
 
     name: ClassVar[str | None] = None
     progress_status: ClassVar[type[ProgressStatus]]
-    reports_output_artifacts: ClassVar[bool] = False
-    carries_exception: ClassVar[bool] = False
+    def reported_output_refs(
+        self, output_artifacts: DebugArtifactRefProjection,
+    ) -> tuple[DebugArtifactRef, ...]:
+        return ()
+
+    def event_artifact_projection(
+        self,
+        output_artifacts: DebugArtifactRefProjection,
+        input_artifacts: DebugArtifactRefProjection,
+    ) -> DebugArtifactRefProjection:
+        return input_artifacts
+
+    def validate_exception(self, exception: BaseException | None) -> None:
+        if exception is not None:
+            raise ValueError(f"{self.name!r} debug events cannot carry an exception.")
 
 
 class ReportsOutputArtifactsDebugBoundary:
     """Trait for boundaries that report the artifacts the invocation produced."""
 
-    reports_output_artifacts: ClassVar[bool] = True
+    def reported_output_refs(
+        self, output_artifacts: DebugArtifactRefProjection,
+    ) -> tuple[DebugArtifactRef, ...]:
+        return output_artifacts.refs
+
+    def event_artifact_projection(
+        self,
+        output_artifacts: DebugArtifactRefProjection,
+        input_artifacts: DebugArtifactRefProjection,
+    ) -> DebugArtifactRefProjection:
+        return output_artifacts
 
 
 class BeforeInvocationDebugBoundary(DebugBoundary):
@@ -148,7 +175,10 @@ class AfterInvocationDebugBoundary(ReportsOutputArtifactsDebugBoundary, DebugBou
 class ExceptionDebugBoundary(ReportsOutputArtifactsDebugBoundary, DebugBoundary):
     name = "exception"
     progress_status = ErrorProgressStatus
-    carries_exception = True
+
+    def validate_exception(self, exception: BaseException | None) -> None:
+        if exception is None:
+            raise ValueError(f"{self.name!r} debug events require an exception.")
 
 
 class DebugWorkerState(ABC, metaclass=AutoRegisterMeta):
@@ -202,8 +232,27 @@ class DebugReplayMode(ABC, metaclass=AutoRegisterMeta):
 
     name: ClassVar[str | None] = None
     retains_compile_artifact: ClassVar[bool] = True
-    keeps_worker_paused: ClassVar[bool] = False
-    """The worker stays alive between commands, paused at invocation boundaries."""
+
+    @classmethod
+    def pause_controller_for(
+        cls, debug_session_id: str
+    ) -> "DebugPausedWorkerController | None":
+        return None
+
+    @classmethod
+    def cleanup_paused_worker(cls, debug_session_id: str) -> None:
+        pass
+
+    @classmethod
+    def adjusted_worker_count(cls, configured: int) -> int:
+        return configured
+
+    @classmethod
+    def adjusted_runtime_environment(
+        cls,
+        runtime_environment: "CompiledRuntimeEnvironmentPlan",
+    ) -> "CompiledRuntimeEnvironmentPlan":
+        return runtime_environment
 
 
 class ColdReplay(DebugReplayMode):
@@ -217,7 +266,30 @@ class WarmArtifactReplay(DebugReplayMode):
 
 class PersistentPausedWorkerReplay(DebugReplayMode):
     name = "persistent_paused_worker"
-    keeps_worker_paused = True
+
+    @classmethod
+    def pause_controller_for(
+        cls, debug_session_id: str
+    ) -> "DebugPausedWorkerController | None":
+        return DebugPausedWorkerRegistry.controller_for(debug_session_id)
+
+    @classmethod
+    def adjusted_worker_count(cls, configured: int) -> int:
+        return 1
+
+    @classmethod
+    def cleanup_paused_worker(cls, debug_session_id: str) -> None:
+        DebugPausedWorkerRegistry.remove(debug_session_id)
+
+    @classmethod
+    def adjusted_runtime_environment(
+        cls,
+        runtime_environment: "CompiledRuntimeEnvironmentPlan",
+    ) -> "CompiledRuntimeEnvironmentPlan":
+        return runtime_environment.with_execution_shape(
+            use_threading=True,
+            configured_num_workers=1,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -339,16 +411,13 @@ class DebugArtifactRef:
     ) -> "DebugArtifactRef":
         """Build a reference carrying shape facts from one bound artifact value."""
 
-        shape: tuple[int, ...] | None = None
-        dtype: str | None = None
         if isinstance(value, RuntimeArrayPayload):
-            shape = tuple(int(axis_size) for axis_size in value.shape)
-            payload_data = value.array_payload_data()
-            if isinstance(payload_data, np.ndarray):
-                dtype = str(payload_data.dtype)
+            shape, dtype = value.debug_shape()
         elif isinstance(value, np.ndarray):
             shape = tuple(int(axis_size) for axis_size in value.shape)
             dtype = str(value.dtype)
+        else:
+            shape, dtype = None, None
         return replace(
             cls.from_artifact_plan(plan=plan, cursor=cursor),
             shape=shape,
@@ -390,17 +459,6 @@ class DebugArtifactIdentity:
                 None if output_plan is None else output_plan.producer_step_name
             ),
             settings_digest=cls.settings_digest_for_plan(plan),
-        )
-
-    def matches(self, other: "DebugArtifactIdentity") -> bool:
-        return (
-            self.name == other.name
-            and self.kind is other.kind
-            and self.group_keys == other.group_keys
-            and self.producer_step_index == other.producer_step_index
-            and self.producer_step_scope_id == other.producer_step_scope_id
-            and self.producer_step_name == other.producer_step_name
-            and self.settings_digest == other.settings_digest
         )
 
     @staticmethod
@@ -505,99 +563,14 @@ class DebugInvocationParameter:
         projection_facts: tuple[str, ...] = ()
         projection: RuntimePlaneAxisValueProjection | None = None
 
-        if isinstance(value, ObjectLabelValue):
-            domain = value.object_label_domain()
-            facts.extend(
-                (
-                    f"representation={value.representation.value!r}",
-                    f"domain_scope={domain.scope.name!r}",
-                    f"declared_object_count={domain.declared_object_count!r}",
-                    f"declared_object_id_count={len(domain.declared_object_ids)}",
-                    "declared_object_plane_count="
-                    f"{len(domain.declared_object_id_domains)}",
-                    f"source_plane_count={value.source_provenance.source_plane_count}",
-                    f"source_image_name_count={len(value.source_image_names)}",
-                )
-            )
-            projection = value.declared_plane_projection()
-            facts.extend(
-                (
-                    "declared_plane_axis="
-                    f"{value.plane_axis.name!r}",
-                    "declared_cardinality="
-                    f"{None if projection is None else projection.axis_size!r}",
-                )
-            )
-            if isinstance(value, RuntimeArrayPayload):
-                facts.append(f"shape={value.shape!r}")
-                label_data = value.array_payload_data()
-                if isinstance(label_data, np.ndarray):
-                    facts.append(f"dtype={str(label_data.dtype)!r}")
-        elif isinstance(value, RuntimeArrayPayload):
-            facts.append(f"shape={value.shape!r}")
-            image_data = value.array_payload_data()
-            if isinstance(image_data, np.ndarray):
-                facts.append(f"dtype={str(image_data.dtype)!r}")
-            metadata = value.metadata
-            if metadata.has_values:
-                facts.extend(
-                    (
-                        f"source_dtype={metadata.source_dtype!r}",
-                        f"axes={metadata.axes!r}",
-                        "source_plane_count="
-                        f"{metadata.source_provenance.source_plane_count}",
-                        "source_image_name_count="
-                        f"{len(metadata.source_image_names)}",
-                    )
-                )
-            if metadata.plane_axis.leads_data:
-                payload_shape = tuple(int(axis_size) for axis_size in value.shape)
-                if plane_projector is not None and (
-                    metadata.plane_axis.one_plane_per_runtime_slice
-                    or not isinstance(plane_projector, RuntimePlaneProjection)
-                ):
-                    projection = RuntimePlaneAxisValueProjection.from_projector(
-                        plane_projector,
-                        metadata.plane_axis,
-                        metadata.source_image_names,
-                    )
-                if projection is None:
-                    facts.append(f"plane_axis={metadata.plane_axis.name!r}")
-                declared_cardinality = payload_shape[0]
-            else:
-                declared_cardinality = None
-            facts.extend(
-                (
-                    f"declared_plane_axis={metadata.plane_axis.name!r}",
-                    f"declared_cardinality={declared_cardinality}",
-                )
-            )
+        if isinstance(value, DebugValueFactProvider):
+            facts, projection = value.debug_value_facts(plane_projector)
         elif isinstance(value, np.ndarray):
-            facts.extend(
-                (
-                    f"shape={value.shape!r}",
-                    f"dtype={str(value.dtype)!r}",
-                )
-            )
-        elif isinstance(value, RuntimeSliceAlignedValueSet):
-            facts.extend(
-                (
-                    f"slice_count={value.slice_count}",
-                    f"declared_cardinality={value.slice_count}",
-                )
-            )
-        elif isinstance(value, RuntimePlaneAxisValueProjection):
-            projection = value
-            facts.append(f"declared_cardinality={value.axis_size}")
+            facts = [f"shape={value.shape!r}", f"dtype={str(value.dtype)!r}"]
         elif isinstance(value, Enum):
             facts.append(f"member={value.name}")
         elif isinstance(value, str):
-            facts.extend(
-                (
-                    f"value={value[:128]!r}",
-                    f"length={len(value)}",
-                )
-            )
+            facts.extend((f"value={value[:128]!r}", f"length={len(value)}"))
         elif value is None or isinstance(value, (int, float, bool)):
             facts.append(f"value={value!r}")
         elif isinstance(value, (Mapping, tuple, list, set, frozenset)):
@@ -919,7 +892,7 @@ class DebugWarmReplayArtifactReusePlan:
             for candidate in snapshot.output_artifact_refs:
                 if (
                     candidate.identity is not None
-                    and artifact_ref.identity.matches(candidate.identity)
+                    and artifact_ref.identity == candidate.identity
                     and candidate.storage_ref != artifact_ref.storage_ref
                 ):
                     return candidate
@@ -1197,17 +1170,10 @@ class DebugEvent(DebugBoundaryState):
         timing_seconds: float | None = None,
         invocation_parameters: tuple[DebugInvocationParameter, ...] = (),
     ) -> "DebugEvent":
-        if event_type.carries_exception != (exception is not None):
-            raise ValueError(
-                f"{event_type.name!r} debug events "
-                f"{'require' if event_type.carries_exception else 'cannot carry'} "
-                "an exception."
-            )
-        reported_output_artifacts = (
-            output_artifacts.refs if event_type.reports_output_artifacts else ()
-        )
-        event_ref_projection = (
-            output_artifacts if event_type.reports_output_artifacts else input_artifacts
+        event_type.validate_exception(exception)
+        reported_output_artifacts = event_type.reported_output_refs(output_artifacts)
+        event_ref_projection = event_type.event_artifact_projection(
+            output_artifacts, input_artifacts,
         )
         exception_text = None
         traceback_text = None
@@ -1906,10 +1872,8 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         request: DebugSinkInstallRequest,
     ) -> None:
         invocation_strategy = DebugInvocationExecutionStrategy.for_config(self.config)
-        pause_controller = (
-            DebugPausedWorkerRegistry.controller_for(self.config.debug_session_id)
-            if self.config.replay_mode.keeps_worker_paused
-            else None
+        pause_controller = self.config.replay_mode.pause_controller_for(
+            self.config.debug_session_id
         )
         if pause_controller is not None:
             pause_controller.bind_context(request.context)
@@ -1983,20 +1947,13 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         return [] if not available_axis_ids else [available_axis_ids[0]]
 
     def compile_worker_count(self, configured_num_workers: int) -> int:
-        if self.config.replay_mode.keeps_worker_paused:
-            return 1
-        return configured_num_workers
+        return self.config.replay_mode.adjusted_worker_count(configured_num_workers)
 
     def compiled_runtime_environment(
         self,
         runtime_environment: "CompiledRuntimeEnvironmentPlan",
     ) -> "CompiledRuntimeEnvironmentPlan":
-        if not self.config.replay_mode.keeps_worker_paused:
-            return runtime_environment
-        return runtime_environment.with_execution_shape(
-            use_threading=True,
-            configured_num_workers=1,
-        )
+        return self.config.replay_mode.adjusted_runtime_environment(runtime_environment)
 
     def snapshot_store_for_context(
         self,

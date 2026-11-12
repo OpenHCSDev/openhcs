@@ -35,7 +35,7 @@ from openhcs.core.callable.processing_preparation import (
 from openhcs.runtime.runtime_util.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
-from .unified_registry import (
+from openhcs.processing.backends.lib_registry.unified_registry import (
     LIBRARY_REGISTRIES,
     FunctionMetadata,
     LibraryRegistryBase,

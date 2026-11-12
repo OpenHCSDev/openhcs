@@ -62,6 +62,25 @@ class AnalysisDimension(Enum):
     THREE_D = "3d"
 
 
+class ImageEdge(Enum):
+    """Image boundary selection for edge-touching object filtering."""
+
+    LEFT = "left"
+    RIGHT = "right"
+    TOP = "top"
+    BOTTOM = "bottom"
+
+    def edge_labels(self, labeled: np.ndarray) -> np.ndarray:
+        if self is ImageEdge.LEFT:
+            return labeled[:, 0]
+        elif self is ImageEdge.RIGHT:
+            return labeled[:, -1]
+        elif self is ImageEdge.TOP:
+            return labeled[0, :]
+        else:
+            return labeled[-1, :]
+
+
 @dataclass(frozen=True)
 class AxonAnalysisSummary:
     """One artifact-scoped summary row for an axon skeleton analysis."""
@@ -188,9 +207,7 @@ def skan_axon_skeletonize_and_analyze(
     threshold_value: Optional[float] = None,
     min_object_size: int = 100,
     min_branch_length: float = 0.0,
-    filter_edge: Optional[
-        str
-    ] = None,  # Filter objects not touching this edge: 'left', 'right', 'top', 'bottom', None
+    filter_edge: ImageEdge | None = None,
     return_skeleton_visualizations: bool = False,
     skeleton_visualization_mode: OutputMode = OutputMode.SKELETON_OVERLAY,
     analysis_dimension: AnalysisDimension = AnalysisDimension.THREE_D,
@@ -528,16 +545,12 @@ def _prune_skeleton(
     return pruned_skeleton
 
 
-def _filter_by_edge(binary_stack: np.ndarray, edge: str) -> np.ndarray:
-    """
-    Keep only objects that touch the specified edge of the image.
-
-    Removes artifacts and objects that don't originate from the specified edge.
-    Useful for filtering out debris while keeping neurites/axons that enter from one side.
+def _filter_by_edge(binary_stack: np.ndarray, edge: ImageEdge) -> np.ndarray:
+    """Keep only objects that touch the specified edge of the image.
 
     Args:
         binary_stack: 3D binary mask (Z, Y, X)
-        edge: Which edge to filter by ('left', 'right', 'top', 'bottom')
+        edge: Which edge to filter by
 
     Returns:
         Filtered binary mask with only objects touching the specified edge
@@ -562,21 +575,7 @@ def _filter_by_edge(binary_stack: np.ndarray, edge: str) -> np.ndarray:
         # Label connected components
         labeled = label(slice_binary)
 
-        # Get labels that touch the specified edge
-        edge_labels = set()
-
-        if edge == "left":
-            # First column (x=0)
-            edge_labels.update(labeled[:, 0])
-        elif edge == "right":
-            # Last column (x=-1)
-            edge_labels.update(labeled[:, -1])
-        elif edge == "top":
-            # First row (y=0)
-            edge_labels.update(labeled[0, :])
-        elif edge == "bottom":
-            # Last row (y=-1)
-            edge_labels.update(labeled[-1, :])
+        edge_labels = set(edge.edge_labels(labeled).flat)
 
         # Remove background label (0)
         edge_labels.discard(0)

@@ -23,6 +23,24 @@ class DetectionMethod(Enum):
     THRESHOLD = "threshold"
 
 
+DetectionMethodHandler = Callable[..., CellCountResult]
+
+
+def detect_cells_single_method(
+    image: object,
+    slice_idx: int,
+    method: DetectionMethod,
+    params: dict[str, object],
+    *,
+    methods: dict[DetectionMethod, DetectionMethodHandler],
+) -> CellCountResult:
+    try:
+        detector = methods[method]
+    except KeyError:
+        raise ValueError(f"Unknown detection method: {method}")
+    return detector(image, slice_idx, params)
+
+
 def detection_method_catalog(
     *,
     blob_log: Callable[..., CellCountResult],
@@ -30,14 +48,14 @@ def detection_method_catalog(
     blob_doh: Callable[..., CellCountResult],
     watershed: Callable[..., CellCountResult],
     threshold: Callable[..., CellCountResult],
-) -> dict[str, Callable[..., CellCountResult]]:
+) -> dict[DetectionMethod, Callable[..., CellCountResult]]:
     """Build the detector catalog from the single detection enum authority."""
     return {
-        DetectionMethod.BLOB_LOG.value: blob_log,
-        DetectionMethod.BLOB_DOG.value: blob_dog,
-        DetectionMethod.BLOB_DOH.value: blob_doh,
-        DetectionMethod.WATERSHED.value: watershed,
-        DetectionMethod.THRESHOLD.value: threshold,
+        DetectionMethod.BLOB_LOG: blob_log,
+        DetectionMethod.BLOB_DOG: blob_dog,
+        DetectionMethod.BLOB_DOH: blob_doh,
+        DetectionMethod.WATERSHED: watershed,
+        DetectionMethod.THRESHOLD: threshold,
     }
 
 
@@ -56,14 +74,39 @@ def colocalization_analyzer_catalog(
     overlap_area: Callable[..., MultiChannelResult],
     intensity_correlation: Callable[..., MultiChannelResult],
     manders_coefficients: Callable[..., MultiChannelResult],
-) -> dict[str, Callable[..., MultiChannelResult]]:
+) -> dict[ColocalizationMethod, Callable[..., MultiChannelResult]]:
     """Build the analyzer catalog from the single colocalization enum authority."""
     return {
-        ColocalizationMethod.DISTANCE_BASED.value: distance_based,
-        ColocalizationMethod.OVERLAP_AREA.value: overlap_area,
-        ColocalizationMethod.INTENSITY_CORRELATION.value: intensity_correlation,
-        ColocalizationMethod.MANDERS_COEFFICIENTS.value: manders_coefficients,
+        ColocalizationMethod.DISTANCE_BASED: distance_based,
+        ColocalizationMethod.OVERLAP_AREA: overlap_area,
+        ColocalizationMethod.INTENSITY_CORRELATION: intensity_correlation,
+        ColocalizationMethod.MANDERS_COEFFICIENTS: manders_coefficients,
     }
+
+
+ColocalizationAnalyzer = Callable[
+    [CellCountResult, CellCountResult, float, float, float],
+    MultiChannelResult,
+]
+
+
+def analyze_colocalization(
+    chan_1_result: CellCountResult,
+    chan_2_result: CellCountResult,
+    method: ColocalizationMethod,
+    max_distance: float,
+    min_overlap_area: float,
+    intensity_threshold: float,
+    *,
+    analyzers: dict[ColocalizationMethod, ColocalizationAnalyzer],
+) -> MultiChannelResult:
+    try:
+        analyzer = analyzers[method]
+    except KeyError:
+        raise ValueError(f"Unknown colocalization method: {method}")
+    return analyzer(
+        chan_1_result, chan_2_result, max_distance, min_overlap_area, intensity_threshold,
+    )
 
 
 class ThresholdMethod(Enum):
@@ -75,8 +118,8 @@ class ThresholdMethod(Enum):
 
 
 @dataclass
-class CellCountResult:
-    """Results for single-channel cell counting."""
+class CellCountMeasurementFields:
+    """Shared measurement fields for cell counting results and serializable rows."""
 
     slice_index: int
     method: str
@@ -86,6 +129,12 @@ class CellCountResult:
     cell_intensities: list[float]
     detection_confidence: list[float]
     parameters_used: dict[str, Any]
+
+
+@dataclass
+class CellCountResult(CellCountMeasurementFields):
+    """Results for single-channel cell counting."""
+
     binary_mask: Any | None = None
 
     @classmethod
@@ -121,7 +170,7 @@ class MultiChannelResult:
     slice_index: int
     chan_1_results: CellCountResult
     chan_2_results: CellCountResult
-    colocalization_method: str
+    colocalization_method: ColocalizationMethod
     colocalized_count: int
     colocalization_percentage: float
     chan_1_only_count: int
@@ -232,10 +281,6 @@ class AreaFilter:
 class ColocalizationAnalysis:
     """Shared cell-counting colocalization semantics for CPU and GPU callers."""
 
-    DISTANCE_BASED_METHOD = "distance_based"
-    OVERLAP_AREA_METHOD = "overlap_area"
-    INTENSITY_CORRELATION_METHOD = "intensity_correlation"
-    MANDERS_COEFFICIENTS_METHOD = "manders_coefficients"
     OVERLAP_DISTANCE_THRESHOLD = 2.0
     INTENSITY_PAIRING_DISTANCE_THRESHOLD = 5.0
 
@@ -249,7 +294,7 @@ class ColocalizationAnalysis:
             return self.empty_result(
                 chan_1_result,
                 chan_2_result,
-                self.DISTANCE_BASED_METHOD,
+                ColocalizationMethod.DISTANCE_BASED,
             )
 
         colocalized_pairs = self.nearest_pairs(
@@ -281,7 +326,7 @@ class ColocalizationAnalysis:
             slice_index=chan_1_result.slice_index,
             chan_1_results=chan_1_result,
             chan_2_results=chan_2_result,
-            colocalization_method=self.DISTANCE_BASED_METHOD,
+            colocalization_method=ColocalizationMethod.DISTANCE_BASED,
             colocalized_count=colocalized_count,
             colocalization_percentage=colocalization_percentage,
             chan_1_only_count=chan_1_result.cell_count - colocalized_count,
@@ -307,7 +352,7 @@ class ColocalizationAnalysis:
             chan_2_result,
             self.OVERLAP_DISTANCE_THRESHOLD,
         )
-        result.colocalization_method = self.OVERLAP_AREA_METHOD
+        result.colocalization_method = ColocalizationMethod.OVERLAP_AREA
         result.colocalization_metrics["min_overlap_threshold"] = min_overlap_area
         result.colocalization_metrics["note"] = (
             "Approximated using distance-based method"
@@ -324,7 +369,7 @@ class ColocalizationAnalysis:
             return self.empty_result(
                 chan_1_result,
                 chan_2_result,
-                self.INTENSITY_CORRELATION_METHOD,
+                ColocalizationMethod.INTENSITY_CORRELATION,
             )
 
         colocalized_pairs: list[tuple[int, int]] = []
@@ -358,7 +403,7 @@ class ColocalizationAnalysis:
             slice_index=chan_1_result.slice_index,
             chan_1_results=chan_1_result,
             chan_2_results=chan_2_result,
-            colocalization_method=self.INTENSITY_CORRELATION_METHOD,
+            colocalization_method=ColocalizationMethod.INTENSITY_CORRELATION,
             colocalized_count=colocalized_count,
             colocalization_percentage=(
                 2 * colocalized_count / total_cells * 100 if total_cells > 0 else 0
@@ -379,7 +424,7 @@ class ColocalizationAnalysis:
             return self.empty_result(
                 chan_1_result,
                 chan_2_result,
-                self.MANDERS_COEFFICIENTS_METHOD,
+                ColocalizationMethod.MANDERS_COEFFICIENTS,
             )
 
         result = self.intensity_based(
@@ -394,7 +439,7 @@ class ColocalizationAnalysis:
             if chan_1_result.cell_intensities and chan_2_result.cell_positions
             else 0.0
         )
-        result.colocalization_method = self.MANDERS_COEFFICIENTS_METHOD
+        result.colocalization_method = ColocalizationMethod.MANDERS_COEFFICIENTS
         result.colocalization_metrics.update(
             {
                 "manders_m1": (
@@ -416,7 +461,7 @@ class ColocalizationAnalysis:
         self,
         chan_1_result: CellCountResult,
         chan_2_result: CellCountResult,
-        method: str,
+        method: ColocalizationMethod,
     ) -> MultiChannelResult:
         return MultiChannelResult(
             slice_index=chan_1_result.slice_index,

@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-_registered_label_validate_plane_count = None
-_registered_label_project_plane = None
-
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
 from abc import ABC
@@ -429,12 +426,17 @@ class PlaneLabelScope(ObjectLabelDomainScope):
         *,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> ObjectLabelDomain:
+        from openhcs.core.object_labels.runtime_object_labels import (
+            object_label_project_plane as _project_plane,
+            object_label_validate_plane_count as _validate_plane_count,
+        )
+
         if plane_projection is None:
             raise ValueError(
                 "Plane-scoped object-label declaration requires an exact runtime "
                 "plane projection."
             )
-        _registered_label_validate_plane_count(
+        _validate_plane_count(
             labels,
             plane_count=plane_projection.axis_size,
             context="Object-label present-domain declaration",
@@ -444,7 +446,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
             declared_object_id_domains=tuple(
                 ObjectLabelIdDomainStrategy.for_value(plane).present_ids(plane)
                 for plane in (
-                    _registered_label_project_plane(
+                    _project_plane(
                         labels,
                         index,
                         plane_count=plane_projection.axis_size,
@@ -480,6 +482,10 @@ class PlaneLabelScope(ObjectLabelDomainScope):
         labels: ObjectLabelValue,
         projection: RuntimePlaneAxisValueProjection | None,
     ) -> tuple["ObjectLabelValue", ...]:
+        from openhcs.core.object_labels.runtime_object_labels import (
+            object_label_project_plane as _project_plane,
+        )
+
         if projection is None:
             raise ValueError(
                 "Plane-scoped object-label measurement requires an exact runtime "
@@ -506,7 +512,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
             )
         return tuple(
             labels.with_projected_plane(
-                _registered_label_project_plane(
+                _project_plane(
                     labels.labels,
                     index,
                     plane_count=plane_count,

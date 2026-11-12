@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-_registered_shared_measurement_row_axis_domain = None
-_registered_MeasurementTableAxisProjection = None
-
 from collections.abc import Iterable
 from functools import lru_cache
 from dataclasses import dataclass, field
@@ -111,7 +108,9 @@ class MeasurementTable(
 
     def runtime_slice_row_domain(self) -> tuple[int, ...] | None:
         """Return the runtime-slice indices these rows carry, if they carry the axis."""
-        return _registered_shared_measurement_row_axis_domain(
+        from openhcs.core.measurements.measurement_row_materialization import shared_measurement_row_axis_domain
+
+        return shared_measurement_row_axis_domain(
             self.name, (self,), MeasurementRowAxisField.SLICE_INDEX
         )
 
@@ -137,7 +136,9 @@ class MeasurementTable(
         )
         if not selects_slice_rows:
             return self
-        return _registered_MeasurementTableAxisProjection(
+        from openhcs.core.artifact_store.runtime_artifact_queries import MeasurementTableAxisProjection
+
+        return MeasurementTableAxisProjection(
             axis=MeasurementRowAxisField.SLICE_INDEX,
             value=context.require_plane_index(),
             table=self,

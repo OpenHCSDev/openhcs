@@ -7,8 +7,9 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from math import floor, isfinite
 from numbers import Real
-from typing import TYPE_CHECKING, ClassVar, Self, TypeAlias, TypeVar
+from typing import ClassVar, Self, TypeAlias, TypeVar
 
+import numpy as np
 from polystore.streaming.identity import (
     StreamProducerIdentity,
     StreamProducerPayloadMapping,
@@ -16,14 +17,10 @@ from polystore.streaming.identity import (
 from zmqruntime.viewer_protocol import (
     ViewerNativeLayerTransform,
     ViewerSourceSpatialDomainPayload,
+    ViewerWireField,
 )
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
-
-if TYPE_CHECKING:
-    import numpy as np
-    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-
-from zmqruntime.viewer_protocol import ViewerWireField
 
 ViewerScalar: TypeAlias = str | int | float | bool | None
 VerticesYX: TypeAlias = tuple[tuple[float, float], ...]

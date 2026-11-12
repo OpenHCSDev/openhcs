@@ -7,7 +7,6 @@ from collections.abc import Callable
 from dataclasses import replace
 from functools import lru_cache
 from typing import (
-    TYPE_CHECKING,
     Any,
     ClassVar,
 )
@@ -64,29 +63,27 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-        CellProfilerObjectLocationMeasurementRows,
-    )
-    from collections.abc import Callable
+from openhcs.core.callable.function_patterns import (
+    FunctionInvocationKey,
+    NormalizedFunctionItem,
+)
 
-    from openhcs.core.callable.function_patterns import (
-        FunctionInvocationKey,
-        NormalizedFunctionItem,
-    )
-    from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
-    from openhcs.core.payload.runtime_tabular_values import ColumnarRows
-    from openhcs.core.steps.function_runtime import (
-        RuntimeCallableKwargs,
-        RuntimeFunctionOutput,
-    )
-    from openhcs.interop.cellprofiler.measurement_scope import (
-        CellProfilerMeasurementTargetScope,
-    )
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_tabular_values import ColumnarRows
+from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+    CellProfilerObjectLocationMeasurementRows,
+)
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableKwargs,
+    RuntimeFunctionOutput,
+)
+from openhcs.interop.cellprofiler.measurement_scope import (
+    CellProfilerMeasurementTargetScope,
+)
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+    CellProfilerOutputRecordRequest,
+)
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.module_measurement_features import ObjectCountFeature
 

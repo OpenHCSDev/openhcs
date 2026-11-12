@@ -21,7 +21,7 @@ from openhcs.constants import Backend
 from openhcs.core.source.source_bindings import ImagePlaneSource
 from openhcs.core.payload.vfs_protocol import FileManagerLike
 
-from .cellprofiler_literals import decode_cellprofiler_setting_literal
+from openhcs.interop.cellprofiler.cellprofiler_literals import decode_cellprofiler_setting_literal
 
 logger = logging.getLogger(__name__)
 

@@ -19,7 +19,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass, replace
 from importlib.metadata import distribution
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TypeVar
 
 from zmqruntime import TcpDataControlPortPairAuthority
 from zmqruntime.config import TransportMode
@@ -63,10 +63,9 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
-if TYPE_CHECKING:
-    from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth import (
-        LooseOperaPhenixNeuriteInputs,
-    )
+from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth import (
+    LooseOperaPhenixNeuriteInputs,
+)
 
 
 class InstalledDemoFailure(RuntimeError):

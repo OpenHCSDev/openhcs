@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from polystore.base import reset_memory_backend, storage_registry
 
 from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
+from openhcs.core.debug.debug_runtime import DebugExecutionConfig, DebugExecutionPolicy
 from openhcs.runtime.zmq.zmq_execution_signature import ZMQExecutionIdentity
-
-if TYPE_CHECKING:
-    from openhcs.core.debug.debug_runtime import DebugExecutionConfig, DebugExecutionPolicy
 
 
 @dataclass(frozen=True, slots=True)

@@ -9,13 +9,8 @@ from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 from typing import Self
 
-from openhcs.core.axes.axis_declarations import AxisFamily
-from openhcs.core.source.source_image_provenance import SourceImageProvenance
-from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.payload.plane_provenance import PlaneProvenance
 
-
-
-_empty_image_metadata_factory: Callable[[], Any] | None = None
 
 
 class RuntimeSliceProjectableValue(ABC):
@@ -35,22 +30,24 @@ class RuntimeSliceProjectableValue(ABC):
         return NoPlaneAxis
 
     @property
-    def image_metadata(self) -> ImagePayloadMetadata:
-        """Return the image metadata this value carries; only images carry any."""
-        assert _empty_image_metadata_factory is not None
-        return _empty_image_metadata_factory()
+    def image_metadata(self) -> PlaneMetadata:
+        """Return the plane metadata this value carries; only images carry any."""
+        from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+
+        return ImagePayloadMetadata()
 
     @property
     def array_data(self) -> object:
         """Return the array a writer stores for this value; only images unwrap."""
         return self
 
-    def scalar_source_provenance(self) -> SourceImageProvenance:
+    def scalar_source_provenance(self) -> PlaneProvenance:
         """Return the source provenance of this value read as one runtime slice."""
         return self.image_metadata.source_provenance
 
-    def slice_source_provenances(self) -> tuple[SourceImageProvenance, ...]:
+    def slice_source_provenances(self) -> tuple[PlaneProvenance, ...]:
         """Return the source provenance of each runtime slice, without reading pixels."""
+        from openhcs.core.axes.axis_declarations import ColourAxis
 
         count = self.runtime_slice_count()
         metadata = self.image_metadata
@@ -104,6 +101,15 @@ class RuntimeSliceProjectableValue(ABC):
     def stored_slices(self) -> tuple[object, ...]:
         """Return the separately stored members ``map_slices`` transforms."""
         return (self,)
+
+    def wrap_raw_output(self, raw_data: object) -> object:
+        """Wrap a raw array result back into this value's type, preserving context.
+
+        Returns ``raw_data`` unchanged when this value has no context worth
+        preserving (no mask, no metadata).  Image payloads override this to
+        call ``with_pixels``.
+        """
+        return raw_data
 
     def match_alignment(
         self,
@@ -270,12 +276,12 @@ class RuntimePlaneAxis(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def compose_provenance(
         cls,
-        provenances: Sequence[SourceImageProvenance],
+        provenances: Sequence[PlaneProvenance],
         *,
-        scalar_sources: Sequence[SourceImageProvenance],
+        scalar_sources: Sequence[PlaneProvenance],
         **topology: bool,
-    ) -> SourceImageProvenance:
-        """Return the source provenance of members composed along this axis.
+    ) -> PlaneProvenance:
+        """Return the provenance of members composed along this axis.
 
         ``topology`` forwards ``preserve_single_topology``; each axis has its
         own default for a single member.
@@ -322,11 +328,12 @@ class RuntimeSlicePlaneAxis(RuntimePlaneAxis):
     @classmethod
     def compose_provenance(
         cls,
-        provenances: Sequence[SourceImageProvenance],
+        provenances: Sequence[PlaneProvenance],
         *,
-        scalar_sources: Sequence[SourceImageProvenance],
+        scalar_sources: Sequence[PlaneProvenance],
         **topology: bool,
-    ) -> SourceImageProvenance:
+    ) -> PlaneProvenance:
+        from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
         return SourceImageProvenance.stack(
             provenances, scalar_sources=scalar_sources, **topology
@@ -369,11 +376,12 @@ class SourceBindingPlaneAxis(RuntimePlaneAxis):
     @classmethod
     def compose_provenance(
         cls,
-        provenances: Sequence[SourceImageProvenance],
+        provenances: Sequence[PlaneProvenance],
         *,
-        scalar_sources: Sequence[SourceImageProvenance],
+        scalar_sources: Sequence[PlaneProvenance],
         **topology: bool,
-    ) -> SourceImageProvenance:
+    ) -> PlaneProvenance:
+        from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
         return SourceImageProvenance.bundle(
             provenances, scalar_sources=scalar_sources, **topology
@@ -421,11 +429,11 @@ class NoPlaneAxis(RuntimePlaneAxis):
     @classmethod
     def compose_provenance(
         cls,
-        provenances: Sequence[SourceImageProvenance],
+        provenances: Sequence[PlaneProvenance],
         *,
-        scalar_sources: Sequence[SourceImageProvenance],
+        scalar_sources: Sequence[PlaneProvenance],
         **topology: bool,
-    ) -> SourceImageProvenance:
+    ) -> PlaneProvenance:
         raise ValueError("Members are composed along a declared plane axis.")
 
 
@@ -565,6 +573,12 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
         object.__setattr__(self, "source_aliases", source_aliases)
         object.__setattr__(self, "axis_size", axis_size)
 
+    def debug_value_facts(
+        self,
+        plane_projector: RuntimePlaneAxisProjector | None,
+    ) -> tuple[list[str], RuntimePlaneAxisValueProjection | None]:
+        return [f"declared_cardinality={self.axis_size}"], self
+
     @property
     def selects_one_plane(self) -> bool:
         """Whether this projection selects one plane of its axis."""
@@ -600,7 +614,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
     def from_source_declaration(
         cls,
         axis: type[RuntimePlaneAxis],
-        source: SourceImageProvenance,
+        source: PlaneProvenance,
     ) -> RuntimePlaneAxisValueProjection | None:
         """Construct the retained axis declared by an exact source-image value.
 
@@ -642,7 +656,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
         )
 
     def validate_source_declaration(
-        self, axis: type[RuntimePlaneAxis], source: SourceImageProvenance,
+        self, axis: type[RuntimePlaneAxis], source: PlaneProvenance,
     ) -> None:
         """Check an explicit projection against retained acquisition declarations."""
         if axis.unstacked:
@@ -780,6 +794,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
 
     def dense_shape_carries_axis(self, shape: Sequence[int]) -> bool:
         """Return whether a dense shape carries this declared leading axis."""
+        from openhcs.core.axes.axis_declarations import AxisFamily
 
         shape = tuple(int(size) for size in shape)
         spatial_rank = AxisFamily.active().payload_spatial_rank

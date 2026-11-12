@@ -437,9 +437,3 @@ def measurement_image_batch_executor(executor: Callable) -> Callable[[F], F]:
     )
 
 
-import openhcs.core.callable.callable_contract as _cc
-import openhcs.core.payload.aligned_image_payload as _aip
-
-_cc._registered_batch_callable_family = RuntimeBatchCallableFamily
-_aip._registered_Pure2DSliceBatchExecutor = Pure2DSliceBatchExecutor
-_aip._registered_RuntimePure2DSliceBatchRequest = RuntimePure2DSliceBatchRequest

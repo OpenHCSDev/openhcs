@@ -41,10 +41,6 @@ from openhcs.core.measurements.runtime_spatial_graph import SpatialGraph
 from openhcs.core.pipeline.annotation_checks import annotation_accepts_runtime_type
 
 
-_registered_OpenHCSPlaneAddress = None
-_registered_RuntimeArtifactLocation = None
-_registered_StoredRuntimeValue = None
-_registered_stack_image_payloads = None
 
 
 class ArtifactType(ABC, metaclass=AutoRegisterMeta):
@@ -55,9 +51,12 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
 
     value: ClassVar[str]
     payload_shape: ClassVar[type[PayloadShape]] = AnyPayloadShape
-    participates_in_measurement_source_names: ClassVar[bool] = False
     participates_in_main_flow_output: ClassVar[bool] = False
     _runtime_value_type: ClassVar[type | None] = None
+
+    @classmethod
+    def measurement_source_names_for_alias(cls, alias: str) -> tuple[str, ...]:
+        return ()
 
     @staticmethod
     def unwrap_runtime_value(value: object) -> object:
@@ -630,7 +629,14 @@ class ImageArtifactType(ImagePayloadArtifactKind):
     """Image array artifact type."""
 
     value = "image"
-    participates_in_measurement_source_names = True
+
+    @classmethod
+    def measurement_source_names_for_alias(cls, alias: str) -> tuple[str, ...]:
+        normalized = alias.strip()
+        if not normalized:
+            return ()
+        parts = tuple(part for part in normalized.split("__") if part)
+        return parts or (normalized,)
 
     @classmethod
     def output_owns_source_context(
@@ -848,8 +854,12 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         payloads = tuple(value.data for value in values)
         metadata_mode = RuntimeSlicePlaneAxis
         if not keeps_memory_type:
-            return _registered_stack_image_payloads(payloads, metadata_mode=metadata_mode)
-        return _registered_stack_image_payloads(
+            from openhcs.core.payload.aligned_image_payload import stack_image_payloads
+
+            return stack_image_payloads(payloads, metadata_mode=metadata_mode)
+        from openhcs.core.payload.aligned_image_payload import stack_image_payloads
+
+        return stack_image_payloads(
             payloads,
             memory_type=detect_memory_type(payloads[0].data),
             device_id=0,
@@ -886,7 +896,7 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         records: tuple[StoredRuntimeValue, ...],
         output_plan: ArtifactOutputPlan,
     ) -> tuple[StoredRuntimeValue, ...]:
-        OpenHCSPlaneAddress = _registered_OpenHCSPlaneAddress
+        from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
         if not output_plan.materialization_uses_source_identity_filename():
             return records
@@ -1319,8 +1329,7 @@ class MeasurementsArtifactType(NominalPayloadKind, MeasurementBearingArtifactTyp
         from openhcs.constants.constants import Backend
 
         RuntimeValue = ArtifactType._runtime_value_type
-        RuntimeArtifactLocation = _registered_RuntimeArtifactLocation
-        StoredRuntimeValue = _registered_StoredRuntimeValue
+        from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactLocation, StoredRuntimeValue
 
         if len(records) <= 1:
             return records
@@ -1350,15 +1359,11 @@ class ObjectLineageArtifactType(NominalPayloadKind, ArtifactType):
 
     value = "object_lineage"
     payload_shape = TablePayloadShape
-    _registered_payload_type: type | None = None
-
     @classmethod
     def runtime_payload_type(cls) -> type:
-        assert cls._registered_payload_type is not None, (
-            "ObjectLineageArtifactType payload type not registered; "
-            "openhcs.core.object_labels.runtime_relationships must be imported first."
-        )
-        return cls._registered_payload_type
+        from openhcs.core.object_labels.runtime_relationships import ObjectRelationship
+
+        return ObjectRelationship
 
     @classmethod
     def compose_runtime_values(

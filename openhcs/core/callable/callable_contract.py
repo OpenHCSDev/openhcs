@@ -59,7 +59,7 @@ from openhcs.core.payload.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
-from openhcs.core.payload.runtime_image_values import owned_runtime_value, RuntimeSliceProjectionDeclarationError, ImagePayload
+from openhcs.core.payload.runtime_image_values import owned_runtime_value, RuntimeSliceProjectionDeclarationError
 from openhcs.core.payload.runtime_output_matching import split_runtime_output
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.config.pipeline_config import runtime_config_parameter
@@ -194,9 +194,8 @@ class DeclaredValue(ABC):
     """How one callable-namespace declaration is validated and normalized."""
 
     default: ClassVar[Any] = None
-    # A declaration whose default is itself a decision (not "undeclared") is
-    # always written, so a reader never re-derives it.
-    written_when_default: ClassVar[bool] = False
+    def should_write(self, value: Any) -> bool:
+        return value != self.default
 
     def read(self, value: object, *, owner: str) -> Any:
         """Return the declared value, or this kind's default when undeclared."""
@@ -258,7 +257,8 @@ class DeclaredMember(DeclaredInstance):
 class DeclaredDecision(DeclaredInstance):
     """A declaration where None is a decision, such as "inject no context"."""
 
-    written_when_default: ClassVar[bool] = True
+    def should_write(self, value: Any) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -376,14 +376,10 @@ def _declared_fields(cls: type) -> tuple[tuple[str, str, DeclaredValue], ...]:
     )
 
 
-_registered_adapter_spec_type: type | None = None
-_registered_processing_contract_family: type | None = None
-_registered_batch_callable_family: type | None = None
-
-
 def _runtime_adapter_spec_type() -> type:
-    assert _registered_adapter_spec_type is not None
-    return _registered_adapter_spec_type
+    from openhcs.core.callable.runtime_adapters import RuntimeAdapterSpec
+
+    return RuntimeAdapterSpec
 
 
 def _request_binding_type() -> type:
@@ -547,7 +543,7 @@ class CallableDeclaration:
             attribute: value
             for name, attribute, kind in _declared_fields(CallableDeclaration)
             for value in (getattr(self, name),)
-            if value != kind.default or kind.written_when_default
+            if kind.should_write(value)
         }
 
     @property
@@ -765,8 +761,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         func: Callable[..., object] | "FunctionReference",
     ) -> CallableContract:
         """Build a contract from callable attributes once at compiler boundary."""
-        assert _registered_batch_callable_family is not None
-        RuntimeBatchCallableFamily = _registered_batch_callable_family
+        from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchCallableFamily
 
         projection = CallableProjection.from_callable(func)
         declaration = CallableDeclaration.from_namespace(
@@ -1150,7 +1145,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         return source_payload if any(
             isinstance(source_payload, argument_type)
             for argument_type in _nominal_argument_types(annotation)
-        ) or not isinstance(source_payload, ImagePayload) else source_payload.data
+        ) else source_payload.array_data
 
     def main_flow_call_argument(self, source_payload: Any) -> Any:
         """Let the processing declaration retain context needed before raw calls."""
@@ -1803,8 +1798,9 @@ def _project_runtime_owned_parameter_exclusions(func: Any) -> None:
 
 
 def _processing_contract_family() -> type:
-    assert _registered_processing_contract_family is not None
-    return _registered_processing_contract_family
+    from openhcs.core.callable.processing_contracts import ProcessingContract
+
+    return ProcessingContract
 
 
 def _attach_runtime_bound_parameter_metadata(

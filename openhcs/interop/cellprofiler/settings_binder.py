@@ -32,7 +32,8 @@ from openhcs.interop.cellprofiler_setting_normalization import (
     normalize_cellprofiler_setting_name,
 )
 
-from .parser import ModuleBlock, ModuleSetting
+from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.utils.environment import BOOL_FALSE_STRINGS, BOOL_TRUE_STRINGS
 
 logger = logging.getLogger(__name__)
 
@@ -456,10 +457,10 @@ class MeasurementFeatureSettingBinding(SettingToKeywordBinding):
 class SettingsBinder:
     """Bind parsed .cppipe setting strings to typed Python kwargs."""
 
-    BOOL_TRUE = {"yes", "true", "1", "on"}
-    BOOL_FALSE = {"no", "false", "0", "off"}
-    GENERIC_BOOL_TRUE = {"yes", "true", "on"}
-    GENERIC_BOOL_FALSE = {"no", "false", "off"}
+    BOOL_TRUE = BOOL_TRUE_STRINGS
+    BOOL_FALSE = BOOL_FALSE_STRINGS
+    GENERIC_BOOL_TRUE = BOOL_TRUE_STRINGS - {"1"}
+    GENERIC_BOOL_FALSE = BOOL_FALSE_STRINGS - {"0"}
 
     def __init__(
         self,

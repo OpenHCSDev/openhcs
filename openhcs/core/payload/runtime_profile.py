@@ -13,6 +13,8 @@ from enum import Enum
 from collections.abc import Iterator, Mapping
 from typing import ClassVar
 
+from openhcs.utils.environment import BOOL_TRUE_STRINGS
+
 PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
 PROFILE_RUNTIME_PATH_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME_PATH"
 RuntimeProfileFieldValue = (
@@ -69,7 +71,7 @@ class RuntimeProfileLogger:
 
     @staticmethod
     def enabled() -> bool:
-        return os.environ.get(PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
+        return os.environ.get(PROFILE_RUNTIME_ENV, "").lower() in BOOL_TRUE_STRINGS
 
     @classmethod
     @contextmanager

@@ -496,9 +496,6 @@ class DirectedObjectRelationshipPayload(
         )
 
 
-ObjectLineageArtifactType._registered_payload_type = ObjectRelationship
-
-
 class DirectedRelationshipPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator):
     """Aggregate directed relationships over one declared PURE_2D plane axis."""
 

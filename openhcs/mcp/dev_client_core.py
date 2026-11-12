@@ -16,7 +16,7 @@ from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_args, get_type_hints
+from typing import ClassVar, Self, TextIO, TypeVar, cast, get_args, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
@@ -81,8 +81,7 @@ from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.authoring.session.operations import SessionOperation
 from openhcs.authoring.session.operations.datasets import DatasetWorkflowOperation
 
-if TYPE_CHECKING:
-    from mcp.types import ProgressNotification
+from mcp.types import ProgressNotification
 
 DEFAULT_CALL_TIMEOUT_SECONDS = 5.0
 DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS = 30.0
@@ -1519,12 +1518,9 @@ class McpDevTransportAuthority:
     def daemon_enabled(cls) -> bool:
         """Return whether the daemon environment variable opts in."""
 
-        return os.getenv(cls.daemon_environment_variable, "").strip().lower() in {
-            "1",
-            "on",
-            "true",
-            "yes",
-        }
+        from openhcs.utils.environment import BOOL_TRUE_STRINGS
+
+        return os.getenv(cls.daemon_environment_variable, "").strip().lower() in BOOL_TRUE_STRINGS
 
     @classmethod
     def spawn_failure_marker_path(cls, socket_path: Path) -> Path:

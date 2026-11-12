@@ -14,9 +14,9 @@ from openhcs.core.memory import cupy as cupy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.utils.import_utils import optional_import_placeholder
 
-from .phase_correlation import phase_correlation_gpu_only, phase_correlation_nist_gpu
-from .position_reconstruction import build_mst_gpu, rebuild_positions_from_mst_gpu
-from .quality_metrics import (
+from openhcs.processing.backends.pos_gen.mist.phase_correlation import TileDirection, phase_correlation_gpu_only, phase_correlation_nist_gpu
+from openhcs.processing.backends.pos_gen.mist.position_reconstruction import build_mst_gpu, rebuild_positions_from_mst_gpu
+from openhcs.processing.backends.pos_gen.mist.quality_metrics import (
     compute_adaptive_quality_threshold,
     compute_correlation_quality_gpu_aligned,
     log_coordinate_transformation,
@@ -40,40 +40,10 @@ def _convert_overlap_to_tile_coordinates(
     overlap_w: int,
     tile_h: int,
     tile_w: int,
-    direction: str,
+    direction: TileDirection,
 ) -> Tuple[float, float]:
-    """
-    Convert overlap-region-relative displacements to tile-center coordinates.
-
-    Args:
-        dy, dx: Phase correlation displacements in overlap region coordinates
-        overlap_h, overlap_w: Overlap region dimensions
-        tile_h, tile_w: Full tile dimensions
-        direction: 'horizontal' or 'vertical'
-
-    Returns:
-        (tile_dy, tile_dx): Displacements in tile-center coordinates
-    """
-    if direction == "horizontal":
-        # For horizontal connections (left-right)
-        # Expected displacement is approximately tile_w - overlap_w
-        expected_dx = tile_w - overlap_w
-        tile_dx = expected_dx + dx  # Add phase correlation correction
-        tile_dy = dy  # Vertical should be minimal
-
-    elif direction == "vertical":
-        # For vertical connections (top-bottom)
-        # Expected displacement is approximately tile_h - overlap_h
-        expected_dy = tile_h - overlap_h
-        tile_dy = expected_dy + dy  # Add phase correlation correction
-        tile_dx = dx  # Horizontal should be minimal
-
-    else:
-        raise ValueError(
-            f"Invalid direction: {direction}. Must be 'horizontal' or 'vertical'"
-        )
-
-    return tile_dy, tile_dx
+    expected = direction.expected_displacement(tile_h, tile_w, overlap_h, overlap_w)
+    return direction.to_tile_displacement(dy, dx, expected)
 
 
 def _validate_displacement_magnitude(
@@ -81,47 +51,13 @@ def _validate_displacement_magnitude(
     tile_dy: float,
     expected_dx: float,
     expected_dy: float,
-    direction: str,
+    direction: TileDirection,
     tolerance_factor: float = 2.0,
     tolerance_percent: float = 0.1,
 ) -> bool:
-    """
-    Validate that displacement magnitudes are reasonable.
-
-    Args:
-        tile_dx, tile_dy: Computed tile-center displacements
-        expected_dx, expected_dy: Expected displacements
-        direction: 'horizontal' or 'vertical'
-        tolerance_factor: How much deviation to allow
-
-    Returns:
-        True if displacement is reasonable, False otherwise
-    """
-    if direction == "horizontal":
-        # For horizontal connections, dx should be close to expected_dx
-        dx_error = abs(tile_dx - expected_dx)
-        max_allowed_error = tolerance_factor * expected_dx * tolerance_percent
-        dx_valid = dx_error <= max_allowed_error
-
-        # dy should be small (minimal vertical drift relative to expected_dx, not expected_dy)
-        max_allowed_dy = tolerance_factor * expected_dx * tolerance_percent
-        dy_valid = abs(tile_dy) <= max_allowed_dy
-
-        return dx_valid and dy_valid
-
-    elif direction == "vertical":
-        # For vertical connections, dy should be close to expected_dy
-        dy_error = abs(tile_dy - expected_dy)
-        max_allowed_error = tolerance_factor * expected_dy * tolerance_percent
-        dy_valid = dy_error <= max_allowed_error
-
-        # dx should be small (minimal horizontal drift relative to expected_dy, not expected_dx)
-        max_allowed_dx = tolerance_factor * expected_dy * tolerance_percent
-        dx_valid = abs(tile_dx) <= max_allowed_dx
-
-        return dy_valid and dx_valid
-
-    return False
+    return direction.validate_magnitude(
+        tile_dx, tile_dy, expected_dx, expected_dy, tolerance_factor, tolerance_percent,
+    )
 
 
 def _validate_cupy_array(array, name: str = "input") -> None:  # type: ignore
@@ -245,7 +181,7 @@ def _global_optimization_gpu_only(
                     dy, dx, quality = phase_correlation_nist_gpu(
                         left_region,
                         right_region,
-                        direction="horizontal",
+                        direction=TileDirection.HORIZONTAL,
                         n_peaks=n_peaks,
                         use_nist_normalization=use_nist_normalization,
                     )
@@ -364,7 +300,7 @@ def _global_optimization_gpu_only(
                     dy, dx, quality = phase_correlation_nist_gpu(
                         top_region,
                         bottom_region,
-                        direction="vertical",
+                        direction=TileDirection.VERTICAL,
                         n_peaks=n_peaks,
                         use_nist_normalization=use_nist_normalization,
                     )
