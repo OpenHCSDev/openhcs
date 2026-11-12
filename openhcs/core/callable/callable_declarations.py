@@ -10,7 +10,6 @@ from typing import Any, ClassVar
 from metaclass_registry.caches import IdentityBoundProcessCache
 from python_introspect import RuntimeParameterDeclarationABC
 
-from openhcs.core.payload.aligned_image_payload import compose_aligned_image_payload
 
 
 class CallableContractRuntimeCache(IdentityBoundProcessCache):
@@ -146,6 +145,8 @@ class ImagePayloadConsumption(str, Enum):
         stack_broadcast_source_indices: Sequence[int | None] = (),
     ) -> ImagePayloadComposition:
         """Admit primary sources to the original alignment/bundle algorithm."""
+
+        from openhcs.core.payload.aligned_image_payload import compose_aligned_image_payload
 
         return compose_aligned_image_payload(
             owner_name,

@@ -14,14 +14,6 @@ from typing import Any
 
 import arraybridge as _arraybridge
 from arraybridge import MemoryType
-from openhcs.core.callable.callable_contract import (
-    attach_callable_contract_metadata,
-    attach_processing_prepare,
-)
-from openhcs.core.callable.processing_contracts import FlexibleContract, ProcessingContract
-from openhcs.core.config.pipeline_config import runtime_config_parameter
-from openhcs.core.payload.runtime_image_values import ImagePayload, PlainImagePayload
-from openhcs.core.payload.runtime_array_values import is_array_payload
 
 
 def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
@@ -33,6 +25,8 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
         contract: Any = None,
         **kwargs: Any,
     ) -> Any:
+        from openhcs.core.callable.processing_contracts import FlexibleContract, ProcessingContract
+
         if contract is None:
             contract = FlexibleContract
         processing_contract = (
@@ -97,6 +91,8 @@ def _admits_plain_image_payload(annotation: Any) -> bool:
     from typing import get_args
 
 
+    from openhcs.core.payload.runtime_image_values import ImagePayload
+
     annotation = resolve_annotated(annotation)
     if is_union_type(annotation):
         return any(_admits_plain_image_payload(member) for member in get_args(annotation))
@@ -114,6 +110,9 @@ def image_payload_boundary(wrapped: Any) -> Any:
     parameter is wrapped when it declares ``ImagePayload`` itself and receives
     a bare array.
     """
+
+    from openhcs.core.payload.runtime_image_values import ImagePayload, PlainImagePayload
+    from openhcs.core.payload.runtime_array_values import is_array_payload
 
     raw_signature = inspect.signature(inspect.unwrap(wrapped), eval_str=True)
     parameters = tuple(raw_signature.parameters.values())
@@ -174,6 +173,11 @@ def _attach_openhcs_metadata(
     processing_contract: Any,
 ) -> None:
     from python_introspect import add_parameter_exclusions, parameter_exclusions
+    from openhcs.core.callable.callable_contract import (
+        attach_callable_contract_metadata,
+        attach_processing_prepare,
+    )
+    from openhcs.core.config.pipeline_config import runtime_config_parameter
 
     signature = _signature_with_resolved_raw_annotations(wrapped)
     raw_callable = inspect.unwrap(wrapped)
