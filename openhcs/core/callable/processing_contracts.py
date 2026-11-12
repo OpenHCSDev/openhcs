@@ -33,7 +33,6 @@ from openhcs.core.measurements.measurement_row_materialization import (
 )
 from openhcs.core.memory import stack_runtime_slices, unstack_runtime_slices
 from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.callable.runtime_batch_contracts import Pure2DSliceBatchExecutor, RuntimePure2DSliceBatchRequest
 
 
 from openhcs.core.payload.runtime_image_values import (
@@ -1142,6 +1141,8 @@ class Pure2DContract(ProcessingContract):
         cls, call: ContractCall, image: Any, kwargs: dict[str, Any],
     ) -> Any:
         """Call once per plane and restack the results."""
+        from openhcs.core.callable.runtime_batch_contracts import Pure2DSliceBatchExecutor, RuntimePure2DSliceBatchRequest
+
         split = call.plane_split(image, kwargs)
         if split is None:
             return call.unsplit(image, kwargs)
