@@ -618,8 +618,6 @@ class RuntimeMeasurementFeature(str, Enum):
         return self._indexed_descriptor_declaration_types
 
 
-@dataclass(frozen=True, slots=True)
-@dataclass(frozen=True, slots=True)
 class MeasurementStatistic(str, Enum):
     """Canonical runtime measurement statistic labels."""
 
