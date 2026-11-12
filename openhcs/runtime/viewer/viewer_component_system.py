@@ -125,7 +125,7 @@ class ViewerStreamingDataTypeHandler(
         """Handle one typed streaming payload batch."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerDisplayConfigInput(ABC, metaclass=AutoRegisterMeta):
     """Nominal input adapter for viewer display configs."""
 
@@ -138,7 +138,7 @@ class ViewerDisplayConfigInput(ABC, metaclass=AutoRegisterMeta):
         """Return a normalized component layout."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerMappingDisplayConfigInput(ViewerDisplayConfigInput):
     """Mapping-backed viewer display config input."""
 
@@ -149,7 +149,7 @@ class ViewerMappingDisplayConfigInput(ViewerDisplayConfigInput):
         return ViewerComponentLayoutMappingParser.layout(self.mapping_display_config)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerObjectDisplayConfigInput(ViewerDisplayConfigInput):
     """Object-backed viewer display config input."""
 
@@ -227,7 +227,7 @@ class ViewerComponentLayoutMappingParser:
         return value
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerComponentLayout(ViewerBatchDisplayPayload):
     """The slot of each declared axis, and the axes one stream addresses.
 
@@ -359,7 +359,7 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerComponentMetadataNormalizer:
     """Normalize component metadata by the stream's declared axes."""
 
@@ -375,7 +375,7 @@ class ViewerComponentMetadataNormalizer:
         return self.declared_axes.normalize_value(component, value)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerComponentValueDomainEntry:
     """Declared observed values for one component in a viewer stream batch."""
 
@@ -404,7 +404,7 @@ class ViewerComponentValueDomainEntry:
         return cls(component=component, values=ordered_values)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerComponentValueDomainPayload:
     """Batch-level component value domain shared by viewer receivers."""
 
@@ -586,7 +586,7 @@ class ViewerComponentMetadataPayload:
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerBatchPayloadFields:
     """Fail-loud typed access to one viewer batch wire payload."""
 
@@ -918,7 +918,7 @@ class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValu
         return iter(self.store.values)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerComponentAxisSemantics(ViewerComponentValueDomainPayload):
     """Shared component-axis layout plus declared value-domain carrier."""
 
@@ -971,7 +971,7 @@ class ViewerComponentAxisSemanticsFactory:
         return ViewerComponentAxisSemantics(entries=(), layout=ViewerComponentLayout.empty())
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerDisplayBatchContext(
     ViewerComponentAxisSemantics,
     ViewerComponentNameMetadata,
@@ -1056,7 +1056,7 @@ class ViewerComponentValueDomain:
         return self.observed_values[component] | self.declared_values[component]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerComponentValueDomainView:
     """Named view over component values used by layer-axis projection."""
 
@@ -1212,7 +1212,7 @@ class ViewerRouteComponentValueTracker:
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerLayerAxisProjection:
     """Route-local component axes projected into a shared viewer coordinate domain."""
 
@@ -1324,7 +1324,7 @@ class ViewerLayerAxisProjection:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerLayerAxisProjectedComponent:
     """One component axis after route-local projection into viewer coordinates."""
 
@@ -1334,7 +1334,7 @@ class ViewerLayerAxisProjectedComponent:
     axis_offset: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerLayerAxisProjectionStep:
     """Projection decision for one component axis."""
 
@@ -1413,7 +1413,7 @@ class ViewerLayerAxisProjectionStep:
             ) from error
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerLayerAxisProjectionRequest:
     """Typed domain bundle for projecting layer-local axes into viewer axes."""
 

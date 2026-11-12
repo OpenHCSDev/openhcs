@@ -34,7 +34,7 @@ from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.axes.axis_declarations import PartitionAxis
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactLocation:
     """Persisted artifact location with facts retained by its writer."""
 
@@ -69,7 +69,7 @@ class RuntimeArtifactLocation:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeStoreObservationCursor:
     """Cursor into the append-only runtime artifact observation stream."""
 
@@ -92,7 +92,7 @@ class RuntimeArtifactQueryTarget:
         raise NotImplementedError
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactLocationTarget(RuntimeArtifactQueryTarget):
     """Runtime-artifact query target for one persisted VFS location."""
 
@@ -102,7 +102,7 @@ class RuntimeArtifactLocationTarget(RuntimeArtifactQueryTarget):
         return record.location == self.location
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
     """Match discovered groups at their compiled producer-owned locations."""
 
@@ -141,7 +141,7 @@ def replace_runtime_artifact_payload(
     filemanager.save(data, location.path, location.backend)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactQuery:
     """Typed lookup for one planned runtime artifact record."""
 
@@ -255,14 +255,14 @@ class RuntimeArtifactQuery:
         return True
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class StoredRuntimeValue(RuntimeValue):
     """A validated runtime value with its persistence boundary."""
 
     location: RuntimeArtifactLocation
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactInput:
     """Bind one compiled artifact input to an exact runtime axis coordinate."""
 
@@ -729,7 +729,7 @@ class RuntimeArtifactInput:
         return self.source_binding_plan.for_artifact_refs(context_sources).image_set_identity_policy()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactBatch(RuntimeParameterDeclarationABC):
     """Immutable contract-selected runtime records for one plate invocation."""
 
@@ -872,7 +872,7 @@ class RuntimeArtifactBatch(RuntimeParameterDeclarationABC):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactAddress:
     """Runtime artifact address projected from a stored runtime value."""
 

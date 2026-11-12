@@ -32,7 +32,7 @@ from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StepOutputManifestKey:
     """Identity for main-flow files produced by one step for one axis."""
 
@@ -44,7 +44,7 @@ class NoStepOutputManifestMatch(RuntimeError):
     """Raised when a stale directory pattern is not in producer lineage."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ProducedOutputSemantics(FunctionOutputIdentity):
     """Semantic record for one output file produced by a FunctionStep."""
 
@@ -614,7 +614,7 @@ def step_output_manifest(context: ExecutingContext) -> StepOutputManifestStore:
     return manifest
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ProducedPathRecordIndex:
     """Correlated producer occurrences and their concrete/template address aliases."""
 

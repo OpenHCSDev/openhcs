@@ -61,7 +61,7 @@ logger = logging.getLogger(__name__)
 DATASET_STEP_PROGRESS_HEARTBEAT_SECONDS = 2.0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class BundleExecutionExtras:
     """Diagnostics captured at the parent-owned execution boundary."""
 
@@ -116,7 +116,7 @@ class BundleExecutionResults(dict[str, ExecutionResult]):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class BundleExecutionRequest(ProgressExecutionContext):
     """Public execute-compiled-bundle call normalized into one request record."""
 
@@ -138,7 +138,7 @@ class BundleExecutionRequest(ProgressExecutionContext):
         return dict(self.execution_bundle.runtime_contexts)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ValidatedBundleExecution(ProgressExecutionContext):
     """Validated execution inputs plus defaults derived from orchestrator state."""
 

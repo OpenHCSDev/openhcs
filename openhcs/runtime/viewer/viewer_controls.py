@@ -222,7 +222,7 @@ class ViewerPointCoordinates(ViewerResultElementCoordinates):
         return floor(cls._coordinate_value(value, axis_label=axis_label) + 0.5)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerNativeDimensions:
     """Actual native readback; canvas_size is logical Qt (width, height)."""
 
@@ -237,7 +237,7 @@ class ViewerNativeDimensions:
         return asdict(self)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerPayloadControlOptions:
     """Caller-declared payload selection and inspection controls."""
 
@@ -376,7 +376,7 @@ class ViewerPayloadControlOptions:
             raise ValueError(f"Viewer payload {field_name} must be nonnegative.")
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerImageSpatialSampleControls(ViewerPayloadControlOptions):
     """Semantic Y/X bounds; metadata, not payload rank or size, owns layout."""
 
@@ -403,7 +403,7 @@ class ViewerImageSpatialSampleControls(ViewerPayloadControlOptions):
         return projected
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerPayloadProjectionOptions:
     """Runtime projection policy over caller-declared payload controls."""
 
@@ -436,7 +436,7 @@ class ViewerPayloadProjectionOptions:
             )
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerStateControlOptions:
     """Formal state-inspection controls shared by agent and viewer runtimes."""
 
@@ -501,7 +501,7 @@ class ViewerStateControlOptions:
             raise ValueError(f"Viewer state {field_name} must be nonnegative.")
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerRoutedImageControlOptions:
     """Exact route and route-local semantic image coordinates."""
 
@@ -514,7 +514,7 @@ class ViewerRoutedImageControlOptions:
         ViewerPayloadControlOptions._validate_axis_indices(dict(self.axis_indices))
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerIntensityWindowControlOptions(ViewerRoutedImageControlOptions):
     """Route-global image contrast derived from caller-declared percentiles.
 
@@ -567,7 +567,7 @@ class ViewerIntensityWindowControlOptions(ViewerRoutedImageControlOptions):
         return numeric
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerFeatureMeasurementControlOptions(ViewerRoutedImageControlOptions):
     """Read-only source-native XY measurement, never a rendered screenshot."""
 
@@ -609,7 +609,7 @@ class ViewerFeatureMeasurementControlOptions(ViewerRoutedImageControlOptions):
             raise ValueError(f"Measurement {name} must be within 1..{ceiling}.")
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerPolylineControlOptions(ViewerFeatureMeasurementControlOptions):
     """Polyline profile: inclusive endpoints, mean across a centred pixel band."""
 
@@ -631,7 +631,7 @@ class ViewerPolylineControlOptions(ViewerFeatureMeasurementControlOptions):
             )
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerRegionControlOptions(ViewerFeatureMeasurementControlOptions):
     """An independently authored simple polygon, not a biological object mask."""
 
@@ -657,7 +657,7 @@ class ViewerRegionControlOptions(ViewerFeatureMeasurementControlOptions):
             raise ValueError("Measurement background_sigma must be nonnegative.")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerMeasurementCoordinates:
     """Audit projection from the accepted item and native coordinate owners."""
 
@@ -681,7 +681,7 @@ class ViewerMeasurementCoordinates:
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerIntensityStatistics:
     count: int
     minimum: float
@@ -713,7 +713,7 @@ class ViewerIntensityStatistics:
         return result
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerPolylineMeasurement:
     vertices_yx: VerticesYX
     world_vertices: tuple[tuple[float, ...], ...]
@@ -737,7 +737,7 @@ class ViewerPolylineMeasurement:
     statistics_precision: str = "float64, population standard deviation (ddof=0)"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerPolygonGeometry:
     area: float
     perimeter: float
@@ -745,7 +745,7 @@ class ViewerPolygonGeometry:
     roundness: float
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerRasterRegionGeometry:
     area_pixels: int
     bbox_yx: tuple[int, int, int, int]
@@ -756,7 +756,7 @@ class ViewerRasterRegionGeometry:
     eccentricity: float
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerRegionMeasurement:
     vertices_yx: VerticesYX
     world_vertices: tuple[tuple[float, ...], ...]
@@ -787,7 +787,7 @@ class ViewerRegionMeasurement:
     statistics_precision: str = "float64, population standard deviation (ddof=0)"
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerNavigationControlOptions:
     """Formal viewer navigation controls shared by agent and viewer runtimes."""
 
@@ -881,7 +881,7 @@ class ViewerNavigationControlOptions:
         )
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerLayerRetirementControlOptions:
     """Explicit routes guarded by their complete observed producer incarnations."""
 
@@ -912,7 +912,7 @@ class ViewerLayerRetirementControlOptions:
         })
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerLayerIsolationControlOptions:
     """Atomic visibility, selection, and navigation for a viewer layer set."""
 

@@ -37,7 +37,7 @@ FILE_NAME_FIELD = "filename"
 """Metadata field of every file record that holds the name a file table shows."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateImageRecord:
     """One image exposed by a plate, including virtual and physical identity."""
 
@@ -78,7 +78,7 @@ class PlateImageRecord:
         return filemanager.sample(self.full_virtual_path, self.backend, request)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateImageInventory:
     """Inventory of plate images resolved through microscope metadata authority."""
 
@@ -363,7 +363,7 @@ class PlateImageInventory:
         raise ValueError(f"Image path {image_path!r} was not found in the plate.")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateResultFileRecord:
     """One analysis result artifact exposed by a plate metadata handler."""
 
@@ -379,7 +379,7 @@ class PlateResultFileRecord:
         return Path(self.full_path)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateFileRecord:
     """Unified file record shape shared by browser and agent projections."""
 
@@ -472,7 +472,7 @@ class PlateFileRecord:
         return query.component_filters.matches(self.metadata)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateFileInventoryQueryResult:
     """Bounded query result for unified plate file records."""
 
@@ -483,7 +483,7 @@ class PlateFileInventoryQueryResult:
     truncated_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateResultFilePreview:
     """Bounded preview for agent-facing result artifacts."""
 
@@ -738,7 +738,7 @@ class PlateResultFilePreviewReader(ResultFilePreviewReader):
         return bool(columns) and all(columns) and len(set(columns)) == len(columns)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateResultFileInventory:
     """Inventory of plate analysis artifacts resolved through metadata authority."""
 
@@ -1014,7 +1014,7 @@ class PlateResultFileInventory:
         return ResultFileFormat.for_suffix_of(file_path)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateFileInventory:
     """Unified plate file inventory shared by UI and agent services."""
 
@@ -1280,7 +1280,7 @@ class PlateFileRecordAmbiguityError(ValueError):
         super().__init__(message)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateImageSample:
     """Bounded pixel sample and summary statistics for one plate image."""
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeImageStackCacheKey:
     """Identity for a stack loaded from an ordered runtime path set."""
 

@@ -39,7 +39,7 @@ from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 LookupValueT = TypeVar("LookupValueT")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class VirtualWorkspaceSourceProjection:
     """Source-binding projection derived from OpenHCS virtual-workspace metadata."""
 
@@ -626,7 +626,7 @@ def _accept_source_binding_projection(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class VirtualWorkspaceImagePayloadProjection:
     """Join persisted semantics to loaded native headers for one workspace image."""
 
@@ -690,7 +690,7 @@ def source_schema_filename_metadata(path: str) -> SourceMetadataMapping | None:
     return parsed.wire_mapping()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class VirtualWorkspaceSourceProjectionCacheEntry:
     """One projection bound to the exact metadata document that produced it."""
 
@@ -819,7 +819,7 @@ class VirtualWorkspaceSourceProjectionCache:
 DEFAULT_SOURCE_PROJECTION_CACHE = VirtualWorkspaceSourceProjectionCache()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class WorkspaceSourceProjections:
     """Projection authority for source-workspace metadata owned by a plate handler."""
 
@@ -952,7 +952,7 @@ class WorkspaceSourceProjections:
         return VirtualWorkspaceSourceProjection.empty(self.dataset_root)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeWorkspaceSourceProjections(
     WorkspaceSourceProjections
 ):

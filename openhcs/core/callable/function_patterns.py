@@ -49,7 +49,7 @@ RuntimeComponentValue: TypeAlias = JsonScalar
 DEFAULT_GROUP_KEY = "default"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeParameterBinding:
     """Compile-resolved runtime parameter value for one callable invocation."""
 
@@ -61,7 +61,7 @@ class RuntimeParameterBinding:
             raise ValueError("Runtime parameter binding name cannot be empty.")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeCallableKwargPolicy:
     """Classify FunctionStep item kwargs before runtime invocation."""
 
@@ -172,7 +172,7 @@ class FunctionInvocationKey:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InvocationArtifactInputProjectionKey:
     """Stable identity for one invocation-to-artifact input edge."""
 
@@ -202,7 +202,7 @@ class InvocationArtifactInputProjectionKey:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InvocationArtifactInputEdgePlan:
     """Exact invocation-owned artifact input occurrence."""
 
@@ -327,7 +327,7 @@ class InvocationArtifactInputEdgePlan:
         self.projection.validate_storage_plan(self.storage_plan)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledMetadataArtifactInputEdgePlan(InvocationArtifactInputEdgePlan):
     """Metadata occurrence backed only by its invocation's injected kwarg."""
 
@@ -341,7 +341,7 @@ class CompiledMetadataArtifactInputEdgePlan(InvocationArtifactInputEdgePlan):
         return scope.invocation.artifact_parameter_value(self.spec)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NormalizedFunctionItem:
     """Compiler-normalized callable item with stable invocation identity."""
 
@@ -369,7 +369,7 @@ class NormalizedFunctionItem:
         raise ValueError(f"Metadata artifact {spec.ref()!r} has no compiled parameter value.")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NormalizedFunctionGroup:
     """Compiler-normalized callable chain for one pattern group."""
 
@@ -407,7 +407,7 @@ class NormalizedFunctionGroup:
         return cls(source_group_key=group_key, items=tuple(normalized_items))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NormalizedFunctionPattern:
     """Raw FunctionStep.func syntax lowered into typed compiler input."""
 
@@ -474,7 +474,7 @@ class NormalizedFunctionPattern:
             yield from group.items
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledFunctionInvocation(NormalizedFunctionItem):
     """Executable compiler output for one callable in a function pattern."""
 
@@ -947,7 +947,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledFunctionGroup:
     """Compiled callable chain for one function-pattern group."""
 
@@ -1247,7 +1247,7 @@ class CreatedPayloadAxisProof(PayloadAxisProof):
         return True
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class UnprovedPayloadAxisProof(PayloadAxisProof):
     invocation: CompiledFunctionInvocation
 
@@ -1255,7 +1255,7 @@ class UnprovedPayloadAxisProof(PayloadAxisProof):
         raise ValueError(failure_message(self.invocation))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledFunctionPattern:
     """Compiled function-pattern graph consumed by FunctionStep runtime."""
 

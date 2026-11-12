@@ -37,7 +37,7 @@ class LiveMeasurementPayloadError(ValueError):
     """Raised when a live-measurement progress context is malformed."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class LiveMeasurementRowPreview:
     """Bounded row preview plus full row count for one measurement table."""
 
@@ -45,7 +45,7 @@ class LiveMeasurementRowPreview:
     row_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class LiveMeasurementTablePreview:
     """Bounded row preview for one measurement artifact write."""
 
@@ -96,7 +96,7 @@ class LiveMeasurementTablePreview:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class LiveMeasurementProgressPayload(ProgressContextPayload):
     """Live measurement preview payload stored inside ProgressEvent.context."""
 

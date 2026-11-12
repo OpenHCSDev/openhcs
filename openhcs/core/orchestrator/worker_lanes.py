@@ -55,7 +55,7 @@ class ForkInheritedWorkerExecutionState:
         ]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class WorkerLaneExecutionContext(ProgressExecutionContext):
     """One worker lane of an execution: its slot and the partition values it owns."""
 
@@ -89,7 +89,7 @@ class WorkerLaneExecutionContext(ProgressExecutionContext):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class WorkerAssignmentPlan:
     """Validated axis ownership and lane context projection for workers."""
 
@@ -106,7 +106,7 @@ class WorkerAssignmentPlan:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class WorkerLaneExecutionPlan(ProgressExecutionContext):
     """Shared execution plan for deterministic worker-lane runners."""
 

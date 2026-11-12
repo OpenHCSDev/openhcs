@@ -47,7 +47,7 @@ from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MainWindowSpecDefinition:
     """Declarative record for one WindowManager-managed window."""
 
@@ -148,7 +148,7 @@ class MainWindowEmbeddedWidgets(DockPanes):
         self.require_pane(OpenHCSUiWindowId.system_monitor).show()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MainWindowPipelineActions:
     """File-menu actions for the embedded pipeline editor."""
 
@@ -203,7 +203,7 @@ class MainWindowPipelineActions:
             QMessageBox.critical(self.main_window, "Save Pipeline", str(error))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MainWindowLifecycleWorkflow:
     """Main-window lifecycle behavior that spans multiple child widgets."""
 

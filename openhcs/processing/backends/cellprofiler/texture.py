@@ -330,7 +330,7 @@ def _texture_scales(scale: TextureScale) -> tuple[int, ...]:
     return (int(scale),)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CellProfilerTexturePixelDataRequest:
     """Quantize image data the same way CellProfiler MeasureTexture does."""
 
@@ -363,7 +363,7 @@ def _clean_feature_vector(features: np.ndarray) -> np.ndarray:
     return clean
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class HaralickFeatureMatrixRequest:
     """Request for CP-compatible Haralick rows using an explicit backend."""
 
@@ -415,7 +415,7 @@ def _has_nonzero_haralick_pairs(nonzero: np.ndarray, scale: int) -> bool:
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TextureMeasurementAxis:
     """Scale, direction, and gray-level coordinates for one Haralick row."""
 
@@ -434,7 +434,7 @@ class TextureMeasurementAxis:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class HaralickFeatureVector:
     """Cleaned Haralick feature row in declared feature-member order."""
 

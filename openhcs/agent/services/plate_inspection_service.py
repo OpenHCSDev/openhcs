@@ -124,7 +124,7 @@ class PlateInspectionFileManagerFactory:
         return FileManager(storage_registry)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionContext:
     """Resolved plate IO context shared by inspection, sampling, and streaming."""
 
@@ -350,7 +350,7 @@ class PlateInspectionFileQueryProjection:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionComponentEntrySet:
     """Nominal value set for one HCS component axis."""
 
@@ -416,7 +416,7 @@ class PlateInspectionComponentEntrySet:
         return None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionComponentCollection:
     """Nominal collection of all inspected HCS component value sets."""
 
@@ -509,7 +509,7 @@ class PlateInspectionMutableParsedComponents:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionParsedFileSet:
     """Filename parse coverage and parsed component values."""
 
@@ -652,7 +652,7 @@ class PlateInspectionComponentSort:
         return (1, value)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionParseCoverage:
     """Parsed filename coverage for confidence and agent-facing warnings."""
 

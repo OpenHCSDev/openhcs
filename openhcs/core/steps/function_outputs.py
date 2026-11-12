@@ -261,7 +261,7 @@ class MaterializedImageOutputWriter:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamOutputItem:
     """One projected image payload and its stream-visible output path."""
 
@@ -282,7 +282,7 @@ class StreamOutputItem:
         return self.projected_payload.require_source_component_metadata()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamOutputBatch:
     """Projected viewer stream items with one authoritative display projection."""
 

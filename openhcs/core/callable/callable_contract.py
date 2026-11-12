@@ -69,7 +69,7 @@ from openhcs.core.pipeline.annotation_checks import special_input_parameter_acce
 CallableNamespace = Mapping[str, Any]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PayloadAxisRequirement:
     """A callable's primary image must declare a payload axis with ``role``."""
 
@@ -117,7 +117,7 @@ class PayloadAxisTransition(ABC):
         return self.preserves(requirement) or self.creates(requirement)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PreservedPayloadAxes(PayloadAxisTransition):
     """The output declares the same payload axes as the input."""
 
@@ -130,7 +130,7 @@ class PreservedPayloadAxes(PayloadAxisTransition):
         return False
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CreatedPayloadAxis(PayloadAxisTransition):
     """The output declares a new payload axis with ``role``."""
 
@@ -386,7 +386,7 @@ def _request_binding_type() -> type:
     return CallableRequestBinding
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class CallableDeclaration:
     """What a processing callable declares to the compiler.
 
@@ -630,7 +630,7 @@ class CallableDeclaration:
             )
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
     """A callable's declaration bound to the callable it was read from.
 
@@ -1515,7 +1515,7 @@ def _rebuild_callable_contract(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CallableRequestBinding:
     """Typed declaration for public kwargs projected into a request record."""
 
@@ -1593,7 +1593,7 @@ class CallableRequestBinding:
         return local_kwargs
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RequestParameterName:
     """Validated implementation parameter name for callable request binding."""
 
@@ -1604,7 +1604,7 @@ class RequestParameterName:
             raise ValueError("request_parameter must be a non-empty string.")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RequestPublicFieldSelection:
     """Validated public request field selection."""
 
@@ -1970,7 +1970,7 @@ def _mutable_callable_namespace(func: Any) -> MutableMapping[str, Any]:
     return namespace
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CallableProjection:
     """Nominal view over callable metadata used at compiler/runtime boundaries."""
 

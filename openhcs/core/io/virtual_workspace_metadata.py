@@ -349,7 +349,7 @@ OpenHCSMetadataPayload: TypeAlias = Mapping[str, JsonValue]
 OpenHCSSubdirectoryPayload: TypeAlias = Mapping[str, JsonValue]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class OpenHCSMetadataSubdirectories:
     """Typed view over OpenHCS metadata subdirectory payloads."""
 
@@ -388,7 +388,7 @@ class OpenHCSMetadataSubdirectories:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class VirtualWorkspaceMapping:
     """Validated virtual-workspace mapping entries for one subdirectory."""
 
@@ -430,7 +430,7 @@ class VirtualWorkspaceMapping:
         return source_ref
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class VirtualWorkspaceSourceProjectionEntries:
     """Validated nominal source projections keyed by canonical virtual path."""
 
@@ -810,7 +810,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         return MappingProxyType(normalized)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class VirtualWorkspaceSourceMetadataEntries:
     """Validated source metadata entries for one virtual-workspace subdirectory."""
 
@@ -852,7 +852,7 @@ class VirtualWorkspaceSourceMetadataEntries:
         return metadata
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class VirtualWorkspaceChannelLabels:
     """Validated colour-axis labels for one virtual-workspace subdirectory."""
 

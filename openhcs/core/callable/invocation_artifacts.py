@@ -49,7 +49,7 @@ def unnamed_main_flow_artifact_name(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ArtifactDeclarationStepContext:
     """Compile-time step context available to artifact declaration providers."""
 
@@ -258,7 +258,7 @@ class InvocationContractProvider(ABC):
         """Return a compile-only callable contract plan for this invocation."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InvocationContractPlan:
     """Compile-time replacement contract plus kwargs consumed by planning."""
 
@@ -377,7 +377,7 @@ class MainFlowArtifactContractProvider(
         return cls()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompositeInvocationContractProvider:
     """Require at most one compile-time invocation-contract provider claim."""
 

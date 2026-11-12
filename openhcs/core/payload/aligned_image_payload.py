@@ -361,7 +361,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AlignedImageStackKwargResolver:
     """Materialize one kwarg for a specific aligned image-stack slice."""
 
@@ -675,7 +675,7 @@ def _complete_image_payload_mask(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImagePayloadComposition:
     """Resolved image payload plus its execution mode."""
 
@@ -932,7 +932,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         return target.stack_arrays(list(promoted), device_id)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AlignedImageSliceContext:
     """Declared semantic context for one aligned image output slice."""
 
@@ -1463,7 +1463,7 @@ class AlignedImageStack(ImagePayloadSliceStack):
         )
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(kw_only=True)
 class ProducedImageStack(ImagePayloadSliceStack):
     """Borrowed produced image slices, composed once into one dense buffer.
 

@@ -19,7 +19,7 @@ from openhcs.constants.constants import (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ExecutionOutputSummary:
     """Typed OpenHCS output-plate fields embedded in a runtime result summary."""
 
@@ -65,7 +65,7 @@ class ExecutionOutputSummary:
         return any(value is not None for value in asdict(self).values())
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ExecutionCompletionPayload:
     """One typed terminal result passed from polling through UI presentation."""
 

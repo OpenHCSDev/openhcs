@@ -146,7 +146,7 @@ RuntimeCallableKwargs = Mapping[str, RuntimeCallableArgument]
 EMPTY_ARTIFACT_PLANS: ArtifactOutputPlans = MappingProxyType({})
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class _ResolvedOutputSlice:
     payload: ImagePayload
     metadata: ImagePayloadMetadata
@@ -154,7 +154,7 @@ class _ResolvedOutputSlice:
     record: ProducedOutputSemantics
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class PatternGroupExecutionScope:
     """Shared pattern-group execution coordinates."""
 
@@ -327,7 +327,7 @@ class PatternGroupExecutionScope:
         return output_count == input_count
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class PatternGroupExecutionRequest(PatternGroupExecutionScope):
     """All runtime data needed to process one pattern group."""
 
@@ -1343,7 +1343,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 )
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
     """Admit exact canonical producer values into an independent cohort."""
 
@@ -1419,7 +1419,7 @@ class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
         return records
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class PatternGroupData(PatternGroupExecutionScope):
     """Complete loaded cohort and its original execution coordinates."""
 
@@ -1582,7 +1582,7 @@ def _save_artifact_value(
     return runtime_value.data
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FunctionCoreExecutor:
     """Execute one scoped callable invocation and route declared artifact I/O."""
 

@@ -35,7 +35,7 @@ from openhcs.core.measurements.measurement_declarations import MeasurementScope,
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(kw_only=True)
 class MeasurementTable(
     SourceImageProvenanceFields,
     NamedArtifactPayload,
@@ -179,7 +179,7 @@ class MeasurementTable(
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectLabelMeasurementValues:
     """Numeric measurements bound to explicit object-label identities."""
 
@@ -306,7 +306,7 @@ class ObjectLabelMeasurementValues:
         return output
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementScopeSelection:
     """A closed set of measurement scopes selected for one runtime operation."""
 
@@ -648,7 +648,7 @@ ObjectCoreMeasurementFeature.__doc__ = (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectLocationCoordinateValues:
     """Dense label-indexed values and missing-row policy for one coordinate."""
 
@@ -693,7 +693,7 @@ def object_location_coordinate_arrays(
             )
         coordinates.append((feature.value, values))
     return tuple(coordinates)
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectMeasurementValueRow:
     """Nominal long-form object measurement row."""
 
@@ -857,7 +857,7 @@ class MeasurementRowValueField(str, Enum):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementScalarLiteral:
     """Scalar classification shared by measurement row and setting policies."""
 
@@ -1023,7 +1023,7 @@ def measurement_axis_integer_domain(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectFeatureValueTable:
     """Wide object-feature values aligned onto a declared object-id domain.
 
@@ -1123,7 +1123,7 @@ class ObjectFeatureValueTable:
         del row
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementSubject:
     """Entity measured by a measurement table."""
 
@@ -1190,7 +1190,7 @@ class MeasurementSubject:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeScopedMeasurementTable:
     """Measurement table plus the execution scope and record it came from."""
 

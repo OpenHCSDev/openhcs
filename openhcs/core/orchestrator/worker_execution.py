@@ -69,7 +69,7 @@ def _runtime_observation_progress_context(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class WorkerExecutorResources(ABC):
     """Nominal worker execution resources for one execution mode."""
 
@@ -156,7 +156,7 @@ class WorkerExecutorResources(ABC):
         """Release resources owned by the orchestrator process for this mode."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InlineWorkerExecutorResources(WorkerExecutorResources):
     """In-process single-lane execution resources."""
 
@@ -188,7 +188,7 @@ class InlineWorkerExecutorResources(WorkerExecutorResources):
         return lane_results
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
     """Fork-inherited runtime context execution resources."""
 
@@ -283,7 +283,7 @@ class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
         return self._runner.run(worker_lane_execution_plan)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PooledWorkerExecutorResources(WorkerExecutorResources):
     """Thread/process pool execution resources."""
 
@@ -361,7 +361,7 @@ class PooledWorkerExecutorResources(WorkerExecutorResources):
         return 0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ProcessWorkerExecutorResources(PooledWorkerExecutorResources):
     """Process-pool resources with exact ownership of child cancellation."""
 
@@ -379,7 +379,7 @@ class ProcessWorkerExecutorResources(PooledWorkerExecutorResources):
         return terminated
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ThreadedWorkerExecutorResources(PooledWorkerExecutorResources):
     """Thread workers share the prepared in-process execution graph."""
 
@@ -972,7 +972,7 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
                 worker.connection.close()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
     """Prepared process resources with isolated ownership for each execution."""
 

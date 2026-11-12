@@ -237,7 +237,7 @@ class ObjectRelationshipDeclaration(ArtifactSpecRelation):
         )
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(kw_only=True)
 class ObjectRelationship(
     SourceImageProvenanceFields,
     RuntimeSliceIndexedValue,
@@ -397,7 +397,7 @@ def _directed_relationship_payload_fields(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DirectedObjectRelationshipPayload(
     RuntimeSliceIndexedValue, RuntimeSliceIdentityProjectableValue
 ):
@@ -643,7 +643,7 @@ class DefaultObjectRelationshipPayloadKernel(ObjectRelationshipPayloadKernel):
 DEFAULT_OBJECT_RELATIONSHIP_PAYLOAD_KERNEL = DefaultObjectRelationshipPayloadKernel()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectRelationshipPayloadRequest:
     """Semantic request for deriving parent-child payloads from label values."""
 
@@ -875,7 +875,7 @@ class SparseIJVObjectRelationshipPayloadStrategy(
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectInstanceKey:
     """Typed identity for one object label inside an optional measurement plane."""
 
@@ -922,7 +922,7 @@ class ObjectInstanceKey:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectInstanceRelationship:
     """Parent-child relationships keyed by typed object instance identity."""
 
@@ -1098,7 +1098,7 @@ class ObjectInstanceRelationship:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectLabelInstanceDomains:
     """Typed object-instance domains keyed by object-label artifact name."""
 

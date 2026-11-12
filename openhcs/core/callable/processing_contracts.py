@@ -33,7 +33,6 @@ from openhcs.core.measurements.measurement_row_materialization import (
 )
 from openhcs.core.memory import stack_runtime_slices, unstack_runtime_slices
 from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
-from openhcs.core.callable.runtime_batch_contracts import Pure2DSliceBatchExecutor, RuntimePure2DSliceBatchRequest
 
 
 from openhcs.core.payload.runtime_image_values import (
@@ -52,7 +51,7 @@ from openhcs.core.payload.runtime_output_matching import (
     RuntimeOutputBundle,
     runtime_output_tuple,
 )
-from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection, RuntimeSlicePlaneAxis
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.measurements.runtime_spatial_grid import SpatialGrid
@@ -60,7 +59,6 @@ from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.core.callable.variable_component_stack_requirement import AlwaysRequiresVariableComponentStack, SemanticControlVariableComponentStackRequirement
 from openhcs.core.callable.callable_contract import CallableDeclaration
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.callable.runtime_batch_contracts import runtime_batch_executors_from_callable
 
 
 PURE2D_VALUE_TYPE_REGISTRY_KEY = "value_type"
@@ -150,7 +148,7 @@ class SignatureFilteredKwargs(RuntimeInvocationKwargPolicy):
         return {name: value for name, value in kwargs.items() if name in parameters}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeCallableInvocation:
     """Typed runtime invocation boundary for processing-contract callables."""
 
@@ -171,7 +169,7 @@ class RuntimeCallableInvocation:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeCallablePolicy:
     """Reusable runtime callable invocation semantics."""
 
@@ -211,7 +209,7 @@ class RuntimeCallablePolicy:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class Pure2DSliceResultBatch:
     """Typed decomposition of per-slice PURE_2D outputs."""
 
@@ -906,7 +904,7 @@ class ContractCall(ABC):
         """Restack per-plane results."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ContractProbe:
     """How a callable behaved on a stack probe and on a plane probe."""
 
@@ -1142,6 +1140,8 @@ class Pure2DContract(ProcessingContract):
         cls, call: ContractCall, image: Any, kwargs: dict[str, Any],
     ) -> Any:
         """Call once per plane and restack the results."""
+        from openhcs.core.callable.runtime_batch_contracts import Pure2DSliceBatchExecutor, RuntimePure2DSliceBatchRequest
+
         split = call.plane_split(image, kwargs)
         if split is None:
             return call.unsplit(image, kwargs)
@@ -1284,6 +1284,8 @@ class LibraryContractCall(ContractCall):
 
     @property
     def batch_executors(self) -> Mapping[Any, Callable[..., Any]]:
+
+        from openhcs.core.callable.runtime_batch_contracts import runtime_batch_executors_from_callable
 
         return runtime_batch_executors_from_callable(self.func)
 

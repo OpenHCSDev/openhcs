@@ -30,7 +30,7 @@ from openhcs.core.source.source_metadata import MetadataExtractionRule, Metadata
 from openhcs.core.util.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source.source_path_identity import source_path_posix, source_paths_equal
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 from openhcs.core.source.source_matching import source_filters_match, semantic_source_metadata_value, source_component_metadata_values, source_metadata_values_equal
 from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.payload_axes import PayloadAxes
@@ -317,7 +317,7 @@ def _normalized_optional_source_text(value: str | None) -> str | None:
     return str(value).strip() or None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImagePlaneSource:
     """One explicit image-plane source URI declared by a source config."""
 
@@ -351,7 +351,7 @@ class ImagePlaneSource:
         return replace(self, uri=str(resolve_source_file(self.uri, source_root)))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImportedMetadataJoin:
     """One join key between image metadata and an imported metadata table."""
 
@@ -376,7 +376,7 @@ class ImportedMetadataJoin:
         object.__setattr__(self, "imported_metadata_field", imported_field)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImportedMetadataTable:
     """Pipeline-level metadata imported from an external table."""
 
@@ -563,7 +563,7 @@ def _materialized_http_source(uri: str, uri_path: str) -> Path:
     return target
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingMatchField:
     """Metadata field from one alias used as a source-set pairing key."""
 
@@ -583,7 +583,7 @@ class SourceBindingMatchField:
         object.__setattr__(self, "metadata_field", str(self.metadata_field))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingMatchDimension:
     """One shared source-set key, expressed as alias-to-metadata-field pairs."""
 
@@ -614,7 +614,7 @@ class SourceBindingMatchDimension:
         return None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceSetPairing(ABC, metaclass=AutoRegisterMeta):
     """How the matched source aliases are paired into logical source sets.
 
@@ -651,14 +651,14 @@ class SourceSetPairing(ABC, metaclass=AutoRegisterMeta):
         return pairing
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PairByOrder(SourceSetPairing):
     """Pair the aliases' sources by their deterministic source order."""
 
     name = "order"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PairByMetadata(SourceSetPairing):
     """Pair the aliases' sources by shared metadata keys."""
 
@@ -685,11 +685,11 @@ class PairByMetadata(SourceSetPairing):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ComponentSelector:
     """Component-axis key/value pair used either to select sources or assign identity."""
 
-    component: Annotated[type[Axis], AxisChoices()]
+    component: type[Axis]
     """Declared axis of the active family, such as channel, site, Z index, or timepoint."""
 
     value: str
@@ -706,7 +706,7 @@ class ComponentSelector:
         object.__setattr__(self, "value", str(self.value))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MetadataSelector:
     """Metadata field/value filter used to select source candidates for one alias."""
 
@@ -724,7 +724,7 @@ class MetadataSelector:
         object.__setattr__(self, "value", source_metadata_scalar(self.value))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceSelector:
     """Choose store-emitted image planes for one named pipeline input.
 
@@ -821,7 +821,7 @@ class SourceSelector:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceAssignmentBase(metaclass=AutoRegisterMeta):
     """Shared contract for selecting an alias and assigning its semantic identity."""
 
@@ -961,7 +961,7 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NamedSourceBinding(SourceAssignmentBase):
     """Name selected image planes and their optional component identity.
 
@@ -1929,7 +1929,7 @@ def source_binding_group_keys_for_group_by(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPlanBase):
     """Immutable compile-time source binding plan for one step."""
 
@@ -2062,7 +2062,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledSourceUniversePlan:
     """Frozen source-file universe decisions for one compiled step."""
 
@@ -2089,7 +2089,7 @@ class CompiledSourceUniversePlan:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingRuntimeMetadataNormalizer:
     """Normalize source metadata carried by a runtime source-binding context."""
 

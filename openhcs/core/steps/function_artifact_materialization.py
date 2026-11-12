@@ -300,7 +300,7 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         """Return persistent materialization backends owned by this policy."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PersistentArtifactMaterializationTargetPlan(ArtifactMaterializationTargetPlan):
     """Target policy for persistent files plus any enabled viewer streams."""
 
@@ -326,7 +326,7 @@ class StreamingOnlyArtifactMaterializationTargetPlan(ArtifactMaterializationTarg
         return {}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlannedArtifactMaterializationPath:
     """Compile-time preview of paths one materialized artifact group may emit."""
 
@@ -335,7 +335,7 @@ class PlannedArtifactMaterializationPath:
     candidate_paths: tuple[str, ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlannedArtifactMaterializationPreview:
     """Compile-time materialization path preview for an explicit artifact spec."""
 
@@ -471,7 +471,7 @@ def actual_materialization_records(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactMaterialization:
     """One exact compiled artifact value and its generic materialization target."""
 
@@ -1162,7 +1162,7 @@ def _planned_materialization_path(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
     """Actual writer outputs saved for one reduced runtime artifact."""
 

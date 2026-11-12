@@ -496,7 +496,7 @@ class NapariAcceptedStreamBatch:
                 server._process_loaded_image(item)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariAcceptedControlRequest:
     """One accepted request owns its eventual reply, including deferred errors."""
 
@@ -1751,7 +1751,7 @@ class NapariDimensionLabelOverlayController:
         return " | ".join(label_parts)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariLayerDisplayRequest:
     """Typed request for displaying one Napari route with one stream data type."""
 
@@ -1823,7 +1823,7 @@ class NapariLayerDisplayRequest:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariRematerializationRequest(NapariLayerDisplayRequest):
     """The original reconciliation traversal already owns every survivor."""
 
@@ -1985,7 +1985,7 @@ class NapariSelectablePresentationRetention:
                 yield
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariImageLayerDisplayHandler(
     NapariImagePresentationRetention, NapariLayerDisplayHandler,
 ):
@@ -2172,7 +2172,7 @@ class NapariShapesLayerDisplayWork(NapariLayerDisplayWork):
         return True
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariShapesLayerDisplayHandler(
     NapariSelectablePresentationRetention, NapariLayerDisplayHandler,
 ):
@@ -2245,7 +2245,7 @@ class NapariShapesLayerDisplayHandler(
             pass
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariPointsLayerDisplayHandler(
     NapariSelectablePresentationRetention, NapariLayerDisplayHandler,
 ):
@@ -2974,7 +2974,7 @@ class NapariResidentFrameMutationControlAction(NapariAppliedFrameControlAction):
         request.complete_from(server, mutate)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ShapeCoordinateBounds:
     """Aggregate YX coordinate bounds for Napari shape payload state."""
 
@@ -3088,7 +3088,7 @@ class ShapeCoordinateBounds:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariResultElementSelectionState:
     """Observed native feature-row selection for one mounted Napari layer."""
 
@@ -3097,7 +3097,7 @@ class NapariResultElementSelectionState:
     selected_data_indices: tuple[int, ...] = ()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariResultSelectionGroupBinding:
     """Bind native feature rows to one declared cross-layer object subject."""
 
@@ -3111,7 +3111,7 @@ class NapariResultSelectionGroupBinding:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariResultSelectionGroupState:
     """One object subject represented by one or more native feature rows."""
 
@@ -3120,7 +3120,7 @@ class NapariResultSelectionGroupState:
     member_indices: tuple[int, ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariResultSelectionGroupIndex:
     """Runtime-derived member lookup for one declared object subject."""
 
@@ -4031,7 +4031,7 @@ def _install_result_selection_toolbar(
     return toolbar
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
     """Shared projection of live Napari route and component stores."""
 
@@ -5509,7 +5509,7 @@ class NapariIntensityWindowControlAction(NapariMountedRouteControlAction):
         ).to_wire_mapping()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariPreparedNavigation:
     """Validated Napari navigation ready for mutation in one Qt turn."""
 

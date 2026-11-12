@@ -38,7 +38,7 @@ def runtime_artifact_viewer_component_identity(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactViewerPayloadExpectation:
     """Exact component and source-domain identity of one viewer payload."""
 
@@ -65,7 +65,7 @@ class RuntimeArtifactViewerPayloadExpectation:
         return self.components, domain.origin_yx, domain.source_shape_yx
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactViewerExpectation:
     """One compiled artifact producer and its exact runtime viewer payloads."""
 
@@ -95,7 +95,7 @@ class RuntimeArtifactViewerExpectation:
         object.__setattr__(self, "payloads", payloads)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactAxisExpectation:
     """Artifact kinds owned by one compiled execution axis."""
 

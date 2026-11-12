@@ -19,7 +19,7 @@ from openhcs.core.config.partition_filter import PartitionFilterProcessor
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaterializationFlagPlanner:
     """Admit source backend and persistence policy for one compilation submission."""
 

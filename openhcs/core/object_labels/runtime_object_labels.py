@@ -109,7 +109,7 @@ def ordered_label_variants(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectLabelVariantData:
     """Final object labels and the variants a domain declared beside them."""
 
@@ -1343,7 +1343,7 @@ class ObjectLabelDataDomainMetadataStrategy(ObjectLabelDomainMetadataStrategy):
         return ObjectLabelDomain()
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(kw_only=True)
 class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
     """Native OpenHCS object-label value."""
 
@@ -2073,7 +2073,7 @@ def object_label_dense_array(
     return np.array(dense_data, dtype=dtype, copy=copy)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectLabelPayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
     """Source-domain adapter for object-label payload values."""
 

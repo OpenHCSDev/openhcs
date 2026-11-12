@@ -18,7 +18,7 @@ from openhcs.core.payload.runtime_identifier import (
 from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementStatistic, ObjectCoreMeasurementFeature
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementSubjectKey:
     """Canonical measured subject for semantic measurement comparison."""
 
@@ -84,7 +84,7 @@ class RuntimeMeasurementSubjectKey:
         return RuntimeMeasurementSourceQualification(self, source_name)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementSourceQualification:
     """Resolved relationship between a measurement subject and row source identity."""
 
@@ -109,7 +109,7 @@ class RuntimeMeasurementSourceQualification:
         return self.row_source_name
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementSourcePair:
     """Ordered pair of source-image identities encoded by measurement dialects."""
 
@@ -159,7 +159,7 @@ class RuntimeMeasurementSourcePair:
         return Counter(runtime_source_name_tokens(self.source_name))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementFeatureKey:
     """Canonical measured feature on one semantic subject."""
 
@@ -405,7 +405,7 @@ _RuntimeSourceTokenGroups = tuple[tuple[str, tuple[str, ...]], ...]
 _MEASUREMENT_AGGREGATE_PREFIXES = frozenset({MeasurementStatistic.MEAN.value})
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementNamePartsProjection:
     """Dialect-aware semantic projection for runtime measurement feature parts."""
 
@@ -525,7 +525,7 @@ class RuntimeMeasurementNamePartsProjection:
         return None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeAggregateFeatureIdentity:
     """Parsed aggregate measurement feature identity."""
 
@@ -580,7 +580,7 @@ class RuntimeAggregateFeatureIdentity:
         return "_".join(self.feature_parts)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SemanticAggregatePrefixedFeatureProjection:
     """Projection of an aggregate-prefixed feature into semantic core form."""
 
@@ -606,7 +606,7 @@ class SemanticAggregatePrefixedFeatureProjection:
         ).feature_name_and_source()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SemanticAggregateFeatureProjection:
     """Resolved aggregate identity and projected child feature."""
 
@@ -630,7 +630,7 @@ class SemanticAggregateFeatureProjection:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SemanticCoreFeatureAndSourceNameProjection:
     """Project a runtime feature name to its semantic core and source qualifier."""
 
@@ -694,7 +694,7 @@ def semantic_core_feature_and_source_name_projection(
     ).project_uncached()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementFeatureNameProjection:
     """Canonical feature/source projection under runtime equivalence policy."""
 
@@ -736,7 +736,7 @@ class RuntimeMeasurementFeatureNameProjection:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementFeatureKeySourceContext:
     """Source context for deriving a runtime measurement feature key."""
 
@@ -748,7 +748,7 @@ class RuntimeMeasurementFeatureKeySourceContext:
     known_source_names: tuple[str, ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class _MeasurementScopeAggregatePolicy:
     """Aggregate-feature parsing policy for one closed measurement scope."""
 
@@ -787,7 +787,7 @@ _MEASUREMENT_SCOPE_AGGREGATE_POLICY_BY_SCOPE = (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementFeatureKeyProjection:
     """Project a runtime measurement field into its semantic feature key."""
 

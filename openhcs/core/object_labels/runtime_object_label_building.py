@@ -16,7 +16,7 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.payload.runtime_array_values import array_geometry
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceImageObjectLabelBuildRequest:
     """Build object-label runtime values from one source-image context."""
 

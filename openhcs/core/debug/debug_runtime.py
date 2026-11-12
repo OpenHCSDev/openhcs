@@ -203,7 +203,7 @@ class StoppedDebugWorker(DebugWorkerState):
     name = "stopped"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugPausedWorkerStatus:
     """Status of a paused persistent debug worker."""
 
@@ -292,7 +292,7 @@ class PersistentPausedWorkerReplay(DebugReplayMode):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugCommand:
     """Typed GUI command for a debug/test-mode session."""
 
@@ -300,7 +300,7 @@ class DebugCommand:
     debug_session_id: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugCursor:
     """Invocation-aware debug cursor."""
 
@@ -361,7 +361,7 @@ class DebugCursor:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugArtifactRef:
     """Reference to a debug artifact or preview payload."""
 
@@ -428,7 +428,7 @@ class DebugArtifactRef:
         return replace(self, content_digest=digest)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugArtifactIdentity:
     """Stable logical identity for matching debug artifacts across replay runs."""
 
@@ -476,7 +476,7 @@ class DebugArtifactIdentity:
         )
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugArtifactRefProjection:
     """Typed debug projection over compiled artifact plans."""
 
@@ -541,7 +541,7 @@ class DebugArtifactRefProjection:
         return self.of_artifact_type(RelationshipsArtifactType)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugInvocationParameter:
     """JSON-safe parameter projection for one compiled function invocation."""
 
@@ -611,7 +611,7 @@ class DebugInvocationParameter:
             for name, value in sorted(kwargs.items(), key=lambda item: str(item[0]))
         )
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DebugBoundaryState(ABC, metaclass=AutoRegisterMeta):
     """Common cursor/artifact state shared by debug events and snapshots."""
 
@@ -633,7 +633,7 @@ class DebugBoundaryState(ABC, metaclass=AutoRegisterMeta):
     invocation_parameters: tuple[DebugInvocationParameter, ...] = ()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugSnapshot(DebugBoundaryState):
     """Snapshot metadata for one debug execution boundary."""
 
@@ -643,7 +643,7 @@ class DebugSnapshot(DebugBoundaryState):
     source_paths: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugControlReplyStatus(WireView):
     """The envelope every debug control reply carries beside its fields."""
 
@@ -651,7 +651,7 @@ class DebugControlReplyStatus(WireView):
     error: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugControlResponse(WireView):
     """A successful debug control response: ``status: ok`` beside its fields."""
 
@@ -666,7 +666,7 @@ class DebugControlResponse(WireView):
         return cls.from_dict(payload)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DebugSessionRequest(ABC):
     """Base request carrying a non-empty debug session id."""
 
@@ -685,7 +685,7 @@ class DebugSessionRequest(ABC):
                 raise ValueError(f"{field_name} cannot be empty.")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugSnapshotReadRequest(DebugSessionRequest, TypedWireMessage):
     """Control-channel request for reading one debug snapshot from the server."""
 
@@ -704,14 +704,14 @@ class DebugSnapshotReadRequest(DebugSessionRequest, TypedWireMessage):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugSnapshotReadResponse(DebugControlResponse):
     """Control-channel response carrying snapshot metadata only."""
 
     snapshot: DebugSnapshot
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugArtifactExportRequest(DebugSessionRequest, TypedWireMessage):
     """Control-channel request for server-side artifact export/materialization."""
 
@@ -730,28 +730,28 @@ class DebugArtifactExportRequest(DebugSessionRequest, TypedWireMessage):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugArtifactExportResponse(DebugControlResponse):
     """Control-channel response containing the server-side export path."""
 
     exported_ref: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugRuntimeInspectionRequest(DebugSessionRequest, TypedWireMessage):
     """Control-channel request for a paused worker runtime inspection view."""
 
     wire_type: ClassVar[str] = "openhcs_debug_inspect_runtime"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugRuntimeInspectionResponse(DebugControlResponse):
     """Control-channel response containing a renderer-independent debug view."""
 
     view_model: DebugViewModel
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugArtifactExportPlan:
     """Filesystem export plan executed in the worker/server namespace."""
 
@@ -805,7 +805,7 @@ class DebugArtifactExportPlan:
         return destination_path
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugWarmReplayArtifactAvailability:
     """Availability result for one warm-replay artifact output."""
 
@@ -814,7 +814,7 @@ class DebugWarmReplayArtifactAvailability:
     hydrated_from: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugWarmReplayArtifactReusePlan:
     """Nominal validation/hydration plan for skipped warm-replay outputs."""
 
@@ -899,7 +899,7 @@ class DebugWarmReplayArtifactReusePlan:
         return None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugArtifactHydrationContext:
     """Runtime storage context used to hydrate warm replay artifacts."""
 
@@ -1129,7 +1129,7 @@ class DebugArtifactHydrationContext:
         return json.dumps(payload, sort_keys=True, default=repr).encode("utf-8")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugWorkerCommandRequest(DebugSessionRequest, TypedWireMessage):
     """Control-channel request for a persistent paused debug worker."""
 
@@ -1138,14 +1138,14 @@ class DebugWorkerCommandRequest(DebugSessionRequest, TypedWireMessage):
     command_type: type[DebugCommandType]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugWorkerCommandResponse(DebugControlResponse):
     """Control-channel response for a persistent debug-worker command."""
 
     worker: DebugPausedWorkerStatus
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugEvent(DebugBoundaryState):
     """Lightweight debug event emitted from runtime boundaries."""
 
@@ -1202,7 +1202,7 @@ class DebugEvent(DebugBoundaryState):
         return project_dataclass(DebugSnapshot, self, snapshot_id=snapshot_id)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugProgressContext(ProgressContextPayload):
     """Small debug context intended for ProgressEvent.context transport."""
 
@@ -1237,7 +1237,7 @@ class DebugProgressContext(ProgressContextPayload):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugProgressEventRequest(DebugSessionRequest):
     """Request for one lightweight ProgressEvent announcing debug state."""
 
@@ -1388,7 +1388,7 @@ class DebugPausedWorkerRegistry:
             cls._controllers.pop(debug_session_id, None)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugSession:
     """Controller identity for one short-lived debug/test-mode execution."""
 
@@ -1447,7 +1447,7 @@ class DebugSession:
         return replace(self, dirty_from_cursor=self.cursor)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugTerminalSummary:
     """Terminal UI/debug summary for one completed debug session."""
 
@@ -1821,7 +1821,7 @@ class DebugExecutionContext(ABC):
         """Return the RuntimeValueStore owned by the active execution context."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugSinkInstallRequest:
     """Execution identity needed to install one worker debug sink."""
 
@@ -1859,7 +1859,7 @@ class NoOpDebugExecutionPolicy(DebugExecutionPolicy):
         return list(available_axis_ids)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
     """Debug execution policy that emits runtime events as ProgressEvents."""
 
@@ -2132,7 +2132,7 @@ class LocalSnapshotProgressDebugEventSink(DebugEventSink):
         return self.invocation_strategy.should_stop_after_invocation(event)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugStoreManifest:
     """The snapshots one debug session's store holds."""
 
@@ -2248,7 +2248,7 @@ class LocalDebugSnapshotStore(DebugSnapshotStore):
         return self.manifest_path
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FileManagerDebugSnapshotStore(DebugSnapshotStore):
     """FileManager/VFS-backed debug snapshot metadata store."""
 

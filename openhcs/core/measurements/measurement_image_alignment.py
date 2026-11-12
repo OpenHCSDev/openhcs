@@ -484,7 +484,7 @@ class MeasurementImageLabelAlignmentRequest:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PreparedMeasurementObjectLabels:
     """Single-pass object-label preparation for measurement-image execution."""
 

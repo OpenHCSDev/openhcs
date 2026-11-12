@@ -339,7 +339,7 @@ class SecondaryMethod(CellProfilerEnumAttributeMixin, Enum):
     DISTANCE_B = ("distance_b", True)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class LabelPropagationResult:
     """Regularized propagation labels and cumulative distances."""
 
@@ -347,7 +347,7 @@ class LabelPropagationResult:
     distances: np.ndarray
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SecondaryInputNormalization:
     """Normalize secondary-object image and primary-label inputs."""
 
@@ -1009,7 +1009,7 @@ class IdentifySecondaryObjectsReplacementPrimarySourceRelation(
     target_artifact_type = ObjectLabelsArtifactType
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class IdentifySecondaryObjectsExecution:
     """Typed result shared by the two exact public output ABIs."""
 
@@ -1741,7 +1741,7 @@ class TertiaryObjectStats:
     secondary_parent_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TertiaryObjectLabelOutput:
     """Typed tertiary labels preserving the secondary object-label domain."""
 
@@ -1757,7 +1757,7 @@ class TertiaryObjectLabelOutput:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TertiaryObjectMeasurement:
     """Nominal measurement summary for one tertiary label plane."""
 
@@ -1776,7 +1776,7 @@ class TertiaryObjectMeasurement:
         return (int(positive_areas.size), float(np.mean(positive_areas)))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TertiaryPrimaryMaskPlane:
     """Primary-object label plane as the mask authority for tertiary segmentation."""
 
@@ -1797,7 +1797,7 @@ class TertiaryPrimaryMaskPlane:
         return TertiaryObjectMeasurement(self.plane).positive_label_count
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TertiarySecondaryRegionPlane:
     """Secondary-object label plane that supplies tertiary region identities."""
 
@@ -1811,7 +1811,7 @@ class TertiarySecondaryRegionPlane:
         return TertiaryObjectMeasurement(self.plane).positive_label_count
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TertiaryObjectInputs:
     """Dense aligned label inputs and source payloads for tertiary segmentation."""
 

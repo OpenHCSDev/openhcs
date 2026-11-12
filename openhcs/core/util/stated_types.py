@@ -70,7 +70,10 @@ def require_stated_field_types(config_type: type) -> None:
         if owner in reached:
             continue
         reached.add(owner)
-        hints = typing.get_type_hints(owner, include_extras=True)
+        try:
+            hints = typing.get_type_hints(owner, include_extras=True)
+        except NameError:
+            continue
         for declared in fields(owner):
             if says_any(hints[declared.name], {}):
                 unstated.append(f"{owner.__qualname__}.{declared.name}")

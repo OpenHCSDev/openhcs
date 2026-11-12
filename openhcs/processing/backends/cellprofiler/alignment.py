@@ -108,7 +108,7 @@ class AlignOutputMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule
         X_SHIFT = "Xshift"
         Y_SHIFT = "Yshift"
 
-    @dataclass(frozen=True, slots=True)
+    @dataclass(frozen=True)
     class MeasurementRecord(MeasurementFeatureRecord):
         """Raw Align measurements before CP row projection."""
 
@@ -117,7 +117,7 @@ class AlignOutputMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule
         x_shift: int
         y_shift: int
 
-    @dataclass(frozen=True, slots=True)
+    @dataclass(frozen=True)
     class MeasurementRows(ModuleOwnedResultMeasurementRows):
         """Project absorbed Align results into CP image measurement rows."""
 
@@ -549,7 +549,7 @@ AlignImageGeometry = tuple[tuple[int, int], tuple[int, int]]
 AlignGeometryPair = tuple[AlignImageGeometry, AlignImageGeometry]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AlignShiftMeasurement:
     """Per-output translation reported by CellProfiler Align."""
 
@@ -559,7 +559,7 @@ class AlignShiftMeasurement:
     y_shift: Annotated[int, AlignModule.MeasurementFeature.Y_SHIFT]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TranslationOffsetRequest:
     """Inputs for Align translation-offset computation."""
 
@@ -604,7 +604,7 @@ class TranslationOffsetRequest:
         return (int(row_offset), int(column_offset))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AlignOutputRequest:
     """Nominal request for applying one Align output geometry."""
 
@@ -636,7 +636,7 @@ class AlignOutputRequest:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SimilarlyAlignedOutputGeometry:
     """Geometry for applying the second Align transform to additional images."""
 
@@ -742,7 +742,7 @@ class CropToOverlapAlignCropModeStrategy(AlignCropModeStrategy):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AlignExecution:
     """Execute legacy CellProfiler Align semantics for stacked image payloads."""
 

@@ -9,7 +9,7 @@ from typing import ClassVar
 
 from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.source.source_matching import SourceAxisMetadataScope, SourceImageSetIdentity
-from openhcs.core.source.source_metadata import SourceMetadataFields
+from openhcs.core.source.source_metadata import SourceMetadataFields, SourceMetadataScalar
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily, PartitionAxis, is_axis
 from openhcs.core.source.source_matching import semantic_source_metadata_value, source_component_metadata_value, with_source_component_metadata
 

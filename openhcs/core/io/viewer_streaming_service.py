@@ -57,7 +57,7 @@ ROI_ARCHIVE_SUFFIX = ".roi.zip"
 SOURCE_FILENAME_EXTENSIONS = (".tif", ".tiff", ".png", ".jpg", ".jpeg")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerStreamingContext:
     """Shared viewer/request context for asynchronous streaming operations."""
 
@@ -67,7 +67,7 @@ class ViewerStreamingContext:
     error_callback: Callable[[str], None]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImageStreamingRequest(ViewerStreamingContext):
     """Request to stream image files to one viewer."""
 
@@ -102,7 +102,7 @@ class ImageStreamingRequest(ViewerStreamingContext):
         metadata.source_spatial_domain.require_image_window(shape_yx)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FullWindowImageStreamingRequest(ImageStreamingRequest):
     """Receipt replay additionally requires its exact full native plane window."""
 
@@ -119,7 +119,7 @@ class FullWindowImageStreamingRequest(ImageStreamingRequest):
         source.require_projected_image_window(filename, image, projection)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ManualImageStreamProjectionIdentity:
     """Exact route identity for one manually selected source-image set."""
 
@@ -149,7 +149,7 @@ class ManualImageStreamProjectionIdentity:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RoiStreamingRequest(ViewerStreamingContext):
     """Request to stream ROI files to one viewer."""
 
@@ -161,7 +161,7 @@ class RoiStreamingRequest(ViewerStreamingContext):
     require_source_metadata: bool = False
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerStreamingResult:
     """Synchronous result for one manual viewer streaming request."""
 
@@ -326,7 +326,7 @@ class StreamingSourceFilenameAuthority:
         return (filename, name)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerStreamingSource(ViewerStreamSourceIdentity):
     """Source authority for viewer streaming from one initialized plate."""
 

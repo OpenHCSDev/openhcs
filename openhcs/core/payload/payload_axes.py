@@ -63,7 +63,7 @@ class AxisSpec(ABC, metaclass=AutoRegisterMeta):
         return cls()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FamilyAxisSpec(AxisSpec):
     """A dimension that carries one axis of the active family."""
 
@@ -92,7 +92,7 @@ class FamilyAxisSpec(AxisSpec):
         return cls(AxisFamily.active().named(str(values["axis"])))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColourSampleAxisSpec(AxisSpec):
     """The colour samples (for example RGB) inside one source image."""
 
@@ -107,7 +107,7 @@ class ColourSampleAxisSpec(AxisSpec):
         return (ColourAxis,)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SpatialAxisSpec(AxisSpec):
     """One spatial dimension, named by the spatial domain's rank."""
 
@@ -123,7 +123,7 @@ class SpatialAxisSpec(AxisSpec):
         return (SpatialAxis,)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimePlaneAxisSpec(AxisSpec):
     """The leading runtime plane axis a payload declares."""
 
@@ -139,7 +139,7 @@ class RuntimePlaneAxisSpec(AxisSpec):
         return ()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class UndeclaredAxisSpec(AxisSpec):
     """A dimension nothing declares."""
 
@@ -160,7 +160,7 @@ def _require_position(position: object) -> int:
     return position
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PositionedAxis:
     """A declared dimension at a rank-relative position (negative counts from the end)."""
 
@@ -186,7 +186,7 @@ class PositionedAxis:
         return {"spec": self.spec.to_mapping(), "position": self.position}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PayloadAxes:
     """The explicitly declared dimensions of a payload, by rank-relative position."""
 

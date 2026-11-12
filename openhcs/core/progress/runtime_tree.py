@@ -22,7 +22,7 @@ from openhcs.core.progress.types import (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeTreeNodeIdentity:
     """Typed identity inputs used by runtime tree node declarations."""
 
@@ -227,7 +227,7 @@ class RuntimeTreeNode:
         return self.declaration
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeTreeProjection:
     """Core runtime tree projection."""
 
@@ -235,7 +235,7 @@ class RuntimeTreeProjection:
     runtime: ExecutionRuntimeProjection
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeExecutionTopology:
     """Typed topology inputs used by runtime tree projection."""
 
@@ -313,7 +313,7 @@ class RuntimeExecutionTopology:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeTreeWorkerStatusContext:
     partition_nodes: Sequence[RuntimeTreeNode]
     execution_started: bool
@@ -376,7 +376,7 @@ class QueuedWorkerStatus(ActiveWorkerStatus):
         return "⚙️ Starting" if context.execution_started else "⏳ Queued"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeTreeEventStatusContext:
     event: ProgressEvent | None
     missing_status: str
@@ -457,7 +457,7 @@ class SuccessTerminalEventStatus(ActiveEventStatus):
         return context.success_status, context.event.percent, context.success_state
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeTreeStepStatusContext:
     step_event: ProgressEvent | None
 
@@ -532,7 +532,7 @@ class FailedStepStatus(ActiveStepStatus):
         return context.step_event.step_name, "❌ Failed", context.step_event.percent
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeTreeExecutionModeContext:
     execution_id: str
     subject_id: str

@@ -45,7 +45,7 @@ from openhcs.core.dataset_sources.source import DeclaredFileSource
 from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class _SourceSet:
     index: int
     candidates_by_alias: Mapping[str, SourceCandidate]
@@ -76,7 +76,7 @@ class _SourceSet:
         return replace(self, metadata=metadata)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class _ImportedMetadataIndex:
     """Validated rows for one exact imported-metadata declaration."""
 
@@ -552,7 +552,7 @@ def _validate_source_binding_projection_registry() -> None:
 _validate_source_binding_projection_registry()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingWorkspaceMaterialization:
     """Result of projecting source bindings into one OpenHCS workspace."""
 
@@ -591,7 +591,7 @@ class SourceBindingWorkspaceMaterialization:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingWorkspaceProjector:
     """Project one resolved source-binding config into a virtual workspace."""
 

@@ -22,7 +22,7 @@ from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImagePayloadSourceMetadataContext:
     """Source-file identity and I/O context for loaded image metadata."""
 

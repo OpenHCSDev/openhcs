@@ -15,7 +15,7 @@ from openhcs.core.progress.projection import (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugProgressRecord:
     """One debug-aware progress event with parsed typed context."""
 
@@ -75,7 +75,7 @@ class DebugProgressRecord:
         return self.context.event_type
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugRuntimeFrame:
     """Current or historical frame derived from one debug progress record."""
 
@@ -110,7 +110,7 @@ class DebugRuntimeFrame:
         return self.record.callable_name
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugRuntimeProjection:
     """Generic debugger state projected from progress and debug contexts."""
 
@@ -153,7 +153,7 @@ class DebugRuntimeProjection:
         return self.current_frame.progress_identity
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugProjectionSource:
     """Core inputs required to build a debug runtime projection."""
 
@@ -245,7 +245,7 @@ class DebugRuntimeProjectionBuilder:
         return None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeProjectionSource:
     """Shared input for all core runtime projections over one event snapshot."""
 
@@ -257,7 +257,7 @@ class RuntimeProjectionSource:
     snapshots: Sequence[DebugSnapshot] = ()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeProjectionBundle:
     """Core runtime projections built from the same progress event snapshot."""
 

@@ -37,7 +37,7 @@ from openhcs.core.payload.runtime_plane_projection import RuntimePlaneProjection
 _F = TypeVar("_F", bound=Callable[..., Any])
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RuntimeImageExecutionContext:
     """Source provenance and execution mode for an image-like invocation."""
 
@@ -46,7 +46,7 @@ class RuntimeImageExecutionContext:
     plane_projection: RuntimePlaneAxisValueProjection | None = None
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RuntimeAdapterRequest:
     """Runtime data needed to build an invocation-scoped adapter."""
 
@@ -231,7 +231,7 @@ RuntimeCallableFactory = Callable[
 ]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeAdapterSpec:
     """Callable-owned runtime adapter injection contract."""
 

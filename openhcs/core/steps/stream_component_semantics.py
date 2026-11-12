@@ -231,7 +231,7 @@ class StreamComponentNameMetadata(dict[str, dict[str, ComponentDisplayName]]):
     """Component value display names keyed by component then raw value."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamScopedDisplayConfig(ViewerDisplayConfigABC):
     """Display config restricted to components addressable by one stream request."""
 
@@ -289,7 +289,7 @@ class StreamComponentMessageExtraPayload(ViewerComponentMetadataPayload):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamViewerComponentMetadataProjector:
     """Project source metadata onto the viewer's declared component axes."""
 
@@ -397,7 +397,7 @@ class StreamViewerComponentMetadataProjector:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamSourceComponentMetadataItems:
     """Source component metadata observed by one viewer streaming operation."""
 
@@ -527,7 +527,7 @@ class StreamComponentNameMap(StreamComponentNameMetadata):
             self[component][wire_value] = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamMetadataRoot:
     """Metadata root that has a metadata document discoverable by the handler."""
 
@@ -565,7 +565,7 @@ class StreamMetadataRoot:
         return tuple(str(value) for value in values)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamMetadataRootAuthority:
     """Resolve unique metadata roots available to stream-output projection."""
 
@@ -620,7 +620,7 @@ class StreamMetadataRootAuthority:
         return tuple(metadata_roots)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamComponentDomainProvider(ABC, metaclass=AutoRegisterMeta):
     """Nominal provider for declared stream component values and display names."""
 
@@ -681,7 +681,7 @@ class StreamComponentDomainProvider(ABC, metaclass=AutoRegisterMeta):
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
     """Declared domain provider for the execution multiprocessing axis."""
 
@@ -721,7 +721,7 @@ class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
         return tuple({self.component: value} for value in self.execution_axis_values)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamMetadataBackedComponentDomainProvider(StreamComponentDomainProvider):
     """Declared domain provider for components described by plate metadata roots."""
 
@@ -739,7 +739,7 @@ class StreamMetadataBackedComponentDomainProvider(StreamComponentDomainProvider)
         return tuple(items)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamComponentDomainProviders:
     """Ordered domain-provider set for one viewer component layout."""
 
@@ -776,7 +776,7 @@ class StreamComponentDomainProviders:
             provider.include_display_names(name_map)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StreamComponentMessageExtraAuthority:
     """Build viewer wire metadata that declares component domains and display names."""
 

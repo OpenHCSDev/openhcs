@@ -105,7 +105,7 @@ from openhcs.core.callable.function_reference import FunctionReference
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ExecutionRuntimeLaunchPlan:
     """Canonical native launch destinations, projected before any write."""
 
@@ -240,7 +240,7 @@ def _optional_subject_identifier(value: SubjectIdentifier | None) -> str | None:
     return str(value)
 
 
-@dataclass(slots=True, init=False)
+@dataclass(init=False)
 class OpenHCSExecutionSubmission:
     """Nominal client-side submission payload for OpenHCS ZMQ execution."""
 
@@ -415,7 +415,7 @@ class ZMQPipelineRunPhase(Enum):
     WAIT_EXECUTION = "wait_execution"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ZMQCompiledPipelineRun:
     """Completed ordinary pipeline run using a server-retained compile artifact."""
 
@@ -517,7 +517,7 @@ def _pycodify_config_source(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ZMQExecutionRequestBuilder:
     identity: ZMQExecutionIdentity
     compile_control: ZMQExecutionCompileControl
@@ -580,7 +580,7 @@ class ZMQExecutionRequestBuilder:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ZMQConfigParamsBoundary:
     """Boundary for zmqruntime's auxiliary params field, not config authority."""
 
@@ -607,12 +607,12 @@ class ZMQConfigParamsBoundary:
         return ZMQConfigParamsBoundary(params=merged_params)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ZMQConfigSourceFields:
     config_code: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ZMQConfigProjection:
     params_boundary: ZMQConfigParamsBoundary | None
     source_fields: ZMQConfigSourceFields | None
@@ -650,7 +650,7 @@ class ZMQConfigProjection:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ZMQClientResponseView:
     response: Mapping[str, ZMQValue]
 

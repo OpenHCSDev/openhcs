@@ -10,7 +10,7 @@ from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ArtifactKey:
     """Stable runtime identity for one artifact value."""
 
@@ -34,7 +34,7 @@ class ArtifactKey:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeValue:
     """A nominal artifact value validated against one compiled storage plan."""
 

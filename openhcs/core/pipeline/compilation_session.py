@@ -22,7 +22,7 @@ from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractVa
 from openhcs.core.components.validation import GenericValidator
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompilationDatasetScope:
     """Plate-root identity used for compiler ObjectState scopes and paths."""
 
@@ -74,7 +74,7 @@ class CompilationDatasetScope:
         return resolved
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompilationPathResolver:
     """Resolve declaration-owned paths for one compilation plate."""
 
@@ -148,7 +148,7 @@ def resolve_declared_dataclass_paths(
     return replace(value, **replacements) if replacements else value
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ResolvedPipelineDefinition(InvocationContractProvider):
     """Capture enabled saved declarations and their scope/provenance facts.
 

@@ -24,7 +24,7 @@ from openhcs.agent.exceptions import AgentFacingErrorMixin
 InspectableSymbol: TypeAlias = Callable | type
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InternalApiSymbolSpec:
     symbol_id: str
     title: str
@@ -428,7 +428,7 @@ class ArchitectureSymbolNotCuratedError(AgentFacingErrorMixin, ValueError):
         return self._agent_error_hint
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceLocation:
     source_path: str
     line_number: int

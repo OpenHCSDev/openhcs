@@ -66,7 +66,7 @@ OBJECT_LABEL_SOURCE_SPATIAL_VALUE_NAME = "Object-label"
 MetadataValueT = TypeVar("MetadataValueT")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImageUnitIntervalIntensityMetadata:
     """Normalized analytical pixels, with optional exact quantization proof.
 
@@ -1722,7 +1722,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         return resolver.resolve_source_spatial_value(self)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
     """Source-domain adapter for image payload data and masks."""
 
@@ -1952,7 +1952,7 @@ def owned_runtime_value(value: Any) -> Any:
     return PlainImagePayload(value)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class UnownedRuntimeValue(RuntimeSliceInvariantValue):
     """A value no runtime family owns (a mapping, a list of rows, a scalar)."""
 
@@ -1975,7 +1975,7 @@ def as_runtime_value(value: Any) -> RuntimeSliceProjectableValue:
     return UnownedRuntimeValue(value)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Pixels that carry no metadata and no mask."""
 
@@ -2024,7 +2024,7 @@ class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
         return self
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImageMetadataPayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Image data plus metadata, without requiring a validity mask."""
 
@@ -2059,7 +2059,7 @@ class ImageMetadataPayload(DataBackedRuntimeArrayPayload, ImagePayload):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaskedImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Image data plus an authoritative per-pixel validity mask."""
 
@@ -2133,7 +2133,7 @@ def project_image_mask_to_data_domain(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImageMetadataProjection(ABC):
     """Construct one metadata result from nominal source and axis transformations."""
 
@@ -2159,7 +2159,7 @@ class ImageMetadataProjection(ABC):
         """Apply provenance using the result ownership established by source selection."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourcePlaneImageMetadataProjection(ImageMetadataProjection):
     """Select scalar source-image facts without removing an array axis."""
 
@@ -2223,7 +2223,7 @@ class LeadingSourcePlaneMetadataProjection(
         return super().project_source_metadata()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImagePayloadSliceProjector:
     """Project payload context from a parent image into one child image slice."""
 
@@ -2498,7 +2498,7 @@ def _tuple_values_at_indices(
     return tuple(_tuple_value(values, index) for index in indices)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImageMaskDomain:
     """Accepted mask shapes for an explicitly declared image data domain.
 

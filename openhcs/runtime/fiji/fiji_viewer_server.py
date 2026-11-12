@@ -86,12 +86,12 @@ FijiDisplayRanges: TypeAlias = list[FijiDisplayRange]
 FijiFixedLabels: TypeAlias = tuple[tuple[str, ComponentValue], ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiDisplayItemContext(ViewerDisplayBatchContext[FijiDisplaySettings]):
     """Shared Fiji display context for item batches and deferred processing."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiBatchProcessingContext(FijiDisplayItemContext):
     """Semantic context carried through PolyStore's debounced batch engine."""
 
@@ -230,7 +230,7 @@ class FijiBatchSettlementState:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiDimensionStorage:
     """Stored ImageJ C/Z/T domains for one Fiji window."""
 
@@ -239,7 +239,7 @@ class FijiDimensionStorage:
     t: FijiDimensionValues
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiSharedMemorySpec:
     """Shared-memory image payload fields required before local copying."""
 
@@ -248,7 +248,7 @@ class FijiSharedMemorySpec:
     dtype: np.dtype
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiImagePayload:
     """Typed image payload used inside Fiji hyperstack construction."""
 
@@ -261,7 +261,7 @@ class FijiImagePayload:
         return None if self.transfer is None else self.transfer.image_id
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiWireItem(WindowProjectionPayloadProvider):
     """Nominal Fiji stream item with all raw wire-key semantics localized."""
 
@@ -364,7 +364,7 @@ class FijiWireItem(WindowProjectionPayloadProvider):
         return str(value)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiPayloadLocalPlaneExpander:
     """Project one ordered payload-local plane axis into scalar Fiji items."""
 
@@ -495,7 +495,7 @@ class FijiPayloadLocalPlaneExpander:
         return FijiWireItem(payload)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiImageItemCollection:
     """Typed collection of Fiji image item payloads."""
 
@@ -521,7 +521,7 @@ class FijiImageItemCollection:
         return {coordinates.key(item.metadata): item.data for item in self.items}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiImagePlaneLookup:
     """Image planes keyed by their shared OpenHCS C/Z/T coordinate tuple."""
 
@@ -590,7 +590,7 @@ class FijiPlaneGeometry:
         return max_height, max_width
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiImageIntensityRange:
     """Global display range across typed Fiji image payloads."""
 
@@ -611,7 +611,7 @@ class FijiImageIntensityRange:
         return cls(minimum=minimum, maximum=maximum)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiStackSliceLabelBuilder:
     """Build ImageJ slice labels from Fiji hyperstack coordinates."""
 
@@ -628,7 +628,7 @@ class FijiStackSliceLabelBuilder:
         return "slice"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiImageStackBuilder:
     """Create an ImageJ ImageStack from typed Fiji image planes."""
 
@@ -709,7 +709,7 @@ class FijiImageStackBuilder:
         return ShortProcessor(self.width, self.height)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiSharedMemoryItemCopier:
     """Copy shared-memory Fiji image payloads into local process memory."""
 
@@ -990,7 +990,7 @@ class FijiHyperstackCoordinates:
         return " | ".join(labels)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiWindowCoordinateResolution:
     """Coordinate domain resolved against stored per-window dimensions."""
 
@@ -1158,14 +1158,14 @@ class FijiWindowRegistry:
         return state.roi_group_id
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiItemBatch(FijiDisplayItemContext):
     """Shared Fiji item batch payload after display/config normalization."""
 
     items: list[FijiWireItem]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiWindowProcessingRequest(FijiDisplayItemContext):
     """Inputs for processing one Fiji window projection."""
 
@@ -1211,7 +1211,7 @@ class FijiRunMacroControlAction(FijiControlAction):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiPayloadHandlerRequest(FijiDisplayItemContext):
     """Typed execution request for one Fiji payload handler."""
 
@@ -1240,7 +1240,7 @@ FIJI_BATCH_REQUIRED_FIELDS: tuple[
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiBatchWireParser:
     """Validate and normalize one raw Fiji batch message."""
 
@@ -1293,7 +1293,7 @@ class FijiBatchMessage(FijiItemBatch):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiPayloadKindItemGroup:
     """Items for one registered Fiji streaming handler type."""
 
@@ -1307,7 +1307,7 @@ class FijiPayloadKindItemGroup:
         self.items.append(item)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiPayloadKindItemBuckets:
     """Mutable buckets for Fiji items keyed by registered handler type."""
 
@@ -1333,7 +1333,7 @@ class FijiPayloadKindItemBuckets:
         return tuple(group for group in self.groups if group.items)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiPayloadKindGroups:
     """Fiji items grouped by registered streaming payload kind."""
 
@@ -1378,7 +1378,7 @@ class FijiPayloadKindGroups:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
     """Fiji-owned bridge from component layout to windowed item processing."""
 
@@ -1648,7 +1648,7 @@ class FijiBatchDispatcher:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiViewerServerLaunchConfig(ViewerServerLaunchRequest):
     """Nominal launch configuration for a Fiji viewer server process."""
 
@@ -1664,7 +1664,7 @@ class FijiViewerServerLaunchConfig(ViewerServerLaunchRequest):
         return OPENHCS_ZMQ_CONFIG
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiInteractiveModeFailure:
     """Classify PyImageJ interactive-mode startup failures at the boundary."""
 
@@ -2690,7 +2690,7 @@ class FijiViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
         self.stop()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiImagePayloadHandler(FijiPayloadHandler):
     """Build or update Fiji hyperstacks from image payloads."""
 
@@ -2731,7 +2731,7 @@ class FijiImagePayloadHandler(FijiPayloadHandler):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiRoiManagerProvider:
     """Create or retrieve the ImageJ ROI manager on the correct thread."""
 
@@ -2792,7 +2792,7 @@ class FijiRoiManagerProvider:
         SwingUtilities.invokeAndWait(FijiUiWorkUnit())
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FijiRoiPayloadHandler(FijiPayloadHandler):
     """Add ROI payloads to ImageJ's ROI manager in hyperstack coordinates."""
 

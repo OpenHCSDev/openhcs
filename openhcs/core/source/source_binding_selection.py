@@ -50,7 +50,7 @@ def _cached_source_candidate_pattern_keys(pattern_path: str) -> tuple[str, ...]:
     )
 
 
-@dataclass(frozen=True, slots=True, eq=False)
+@dataclass(frozen=True, eq=False)
 class DeclaredSourceMetadataRecord(SourceMetadataRecord):
     """Live declared metadata that still requires path-specific fallbacks."""
 
@@ -94,7 +94,7 @@ class DeclaredSourceMetadataRecord(SourceMetadataRecord):
         return self.from_mapping(metadata) if metadata else None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceMetadataCandidates:
     """Candidate metadata records resolved for one source-binding pattern."""
 
@@ -115,7 +115,7 @@ class SourceMetadataCandidates:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceCandidatePathResolution:
     """Virtual and mapped-source path views for one source-binding candidate."""
 
@@ -140,7 +140,7 @@ class SourceCandidatePathResolution:
         return self.pattern_keys
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourcePatternResolutionContext:
     """Source paths and metadata available while filtering execution candidates."""
 
@@ -561,7 +561,7 @@ class SourceBindingCandidateMatcher:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceAnchorPatternSelection:
     """Resolved source-compatible anchors plus the authority that owns them."""
 
@@ -587,7 +587,7 @@ class SourceAnchorPatternSelection:
         return cls(patterns=tuple(patterns), reason=reason)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceWorkspaceAnchorNarrowing:
     """Contract for partial anchors materialized from a virtual source workspace."""
 
@@ -602,7 +602,7 @@ class SourceWorkspaceAnchorNarrowing:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingMatchResolution:
     """Alias match result for one source-bound anchor pattern."""
 
@@ -1074,7 +1074,7 @@ class SourceIdentityResolutionContext(SourcePatternResolutionContext):
         return tuple(matches_by_identity)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
     """Resolve all declared source aliases for one matched image-set anchor."""
 
@@ -1443,7 +1443,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
         return MappingProxyType(values)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceFileUniverse:
     """Concrete file universe plus the backend that names those files."""
 
@@ -1500,7 +1500,7 @@ class SourceFileUniverse:
         return [loaded_by_path[path] for path in self.files]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceUniverseRuntimeState:
     """Resolved source universes assembled from the registered request family."""
 
@@ -1532,7 +1532,7 @@ class SourceUniverseRuntimeState:
         return self.load_universe
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     """Plan-artifact request for source-binding runtime universe resolution."""
 
@@ -1831,7 +1831,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StepInputSourceUniverseRequest(SourceUniverseRequest):
     """Request for the source universe represented by the current step input."""
 
@@ -1866,7 +1866,7 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
         return SourceUniverseRequest.contribute_runtime_state(self, state, universe)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
     """Request for the source universe represented by the pipeline start."""
 

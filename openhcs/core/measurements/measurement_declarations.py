@@ -64,7 +64,7 @@ class RuntimeMeasurementFeatureRelation(ABC):
         """Return the target family for one selected source family."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementFeatureRelationDeclaration:
     """One producer-owned relation declared between measurement feature families."""
 
@@ -92,7 +92,7 @@ class RuntimeMeasurementFeatureRelationDeclaration:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementFeatureRelationDeclarationCollection:
     """Blind query surface over producer-declared feature relations."""
 
@@ -234,7 +234,7 @@ _DEFAULT_OBJECT_IDENTITY_FIELDS: tuple[str, ...] = (
 _DEFAULT_OBJECT_IDENTITY_OUTPUT_FIELD: str = "object_label"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementRowIdentityContract:
     """Declare row identity precedence, sample numbering and the object-ID field.
 
