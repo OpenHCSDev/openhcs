@@ -618,8 +618,6 @@ class RuntimeMeasurementFeature(str, Enum):
         return self._indexed_descriptor_declaration_types
 
 
-@dataclass(frozen=True, slots=True)
-@dataclass(frozen=True, slots=True)
 class MeasurementStatistic(str, Enum):
     """Canonical runtime measurement statistic labels."""
 
@@ -796,7 +794,6 @@ class MeasurementRowAxisField(str, Enum):
         )
 
 
-@dataclass(frozen=True, slots=True)
 @lru_cache(maxsize=32768)
 def _is_sample_number_reference(
     contract: RuntimeMeasurementRowIdentityContract,
