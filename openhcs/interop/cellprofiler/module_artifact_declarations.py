@@ -73,17 +73,17 @@ from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     CellProfilerObjectLocationMeasurementRows,
 )
-    from openhcs.core.steps.function_runtime import (
-        RuntimeCallableKwargs,
-        RuntimeFunctionOutput,
-    )
-    from openhcs.interop.cellprofiler.measurement_scope import (
-        CellProfilerMeasurementTargetScope,
-    )
-    from openhcs.interop.cellprofiler.parser import ModuleBlock
-    from openhcs.interop.cellprofiler.runtime.output_record_request import (
-        CellProfilerOutputRecordRequest,
-    )
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableKwargs,
+    RuntimeFunctionOutput,
+)
+from openhcs.interop.cellprofiler.measurement_scope import (
+    CellProfilerMeasurementTargetScope,
+)
+from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.runtime.output_record_request import (
+    CellProfilerOutputRecordRequest,
+)
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.module_measurement_features import ObjectCountFeature
 
