@@ -31,12 +31,6 @@ from openhcs.core.util.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source.source_path_identity import source_path_posix, source_paths_equal
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily
-from python_introspect import RegisteredClassChoices
-
-
-class AxisChoices(RegisteredClassChoices):
-    def __init__(self) -> None:
-        super().__init__(Axis)
 from openhcs.core.source.source_matching import source_filters_match, semantic_source_metadata_value, source_component_metadata_values, source_metadata_values_equal
 from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.payload_axes import PayloadAxes
@@ -695,7 +689,7 @@ class PairByMetadata(SourceSetPairing):
 class ComponentSelector:
     """Component-axis key/value pair used either to select sources or assign identity."""
 
-    component: Annotated[type[Axis], AxisChoices()]
+    component: type[Axis]
     """Declared axis of the active family, such as channel, site, Z index, or timepoint."""
 
     value: str
