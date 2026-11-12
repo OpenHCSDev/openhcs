@@ -40,7 +40,7 @@ from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 _RuntimeStepValue = TypeVar("_RuntimeStepValue")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RequiredVisualizer:
     """Streaming visualizer required by a compiled processing context."""
 

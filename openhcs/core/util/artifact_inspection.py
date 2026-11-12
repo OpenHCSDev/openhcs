@@ -9,7 +9,7 @@ from typing import Any, ClassVar
 from zmqruntime.messages import TypedWireMessage
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledArtifactInvocationInspection:
     """Exact artifact contracts and plans for one compiled invocation."""
 
@@ -42,7 +42,7 @@ class CompiledArtifactInvocationInspection:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledArtifactStepInspection:
     """Compiler-owned artifact state for one context and pipeline step."""
 
@@ -80,7 +80,7 @@ class CompiledArtifactStepInspection:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledArtifactInspection:
     """Pickle-safe projection of one retained compiled execution bundle."""
 
@@ -122,7 +122,7 @@ class CompiledArtifactInspection:
         return tuple(step for step in self.steps if step.step_index == step_index)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledArtifactInspectionRequest(TypedWireMessage):
     """Control request for one retained compile artifact projection."""
 
@@ -135,7 +135,7 @@ class CompiledArtifactInspectionRequest(TypedWireMessage):
             raise ValueError("compile_artifact_id cannot be empty.")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledArtifactInspectionResponse:
     """Control response carrying the compiler-owned inspection projection."""
 

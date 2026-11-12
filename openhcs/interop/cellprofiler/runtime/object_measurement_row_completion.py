@@ -112,7 +112,7 @@ class MissingObjectMeasurementValuePolicy(str, Enum):
     ZERO_WITHIN_POSITIVE_EXTENT = "zero_within_positive_extent"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MissingObjectMeasurementValueRequest:
     """Inputs needed to materialize one missing object-measurement cell."""
 
@@ -256,7 +256,7 @@ class ZeroWithinPositiveExtentMissingObjectMeasurementValueStrategy(
         return max(object_ids, default=0)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectMeasurementRowCompletionSchema:
     """Nominal table schema for completing object-scoped measurement rows."""
 
@@ -676,7 +676,7 @@ class ObjectMeasurementRowCompletionSchema:
         return dict(zip(self.axis_fields, axis_key, strict=True))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectMeasurementRowIdentityProjectionResult:
     """Rows plus their nominal object/axis identity after projection."""
 
@@ -800,7 +800,7 @@ class ObjectMeasurementRowIdentityProjectionResult:
         return (axis_order[axis_key], object_order[object_id])
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectMeasurementProjectedRowKeys:
     """Projected object-row keys with aggregate diagnostics."""
 
@@ -895,7 +895,7 @@ class ObjectMeasurementProjectedRowKeys:
         return ObjectMeasurementProjectedRowKeys((*self.entries, *tuple(entries)))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectMeasurementRowOrdinalProjectionState:
     """Declared source-label to row-ordinal mapping for compact projection."""
 

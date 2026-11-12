@@ -27,7 +27,7 @@ class MissingArtifactInputError(ValueError):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ArtifactProducer:
     """Compiled artifact producer identity and scope."""
 

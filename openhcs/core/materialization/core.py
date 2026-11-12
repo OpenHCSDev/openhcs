@@ -146,7 +146,7 @@ class BackendCallKwargs(ABC, metaclass=AutoRegisterMeta):
         """Partition outputs into exact FileManager batch calls."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
     """Raw FileManager backend kwargs at the materialization adapter edge."""
 
@@ -249,7 +249,7 @@ def expanded_tabular_rows(
     return rows
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class BackendKwargsAbsent:
     """Default backend kwargs variant for callers that do not provide overrides."""
 
@@ -1102,7 +1102,7 @@ class IdentityMaterializationSourceProjection(MaterializationSourceProjection):
         return value
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourcePathSegments:
     """Validated dotted source path segments."""
 
@@ -1116,7 +1116,7 @@ class SourcePathSegments:
         return cls(segments)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DottedMaterializationSourceProjection(MaterializationSourceProjection):
     """Source option declared as a dotted path into the input payload."""
 
@@ -1190,7 +1190,7 @@ def sized_materialization_is_empty(value: Sized) -> bool:
     return len(value) == 0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaterializationInputItem(RuntimeProjectedPayloadItem):
     """One materialization payload item with semantic metadata preserved."""
 
@@ -1237,7 +1237,7 @@ class ROIMaterializationSourceSpatialDomain:
         return domains[0]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourcePlaneProjectionContract:
     """Source-plane provenance declared by the payload before slice projection."""
 
@@ -1263,7 +1263,7 @@ class SourcePlaneProjectionContract:
         return bool(self.plane_count_sources)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceComponentMetadataStemAuthority:
     """Construct source stems from component metadata through the filename parser."""
 
@@ -1299,7 +1299,7 @@ class SourceComponentMetadataStemAuthority:
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceStemAuthoritySelection:
     """Available source-stem inputs for one materialization context."""
 
@@ -1494,7 +1494,7 @@ class SourcePathSourceStemResolutionPolicy(ComponentMetadataSourceStemResolution
         ).stem
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PathOnlySourceStemAuthority(
     AlwaysMatchesContextMixin[SourceStemAuthoritySelection],
     SourceStemAuthority,
@@ -1515,7 +1515,7 @@ class PathOnlySourceStemAuthority(
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
     """Resolve ROI source stems from paths or parser-readable component metadata."""
 
@@ -1630,7 +1630,7 @@ class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ROIMaterializationArchiveIdentity:
     """Archive path plus stream-visible source identity for one ROI output."""
 
@@ -1724,7 +1724,7 @@ class ROIMaterializationArchiveIdentity:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ROIMaterializationTarget:
     """One ROI archive output with the label planes it owns."""
 
@@ -1756,7 +1756,7 @@ class ROIMaterializationTarget:
 ROIMaterializationTargets = tuple[ROIMaterializationTarget, ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ROIPathAuthority:
     """Name addressable ROI archives from source metadata."""
 
@@ -1798,7 +1798,7 @@ class ROIPathAuthority:
         return path
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ROIRequestBase(ROIPathAuthority):
     """Shared ROI materialization request facts."""
 
@@ -1806,7 +1806,7 @@ class ROIRequestBase(ROIPathAuthority):
     options: ROIOptions
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ROIMaterializationTargetRequest(ROIRequestBase):
     """Input facts needed to derive ROI archive targets."""
 
@@ -1881,7 +1881,7 @@ class ROIMaterializationTargetRequest(ROIRequestBase):
         return self.source_identity_set.requires_projected_targeting
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaterializationInput:
     """Normalized writer input with data and metadata from one authority."""
 
@@ -2219,7 +2219,7 @@ class ErrorPathPolicy(WriteModePathPolicy):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ViewerStreamBackendCallKwargs(BackendCallKwargs):
     """Viewer stream kwargs with per-output component metadata applied in-band."""
 
@@ -3382,7 +3382,7 @@ class ROIMaterializationTargetPolicy(
         """Return ROI archive targets for the request."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ROIPlaneSourceIdentitySet:
     """Source identities available for a runtime-slice-projected ROI plane set."""
 
@@ -3441,7 +3441,7 @@ class ROIPlaneSourceIdentitySet:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ROIMaterializationPathContext:
     """Path-selection facts derived from the projected ROI plane set."""
 
@@ -4304,7 +4304,7 @@ class TiffArrayAuthority:
         return str(np.shape(value))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimePlaneStackAxisMetadataProjection:
     """Project scalar source identity across variable component runtime planes."""
 
@@ -4371,7 +4371,7 @@ class RuntimePlaneStackAxisMetadataProjection:
         ).ordered_axes()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimePlaneStackAxesProjectionSelection:
     """Select variable component axes that still need runtime-plane projection."""
 
@@ -4500,7 +4500,7 @@ class RuntimePlaneStackAxesProjectionSelection:
         ).metadata_with_artifact_source_identity(item.metadata)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TiffStackSliceMetadataRequest:
     """Input facts needed to align metadata to emitted TIFF slices."""
 

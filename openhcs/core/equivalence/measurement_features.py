@@ -38,7 +38,7 @@ RuntimeMeasurementFactCounterMapping = Mapping[
 RuntimeMeasurementRowIdentity = tuple[tuple[str, object], ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeMeasurementFeatureSemanticContext:
     """Selection context for runtime measurement feature semantic profiles."""
 
@@ -406,7 +406,7 @@ class ObjectCalculatedIdentifierFeatureSemanticProfile(
         ) and ObjectCalculatedFeatureSemanticProfile.matches_feature(self, context)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TieSensitiveLocationValueFeatureRelation(RuntimeMeasurementFeatureRelation):
     """Location-feature relation gated by a stable value feature."""
 
@@ -649,7 +649,7 @@ class BinarySparseNumericTolerance(SparseNumericCounterToleranceProfile):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SparseObjectBoundaryEquivalence:
     """Sparse object-boundary equivalence for object measurement features."""
 
@@ -854,7 +854,7 @@ class SparseObjectBoundaryMeanEquivalence(SparseObjectBoundaryStatisticEquivalen
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementFeatureStabilityPolicy:
     """Evaluate supporting measurement stability for feature equivalence."""
 

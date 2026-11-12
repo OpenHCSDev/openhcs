@@ -159,7 +159,7 @@ from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdap
 from openhcs.interop.cellprofiler.runtime.output_record_request import (
 CellProfilerOutputRecordRequest,
 )
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationThresholdMaskGroup:
     """One saved threshold-mask group from the serialized module settings."""
 
@@ -214,7 +214,7 @@ class ColocalizationThresholdMaskObjectRelation(ArtifactSpecRelation):
     target_artifact_type = ImageArtifactType
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationThresholdMaskRuntimeOutput(RuntimeSliceIndexedValue):
     """Runtime mask request in compiled image-output order."""
 
@@ -241,7 +241,7 @@ class _ColocalizationThresholdMaskOutputsRuntimeParameter(KeywordRuntimeParamete
     parameter_default = ()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationSourcePairFeatureRelation(RuntimeMeasurementFeatureRelation):
     """Exact CP family and source orientation for one colocalization feature."""
 
@@ -1512,7 +1512,6 @@ class ColocalizationMeasurementSchema:
         return make_dataclass(
             "ObjectColocalizationMeasurements",
             row_fields,
-            slots=True,
             namespace={
                 "__module__": __name__,
                 "__doc__": "Colocalization measurements scoped to one labeled object.",
@@ -1546,7 +1545,7 @@ class ColocalizationMeasurementOptions:
         object.__setattr__(self, "costes_method", CostesMethod(self.costes_method))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationCostesThresholds:
     """Precomputed Costes thresholds for one resolved image source pair."""
 
@@ -1560,7 +1559,7 @@ class ColocalizationCostesThresholds:
         return cls(first=float(first), second=float(second))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationImagePairCacheKey:
     """Batch-local identity for one resolved colocalization image pair."""
 
@@ -1570,7 +1569,7 @@ class ColocalizationImagePairCacheKey:
     channel_2: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationObjectLabelCacheKey:
     """Batch-local identity for labels projected into one image-pair mask."""
 
@@ -1608,7 +1607,7 @@ class ColocalizationObjectLabelCacheKey:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationCostesThresholdCacheKey:
     """Exact selected-pixel content and algorithm identity for Costes thresholds."""
 
@@ -1618,7 +1617,7 @@ class ColocalizationCostesThresholdCacheKey:
     backend_provider: BackendProviderSelectionInput
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationImagePairContext:
     """Resolved image-pair pixels shared by batched object colocalization calls."""
 
@@ -1718,7 +1717,7 @@ class ColocalizationImagePairContext:
         return np.asarray(cls.measurement_pixels(image), dtype=np.float32)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColocalizationObjectLabelContext:
     """Resolved object-label reductions shared by batched image-pair calls."""
 
@@ -1796,7 +1795,7 @@ class ColocalizationObjectLabelContext:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectColocalizationRequestContext:
     """Resolved object-colocalization request state shared by all metric stages."""
 
@@ -1817,7 +1816,7 @@ class ObjectColocalizationRequestContext:
         return bool(self.labels.object_labels.size)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectColocalizationBaseStage:
     """Per-object base reductions used by all downstream object metrics."""
 
@@ -1864,7 +1863,7 @@ class ObjectColocalizationBaseStage:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectColocalizationRankCacheKey:
     """Batch-local identity for one object-label/channel rank vector."""
 
@@ -2022,7 +2021,7 @@ class ObjectColocalizationMetricArrays:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectColocalizationColumnarMeasurements(ObjectMeasurementColumnarRows):
     """Columnar object-colocalization rows preserving direct row iteration."""
 
@@ -2063,7 +2062,7 @@ class ObjectColocalizationColumnarMeasurements(ObjectMeasurementColumnarRows):
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectColocalizationThresholdStage:
     """Threshold masks and reductions for object Manders/RWC/overlap metrics."""
 

@@ -11,7 +11,7 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.core.execution.execution_state import ExecutionCancelled, ExecutionCompleted, ExecutionFailed, parse_terminal_status
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugSessionTargetState:
     """Current plate/pipeline target state required by debug controls."""
 
@@ -22,7 +22,7 @@ class DebugSessionTargetState:
     terminal_status: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugPauseBoundaryState:
     """Debug-pause markers visible to action projection and command dispatch."""
 
@@ -33,7 +33,7 @@ class DebugPauseBoundaryState:
         return bool(self.pause_step_indices)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DebugSessionProjectionContext:
     """Complete target/session state needed to project debugger availability."""
 

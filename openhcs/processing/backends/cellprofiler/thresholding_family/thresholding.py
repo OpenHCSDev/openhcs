@@ -415,7 +415,7 @@ class MedianAbsoluteDeviationRobustBackgroundSpreadStrategy(
         return float(threshold_primitives().mad(values))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CellProfilerThresholdDiagnostics:
     """CellProfiler threshold measurements emitted as runtime facts."""
 
@@ -425,7 +425,7 @@ class CellProfilerThresholdDiagnostics:
     sum_of_entropies: float
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RobustBackgroundThresholdSettings:
     """Settings meaningful to CP robust-background thresholding."""
 
@@ -476,7 +476,7 @@ class RobustBackgroundThresholdSettings:
         return float(center + spread * self.number_of_deviations)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class GlobalThresholdMethodParameters:
     """Method-specific parameters for CellProfiler global thresholding."""
 
@@ -540,7 +540,7 @@ class GlobalThresholdMethodParameters:
         return replace(self, multiotsu_nbins=int(nbins))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class GlobalThresholdSourceSelection:
     """Image and method parameters selected for one global threshold estimate."""
 
@@ -617,7 +617,7 @@ def threshold_mask_for_image_domain(
     return mask_array
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ThresholdApplicationSmoothing:
     """CellProfiler threshold-application smoothing policy."""
 
@@ -714,7 +714,7 @@ class ThresholdApplicationSmoothing:
         return (output, self.sigma)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ThresholdApplicationRequest:
     """Executable CellProfiler threshold application request."""
 
@@ -895,7 +895,7 @@ class NumpyThresholdDiagnosticsBackendStrategy(ThresholdDiagnosticsBackendStrate
         return _numpy_threshold_sum_of_entropies(image, mask, binary_image)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ThresholdDiagnosticRequest:
     """Typed inputs for one CellProfiler threshold diagnostic measurement."""
 
@@ -1318,7 +1318,7 @@ class ThresholdPrimitiveBackendStrategy(
         """Return CP-compatible minimum cross-entropy threshold."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NumbaLogTransformConversion:
     """State needed to invert the CP-style log normalization."""
 
@@ -1504,7 +1504,7 @@ def threshold_primitives(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class GlobalThresholdRequest:
     """Context needed by one CellProfiler global threshold method."""
 
@@ -1518,7 +1518,7 @@ class GlobalThresholdRequest:
     method_parameters: GlobalThresholdMethodParameters
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CellProfilerThresholdResult:
     """Threshold mask and diagnostics from one CP-compatible threshold request."""
 
@@ -1578,7 +1578,7 @@ class CellProfilerThresholdTuple(tuple):
         return value
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CellProfilerThresholdSettings:
     """CellProfiler threshold settings independent of image provenance."""
 
@@ -1664,7 +1664,7 @@ class CellProfilerThresholdSettings:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CellProfilerThresholdRequest:
     """Closed CP-compatible threshold execution contract."""
 
@@ -3091,7 +3091,7 @@ class ThresholdMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule):
     measurement_feature_family = "Threshold"
     measurement_feature_token_aliases = (("original", "Orig"),)
 
-    @dataclass(frozen=True, slots=True)
+    @dataclass(frozen=True)
     class MeasurementRows(ModuleOwnedResultMeasurementRows):
         """Project absorbed threshold stats into CP measurement rows."""
 

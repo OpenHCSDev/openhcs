@@ -38,7 +38,7 @@ from openhcs.interop.cellprofiler_setting_normalization import (
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ModuleSettingRowRecord:
     """Concrete CellProfiler setting row identity and value."""
 
@@ -49,7 +49,7 @@ class ModuleSettingRowRecord:
     value: Any
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ModuleSettingCoverageRecord(ModuleSettingRowRecord):
     """Coverage status for one concrete CellProfiler setting row."""
 
@@ -104,7 +104,7 @@ class SettingUnmapped(ModuleSettingCoverageStatus):
     is_covered = False
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class BoundModuleSettings:
     """Typed module-setting translation result."""
 

@@ -52,7 +52,7 @@ class RuntimeMeasurementTablesQueryCache(
     """Store-owned measurement tables for one axis and component group."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactQueryContext:
     """Execution-scope view over a RuntimeValueStore."""
 
@@ -110,7 +110,7 @@ def runtime_record_locations(records: Sequence[StoredRuntimeValue]) -> tuple[str
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementObjectQuery:
     """Query for measurement tables describing one object set."""
 
@@ -136,7 +136,7 @@ class MeasurementObjectQuery:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementScopeQuery:
     """Query for measurement tables describing a semantic scope."""
 
@@ -207,7 +207,7 @@ def _measurement_table_may_declare_object_name(table: MeasurementTable) -> bool:
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementTableAxisProjection(MeasurementAxisValueProjection):
     """Projection of one measurement table onto a declared row-axis value."""
 
@@ -252,7 +252,7 @@ class MeasurementTableAxisProjection(MeasurementAxisValueProjection):
         return target_table
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementLabelSliceAxisSelection:
     """Authoritative row-axis binding for label-stack measurement lookup."""
 
@@ -341,7 +341,7 @@ class MeasurementLabelSliceAxisSelection:
             ) from exc
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class MeasurementLabelSliceFeatureQuery(MeasurementTableFeatureQuery):
     """Query one measurement feature against a stack of object-label planes."""
 
@@ -551,7 +551,7 @@ class MeasurementLabelSliceFeatureQuery(MeasurementTableFeatureQuery):
         return None
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
     """Query one feature for multiple object-label payloads through one table pass."""
 

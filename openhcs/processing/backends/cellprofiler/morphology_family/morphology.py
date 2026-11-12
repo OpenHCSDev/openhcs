@@ -797,7 +797,7 @@ class MaskChoice(Enum):
     IMAGE = "image"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FillObjectsRequest:
     """Complete request for one FillObjects mode implementation."""
 
@@ -880,21 +880,21 @@ class FillObjectConvexHullStrategy(FillObjectsModeStrategy):
         return filled_labels
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlaneStats:
     """Base summary row for operations reported per runtime plane."""
 
     slice_index: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectRemovalStats(PlaneStats):
     """Shared object-removal count summary."""
 
     objects_removed: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectCountTransitionStats(PlaneStats):
     """Shared input/output object-count transition summary."""
 
@@ -902,14 +902,14 @@ class ObjectCountTransitionStats(PlaneStats):
     output_object_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectRemovalTransitionStats(ObjectCountTransitionStats):
     """Object-count transition that also reports removed object count."""
 
     objects_removed: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ResizeObjectsStats:
     slice_index: int
     original_height: int
@@ -919,7 +919,7 @@ class ResizeObjectsStats:
     object_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ResizeObjects3DStats:
     slice_index: int
     original_depth: int
@@ -931,7 +931,7 @@ class ResizeObjects3DStats:
     object_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ResizeObjectsRequest:
     """Runtime resize configuration independent of public module signature shape."""
 
@@ -962,12 +962,12 @@ class ResizeObjectsRequest:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ErosionStats(ObjectRemovalTransitionStats):
     pass
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DilationStats:
     slice_index: int
     object_count: int
@@ -975,14 +975,14 @@ class DilationStats:
     mean_area_after: float
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DilationStats3D:
     object_count: int
     mean_volume_before: float
     mean_volume_after: float
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CentroidStats:
     slice_index: int
     object_count: int
@@ -1614,7 +1614,7 @@ def morphologicalskeleton(image: np.ndarray) -> np.ndarray:
     return skeletonize(image > 0).astype(np.float32)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class HoleRemovalDiameterPolicy:
     """CellProfiler RemoveHoles diameter threshold semantics."""
 
@@ -1732,7 +1732,7 @@ class FillHolesOption(CellProfilerEnumAttributeMixin, Enum):
 CELLPROFILER_LOW_RES_AUTO_MAXIMA_SUPPRESSION_SIZE = 7.0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DeclumpingMaximaGeometry:
     """CellProfiler declumping maxima resize and suppression geometry."""
 
@@ -1765,7 +1765,7 @@ class DeclumpingMaximaGeometry:
         return cls(1.0, manual_declumping_size(maxima_suppression_size))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SparseBooleanCubicMapCoordinatesThreshold:
     """Sparse evaluator for thresholded cubic boolean coordinate resampling."""
 
@@ -3477,7 +3477,7 @@ def _scipy_relabel_sequential(labels: np.ndarray) -> tuple[np.ndarray, int]:
     return (output, int(positive.size))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FootprintOffsetDimensionPolicy:
     """Allowed footprint dimensionality and failure message for offset tables."""
 
@@ -3499,7 +3499,7 @@ FOOTPRINT_OFFSET_2D_OR_3D_POLICY = FootprintOffsetDimensionPolicy(
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FootprintOffsetTable:
     """Centered footprint geometry for native and Numba morphology kernels."""
 
@@ -4808,7 +4808,7 @@ def expand_or_shrink_objects(
 expand_or_shrink_objects.__openhcs_prepare__ = prepare_expand_or_shrink_objects
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaskObjectsStats(ObjectRemovalStats):
     """MaskObjects count summary for one runtime plane."""
 
@@ -4816,7 +4816,7 @@ class MaskObjectsStats(ObjectRemovalStats):
     remaining_object_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaskObjectsPlaneResult:
     """MaskObjects result for one runtime plane."""
 
@@ -5003,7 +5003,7 @@ class MaskObjectsRetainNumberingStrategy(MaskObjectsNumberingStrategy):
         return (masked_labels, len(np.unique(masked_labels[masked_labels != 0])))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaskObjectsPlaneOperation:
     """CellProfiler MaskObjects semantics for one aligned object-label plane."""
 
@@ -5076,7 +5076,7 @@ class MaskObjectsPlaneOperation:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaskObjectsOutputLabels:
     """Typed MaskObjects label output preserving input object-label semantics."""
 
@@ -5219,7 +5219,7 @@ def mask_objects(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CombineObjectsStats:
     """CellProfiler CombineObjects summary row."""
 
@@ -5481,14 +5481,14 @@ class SplitOrMergePerParent(SplitOrMergeInputTopology):
     uses_parent_objects = True
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SplitOrMergeStats(ObjectCountTransitionStats):
     """CellProfiler SplitOrMergeObjects summary row."""
 
     operation: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SplitOrMergeRequest:
     """Complete semantic request for SplitOrMergeObjects."""
 

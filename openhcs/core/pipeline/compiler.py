@@ -127,7 +127,7 @@ FUNCTION_MEMORY_PLAN_REQUIREMENTS = (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AxisCompilationRequest:
     """Authoritative context record for axis-level compilation fanout."""
 

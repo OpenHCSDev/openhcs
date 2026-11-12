@@ -31,7 +31,7 @@ class IncompleteFunctionOutputFilenameIdentityError(ValueError):
         super().__init__(message)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FunctionOutputParsedPathIdentityCacheKey:
     """Context-local cache identity for parser-derived output identity."""
 
@@ -40,7 +40,7 @@ class FunctionOutputParsedPathIdentityCacheKey:
     source: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FunctionOutputFilenameCacheKey:
     """Context-local cache identity for constructed output filenames."""
 
@@ -50,7 +50,7 @@ class FunctionOutputFilenameCacheKey:
     filename_qualifier: str | None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FunctionOutputMetadataIdentityCacheKey:
     """Context-local cache identity for payload-metadata-derived output identity."""
 
@@ -79,7 +79,7 @@ class FunctionOutputIdentityCache:
     ] = field(default_factory=dict)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FunctionOutputPathRequest:
     """Inputs needed to project one runtime output slice into a VFS path."""
 
@@ -94,7 +94,7 @@ class FunctionOutputPathRequest:
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FunctionOutputIdentity:
     """Semantic component identity used for one output filename."""
 

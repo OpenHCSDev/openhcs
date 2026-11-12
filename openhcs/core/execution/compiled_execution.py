@@ -16,7 +16,7 @@ from openhcs.core.execution.worker_start_policy import (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledWorkerStartPlan:
     """Compiled multiprocessing start method decision."""
 
@@ -65,7 +65,7 @@ class CompiledWorkerStartPlan:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledRuntimeEnvironmentPlan:
     """Compiled runtime environment facts consumed by worker execution."""
 
@@ -113,7 +113,7 @@ class CompiledRuntimeEnvironmentPlan:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompiledExecutionBundle:
     """Compiled execution data split by semantic role.
 

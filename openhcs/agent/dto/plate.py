@@ -209,7 +209,7 @@ class PlateInspectionDefaults:
     MAX_FILES_TO_PARSE = 250_000
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DatasetTarget:
     """How a request opens its dataset: one registered source format, or detection.
 
@@ -228,7 +228,7 @@ class DatasetTarget:
         return DatasetSourceChoice.named(self.source_format).auto_detected
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SelectedPlateTargetOptions(DatasetTarget):
     """Shared target controls for PlateManager-selected plate operations."""
 
@@ -248,7 +248,7 @@ class SelectedPlateTargetOptions(DatasetTarget):
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SelectedPlateFileFilterOptions(SelectedPlateTargetOptions):
     """Shared file filtering controls for selected-plate operations."""
 
@@ -270,7 +270,7 @@ class SelectedPlateFileFilterOptions(SelectedPlateTargetOptions):
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionBounds:
     """Payload bounds for potentially large plate folder inspections."""
 
@@ -313,7 +313,7 @@ class PlateInspectionBounds:
         return min(max(int(value), PlateInspectionDefaults.MIN_BOUND), maximum)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlatePathInspectionRequest(DatasetTarget):
     """Read-only inspection request for a local plate folder."""
 
@@ -356,7 +356,7 @@ class PlatePathInspectionRequest(DatasetTarget):
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateImageSampleRequest(DatasetTarget):
     """Request a bounded pixel sample from an image exposed by a plate."""
 
@@ -412,7 +412,7 @@ class PlateImageSampleRequest(DatasetTarget):
         return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateFileQueryRequest(DatasetTarget):
     """Query image/result files exposed by a local plate inventory."""
 
@@ -480,7 +480,7 @@ class PlateFileQueryRequest(DatasetTarget):
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateFileStreamRequest(DatasetTarget):
     """Stream image or ROI files exposed by a local plate inventory to a viewer."""
 
@@ -569,7 +569,7 @@ class PlateFileStreamRequest(DatasetTarget):
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
     """Inspect images for the plate currently selected in the UI."""
 
@@ -630,7 +630,7 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
     """Query files for the plate currently selected in the UI."""
 
@@ -701,7 +701,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
     """Sample one image from the plate currently selected in the UI."""
 
@@ -788,7 +788,7 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
     """Stream files from the plate currently selected in the UI."""
 
@@ -867,7 +867,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SyntheticPlateGenerationRequest:
     """Request a bounded synthetic microscopy plate for MCP-driven workflows."""
 
@@ -976,7 +976,7 @@ class SyntheticPlateGenerationRequest:
         return {f.name: _dto_wire_value(getattr(self, f.name)) for f in dataclasses.fields(self)}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionComponentValue:
     """One component value observed in metadata, filenames, or both."""
 
@@ -986,7 +986,7 @@ class PlateInspectionComponentValue:
     observed_in_filenames: bool = False
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionComponentSummary:
     """Bounded values for one declared axis, named by its boundary name."""
 
@@ -997,7 +997,7 @@ class PlateInspectionComponentSummary:
     truncated_value_count: int = 0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionImageRecordSummary:
     """One bounded image record exposed by plate inventory inspection."""
 
@@ -1007,7 +1007,7 @@ class PlateInspectionImageRecordSummary:
     metadata: JsonObject = field(default_factory=dict)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionImageFileSummary:
     """Bounded image-file listing summary."""
 
@@ -1017,7 +1017,7 @@ class PlateInspectionImageFileSummary:
     truncated_file_count: int = 0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionResultFileRecordSummary:
     """One bounded analysis artifact record exposed by plate inspection."""
 
@@ -1028,7 +1028,7 @@ class PlateInspectionResultFileRecordSummary:
     preview: PlateInspectionResultFilePreview | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionResultFilePreview:
     """Bounded preview for one analysis artifact."""
 
@@ -1046,7 +1046,7 @@ class PlateInspectionResultFilePreview:
     omitted_reason: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateFileQueryRecordSummary:
     """One unified file record returned by a plate file query."""
 
@@ -1062,7 +1062,7 @@ class PlateFileQueryRecordSummary:
     preview: PlateInspectionResultFilePreview | None = None
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class PlateFileQueryResult(AgentResultEnvelope):
     """Bounded plate file query result."""
 
@@ -1082,7 +1082,7 @@ class PlateFileQueryResult(AgentResultEnvelope):
     warnings: tuple[AgentWarning, ...] = ()
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class PlateFileStreamResult(AgentResultEnvelope):
     """Result from streaming plate inventory files to a live viewer."""
 
@@ -1102,7 +1102,7 @@ class PlateFileStreamResult(AgentResultEnvelope):
     status_messages: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class SyntheticPlateGenerationResult(AgentResultEnvelope):
     """Result from generating a bounded synthetic microscopy plate."""
 
@@ -1126,7 +1126,7 @@ class SyntheticPlateGenerationResult(AgentResultEnvelope):
     include_all_components: bool = True
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionResultFileSummary:
     """Bounded result-artifact listing summary."""
 
@@ -1137,7 +1137,7 @@ class PlateInspectionResultFileSummary:
     truncated_file_count: int = 0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionParseFailure:
     """One filename that could not be parsed by the selected handler parser."""
 
@@ -1145,7 +1145,7 @@ class PlateInspectionParseFailure:
     reason: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionParseSummary:
     """Filename parse coverage for the inspected image files."""
 
@@ -1157,7 +1157,7 @@ class PlateInspectionParseSummary:
     truncated_failure_count: int = 0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionWorkspacePreparation:
     """Whether execution still needs a mutating workspace-preparation step."""
 
@@ -1169,7 +1169,7 @@ class PlateInspectionWorkspacePreparation:
     reason: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionHandlerCandidate:
     """Format-specific handler evidence recovered from authoritative parsers."""
 
@@ -1186,7 +1186,7 @@ class PlateInspectionHandlerCandidate:
     metadata_diagnostic: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlateInspectionWorkflowAdvice:
     """Structured routing advice kept separate from decoder evidence."""
 
@@ -1207,7 +1207,7 @@ class PlateInspectionWorkflowAdvice:
     message: str = ""
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class PlatePathInspectionResult(AgentResultEnvelope):
     """Read-only plate-folder inspection result."""
 
@@ -1248,7 +1248,7 @@ class PlatePathInspectionResult(AgentResultEnvelope):
     warnings: tuple[AgentWarning, ...] = ()
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class PlateImageSampleResult(AgentResultEnvelope):
     """Bounded image sample resolved through plate virtual-workspace metadata."""
 
@@ -1276,7 +1276,7 @@ class PlateImageSampleResult(AgentResultEnvelope):
     sample_omitted_reason: str | None = None
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class SelectedPlateImageInspectionResult(AgentResultEnvelope):
     """Image inspection for the single plate currently selected in the UI."""
 
@@ -1285,7 +1285,7 @@ class SelectedPlateImageInspectionResult(AgentResultEnvelope):
     inspection: PlatePathInspectionResult | None = None
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class SelectedPlateFileQueryResult(AgentResultEnvelope):
     """File query for the single plate currently selected in the UI."""
 
@@ -1294,7 +1294,7 @@ class SelectedPlateFileQueryResult(AgentResultEnvelope):
     query: PlateFileQueryResult | None = None
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class SelectedPlateImageSampleResult(AgentResultEnvelope):
     """Bounded image sample for the single plate currently selected in the UI."""
 
@@ -1305,7 +1305,7 @@ class SelectedPlateImageSampleResult(AgentResultEnvelope):
     sample: PlateImageSampleResult | None = None
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True)
 class SelectedPlateFileStreamResult(AgentResultEnvelope):
     """Streaming result for the single plate currently selected in the UI."""
 

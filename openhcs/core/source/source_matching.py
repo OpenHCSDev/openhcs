@@ -80,7 +80,7 @@ def _source_filters_match_cached(
     return all(any_group_matches.values())
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceImageSetIdentityPolicy:
     """Nominal policy for reducing source plane metadata to image-set identity."""
 
@@ -147,7 +147,7 @@ class SourceImageSetIdentityPolicy:
         return source_bindings.image_set_identity_policy(group_component=group_component)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceImageSetIdentity:
     """Image-set identity from source metadata under a typed component policy."""
 
@@ -192,7 +192,7 @@ class SourceImageSetIdentity:
         return cls((("source_path", source_path_identity_key(fallback_source_path)),))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceImageSetIdentityPairPredicate(
     ABC,
     metaclass=AutoRegisterMeta,
@@ -223,7 +223,7 @@ class SourceImageSetIdentityPairPredicate(
         """Return whether this identity pair satisfies the predicate."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceImageSetIdentityCompatibility(SourceImageSetIdentityPairPredicate):
     """Compatibility predicate for full and partially scoped source identities."""
 
@@ -240,7 +240,7 @@ class SourceImageSetIdentityCompatibility(SourceImageSetIdentityPairPredicate):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceImageSetIdentityExactMatch(SourceImageSetIdentityPairPredicate):
     """Strict predicate for one fully identified source plane."""
 
@@ -485,7 +485,7 @@ SourceAxisMetadataValue: TypeAlias = SourceMetadataScalar
 SourceAxisMetadataRecord: TypeAlias = SourceMetadataMapping
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceAxisMetadataScope:
     """Runtime source-axis metadata constraints used for candidate alignment."""
 

@@ -15,7 +15,7 @@ from openhcs.core.artifact_store.runtime_stores import (
 )
 from openhcs.core.io.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StepExecutionObservation:
     """Saved outputs and explicitly reused historical outputs from one step."""
 

@@ -12,7 +12,7 @@ from openhcs.core.equivalence.keys import RuntimeAggregateFeatureIdentity
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RelationshipAggregateFeatureContext:
     """Semantic context for deriving parent-row aggregates from child rows."""
 
@@ -22,7 +22,7 @@ class RelationshipAggregateFeatureContext:
     dialect: MeasurementDialect
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RelationshipAggregateFeatureKeyProjection:
     """Parsed relationship aggregate measurement key."""
 
@@ -54,7 +54,7 @@ class RelationshipAggregateFeatureKeyProjection:
         return self.resolution().aggregate_child_feature_name()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RelationshipAggregateFeatureResolution:
     """Relationship aggregate feature context with its owning semantics."""
 

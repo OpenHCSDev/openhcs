@@ -83,7 +83,7 @@ class SourceFilterMatchType(ABC, metaclass=AutoRegisterMeta):
         """Whether ``file_path``, whose subject text is ``text``, matches."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceFilterClause:
     """Typed filter clause applied before metadata extraction."""
 
@@ -140,7 +140,7 @@ def normalize_source_binding_values(
     return normalized_values
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MetadataExtractionRule:
     """Regex-backed metadata extraction rule for source binding resolution."""
 
@@ -205,7 +205,7 @@ SourceMetadataIdentityItems: TypeAlias = tuple[
 _MetadataViewT = TypeVar("_MetadataViewT")
 
 
-@dataclass(frozen=True, slots=True, eq=False)
+@dataclass(frozen=True, eq=False)
 class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
     """Common field projection algorithms with nominal lifetime-selected views."""
 
@@ -577,7 +577,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         return cls.derived_mapping(metadata, merged)
 
 
-@dataclass(frozen=True, slots=True, eq=False)
+@dataclass(frozen=True, eq=False)
 class SourceMetadataRecord(SourceMetadataFields):
     """Ordered source metadata carried through declared selector resolution."""
 
@@ -599,7 +599,7 @@ class SourceMetadataRecord(SourceMetadataFields):
         return hash((self.fields,))
 
 
-@dataclass(frozen=True, slots=True, eq=False)
+@dataclass(frozen=True, eq=False)
 class OwnedSourceMetadataFields(SourceMetadataFields):
     """Deep field ownership, indexed lookup, bounded views and local transport lifetime."""
 
@@ -728,7 +728,7 @@ class OwnedSourceMetadataFields(SourceMetadataFields):
         return self if fields is None else DurableSourceMetadata.from_mapping(fields)
 
 
-@dataclass(frozen=True, slots=True, eq=False)
+@dataclass(frozen=True, eq=False)
 class ResolvedSourceMetadataRecord(OwnedSourceMetadataFields, SourceMetadataRecord):
     """Owned runtime fields with the existing ordered selector record contract."""
 
@@ -747,7 +747,7 @@ class ResolvedSourceMetadataRecord(OwnedSourceMetadataFields, SourceMetadataReco
         return self if self.fields else None
 
 
-@dataclass(frozen=True, slots=True, eq=False)
+@dataclass(frozen=True, eq=False)
 class DurableSourceMetadata(OwnedSourceMetadataFields):
     """Owned literal metadata from durable storage and image field derivation."""
 
@@ -834,7 +834,7 @@ def _cached_normalized_path_metadata_value(value: str) -> str:
     return value
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DeclaredSourceMetadata:
     """Source-literal metadata preserved separately from canonical axis fields."""
 
@@ -925,7 +925,7 @@ class DeclaredSourceMetadata:
         target[DECLARED_SOURCE_METADATA_FIELD] = merged
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceFilterPathMetadata:
     """Source path identities that file selector clauses may target."""
 
@@ -1013,7 +1013,7 @@ class SourceVoxelSpacingUnit(StrEnum):
         return self._physical_coordinates(spacing)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceVoxelSpacing:
     """Source-pixel coordinates, ordered like arrays, with explicit unit semantics.
 

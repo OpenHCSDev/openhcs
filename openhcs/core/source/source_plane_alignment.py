@@ -10,7 +10,7 @@ from openhcs.core.source.source_matching import SourceImageSetIdentity, SourceIm
 SourcePlaneIdentitySequence = tuple[frozenset[SourceImageSetIdentity], ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourcePlaneIdentitySequenceAlignment:
     """Align target source planes to an image source-plane sequence."""
 

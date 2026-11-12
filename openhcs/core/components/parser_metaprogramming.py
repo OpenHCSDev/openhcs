@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 FilenameParseValue: TypeAlias = str | int | float | bool | None
 
 
-@dataclass(frozen=True, slots=True, init=False)
+@dataclass(frozen=True, init=False)
 class FilenameParseResult(ViewerFilenameParseResultABC):
     """Immutable parser result keyed by declared axes."""
 

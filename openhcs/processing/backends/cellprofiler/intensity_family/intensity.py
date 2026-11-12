@@ -124,7 +124,7 @@ class MeasureImageIntensityModule(
     )
     ignored_settings = ("Measure the intensity only from areas enclosed by objects?",)
 
-    @dataclass(frozen=True, slots=True)
+    @dataclass(frozen=True)
     class MeasurementRows(ModuleOwnedResultMeasurementRows, NumbaNumpyDefaultBackend):
         """Project image-intensity records into exact CellProfiler features."""
 
@@ -501,7 +501,7 @@ class RescaleIntensityModule(CellProfilerModule, ValidatedHighConfidenceModule):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImageIntensityPercentileSpec:
     """Percentile calculation policy for image-intensity rows."""
 
@@ -538,7 +538,7 @@ class ImageIntensityPercentileSpec:
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ImageIntensityMeasurement(MeasurementFeatureRecord):
     """CellProfiler-compatible intensity measurements for one image region."""
 
@@ -606,7 +606,7 @@ class ImageIntensityMeasurement(MeasurementFeatureRecord):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectIntensityMeasurement(ObjectIntensityFeatureValues[float]):
     """Per-object CellProfiler-compatible intensity measurements."""
 
@@ -625,7 +625,7 @@ class ObjectIntensityMeasurement(ObjectIntensityFeatureValues[float]):
         )
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ObjectIntensityMeasurementAxisContext:
     """Runtime row-axis context for one object-intensity measurement plane."""
 
@@ -652,7 +652,7 @@ class ObjectIntensityMeasurementAxisContext:
         return columns
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectIntensityMeasurementRows(
     ObjectIntensityMeasurementAxisContext, ObjectMeasurementColumnarRows
 ):
@@ -773,7 +773,7 @@ def _align_intensity_column(
     return aligned
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectIntensityPreparedLabels:
     """Prepared object-label domain reused across same-label intensity images."""
 
@@ -870,7 +870,7 @@ class ObjectIntensityPreparedLabels:
         return MeasurementObjectRowIdentity.LABEL_ID
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
     """Nominal measurement context for object-intensity execution."""
 
@@ -952,7 +952,7 @@ class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
         )
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ObjectIntensityMeasurementRequest(ObjectIntensityMeasurementContext):
     """Executable request for one object-intensity image/label plane."""
 
@@ -1674,7 +1674,7 @@ def measure_image_intensity_objects(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RescaleIntensityContext:
     """Normalized settings and image data for one intensity rescale operation."""
 

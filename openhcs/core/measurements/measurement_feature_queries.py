@@ -54,7 +54,7 @@ MeasurementValueIndexesByObject = Mapping[str, MeasurementValueIndexResult]
 _DIAGNOSTIC_NONE = "<none>"
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RuntimeObjectMeasurementQuery:
     """Store-stable identity for object measurement queries."""
 
@@ -84,7 +84,7 @@ class RuntimeObjectMeasurementQuery:
         return normalized
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RuntimeObjectSliceMeasurementQuery(RuntimeObjectMeasurementQuery):
     """Object measurement query scoped by an OpenHCS runtime slice."""
 
@@ -101,7 +101,7 @@ class RuntimeObjectSliceMeasurementQuery(RuntimeObjectMeasurementQuery):
             object.__setattr__(self, "slice_index", slice_index)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeObjectLabelMeasurementQuery(RuntimeObjectSliceMeasurementQuery):
     """Store-stable identity for label-aligned object measurement queries."""
 
@@ -154,7 +154,7 @@ def _first_measurement_row_mapping(
     return measurement_row_mapping(rows[0])
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementAxisValueProjection:
     """Projection rule for rows that may or may not declare one runtime axis."""
 
@@ -192,7 +192,7 @@ class MeasurementAxisValueProjection:
         return measurement_axis_integer_value(value, self.axis) is not None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ColumnarMeasurementTableSchema:
     """Call-local semantic projection for nominal columnar measurement rows."""
 
@@ -680,7 +680,7 @@ class ColumnarMeasurementTableSchema:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementFeatureQuery:
     """Query for measurement rows carrying one semantic feature value."""
 
@@ -894,7 +894,7 @@ class MeasurementFeatureQuery:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementObjectFeatureVectorBatchQuery:
     """Query multiple object-domain vectors for one measurement feature."""
 
@@ -1126,7 +1126,7 @@ class MeasurementObjectFeatureVectorBatchQuery:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MeasurementFeatureValueIndex:
     """Object-label and positional values for one measurement feature."""
 
@@ -1264,14 +1264,14 @@ class MeasurementFeatureValueIndex:
         return self.values_by_label, self.positional_values
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class MeasurementTableFeatureQuery(MeasurementFeatureQuery, ABC):
     """Feature query bound to a concrete measurement-table collection."""
 
     measurement_tables: tuple[MeasurementTable, ...]
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ObjectMeasurementLabelPlaneBinding(MeasurementTableFeatureQuery):
     """Bind one object measurement feature onto a label-plane object domain."""
 
@@ -1293,7 +1293,7 @@ class ObjectMeasurementLabelPlaneBinding(MeasurementTableFeatureQuery):
         return policy.values(self)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class IndexedObjectMeasurementLabelPlaneBinding(ObjectMeasurementLabelPlaneBinding):
     """Bind an already-indexed measurement feature onto a label plane."""
 

@@ -29,7 +29,7 @@ ArtifactInputPlans = Mapping[ArtifactSpecRef, ArtifactInputPlan]
 ArtifactOutputPlans = Mapping[ArtifactSpecRef, ArtifactOutputPlan]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FrameworkDeviceBinding:
     """One framework-local GPU device selected for compiled execution."""
 
@@ -48,7 +48,7 @@ class FrameworkDeviceBinding:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FrameworkDeviceAssignment:
     """Compiled framework-local device bindings for one step footprint."""
 
@@ -160,7 +160,7 @@ class FrameworkDeviceAssignment:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InputConversionPlan:
     """Typed input-conversion section of a compiled step plan."""
 
@@ -170,7 +170,7 @@ class InputConversionPlan:
     original_subdir: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaterializedOutputPlan:
     """Typed materialized-output section of a compiled step plan."""
 
@@ -181,7 +181,7 @@ class MaterializedOutputPlan:
     analysis_results_dir: str | None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SequentialRuntimeFilter:
     """One compile-resolved sequential component constraint."""
 
@@ -193,7 +193,7 @@ class SequentialRuntimeFilter:
         return self.component.name
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SequentialRuntimeFilterPlan:
     """Compile-resolved sequential filtering for one runtime context."""
 
@@ -208,7 +208,7 @@ class SequentialRuntimeFilterPlan:
         return bool(self.filters)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactMaterializationPlan:
     """Compile-resolved runtime artifact materialization target."""
 

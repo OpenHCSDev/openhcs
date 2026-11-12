@@ -69,7 +69,7 @@ def runtime_callable_defaults(
     return MappingProxyType(defaults)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RuntimeBatchInvocationRequest(RuntimeImageExecutionContext):
     """One invocation inside a nominal runtime batch."""
 
@@ -117,7 +117,7 @@ class RuntimeBatchExecutionDomain(str, Enum):
     ARTIFACT_PARTITIONS = "artifact_partitions"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeArtifactPartitionBatchRequest:
     """Parent-admitted artifact batch mapped through existing worker resources.
 
@@ -183,7 +183,7 @@ class RuntimeArtifactPartitionBatchRequest:
 _BATCH_EXECUTORS_ATTRIBUTE = "__openhcs_runtime_batch_executors__"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimePure2DSliceBatchRequest(
     Generic[RuntimeSliceDataT, RuntimeSliceResultT, RuntimeKwargValueT],
 ):
@@ -263,7 +263,7 @@ class RuntimeBatchExecutor(ABC, metaclass=AutoRegisterMeta):
         """Execute one runtime batch domain."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeBatchCallableFamily:
     """Callable plus its raw processing ancestor for inherited batch contracts."""
 

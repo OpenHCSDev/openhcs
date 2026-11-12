@@ -37,7 +37,7 @@ class SourceDatasetDiagnostic(ABC):
         """Return this diagnostic's leaf-owned canonical metadata payload."""
 
 
-@dataclass(frozen=True, slots=True, init=False)
+@dataclass(frozen=True, init=False)
 class OpenHCSPlaneAddress:
     """Canonical OpenHCS logical address for one image plane."""
 
@@ -188,7 +188,7 @@ class OpenHCSPlaneAddress:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class OpenHCSPlaneFilename:
     """Parsed canonical OpenHCS plane address and its file extension."""
 
@@ -204,7 +204,7 @@ class OpenHCSPlaneFilename:
         object.__setattr__(self, "extension", extension)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceDatasetIdentity:
     """Explicit metadata identity shared by every store in one source dataset."""
 
@@ -223,7 +223,7 @@ class SourceDatasetIdentity:
         return cls(absolute_source_path(root).as_uri())
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourcePlaneStoreIdentity:
     """Exact store-local identities for one declared source plane."""
 
@@ -287,7 +287,7 @@ class SourcePlaneStoreIdentity:
         return (self.container_paths, self.plane_id)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceCandidate:
     """One store-emitted source plane and its exact execution identity."""
 
@@ -405,7 +405,7 @@ class SourceCandidate:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourcePlaneDataset:
     """One explicitly identified dataset composed of exact store-emitted planes."""
 
@@ -701,7 +701,7 @@ declared_optional_payload_field = lru_cache(maxsize=None)(
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourcePlaneProjection(SourceProjection):
     """One canonical primary plane mapped to one source pixel reference."""
 
@@ -742,7 +742,7 @@ class SourcePlaneProjection(SourceProjection):
         return self.source_alias
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceArtifactProjection(SourceProjection):
     """One typed source artifact attached to a source-set execution address."""
 
@@ -900,7 +900,7 @@ class SourceArtifactProjection(SourceProjection):
         return self.image_metadata
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceProjectionSet:
     """Validated source projection set for one OpenHCS source workspace."""
 
@@ -1048,7 +1048,7 @@ class SourceProjectionSet:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceProjectionMetadataSerializer:
     """Serialize projection identity into OpenHCS metadata-compatible fields."""
 

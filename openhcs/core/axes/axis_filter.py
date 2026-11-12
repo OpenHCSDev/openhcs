@@ -10,7 +10,7 @@ from typing import TypeAlias
 PartitionFilterValue: TypeAlias = list[str] | str | int | None
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StepAxisFilterResolution:
     """Resolved axis filter for one step-level filtering config root."""
 
@@ -19,7 +19,7 @@ class StepAxisFilterResolution:
     original_filter: PartitionFilterValue
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StepAxisFilterSet:
     """Resolved axis filters keyed by the config type that declared them."""
 

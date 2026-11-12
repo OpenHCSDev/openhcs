@@ -155,7 +155,7 @@ class IntensityDistributionHeatmapMeasurement(Enum, NumbaNumpyDefaultBackend):
     RADIAL_CV = "Radial CV"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class IntensityDistributionBinGroup:
     """One radial bin configuration selected by heatmap rows."""
 
@@ -164,7 +164,7 @@ class IntensityDistributionBinGroup:
     maximum_radius: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class IntensityDistributionHeatmapGroup:
     """One serialized heatmap group, including its conditional image output."""
 
@@ -267,7 +267,7 @@ class IntensityDistributionHeatmapObjectRelation(ArtifactSpecRelation):
     target_artifact_type = ImageArtifactType
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class IntensityDistributionHeatmapRuntimeOutput(RuntimeSliceIndexedValue):
     """Runtime heatmap request in compiled image-output order."""
 
@@ -348,7 +348,7 @@ class MeasureObjectIntensityDistributionObjectMeasurementRowPolicy(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class IndexedRadialDistributionFeature:
     """Identity of one source-qualified radial feature and its bin."""
 
@@ -966,7 +966,7 @@ class IntensityDistributionProfiler:
         self.record(label, started_at, rows=row_count)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RadialDistributionArrays:
     """Dense per-object radial intensity-distribution arrays."""
 
@@ -1006,7 +1006,7 @@ class RadialDistributionArrays:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RadialCenterDistanceFields:
     """CellProfiler center-propagation fields for radial measurements."""
 
@@ -1016,7 +1016,7 @@ class RadialCenterDistanceFields:
     centers_j: np.ndarray
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RadialCenterPropagationRequest:
     """Nearest-center propagation for radial intensity-distribution geometry."""
 
@@ -1167,7 +1167,7 @@ def _radial_unobstructed_center_fields(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RadialLabelGeometryCacheKey:
     """Content identity for radial geometry derived only from object labels."""
 
@@ -1186,7 +1186,7 @@ class RadialLabelGeometryCacheKey:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RadialLabelGeometry:
     """Label-only radial geometry shared by all intensity images for a label plane."""
 
@@ -1194,7 +1194,7 @@ class RadialLabelGeometry:
     center_fields: RadialCenterDistanceFields
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class IntensityDistributionSliceInput:
     """One aligned 2D image/label slice."""
 
@@ -1257,7 +1257,7 @@ class IntensityDistributionSliceInput:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RadialDistributionMeasureRequest:
     """Complete per-plane radial-distribution measurement request."""
 
@@ -1350,7 +1350,7 @@ class RadialDistributionMeasureRequest:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RadialDistributionGeometryIndex:
     """Per-label radial bin/wedge index reusable across intensity images."""
 
@@ -1366,7 +1366,7 @@ class RadialDistributionGeometryIndex:
     n_bins: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class IntensityDistributionMeasurementRequest:
     """Executable intensity-distribution request for one aligned slice."""
 
@@ -1575,7 +1575,7 @@ class ObjectIntensityDistributionMeasurementColumnarRows(ObjectMeasurementColumn
         return self._fields
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DeclaredRadialDistributionObjectRow:
     """Array row for a declared object ID, including absent measured objects."""
 

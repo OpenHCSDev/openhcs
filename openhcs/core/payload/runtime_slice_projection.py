@@ -114,7 +114,7 @@ RuntimeProjectionData: TypeAlias = (
 ProjectionT = TypeVar("ProjectionT", bound=RuntimeProjectionData)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeProjectionSourceIdentityRequest:
     """Nominal request for runtime-slice projection with source identity rules."""
 
@@ -177,7 +177,7 @@ class RuntimeProjectionSourceIdentityRequest:
         return f"{self.source_description} runtime slice {slice_index}"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeProjectionPlaneMetadata:
     """Plane identity carried by one runtime-slice-projected payload item."""
 
@@ -308,7 +308,7 @@ class RequiredSourceComponentMetadata(RuntimeProjectionSourceIdentityRequirement
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeProjectedPayloadItem:
     """One runtime payload projected into an execution-addressable value."""
 

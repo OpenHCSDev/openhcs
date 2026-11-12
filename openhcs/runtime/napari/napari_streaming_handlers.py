@@ -263,7 +263,7 @@ class NapariTimerHandle(ABC):
         """Stop the pending layer update."""
 
 
-@dataclass(frozen=True, slots=True, weakref_slot=True)
+@dataclass(frozen=True, weakref_slot=True)
 class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
     """Queued debounced layer update with flush-local runtime residue."""
 
@@ -532,7 +532,7 @@ class NapariLayerSettlementState:
             )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariStreamLayerAddress:
     """Component/path/data-type identity for one staged stream payload."""
 
@@ -556,7 +556,7 @@ class NapariStreamLayerAddress:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariStreamLayerItem:
     """One component-addressed payload staged for a Napari layer update."""
 
@@ -627,7 +627,7 @@ class NapariImagePayloadAxisLabelPolicy:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariAggregateAxisBinding:
     """Bind one payload-local plane axis to one viewer component axis."""
 
@@ -648,7 +648,7 @@ class NapariAggregateAxisBinding:
         return self.values[index]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariAggregateAxisBindingSet:
     """Aggregate axis bindings for one Napari display route."""
 
@@ -978,7 +978,7 @@ class NapariScalarImageLayerPresentationPolicy(NapariImageLayerPresentationPolic
         return {"rgb": False, "colormap": self.colormap(colormap)}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariSourceChannelImageLayerPresentationPolicy(
     NapariScalarImageLayerPresentationPolicy
 ):
@@ -998,7 +998,7 @@ class NapariRGBImageLayerPresentationPolicy(NapariImageLayerPresentationPolicy):
         return {"rgb": True}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariLayerSelectionSnapshot:
     """Selection state before an automatic layer replacement."""
 
@@ -1212,7 +1212,7 @@ class NapariDimensionLayerState:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariAxisPresentation(ViewerComponentAxisSemantics):
     """Layer-local axis semantics projected into the viewer coordinate space."""
 
@@ -2122,7 +2122,7 @@ class NapariShapeFeatureColumns:
         self.values[name][-1] = value
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariShapeColorProjection:
     """One authoritative label-to-color projection for a Shapes payload."""
 
@@ -2156,7 +2156,7 @@ class NapariShapeColorProjection:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NapariShapeLayerPayload:
     """Native N-D Napari Shapes data assembled from streamed ROI payloads."""
 

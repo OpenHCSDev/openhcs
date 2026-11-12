@@ -17,7 +17,7 @@ def _active_source_bindings(
     return step_bindings if step_bindings.enabled else source_bindings
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceInventory:
     """Resolved source candidates available for source-binding previews."""
 
@@ -82,7 +82,7 @@ class SourceInventory:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingPreviewRow:
     """Preview summary for one binding applied to a concrete source inventory."""
 
@@ -110,7 +110,7 @@ class SourceBindingPreviewRow:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceSetPreviewRow:
     """Preview summary for one matched source set."""
 
@@ -138,7 +138,7 @@ class SourceBindingDiagnosticSeverity(str, Enum):
     INFO = "info"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingDiagnostic:
     """Pure diagnostic for unresolved source-binding state."""
 
@@ -155,7 +155,7 @@ BindingMatches = tuple[
 ]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingsPreview:
     """Concrete preview of source bindings against an inventory."""
 

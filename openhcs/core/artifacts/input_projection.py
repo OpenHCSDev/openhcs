@@ -9,7 +9,7 @@ from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.callable.callable_declarations import FunctionStepExecutionScope
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ArtifactInputProjectionPlan:
     """Invocation-edge projection of one exact producer-owned artifact input."""
 

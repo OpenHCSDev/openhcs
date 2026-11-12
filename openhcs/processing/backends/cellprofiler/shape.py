@@ -610,7 +610,7 @@ class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
         return self._rows
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectSizeShapeFeatureArrayOwner(ABC, metaclass=AutoRegisterMeta):
     """Shared AreaShape feature-array invocation policy for backend owners."""
 
@@ -651,7 +651,7 @@ class ObjectSizeShapeFeatureArrayOwner(ABC, metaclass=AutoRegisterMeta):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
     """Backend-owned CellProfiler AreaShape feature-array measurement."""
 
@@ -904,7 +904,7 @@ def measure_object_size_shape_feature_arrays(
     ).feature_arrays()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ObjectSizeShapeMeasurementRowsRequest(
     ObjectSizeShapeFeatureArrayOwner,
 ):
@@ -1044,7 +1044,7 @@ measure_object_size_shape.__openhcs_prepare__ = (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DenseObjectSizeShapeMeasurement(
     ObjectSizeShapeFeatureArrayOwner,
 ):
@@ -1084,7 +1084,7 @@ class DenseObjectSizeShapeMeasurement(
         return rows
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SparseIJVObjectSizeShapeMeasurement(
     ObjectSizeShapeFeatureArrayOwner,
 ):
@@ -1152,7 +1152,7 @@ class SparseIJVObjectSizeShapeMeasurement(
         ).rows()[0]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ShapeCoordinateFeatureFields:
     """AreaShape feature fields whose values live in object-label XY coordinates."""
 

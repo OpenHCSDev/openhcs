@@ -150,7 +150,7 @@ class SignatureFilteredKwargs(RuntimeInvocationKwargPolicy):
         return {name: value for name, value in kwargs.items() if name in parameters}
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeCallableInvocation:
     """Typed runtime invocation boundary for processing-contract callables."""
 
@@ -171,7 +171,7 @@ class RuntimeCallableInvocation:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeCallablePolicy:
     """Reusable runtime callable invocation semantics."""
 
@@ -211,7 +211,7 @@ class RuntimeCallablePolicy:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class Pure2DSliceResultBatch:
     """Typed decomposition of per-slice PURE_2D outputs."""
 
@@ -906,7 +906,7 @@ class ContractCall(ABC):
         """Restack per-plane results."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ContractProbe:
     """How a callable behaved on a stack probe and on a plane probe."""
 

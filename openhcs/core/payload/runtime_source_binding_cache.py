@@ -14,7 +14,7 @@ from openhcs.core.source.source_path_identity import source_path_identity_key
 from openhcs.core.source.source_binding_selection import DeclaredSourceMetadataRecord, SourceIdentityResolutionContext
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimeSourceResolutionSnapshot:
     """A derived resolution view retaining its exact projection and parser owners."""
 

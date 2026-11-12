@@ -159,7 +159,7 @@ def artifact_producers_for_outputs(
     )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ArtifactConsumer:
     """Compiled artifact consumer identity and declared contract."""
 
@@ -176,7 +176,7 @@ class ArtifactConsumer:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ArtifactGraph:
     """Producer/consumer graph owned by one FunctionStep pattern.
 

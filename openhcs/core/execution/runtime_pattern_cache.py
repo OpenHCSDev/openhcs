@@ -17,7 +17,7 @@ DiscoveredPatternCollection = (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RuntimePatternDiscoveryCacheKey:
     """Identity for pattern discovery over an immutable source-file universe."""
 
@@ -47,7 +47,7 @@ class RuntimePatternDiscoveryCacheKey:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FrozenAxisPatternCollection:
     """Immutable pattern collection for one multiprocessing axis."""
 
@@ -82,7 +82,7 @@ class FrozenAxisPatternCollection:
         return list(self.patterns)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FrozenPatternDiscoveryResult:
     """Immutable pattern-discovery result keyed by axis id."""
 

@@ -9,7 +9,7 @@ from openhcs.core.config.pipeline_config import SourceBindingsConfig, StepSource
 from openhcs.core.source.source_bindings_preview import SourceInventory
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SourceBindingContext:
     """Complete public source-binding context for one logical plate row."""
 
