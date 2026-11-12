@@ -25,12 +25,6 @@ from openhcs.core.callable.function_patterns import FunctionGroupKey, RuntimeInv
 from openhcs.core.execution.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
 from openhcs.core.source.source_binding_selection import SourceBoundAnchorPatternPolicy, SourceCandidatePath
 from openhcs.core.util.step_dependencies import PipelineStartInput
-from openhcs.core.steps.function_io import (
-    generate_materialized_paths,
-    get_all_image_paths,
-    save_materialized_data,
-    update_metadata_for_zarr_conversion,
-)
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     step_output_manifest,
@@ -847,6 +841,13 @@ class FunctionStepExecutor:
         )
 
     def _convert_input_if_needed(self) -> None:
+        from openhcs.core.steps.function_io import (
+            generate_materialized_paths,
+            get_all_image_paths,
+            save_materialized_data,
+            update_metadata_for_zarr_conversion,
+        )
+
         plan = self.plan
         input_conversion = plan.input_conversion
         if input_conversion is None:
