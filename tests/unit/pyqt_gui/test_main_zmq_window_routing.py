@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QDialog, QTreeWidgetItem
 from pyqt_reactive.services.window_manager import WindowManager
 from formbridge.services.zmq_server_info import BaseServerInfo
 from formbridge.services.zmq_server_scan_service import EndpointObservationSnapshot
-from pyqt_reactive.widgets import StatusState
+from pyqt_reactive.widgets.status_indicator import StatusState
 from pyqt_reactive.widgets.shared.zmq_server_browser_widget import (
     ZMQServerBrowserWidgetABC,
 )

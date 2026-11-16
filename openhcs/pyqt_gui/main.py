@@ -36,7 +36,7 @@ from pyqt_reactive.services.application_shortcuts import ShortcutLifecycle
 from pyqt_reactive.services.time_travel_navigation import TimeTravelNavigator
 from pyqt_reactive.services.window_manager import WindowManager
 from formbridge.services.zmq_server_scan_service import EndpointObservationSnapshot
-from pyqt_reactive.widgets import (
+from pyqt_reactive.widgets.status_indicator import (
     StatusIndicator,
     StatusState,
 )
