@@ -401,7 +401,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
 from openhcs.core.object_labels.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
@@ -419,6 +419,9 @@ from openhcs.processing.backends.cellprofiler.structuring_elements import (
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
+from openhcs.processing.backends.cellprofiler._backend import CentrosomeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 NDIMAGE_CONSTANT_MODE = "constant"
 WATERSHED_STRATEGY_REGISTRY_KEY = "strategy_label"

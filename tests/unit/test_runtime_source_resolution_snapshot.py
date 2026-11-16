@@ -25,7 +25,7 @@ from openhcs.core.source.source_metadata import (
 )
 from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.dataset_sources.interfaces import FilenameParseResult
+from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (

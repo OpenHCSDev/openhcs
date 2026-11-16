@@ -845,8 +845,8 @@ class FunctionStepExecutor:
             generate_materialized_paths,
             get_all_image_paths,
             save_materialized_data,
-            update_metadata_for_zarr_conversion,
         )
+        from openhcs.core.dataset_sources.openhcs_format import update_metadata_for_zarr_conversion
 
         plan = self.plan
         input_conversion = plan.input_conversion

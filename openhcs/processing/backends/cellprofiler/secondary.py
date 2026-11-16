@@ -263,7 +263,7 @@ class IdentifyTertiaryObjectsModule(
         return tuple(outputs)
 
 
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
@@ -311,6 +311,8 @@ from openhcs.processing.backends.cellprofiler.watershed import (
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
+from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)

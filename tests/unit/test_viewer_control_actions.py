@@ -12,8 +12,8 @@ from openhcs.runtime.viewer.viewer_control_actions import (
     LifecycleControlAction,
     ViewerServerPort,
 )
-from openhcs.runtime.viewer.viewer_protocol import (
-    ViewerControlMessageType,
+from openhcs.runtime.viewer.viewer_protocol import ViewerControlMessageType
+from openhcs.runtime.viewer.viewer_contract_types import (
     ViewerControlResponse,
     ViewerSettleProgress,
 )

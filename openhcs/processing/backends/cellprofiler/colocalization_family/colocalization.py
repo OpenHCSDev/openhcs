@@ -120,7 +120,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_float,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
@@ -159,6 +159,7 @@ from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdap
 from openhcs.interop.cellprofiler.runtime.output_record_request import (
 CellProfilerOutputRecordRequest,
 )
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 @dataclass(frozen=True)
 class ColocalizationThresholdMaskGroup:
     """One saved threshold-mask group from the serialized module settings."""

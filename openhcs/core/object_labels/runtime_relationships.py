@@ -27,7 +27,8 @@ from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
-from openhcs.core.measurements.runtime_measurements import ObjectReferenceFeatureMarker, MeasurementScalarLiteral
+from openhcs.core.measurements.runtime_measurements import MeasurementScalarLiteral
+from openhcs.core.measurements.measurement_declarations import ObjectReferenceFeatureMarker
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
 from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainMetadataStrategy
 from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainScope
@@ -35,6 +36,8 @@ from openhcs.core.object_labels.runtime_object_label_domains import dense_object
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceIdentityProjectableValue
 import numpy as np
 from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array, object_label_storage_is_sparse_ijv, object_label_sparse_ijv_rows
+from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.source.source_image_provenance import SourceImageProvenance
 
 
 class DirectParentReferenceFeatureMarker(ObjectReferenceFeatureMarker):

@@ -64,9 +64,11 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlResponseField,
     ViewerProtocolStatus,
     ViewerServerLaunchRequest,
-    SettlementComplete,
     SettlementFailed,
     SettlementRunning,
+)
+from openhcs.runtime.viewer.viewer_contract_types import (
+    SettlementComplete,
     ViewerSettleProgress,
 )
 from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION

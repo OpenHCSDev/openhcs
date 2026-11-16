@@ -190,9 +190,9 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerPayloadRecord,
     ViewerProtocolStatus,
     ViewerQtEnvironmentPolicy,
-    ViewerSettleProgress,
     ViewerStateControlOptions,
 )
+from openhcs.runtime.viewer.viewer_contract_types import ViewerSettleProgress
 from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.core.axes.axis_declarations import ColourAxis

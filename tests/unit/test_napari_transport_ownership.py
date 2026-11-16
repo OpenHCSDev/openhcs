@@ -153,9 +153,9 @@ def test_napari_control_pump_reports_active_settlement_without_qt_dispatch() -> 
     from openhcs.runtime.viewer.viewer_component_system import (
         ViewerComponentAxisSemanticsFactory,
     )
-    from openhcs.runtime.viewer.viewer_protocol import (
+    from openhcs.runtime.viewer.viewer_protocol import SettlementRunning
+    from openhcs.runtime.viewer.viewer_contract_types import (
         ViewerControlResponse,
-        SettlementRunning,
         ViewerSettleProgress,
     )
 

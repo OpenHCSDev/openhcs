@@ -305,7 +305,7 @@ from openhcs.core.callable.runtime_batch_contracts import RuntimeBatchInvocation
 from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
     PreparedObjectMeasurementInvocation,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendSelection,
     CellProfilerBackendStrategyMixin,
@@ -342,6 +342,7 @@ from openhcs.core.equivalence.measurement_features import (
     TieSensitiveLocationValueFeatureRelation,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 logger = logging.getLogger(__name__)
 ImageIntensityOutput: TypeAlias = np.ndarray | ImageMetadataPayload | MaskedImagePayload

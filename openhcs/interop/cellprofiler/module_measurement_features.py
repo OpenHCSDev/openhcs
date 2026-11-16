@@ -12,19 +12,21 @@ from typing import (
 )
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurements.runtime_measurements import (
-    MeasuredObjectAnchorFeatureMarker,
     MeasurementScope,
     MeasurementStatistic,
-    ObjectCalculatedFeatureMarker,
-    ObjectCountFeatureMarker,
-    ObjectIdentifierFeatureMarker,
-    ObjectIntensityFeatureMarker,
-    ObjectLocationFeatureMarker,
     ObjectShapeDescriptorFeatureMarker,
     RuntimeMeasurementFeature,
     RuntimeMeasurementFeatureOwner,
     RuntimeMeasurementFeatureRelationDeclaration,
     RuntimeMeasurementFeatureSemanticMarker,
+)
+from openhcs.core.measurements.measurement_declarations import (
+    MeasuredObjectAnchorFeatureMarker,
+    ObjectCalculatedFeatureMarker,
+    ObjectCountFeatureMarker,
+    ObjectIdentifierFeatureMarker,
+    ObjectIntensityFeatureMarker,
+    ObjectLocationFeatureMarker,
 )
 from openhcs.core.payload.runtime_tabular_values import FieldSpec
 

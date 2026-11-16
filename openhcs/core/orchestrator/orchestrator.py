@@ -42,7 +42,7 @@ from openhcs.core.orchestrator.bundle_execution import (
 from openhcs.core.progress.types import ProgressExecutionContext
 from python_introspect import project_dataclass
 from openhcs.core.io.viewer_streaming_service import StreamingViewerLifecycle
-from openhcs.runtime.viewer.viewer_protocol import ViewerPersistenceMode
+from openhcs.runtime.viewer.viewer_contract_types import ViewerPersistenceMode
 from polystore.filemanager import FileManager
 
 
@@ -57,6 +57,7 @@ from openhcs.core.config.pipeline_config import StreamingConfig
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataGenerator
 from openhcs.core.pipeline.path_planner import PipelinePathPlanner
 from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection, WorkspaceSourceProjections
+from openhcs.core.debug.debug_runtime import NoOpDebugExecutionPolicy
 
 # Import generic component system - required for orchestrator functionality
 

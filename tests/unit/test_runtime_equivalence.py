@@ -99,8 +99,10 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementStatistic,
     MeasurementSubject,
-    ObjectCalculatedFeatureMarker,
     ObjectCoreMeasurementFeature,
+)
+from openhcs.core.measurements.measurement_declarations import (
+    ObjectCalculatedFeatureMarker,
     ObjectIdentifierFeatureMarker,
 )
 from openhcs.core.object_labels.runtime_relationships import (
@@ -11423,7 +11425,7 @@ def test_exported_relationships_consume_declared_object_identity(
     from benchmark.equivalence.table_snapshots import (
         RuntimeTableSnapshot,
     )
-    from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementRowIdentityContract
+    from openhcs.core.measurements.measurement_declarations import RuntimeMeasurementRowIdentityContract
     from openhcs.interop.cellprofiler.measurement_dialect import (
         CellProfilerMeasurementDialect,
     )

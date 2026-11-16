@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
-from openhcs.runtime.viewer.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_contract_types import (
     ViewerControlResponse,
     ViewerPersistenceMode,
     ViewerSettleProgress,

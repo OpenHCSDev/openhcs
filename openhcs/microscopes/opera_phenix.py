@@ -21,10 +21,10 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.microscopes.vendor_layout import VirtualMappingSource
 from openhcs.core.dataset_sources.interfaces import (
     DiskImageFileListingMetadataHandler,
-    FilenameParseResult,
     FilenameParser,
     MetadataComponentValueSet,
 )
+from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.domains.microscopy.axes import Microscopy
 
 logger = logging.getLogger(__name__)

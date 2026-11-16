@@ -38,7 +38,7 @@ from openhcs.core.callable.function_patterns import (
 )
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.pipeline.function_contracts import annotation_produces_runtime_type
+from openhcs.core.pipeline.annotation_checks import annotation_produces_runtime_type
 from openhcs.core.object_labels.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.payload.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows

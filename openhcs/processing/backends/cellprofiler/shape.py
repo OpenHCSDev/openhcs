@@ -37,7 +37,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
 from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     LabelsObjectInputPolicy,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
@@ -488,6 +488,7 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
 )
 from openhcs.processing.backends.cellprofiler.zernike import shape_zernike_moments
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)

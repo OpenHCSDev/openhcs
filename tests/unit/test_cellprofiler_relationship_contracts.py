@@ -37,10 +37,8 @@ from openhcs.core.object_labels.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.measurements.runtime_measurements import (
-    ObjectReferenceFeatureMarker,
-    RuntimeMeasurementFeatureDeclaration,
-)
+from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureDeclaration
+from openhcs.core.measurements.measurement_declarations import ObjectReferenceFeatureMarker
 from openhcs.core.object_labels.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelPayload,

@@ -32,11 +32,13 @@ from openhcs.runtime.napari.napari_viewer_server import (
 from openhcs.runtime.viewer.viewer_protocol import (
     ViewerConnectedExternal,
     NapariViewerServerRequest,
-    ViewerControlResponse,
     ViewerControlMessageRequest,
-    SettlementComplete,
     SettlementFailed,
     SettlementRunning,
+)
+from openhcs.runtime.viewer.viewer_contract_types import (
+    ViewerControlResponse,
+    SettlementComplete,
     ViewerSettleProgress,
 )
 from openhcs.core.config.streaming_config_declarations import NapariViewer

@@ -16,7 +16,7 @@ from openhcs.core.payload.aligned_image_payload import (
     ImageOutputBundle,
     ImagePayloadComposition,
 )
-from openhcs.core.callable.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable.callable_declarations import KeywordRuntimeParameter
 from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,

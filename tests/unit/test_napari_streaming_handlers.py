@@ -35,10 +35,12 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerProtocolStatus,
     SettlementFailed,
     SettlementRunning,
-    ViewerSettleProgress,
-    ViewerControlResponse,
     ViewerStateControlOptions,
     ViewerComponentValueOrdering,
+)
+from openhcs.runtime.viewer.viewer_contract_types import (
+    ViewerSettleProgress,
+    ViewerControlResponse,
 )
 from openhcs.runtime.napari.napari_viewer_server import NapariViewerServer
 from openhcs.runtime.viewer.viewer_protocol import NapariViewerServerRequest
@@ -80,16 +82,18 @@ from openhcs.runtime.viewer.viewer_component_system import (
 )
 from openhcs.runtime.viewer.viewer_protocol import (
     ViewerComponentValueOrdering,
-    ViewerControlResponse,
     ViewerControlResponseField,
     ViewerIntensityWindowControlOptions,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
     ViewerProtocolStatus,
-    ViewerSettleProgress,
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
+)
+from openhcs.runtime.viewer.viewer_contract_types import (
+    ViewerControlResponse,
+    ViewerSettleProgress,
 )
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.viewer.viewer_display import NapariSlots

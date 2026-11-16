@@ -61,8 +61,11 @@ from openhcs.runtime.viewer.viewer_controls import (
 )
 from openhcs.core.io.roi_point_metadata import ROIFractionalZ
 from openhcs.runtime.viewer.viewer_protocol import (
-    OpenHCSViewerControlMessageType, SettlementComplete, SettlementFailed, SettlementRunning,
+    OpenHCSViewerControlMessageType,
+    SettlementFailed,
+    SettlementRunning,
 )
+from openhcs.runtime.viewer.viewer_contract_types import SettlementComplete
 from openhcs.runtime.viewer.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
     ViewerComponentNameMetadata,

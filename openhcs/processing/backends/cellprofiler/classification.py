@@ -1289,7 +1289,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -1298,6 +1298,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 
 class _ClassificationMethodBehavior(ABC):
