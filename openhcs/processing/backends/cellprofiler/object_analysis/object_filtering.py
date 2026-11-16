@@ -126,6 +126,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
 class _FilterMeasurementValuesRuntimeParameter(KeywordRuntimeParameter):

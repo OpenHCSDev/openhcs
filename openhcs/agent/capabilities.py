@@ -204,11 +204,93 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowNativePresentationResult,
 )
 from openhcs.runtime.viewer.viewer_controls import ViewerNavigationControlOptions
-from python_introspect import to_jsonable
+from python_introspect import JsonValue, to_jsonable
 
 from argparse import ArgumentParser, Namespace
-from openhcs.mcp.dev_client_commanding import McpDevCliProjection
-from openhcs.mcp.server import McpCapabilityBinder
+from formbridge.bridge.dto import UiBridgeConnectionSpec
+class CapabilityMcpBinder(ABC):
+    """The MCP transport primitives a capability invocation composes into its tool or resource."""
+
+    context: object
+    """What the invocation executes against (its execute(context, ...) takes it as is)."""
+
+    @property
+    @abstractmethod
+    def selected_registry(self) -> AgentCapabilityRegistry:
+        ...
+
+    @abstractmethod
+    def register_tool(self, declaration: type[AgentCapabilityDeclaration], invocation: AgentCapabilityInvocation) -> None:
+        ...
+
+    @abstractmethod
+    def register_resource(self, declaration: type[AgentCapabilityDeclaration], invocation: AgentCapabilityInvocation) -> None:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def request_annotation(request_type: type, parameter_name: str, annotation):
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def ui_connection_parameter() -> Parameter:
+        ...
+
+    @abstractmethod
+    def ui_connection(self, arguments: Mapping[str, JsonValue]) -> UiBridgeConnectionSpec:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def viewer_connection_parameters() -> tuple[Parameter, ...]:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def viewer_control(arguments: Mapping[str, JsonValue]) -> ViewerWindowControlRequest:
+        ...
+
+
+class CapabilityCliProjection(ABC):
+    """The dev-client argument primitives a capability invocation composes into its command."""
+
+    @staticmethod
+    @abstractmethod
+    def configure_ui_connection(parser: ArgumentParser) -> None:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def ui_connection_arguments(args: Namespace) -> dict[str, JsonValue]:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def ui_timeout_seconds(args: Namespace, timeout_seconds: float) -> float:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def configure_viewer_connection(parser: ArgumentParser) -> None:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def viewer_connection_arguments(args: Namespace) -> dict[str, JsonValue]:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def configure_request(parser: ArgumentParser, request_type: type) -> None:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def request_tool_arguments(args: Namespace, request_type: type) -> dict[str, JsonValue]:
+        ...
+
+
 class CapabilityKind(Enum):
     RESOURCE = "resource"
     TOOL = "tool"
@@ -675,14 +757,14 @@ class AgentCapabilityInvocation(ABC):
     def tool_parameters(
         self,
         declaration: type[AgentCapabilityDeclaration],
-        binder: McpCapabilityBinder,
+        binder: CapabilityMcpBinder,
     ) -> tuple[Parameter, ...]:
         return ()
 
     def call_arguments(
         self,
         declaration: type[AgentCapabilityDeclaration],
-        binder: McpCapabilityBinder,
+        binder: CapabilityMcpBinder,
         arguments: Mapping[str, object],
     ) -> tuple[object, ...]:
         return ()
@@ -690,7 +772,7 @@ class AgentCapabilityInvocation(ABC):
     def invoke(
         self,
         declaration: type[AgentCapabilityDeclaration],
-        binder: McpCapabilityBinder,
+        binder: CapabilityMcpBinder,
         arguments: Mapping[str, object],
     ) -> object:
         return self.execute(
@@ -701,7 +783,7 @@ class AgentCapabilityInvocation(ABC):
     def bind_mcp(
         self,
         declaration: type[AgentCapabilityDeclaration],
-        binder: McpCapabilityBinder,
+        binder: CapabilityMcpBinder,
     ) -> None:
         binder.register_tool(declaration, self)
 
@@ -709,7 +791,7 @@ class AgentCapabilityInvocation(ABC):
         self,
         declaration: type[AgentCapabilityDeclaration],
         parser: ArgumentParser,
-        cli: McpDevCliProjection,
+        cli: CapabilityCliProjection,
     ) -> None:
         """Add the CLI arguments this shape's inputs require."""
 
@@ -717,7 +799,7 @@ class AgentCapabilityInvocation(ABC):
         self,
         declaration: type[AgentCapabilityDeclaration],
         args: Namespace,
-        cli: McpDevCliProjection,
+        cli: CapabilityCliProjection,
     ) -> dict[str, object]:
         return {}
 
@@ -725,7 +807,7 @@ class AgentCapabilityInvocation(ABC):
         self,
         args: Namespace,
         timeout_seconds: float,
-        cli: McpDevCliProjection,
+        cli: CapabilityCliProjection,
     ) -> float:
         return timeout_seconds
 
@@ -759,14 +841,14 @@ class AgentServerHealthInvocation(AgentCapabilityInvocation):
 
     allow_stale_server = True
 
-    def execute(self, context: McpCapabilityBinder, *arguments: object) -> object:
+    def execute(self, context: CapabilityMcpBinder, *arguments: object) -> object:
         del arguments
         return context.server_health()
 
     def invoke(
         self,
         declaration: type[AgentCapabilityDeclaration],
-        binder: McpCapabilityBinder,
+        binder: CapabilityMcpBinder,
         arguments: Mapping[str, object],
     ) -> object:
         del declaration, arguments
@@ -784,7 +866,7 @@ class AgentResourceInvocationMixin:
     def bind_mcp(
         self,
         declaration: type[AgentCapabilityDeclaration],
-        binder: McpCapabilityBinder,
+        binder: CapabilityMcpBinder,
     ) -> None:
         binder.register_resource(declaration, self)
 

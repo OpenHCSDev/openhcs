@@ -81,6 +81,7 @@ from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepCo
 from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 @dataclass(frozen=True)
 class RelateObjectsDistanceParentInputRelation(ArtifactSpecRelation):
     """Mark an object input as a repeated distance-parent role."""

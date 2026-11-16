@@ -56,6 +56,7 @@ from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.utils.environment import parse_bool_string
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
 def parse_watershed_border_exclusion(value: str) -> bool:

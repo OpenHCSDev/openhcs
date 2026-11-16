@@ -16,6 +16,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta, register_once
 
 from openhcs.agent.capabilities import (
+    CapabilityCliProjection,
     AgentCapabilityDeclaration,
     get_agent_capability,
     get_capability_registry,
@@ -523,7 +524,7 @@ class AgentCliRequestProjection:
         return McpToolArguments.from_payload(request.as_tool_arguments())
 
 
-class McpDevCliProjection:
+class McpDevCliProjection(CapabilityCliProjection):
     """Dev-client argument primitives a capability invocation composes."""
 
     @staticmethod

@@ -47,6 +47,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
 
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 class ExcludeMode(Enum):
     THRESHOLD = "threshold"
     MASK = "mask"

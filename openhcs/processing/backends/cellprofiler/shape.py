@@ -61,6 +61,7 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
 CellProfilerMeasurementImage,
 )
 from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 class ZeroFilledShapeFeature(RuntimeMeasurementFeatureSemanticMarker):
     """Shape feature that is zero, not missing, for an empty label below the
     largest measured label."""
@@ -488,7 +489,6 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
     _edt_1d_numba,
 )
 from openhcs.processing.backends.cellprofiler.zernike import shape_zernike_moments
-from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
