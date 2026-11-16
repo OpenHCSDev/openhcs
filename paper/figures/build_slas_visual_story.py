@@ -883,7 +883,7 @@ def submission_autonomous_loop():
             sheet.asset(icons / "circle-check-big.svg", (x+1.8, y+0.5, 8, 9))
         else:
             sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 0.5, 8, 9))
-        sheet.text(x + 11, y + 4.7, detail, size=9, va="center",
+        sheet.text(x + 10, y + 4.7, detail, size=10, va="center",
                    linespacing=1.5, zorder=4)
     for start, end in (((31,68.5),(36,68.5)), ((64,68.5),(69,68.5)),
                        ((83,62),(83,58)), ((69,51.5),(64,51.5)),

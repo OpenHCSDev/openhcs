@@ -1,8 +1,8 @@
 {
-  "generator_sha256": "1d100ff8e5632538c62ea72f6f4316c018e1da12f2322f4552ad93b83ceff04d",
+  "generator_sha256": "a23e96433d663bb742daa57e6b45029410274b7943051a175ae398cb8bde9a90",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "e980c03e95f537f56122d98209e422616852e6c6bbbd610766f30fb071fa92e2",
-    "paper/figures/build_slas_task_only.py": "ca7704603e294285b0b02a7773e47556951bbf77938b0dc7b6317e86fbcc6581",
+    "paper/figures/build_slas_supplement.py": "ce44447a6566ccfd2f4e0761bffb5599df313b863e9e1cd168cd08e118fe4107",
+    "paper/figures/build_slas_task_only.py": "1b07ec97e81bdd4617775df7125d7d0a774c6755c59ba2a498de93bbdb48c36a",
     "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json": "b0f70a14a4fe97cd5b6c9da9fb6363006ae2471aab5c2bc507bf1bdb32fa8789",
     "paper/figures/slas/frozen_bright_object_views.json": "2d09d361e32493c524b746c1d37e286a59f3ec030c4f83c4a73aeab486864c99",
     "paper/figures/build_slas_neurite_views.py": "9c25127cdfcd382c95caf2c31aaafbedb69349f68c2c78792eba31ba0c626984",
@@ -201,19 +201,12 @@
       ],
       "interpolation": "none; exact array index permutation",
       "analysis_rerun": false
-    },
-    {
-      "operation": "Vertical canvas crop; axis sizes and type unchanged",
-      "bottom_top_fractions": [
-        0,
-        0.84
-      ]
     }
   ],
   "output_sha256": {
-    "submission_analysis_repair_panels.png": "91ef7f210cea35d59a05989e4eb0e5b171082fcaabc8dfafd5c28fa8afcc40a2",
-    "submission_analysis_repair_panels.pdf": "63e945e866bd629062f2ed5413e23f0c205513c92d86b971fa92c701370136fe",
-    "submission_analysis_repair_panels.svg": "9826bc7bcd095a38097983e21b5f34f381e58dfd0bbe45a7dbf2d722692c5afb"
+    "submission_analysis_repair_panels.png": "036e9384891502a7d77b7eefa672c6bb55b3082cf656081242f8e116fd4204f9",
+    "submission_analysis_repair_panels.pdf": "214505940ba21411bad68b067dc61c377be01f4c1fdbc1237e9cdfdd41fa7bf8",
+    "submission_analysis_repair_panels.svg": "a75a302de85fca0c08f5cb4a293ec33742aa593b6f1b3a3856c7682a6c084b34"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
