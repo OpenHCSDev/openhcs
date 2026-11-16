@@ -783,7 +783,7 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
     from build_slas_neurite_effects import NeuriteEffectFigure
     from build_slas_neurite_views import AcquisitionNeuriteView
 
-    sheet = FigureSheet("submission_neurite_results", "", 7.1, input_root=input_root)
+    sheet = FigureSheet("submission_neurite_results", "", 9.5, input_root=input_root)
     sheet.source(OUTPUT / "blind_neurite_sources/source-receipt.json")
     sheet.source(OUTPUT / "blind_neurite_sources/final-freeze.json")
     views_path = OUTPUT / "frozen_neurite_views.json"
@@ -791,13 +791,14 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
     laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())["blind_cohort"])
     NeuriteEffectFigure.draw_panels(
         sheet, NeuriteEffectFigure.cohort_tables(sheet),
-        metrics=("mean_outgrowth",), bounds=(3, 48, 94, 49), start_letter="A",
+        metrics=("mean_outgrowth", "branches_per_cell"),
+        bounds=(3, 36, 94, 62), start_letter="A",
     )
-    sheet.text(3, 44.5, "Original analysis 1 · A02, site 2", size=11, weight="bold")
-    laboratory_view.draw_columns((3, 1, 94, 36), 41, (
-        ("C  Raw", laboratory_view.draw_raw),
-        ("D  Labels and paths", laboratory_view.draw_result),
-        ("E  Overlay", laboratory_view.draw_overlay),
+    sheet.text(3, 33.5, "Original analysis 1 · A02, site 2", size=11, weight="bold")
+    laboratory_view.draw_columns((3, 1, 94, 27), 30, (
+        ("E  Raw", laboratory_view.draw_raw),
+        ("F  Labels and paths", laboratory_view.draw_result),
+        ("G  Overlay", laboratory_view.draw_overlay),
     ))
     # Preserve the 1024-pixel field in the manuscript's raster embedding too.
     sheet.save(dpi=600)
@@ -843,56 +844,56 @@ def submission_autonomous_loop():
     icons = ROOT / "paper/figures/assets/lucide"
     sheet.source(icons / "SOURCE.txt")
     sheet.source(icons / "LICENSE")
-    sheet.text(3, 84, "The agent guide’s procedure: from biological brief to editable analysis",
+    sheet.text(3, 80.5, "The agent guide’s procedure: from biological brief to editable analysis",
                size=12, weight="bold")
     stages = (
-        (3, 63, "1  Biological brief", "clipboard-list",
+        (3, 62, "1  Biological brief", "clipboard-list",
          "Question\nMeasurements\nImage acquisition", BLUE),
-        (36, 63, "2  Inspect inputs", "microscope",
+        (36, 62, "2  Inspect inputs", "microscope",
          "Channels and scale\nBright/dim regions\nCentres / borders", BLUE),
-        (69, 63, "3  Build and run", "workflow",
+        (69, 62, "3  Build and run", "workflow",
          "Choose methods\nSet parameters\nRun the analysis", BLUE),
-        (69, 41, "4  Check the result", "scan-eye",
+        (69, 45, "4  Check the result", "scan-eye",
          "Raw and overlay\nMatched regions\nObjects and values", TEAL),
-        (36, 41, "5  Repair and recheck", "wrench",
+        (36, 45, "5  Repair and recheck", "wrench",
          "Find faulty step\nRevise and rerun\nInspect regions", ORANGE),
-        (3, 41, "6  Finalize and deliver", "files",
+        (3, 45, "6  Finalize and deliver", "files",
          "Analysis settings\nImages and tables\nChecks and limits", TEAL),
     )
     for x, y, title, icon, detail, color in stages:
         sheet.axis.add_patch(FancyBboxPatch(
-            (x, y), 28, 17, boxstyle="round,pad=0.2,rounding_size=0.65",
+            (x, y), 28, 13, boxstyle="round,pad=0.2,rounding_size=0.65",
             facecolor=PALE, edgecolor=color, linewidth=1.2, zorder=2,
         ))
-        sheet.text(x + 14, y + 14.5, title, size=11, weight="bold",
+        sheet.text(x + 14, y + 10.8, title, size=11, weight="bold",
                    color=color, ha="center", va="center")
         if icon == "clipboard-list":
-            sheet.asset(icons / "user-round.svg", (x+1, y+3, 6, 9))
-            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+8, 3, 4))
-            sheet.asset(icons / "clipboard-list.svg", (x+7, y+1, 3, 5))
+            sheet.asset(icons / "user-round.svg", (x+1, y+1, 6, 8))
+            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+6, 3, 3))
+            sheet.asset(icons / "clipboard-list.svg", (x+7, y+0.5, 3, 4.5))
         elif icon == "microscope":
             sheet.source(ROOT / "website/assets/logos/README.md")
-            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+7, 9, 6))
-            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+1, 9, 6))
+            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+4.8, 8, 4.6))
+            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+0.4, 8, 4.6))
         elif icon == "workflow":
-            sheet.asset(icons / "list-tree.svg", (x+1.8, y+2, 8, 10))
+            sheet.asset(icons / "list-tree.svg", (x+1.8, y+0.5, 8, 9))
         elif icon == "scan-eye":
-            sheet.asset(icons / "clipboard-check.svg", (x+1.8, y+2, 8, 10))
+            sheet.asset(icons / "clipboard-check.svg", (x+1.8, y+0.5, 8, 9))
         elif icon == "files":
-            sheet.asset(icons / "circle-check-big.svg", (x+1.8, y+2, 8, 10))
+            sheet.asset(icons / "circle-check-big.svg", (x+1.8, y+0.5, 8, 9))
         else:
-            sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 2, 8, 10))
-        sheet.text(x + 11, y + 7.5, detail, size=9, va="center",
+            sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 0.5, 8, 9))
+        sheet.text(x + 11, y + 4.7, detail, size=9, va="center",
                    linespacing=1.5, zorder=4)
-    for start, end in (((31,71.5),(36,71.5)), ((64,71.5),(69,71.5)),
-                       ((83,63),(83,58)), ((69,49.5),(64,49.5)),
-                       ((36,49.5),(31,49.5))):
+    for start, end in (((31,68.5),(36,68.5)), ((64,68.5),(69,68.5)),
+                       ((83,62),(83,58)), ((69,51.5),(64,51.5)),
+                       ((36,51.5),(31,51.5))):
         sheet.arrow(start, end)
-    sheet.route(((50,58),(50,60),(67,60),(67,82),(83,82),(83,80)), color=ORANGE, dashed=True)
-    sheet.text(50, 61, "Return to 3: build and run", size=9, ha="center", color=ORANGE)
-    sheet.text(50, 37, "The scientist checks images and measurements, and can edit the analysis",
+    sheet.route(((50,58),(50,59.5),(67,59.5),(67,78),(83,78),(83,75)), color=ORANGE, dashed=True)
+    sheet.text(50, 60.5, "Return to 3: build and run", size=9, ha="center", color=ORANGE)
+    sheet.text(50, 41, "The scientist checks images and measurements, and can edit the analysis",
                size=10.5, ha="center", weight="bold", color=TEAL)
-    sheet.crop_vertical(.34, .875)
+    sheet.crop_vertical(.39, .835)
     sheet.save()
 
 

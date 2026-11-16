@@ -23,7 +23,7 @@ Pipeline preparation connects image groups and named detections to the functions
 ![Additional endpoint responses from all three independent blind agents.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-The three independently developed blind analyses were re-evaluated with the corrected neurite engine for fusicoccin-A (FC-A) and Y27632 on their original 180 fields in 20 wells. For all panels, including continuations, each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD after normalization, excluding uncertainty in the control mean. Doses are equally spaced for display; no concentration–response model was fitted. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Drug panels share vertical limits. Main Figure 6A–B shows mean outgrowth per cell.
+The three independently developed blind analyses were re-evaluated with the corrected neurite engine for fusicoccin-A (FC-A) and Y27632 on their original 180 fields in 20 wells. For all panels, including continuations, each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD after normalization, excluding uncertainty in the control mean. Doses are equally spaced for display; no concentration–response model was fitted. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Drug panels share vertical limits. Main Figure 6A–B shows mean outgrowth per cell and Figure 6C–D shows branches per cell.
 :::
 
 ## Supp. Figure 2, continued. Process length and branching {#supplementary-figure-2-continued.-process-length-and-branching}
@@ -32,6 +32,14 @@ The three independently developed blind analyses were re-evaluated with the corr
 
 ::: {custom-style="ImageCaption"}
 Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from the fixed-code re-evaluation of three frozen analyses are compared with MetaXpress. **(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. OpenHCS totals and ratios are means across fields. MetaXpress branches per process divide exported well totals; its per-cell values are MetaXpress's exported well values. The endpoints depend on the tracing and branching definitions of each analysis.
+:::
+
+## Supp. Figure 2, continued. Correlations with MetaXpress
+
+![Well-level correlations for all nine endpoints and three corrected analyses.](../figures/slas/supp_neurite_autonomous_correlations.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+Each cell shows Pearson r between an analysis and MetaXpress across the 20 matched wells, including both drugs and all doses. The correlations use absolute well measurements, not normalized fold changes. OpenHCS well values average nine fields. High correlation does not establish agreement in measurement magnitude; the dose-response curves show those differences separately.
 :::
 
 ## Supp. Figure 2, continued. Scientist-assisted neurite analysis {#supplementary-figure-2-continued.-scientist-assisted-neurite-analysis}
