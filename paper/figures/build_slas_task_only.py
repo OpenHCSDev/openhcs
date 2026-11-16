@@ -22,7 +22,7 @@ import numpy as np
 from build_slas_supplement import SupplementFigure, VolumeResultsFigure
 from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
 from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison, NUCLEAR_SOURCE
-from build_slas_visual_story import BLUE, TEAL, ORANGE, FigureSheet
+from build_slas_visual_story import BLUE, TEAL, ORANGE, FigureSheet, submission_autonomous_loop
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_DIRECTORY = Path("paper/supplementary/task_only_analysis")
@@ -445,25 +445,11 @@ class AnalysisResultsFigure(SupplementFigure):
 
 
 class RepairResultsFigure(VolumeResultsFigure):
-    """The guide's procedure beside four separate recorded repair examples."""
+    """Four separate recorded repairs, retaining their original image regions."""
 
     def draw_panels(self):
-        self.draw_procedure()
         self.draw_repairs()
         super().draw_panels()
-
-    def draw_procedure(self):
-        self.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md")
-        self.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md")
-        self.text(3, 98, "Image review guides analysis repair", size=16, weight="bold", va="top")
-        stages = ("Brief + inputs", "Build + run", "Inspect results", "Revise + rerun", "Recheck")
-        for column, title in enumerate(stages):
-            left = 3 + column * 19
-            self.box(left, 88, 17, 6, title, size=11)
-            if column:
-                self.arrow((left - 2, 91), (left, 91))
-        self.text(50, 85, "Guide-directed procedure above; separate recorded analyses below",
-                  size=11, ha="center")
 
     def draw_repairs(self):
         self.source(Path(__file__))
@@ -487,8 +473,14 @@ def submission_summary() -> None:
 
 def submission_repairs(*, input_root: Path = FigureSheet.default_input_root) -> None:
     """Render Figure 4 from the same frozen first/final image regions."""
-    sheet = RepairResultsFigure("submission_analysis_repairs", 10.5, input_root=input_root)
-    sheet.draw_panels()
+    submission_autonomous_loop()
+    panels = RepairResultsFigure("submission_analysis_repair_panels", 8.1, input_root=input_root)
+    panels.draw_panels()
+    panels.crop_vertical(0, .84)
+    panels.save(dpi=400)
+    sheet = SupplementFigure("submission_analysis_repairs", 10.6, input_root=input_root)
+    sheet.artwork("submission_autonomous_loop", (3, 66, 94, 33))
+    sheet.artwork("submission_analysis_repair_panels", (3, 1, 94, 64))
     sheet.save(dpi=400)
 
 

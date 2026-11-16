@@ -4,7 +4,7 @@ import argparse
 import json
 from math import isclose
 from pathlib import Path
-from statistics import mean, stdev
+from statistics import correlation, mean, stdev
 from textwrap import fill
 
 from build_slas_visual_story import (
@@ -67,15 +67,8 @@ class NeuriteEffectFigure(FigureSheet):
         )
 
     @staticmethod
-    def draw_panels(
-        sheet: FigureSheet,
-        tables: Path | dict[str, Path],
-        *,
-        metrics=DEFAULT_METRICS,
-        bounds=(0, 0, 100, 100),
-        start_letter="A",
-    ):
-        """Draw measured panels directly into a standalone or composite sheet."""
+    def read_datasets(sheet, tables, metrics):
+        """Read the matched well tables and verify their shared reference values."""
         sheet.source(Path(__file__))
         sheet.source(ROOT / "paper/figures/compare_personal_neurite.py")
         table_sets = {"OpenHCS": tables} if isinstance(tables, Path) else tables
@@ -113,6 +106,47 @@ class NeuriteEffectFigure(FigureSheet):
                 raise ValueError(
                     "Authors must use the same reference wells and aggregation protocol"
                 )
+        return datasets
+
+    @staticmethod
+    def draw_correlations(sheet, tables, *, bounds=(0.43, 0.16, 0.42, 0.68)):
+        """Show absolute well-level correlation without implying equal magnitudes."""
+        declarations = endpoint_declarations()
+        metrics = tuple(declarations)
+        datasets = NeuriteEffectFigure.read_datasets(sheet, tables, metrics)
+        values = [
+            [correlation([float(row[metric]) for row in wells],
+                         [float(row["openhcs_" + metric]) for row in wells])
+             for _, wells, _, _ in datasets]
+            for metric in metrics
+        ]
+        axis = sheet.plot_axes(bounds)
+        image = axis.imshow(values, vmin=-1, vmax=1, cmap="RdBu", aspect="auto")
+        axis.set_xticks(range(len(datasets)), [label for label, _, _, _ in datasets])
+        axis.set_yticks(range(len(metrics)), [declarations[metric].absolute_label for metric in metrics])
+        axis.xaxis.tick_top()
+        axis.tick_params(length=0, pad=9)
+        for row, results in enumerate(values):
+            for column, value in enumerate(results):
+                axis.text(column, row, f"{value:.3f}", ha="center", va="center",
+                          fontsize=sheet.plot_font_size, color="white" if abs(value) > .6 else "black")
+        bar = sheet.figure.colorbar(image, ax=axis, fraction=.06, pad=.06)
+        bar.set_label("Pearson r", fontsize=sheet.plot_font_size)
+        bar.ax.tick_params(labelsize=sheet.plot_font_size)
+        return {len(wells) for _, wells, _, _ in datasets}
+
+    @staticmethod
+    def draw_panels(
+        sheet: FigureSheet,
+        tables: Path | dict[str, Path],
+        *,
+        metrics=DEFAULT_METRICS,
+        bounds=(0, 0, 100, 100),
+        start_letter="A",
+    ):
+        """Draw measured panels directly into a standalone or composite sheet."""
+        datasets = NeuriteEffectFigure.read_datasets(sheet, tables, metrics)
+        _, wells, effects, evidence = datasets[0]
         series = [("MetaXpress", wells, effects, "metaxpress", "", BLUE, "o")]
         colours = (TEAL, ORANGE, PURPLE)
         markers = ("s", "^", "D")

@@ -28,6 +28,11 @@ class SummaryEndpoint:
     native_column: str
     unit: str = field(default="count", kw_only=True)
 
+    @property
+    def absolute_label(self):
+        """Name this endpoint before control normalization."""
+        return self.label.removesuffix(" / control")
+
     def native_value(self, summary, cells):
         return float(summary[self.native_column])
 

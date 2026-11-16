@@ -180,6 +180,19 @@ def autonomous_treatment_endpoints():
         autonomous.text(3, 3, "Curve-specific DMSO normalization; algorithm comparison, not manual tracing truth.", size=10)
         autonomous.save()
 
+    correlations = SupplementFigure("supp_neurite_autonomous_correlations", 6.4)
+    correlations.heading("Well-level correlations with MetaXpress", 98)
+    counts = NeuriteEffectFigure.draw_correlations(
+        correlations, NeuriteEffectFigure.cohort_tables(correlations),
+    )
+    if len(counts) != 1:
+        raise ValueError("Correlations require the same matched wells for all analyses")
+    correlations.text(50, 7, f"Pearson r across {next(iter(counts))} matched wells; both drugs and all doses.",
+                      size=11, ha="center")
+    correlations.text(50, 2, "Absolute well measurements; correlation does not establish equal magnitudes.",
+                      size=11, ha="center")
+    correlations.save()
+
 
 def treatment_endpoints():
     """Render the cohort pages and the separately retained assisted comparison."""
