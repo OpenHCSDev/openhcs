@@ -69,10 +69,8 @@ from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
 from openhcs.interop.cellprofiler.database_column_dialect import (
     CellProfilerObjectCoreMeasurementFeature,
 )
-from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-    FormattingMeasurementFeatureTemplate,
-    ObjectLocationMeasurementRows,
-)
+from openhcs.interop.cellprofiler.runtime.measurement_rows import ObjectLocationMeasurementRows
+from openhcs.interop.cellprofiler.module_measurement_features import FormattingMeasurementFeatureTemplate
 from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
     RelationshipMeasurementRows,
 )
@@ -82,8 +80,9 @@ from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 @dataclass(frozen=True)
-class RelateObjectsDistanceParentInputRelation(ArtifactSpecRelation, NumbaNumpyDefaultBackend):
+class RelateObjectsDistanceParentInputRelation(ArtifactSpecRelation):
     """Mark an object input as a repeated distance-parent role."""
 
     relation_key = "relate_objects_distance_parent_input"
@@ -146,7 +145,7 @@ class RelateObjectsChildMeanMeasurementFeature:
 
 
 class RelateObjectsModule(
-    ObjectLabelDrivenPrimaryImageInputPolicy,
+    ValidatedHighConfidenceModule, ObjectLabelDrivenPrimaryImageInputPolicy,
     PlaneRuntimeArtifactModule,
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,
@@ -853,7 +852,6 @@ from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 ParentObjectLabelsInput = Annotated[
     ObjectLabelValue,
@@ -1760,7 +1758,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
         return indexes_by_slice
 
 
-class NumbaNumpyObjectRelationshipBackendStrategy(ObjectRelationshipBackendStrategy):
+class NumbaNumpyObjectRelationshipBackendStrategy(NumbaNumpyDefaultBackend, ObjectRelationshipBackendStrategy):
     """Numba-accelerated NumPy object relationship primitives."""
     def prepare_backend(self) -> None:
         parent_labels = np.array([[1, 1, 0], [0, 2, 2], [0, 0, 0]], dtype=np.int32)

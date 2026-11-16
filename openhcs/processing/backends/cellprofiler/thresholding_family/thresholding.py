@@ -174,14 +174,14 @@ def log_threshold_profile(label: str, seconds: float, **fields: object) -> None:
     RuntimeProfileLogger.log(logger, label, seconds, **fields)
 
 
-class CellProfilerThresholdAssignment(Enum, NumbaNumpyDefaultBackend):
+class CellProfilerThresholdAssignment(Enum):
     """Closed foreground/background assignment for multi-class CP thresholds."""
 
     FOREGROUND = "Foreground"
     BACKGROUND = "Background"
 
 
-class CellProfilerAveragingMethod(Enum, NativeNumpyBackend):
+class CellProfilerAveragingMethod(Enum):
     """Closed CP robust-background center estimators."""
 
     MEAN = "Mean"
@@ -232,7 +232,7 @@ class CellProfilerThresholdMethod(CellProfilerEnumAttributeMixin, Enum):
         return GlobalThresholdSourceSelection(threshold_image, method_parameters)
 
 
-class CellProfilerOtsuMethod(Enum, CentrosomeNumpyBackend):
+class CellProfilerOtsuMethod(Enum):
     """Closed CP Otsu class-count selector."""
 
     TWO_CLASS = "Two classes"
@@ -766,7 +766,7 @@ class ThresholdSmoothingBackendStrategy(
         """Return the smoothed image and effective Gaussian sigma."""
 
 
-class NumbaNumpyThresholdSmoothingBackendStrategy(ThresholdSmoothingBackendStrategy):
+class NumbaNumpyThresholdSmoothingBackendStrategy(NumbaNumpyDefaultBackend, ThresholdSmoothingBackendStrategy):
     """NumPy-memory threshold smoothing with Numba convolution."""
     def prepare_backend(self) -> None:
         image = np.linspace(0.0, 1.0, 16, dtype=np.float64).reshape((4, 4))
@@ -885,7 +885,7 @@ class ThresholdDiagnosticsBackendStrategy(
         """Compute foreground plus background log-histogram entropy."""
 
 
-class NumpyThresholdDiagnosticsBackendStrategy(ThresholdDiagnosticsBackendStrategy, NumbaNumpyDefaultBackend):
+class NumpyThresholdDiagnosticsBackendStrategy(NativeNumpyBackend, ThresholdDiagnosticsBackendStrategy):
     """Independent NumPy implementation of CellProfiler threshold diagnostics."""
     def weighted_variance(
         self, image: np.ndarray, mask: np.ndarray, binary_image: np.ndarray
@@ -985,7 +985,7 @@ class WholeImageThresholdDiagnostics(ThresholdDiagnosticDomain):
 
 
 class NumbaNumpyThresholdDiagnosticsBackendStrategy(
-    ThresholdDiagnosticsBackendStrategy
+    NumbaNumpyDefaultBackend, ThresholdDiagnosticsBackendStrategy
 ):
     """Numba-accelerated NumPy implementation of threshold diagnostics."""
     def prepare_backend(self) -> None:
@@ -1330,7 +1330,7 @@ class NumbaLogTransformConversion:
     log_max: float
 
 
-class NumbaNumpyThresholdPrimitiveBackendStrategy(ThresholdPrimitiveBackendStrategy, NumbaNumpyDefaultBackend):
+class NumbaNumpyThresholdPrimitiveBackendStrategy(NumbaNumpyDefaultBackend, ThresholdPrimitiveBackendStrategy):
     """Numba-backed threshold primitives for NumPy-memory images."""
     def prepare_backend(self) -> None:
         values = np.linspace(0.01, 1.0, 32, dtype=np.float64)
@@ -1494,7 +1494,7 @@ class NumbaNumpyThresholdPrimitiveBackendStrategy(ThresholdPrimitiveBackendStrat
 
 
 class CentrosomeNumpyThresholdPrimitiveBackendStrategy(
-    NumbaNumpyThresholdPrimitiveBackendStrategy
+    CentrosomeNumpyBackend, NumbaNumpyThresholdPrimitiveBackendStrategy
 ):
     """Compatibility provider backed by absorbed threshold primitives."""
 
@@ -3199,7 +3199,7 @@ class ProducedImageThresholdMeasurementRecordRowsMixin(
 
 
 class ThresholdModule(
-    ProducedImageThresholdMeasurementRecordRowsMixin,
+    ValidatedHighConfidenceModule, ProducedImageThresholdMeasurementRecordRowsMixin,
     NoObjectNameMeasurementRecordMixin,
     ProducedImagePayloadMeasurementRecordMixin,
     MeasurementArtifactOutputModule,

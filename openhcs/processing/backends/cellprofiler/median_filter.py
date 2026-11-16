@@ -44,7 +44,7 @@ from openhcs.core.callable.processing_contracts import (
 from openhcs.core.payload.runtime_image_values import ImagePayload
 
 
-class MedianFilterModule(CellProfilerModule, NativeNumpyBackend, ValidatedHighConfidenceModule):
+class MedianFilterModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "MedianFilter"
     function_name = "medianfilter"
     setting_bindings = (
@@ -151,7 +151,7 @@ class MedianFilterBackendStrategy(
         return normalized
 
 
-class NumpyMedianFilterBackendStrategy(MedianFilterBackendStrategy):
+class NumpyMedianFilterBackendStrategy(NativeNumpyBackend, MedianFilterBackendStrategy):
     """NumPy/SciPy median filtering with exact accelerated rank paths."""
 
     vectorized_memory_policy: ClassVar[VectorizedMedianFilterMemoryPolicy] = (

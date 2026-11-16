@@ -60,10 +60,8 @@ from openhcs.interop.cellprofiler.setting_names import (
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     NoObjectNameMeasurementRecordMixin,
 )
-from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-    FormattingMeasurementFeatureTemplate,
-    ModuleOwnedResultMeasurementRows,
-)
+from openhcs.interop.cellprofiler.runtime.measurement_rows import ModuleOwnedResultMeasurementRows
+from openhcs.interop.cellprofiler.module_measurement_features import FormattingMeasurementFeatureTemplate
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
@@ -77,6 +75,9 @@ from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
 from openhcs.core.callable.function_patterns import NormalizedFunctionItem
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 @dataclass(frozen=True, slots=True)
 class ClassifiedImageOutput:
     """One active classified-image output owned by a single rule group."""
@@ -86,7 +87,7 @@ class ClassifiedImageOutput:
 
 
 @dataclass(frozen=True)
-class ClassifiedImageSourceRelation(SourceStackLineageSourceRelation, NumbaNumpyDefaultBackend):
+class ClassifiedImageSourceRelation(SourceStackLineageSourceRelation):
     """Tie one classified image to its exact repeated classification rule."""
 
     relation_key: ClassVar[str] = "classify_objects_classified_image_source"
@@ -1269,8 +1270,6 @@ class ClassifyObjectsSingleMeasurementModule(
         )
 
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from enum import Enum
 import json
 from metaclass_registry import AutoRegisterMeta
@@ -1298,7 +1297,6 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.core.payload.payload_axes import ColourSampleAxisSpec
 from openhcs.core.payload.runtime_image_values import ImagePayload
-from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 
 class _ClassificationMethodBehavior(ABC):
@@ -1963,7 +1961,7 @@ class ObjectClassificationBackendStrategy(
 
 
 class NumbaNumpyObjectClassificationBackendStrategy(
-    ObjectClassificationBackendStrategy
+    NumbaNumpyDefaultBackend, ObjectClassificationBackendStrategy
 ):
     """Numba-backed NumPy object classification primitives."""
     def prepare_backend(self) -> None:

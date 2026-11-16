@@ -65,7 +65,7 @@ class CropMask(ArtifactSidecarRole):
 
 
 class CropModule(
-    NoObjectNameMeasurementRecordMixin,
+    ValidatedHighConfidenceModule, NoObjectNameMeasurementRecordMixin,
     ProducedImageMeasurementRecordMixin,
     SourceQualifiedWideMeasurementRowsModule,
     ObjectArtifactInputModule,

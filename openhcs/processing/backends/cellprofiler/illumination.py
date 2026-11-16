@@ -98,7 +98,7 @@ from openhcs.core.payload.runtime_image_values import ImagePayload
 
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
-class IntensityChoice(Enum, NativeNumpyBackend):
+class IntensityChoice(Enum):
     """CellProfiler CorrectIlluminationCalculate intensity source."""
 
     REGULAR = "regular"
@@ -155,7 +155,7 @@ class IlluminationCorrectionMethod(Enum):
     SUBTRACT = "subtract"
 
 class CorrectIlluminationApplyModule(
-    CellProfilerModule,
+    ValidatedHighConfidenceModule, CellProfilerModule,
 ):
     module_name = "CorrectIlluminationApply"
     function_name = "correct_illumination_apply"
@@ -389,7 +389,7 @@ class IlluminationCalculationScopeExecutionModePolicy:
         return default
 
 class CorrectIlluminationCalculateModule(
-    IlluminationCalculationScopeExecutionModePolicy,
+    ValidatedHighConfidenceModule, IlluminationCalculationScopeExecutionModePolicy,
     CellProfilerModule,
 ):
     module_name = "CorrectIlluminationCalculate"
@@ -1502,7 +1502,7 @@ class NumbaNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStr
         result = values[result_codes]
         return result.astype(np.float32) / 65535.0
 
-class NativeNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendStrategy):
+class NativeNumpyRankMedianSmoothingBackendStrategy(NativeNumpyBackend, RankMedianSmoothingBackendStrategy):
     """Compact-domain skimage rank-median backend for NumPy planes."""
 
     is_default_backend = True

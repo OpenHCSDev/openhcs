@@ -198,7 +198,7 @@ ColocalizationThresholdMaskGroupsInput = Annotated[
 
 
 @dataclass(frozen=True)
-class ColocalizationThresholdMaskSourceRelation(SourceStackLineageSourceRelation, NumbaNumpyDefaultBackend):
+class ColocalizationThresholdMaskSourceRelation(SourceStackLineageSourceRelation):
     """Declare the exact source image and threshold for a saved mask."""
 
     relation_key: ClassVar[str] = "colocalization_threshold_mask_source"
@@ -497,7 +497,7 @@ class CostesMethod(Enum):
 
 
 class MeasureColocalizationModule(
-    LabelsObjectInputPolicy,
+    ValidatedHighConfidenceModule, LabelsObjectInputPolicy,
     NoObjectNameMeasurementRecordMixin,
     MeasureColocalizationMeasurementRowPolicy,
     PerObjectMeasurementExecutionModule,
@@ -1294,7 +1294,7 @@ class ColocalizationCostesBackendStrategy(
 
 
 class NumbaNumpyColocalizationCostesBackendStrategy(
-    ColocalizationCostesBackendStrategy
+    NumbaNumpyDefaultBackend, ColocalizationCostesBackendStrategy
 ):
     """Numba implementation of Costes threshold searches."""
     def linear_costes(

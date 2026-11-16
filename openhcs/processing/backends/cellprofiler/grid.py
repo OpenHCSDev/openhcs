@@ -604,7 +604,7 @@ class DefineGridManualModule(
 
 
 class IdentifyObjectsInGridModule(
-    PlaneRuntimeArtifactModule,
+    ValidatedHighConfidenceModule, PlaneRuntimeArtifactModule,
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,
     MeasurementArtifactOutputModule,

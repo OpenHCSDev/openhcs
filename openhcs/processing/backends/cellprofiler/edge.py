@@ -9,7 +9,7 @@ from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
-class EnhanceEdgesModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class EnhanceEdgesModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "EnhanceEdges"
     function_name = "enhance_edges"
     input_image_setting = "Select the input image"

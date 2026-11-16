@@ -81,7 +81,7 @@ class WatershedMethod(str, Enum):
 
 
 class WatershedModule(
-    MeasurementArtifactOutputModule,
+    ValidatedHighConfidenceModule, MeasurementArtifactOutputModule,
     ObjectArtifactOutputModule,
     CellProfilerModule,
 ):
@@ -978,7 +978,7 @@ class WatershedSeedStrategy(
         """Return marker labels for the supplied seed image."""
 
 
-class LocalWatershedSeedStrategy(WatershedSeedStrategy, NumbaNumpyDefaultBackend):
+class LocalWatershedSeedStrategy(WatershedSeedStrategy):
     strategy_key = WatershedSeedMethod.LOCAL
 
     def markers(
@@ -1006,7 +1006,7 @@ class LocalWatershedSeedStrategy(WatershedSeedStrategy, NumbaNumpyDefaultBackend
         return markers.astype(np.int32, copy=False)
 
 
-class RegionalWatershedSeedStrategy(WatershedSeedStrategy, NativeNumpyBackend):
+class RegionalWatershedSeedStrategy(WatershedSeedStrategy):
     strategy_key = WatershedSeedMethod.REGIONAL
 
     def markers(
@@ -1027,7 +1027,7 @@ class RegionalWatershedSeedStrategy(WatershedSeedStrategy, NativeNumpyBackend):
         return markers.astype(np.int32, copy=False)
 
 
-class ConnectedComponentsWatershedSeedStrategy(WatershedSeedStrategy, CentrosomeNumpyBackend):
+class ConnectedComponentsWatershedSeedStrategy(WatershedSeedStrategy):
     strategy_key = WatershedSeedMethod.CONNECTED_COMPONENTS
 
     def markers(
@@ -1588,16 +1588,16 @@ class LegacyWatershedBackendStrategy(
         )
 
 
-class NumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
+class NumpyLegacyWatershedBackendStrategy(NativeNumpyBackend, LegacyWatershedBackendStrategy):
     """NumPy-memory reference legacy watershed backend."""
 
     prefer_fast = False
 
 
-class CentrosomeNumpyLegacyWatershedBackendStrategy(NumpyLegacyWatershedBackendStrategy, NativeNumpyBackend):
+class CentrosomeNumpyLegacyWatershedBackendStrategy(CentrosomeNumpyBackend, NumpyLegacyWatershedBackendStrategy):
     """Centrosome provider using the absorbed CellProfiler reference semantics."""
 
-class NumbaNumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
+class NumbaNumpyLegacyWatershedBackendStrategy(NumbaNumpyDefaultBackend, LegacyWatershedBackendStrategy):
     """NumPy-memory legacy watershed backend with required Numba acceleration."""
 
     prefer_fast = True
@@ -1628,7 +1628,7 @@ class CellProfiler4DistanceMarkerBackendStrategy(
 
 
 class MahotasCellProfiler4DistanceMarkerBackendStrategy(
-    CellProfiler4DistanceMarkerBackendStrategy
+    NativeNumpyBackend, CellProfiler4DistanceMarkerBackendStrategy
 ):
     """Reference CellProfiler 4 marker backend."""
     def distance_markers(

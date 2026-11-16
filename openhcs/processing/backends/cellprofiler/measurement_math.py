@@ -484,7 +484,7 @@ class CalculateMathRoundingMethod(Enum):
 
 
 class CalculateMathModule(
-    HomogeneousObjectNameMeasurementRecordMixin,
+    ValidatedHighConfidenceModule, HomogeneousObjectNameMeasurementRecordMixin,
     CalculateMathInputPolicy,
     PriorMeasurementArtifactInputModule,
     MeasurementArtifactOutputModule,

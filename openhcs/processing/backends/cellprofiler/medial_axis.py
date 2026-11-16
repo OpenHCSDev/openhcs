@@ -39,7 +39,7 @@ def medialaxis(image: np.ndarray) -> np.ndarray:
     return skeleton.astype(np.float32)
 
 
-class MedialaxisModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class MedialaxisModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "Medialaxis"
     function_name = "medialaxis"
     setting_bindings = (

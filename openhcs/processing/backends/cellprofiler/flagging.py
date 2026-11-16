@@ -641,7 +641,7 @@ def flag_image_intensity(
 
 
 class FlagImageModule(
-    FlagImageInputPolicy,
+    ValidatedHighConfidenceModule, FlagImageInputPolicy,
     NoObjectNameMeasurementRecordMixin,
     PriorMeasurementArtifactInputModule,
     MeasurementArtifactOutputModule,

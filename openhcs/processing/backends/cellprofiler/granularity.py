@@ -211,7 +211,7 @@ class MeasureGranularityObjectMeasurementRowPolicy(
 
 
 class MeasureGranularityModule(
-    LabelsObjectInputPolicy,
+    ValidatedHighConfidenceModule, LabelsObjectInputPolicy,
     MeasureGranularityObjectMeasurementRowPolicy,
     PerObjectMeasurementExecutionModule,
     SourceQualifiedWideMeasurementRowsModule,
@@ -223,7 +223,7 @@ class MeasureGranularityModule(
     function_variants = ("measure_granularity_objects",)
     measurement_category_prefixes = (("granularity",),)
 
-    class MeasurementFeature(RuntimeMeasurementFeature, NativeNumpyBackend):
+    class MeasurementFeature(RuntimeMeasurementFeature):
         """Indexed granularity spectrum family emitted by MeasureGranularity."""
 
         SPECTRUM = (
@@ -762,7 +762,7 @@ class GranularityReconstructionBackendStrategy(
 
 
 class NativeGranularityReconstructionBackendStrategy(
-    GranularityReconstructionBackendStrategy
+    NativeNumpyBackend, GranularityReconstructionBackendStrategy
 ):
     """Reference skimage reconstruction backend for granularity."""
     def reconstruct_radius_one(

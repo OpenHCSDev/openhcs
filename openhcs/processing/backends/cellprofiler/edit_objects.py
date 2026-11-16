@@ -148,7 +148,7 @@ def edit_objects_manually(
 
 
 class EditObjectsManuallyModule(
-    LabelsObjectInputPolicy,
+    ValidatedHighConfidenceModule, LabelsObjectInputPolicy,
     ObjectLineageTransformContractModule,
 ):
     module_name = "EditObjectsManually"

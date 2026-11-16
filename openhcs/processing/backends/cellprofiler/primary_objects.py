@@ -626,7 +626,7 @@ def _remap_object_label_variant_after_final_relabel(
 
 
 class IdentifyPrimaryObjectsModule(
-    OutputObjectThresholdMeasurementRecordRowsMixin,
+    ValidatedHighConfidenceModule, OutputObjectThresholdMeasurementRecordRowsMixin,
     NoObjectNameMeasurementRecordMixin,
     CurrentPayloadMeasurementRecordMixin,
     MeasurementArtifactOutputModule,

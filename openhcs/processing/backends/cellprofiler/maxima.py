@@ -194,7 +194,7 @@ def find_maxima_with_mask(
 
 
 class FindMaximaModule(
-    NoObjectNameMeasurementRecordMixin,
+    ValidatedHighConfidenceModule, NoObjectNameMeasurementRecordMixin,
     ProducedImageMeasurementRecordMixin,
     MeasurementArtifactOutputModule,
 ):

@@ -169,7 +169,7 @@ class IndexedObjectZernikeDescriptor:
         return None
 
 
-class ZernikeDescriptorSparseNumericTolerance(SparseNumericCounterToleranceProfile, NativeNumpyBackend):
+class ZernikeDescriptorSparseNumericTolerance(SparseNumericCounterToleranceProfile):
     """Zernike descriptor sparse tolerance owned by CellProfiler Zernike support."""
 
     profile_key = "cellprofiler_zernike_descriptor"
@@ -1105,7 +1105,7 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
         return zernike_numbers, magnitudes, phases
 
 
-class NativeNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
+class NativeNumpyShapeZernikeBackendStrategy(NativeNumpyBackend, ShapeZernikeBackendStrategy):
     """CellProfiler-source Zernike backend for parity-sensitive measurements."""
 
     is_default_backend = True

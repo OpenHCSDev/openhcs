@@ -136,7 +136,7 @@ class ColorToGrayMode(Enum):
 
 
 class ColorToGrayModule(
-    CellProfilerModule,
+    ValidatedHighConfidenceModule, CellProfilerModule,
 ):
     module_name = "ColorToGray"
     function_name = "color_to_gray"
@@ -631,7 +631,7 @@ class ColorToGrayModule(
 
 
 class GrayToColorModule(
-    CellProfilerModule,
+    ValidatedHighConfidenceModule, CellProfilerModule,
 ):
     module_name = "GrayToColor"
     function_name = "gray_to_color"
@@ -1086,7 +1086,7 @@ class GrayToColorModule(
 
 
 class UnmixColorsModule(
-    CellProfilerModule,
+    ValidatedHighConfidenceModule, CellProfilerModule,
 ):
     module_name = "UnmixColors"
     function_name = "unmix_colors"
@@ -2223,7 +2223,7 @@ def _coerce_custom_absorbance(
 
 
 class InvertForPrintingModule(
-    CellProfilerModule,
+    ValidatedHighConfidenceModule, CellProfilerModule,
 ):
     module_name = "InvertForPrinting"
     function_name = "invert_for_printing"

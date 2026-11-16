@@ -18,7 +18,7 @@ from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
 
 
-class ReducenoiseModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class ReducenoiseModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "Reducenoise"
     aliases = ("ReduceNoise",)
     function_name = "reducenoise"
@@ -35,7 +35,7 @@ class ReducenoiseModule(CellProfilerModule, ValidatedHighConfidenceModule):
     )
 
 
-class SmoothModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class SmoothModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "Smooth"
     function_name = "smooth"
     input_image_setting = "Select the input image"

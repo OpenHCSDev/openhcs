@@ -480,7 +480,7 @@ class FilterObjectsInputPolicy(
 
 
 class FilterObjectsModule(
-    PlaneRuntimeArtifactModule,
+    ValidatedHighConfidenceModule, PlaneRuntimeArtifactModule,
     FilterObjectsInputPolicy,
     ObjectArtifactInputModule,
     ObjectArtifactOutputModule,
