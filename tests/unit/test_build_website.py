@@ -333,10 +333,7 @@ def test_shipping_copy_projects_current_release_and_keeps_boundaries_explicit(
     package_version = read_package_version(REPO_ROOT)
     assert RELEASE_VERSION_TOKEN not in html
     assert f"Install OpenHCS {package_version}" in html
-    assert "Desktop installers include the GUI and local MCP setup" in html
-    assert "ChatGPT" in html
-    assert 'href="support.html#plugin-status"' not in html
-    assert "ChatGPT web" not in html
+    assert f"PyPI {package_version}" in html
     installer_assets = re.findall(
         r"https://github\.com/OpenHCSDev/OpenHCS/releases/latest/download/" r"([^\"]+)",
         html,
@@ -344,112 +341,59 @@ def test_shipping_copy_projects_current_release_and_keeps_boundaries_explicit(
     publish_workflow = (REPO_ROOT / ".github/workflows/publish.yml").read_text(
         encoding="utf-8"
     )
-    assert len(installer_assets) == 2
-    assert all(asset_name in publish_workflow for asset_name in installer_assets)
     assert installer_assets == [
         "OpenHCS-Windows-Installer.exe",
         "OpenHCS-macOS-Installer.dmg",
     ]
-    assert all(not asset_name.endswith(".zip") for asset_name in installer_assets)
-    assert "Download for Windows" in html
-    assert "Download for macOS" in html
-    assert "Download and run — no ZIP to extract" in html
-    assert "Open the DMG, then open OpenHCS Installer" in html
-    assert "Install-OpenHCS.cmd" not in html
-    assert (
-        "User-scoped, CPU-only installers include CellProfiler compatibility"
-        in normalized_html
-    )
-    assert "local MCP, Napari, Fiji, and Bio-Formats" in normalized_html
-    assert "GPU libraries are optional and not included" in normalized_html
-    assert "Fiji downloads Java on first use" in normalized_html
-    assert (
-        "The Windows installer is unsigned, and the macOS installer is not notarized"
-        in normalized_html
-    )
-    assert "latest complete GitHub release may trail PyPI" in normalized_html
-    assert f"PyPI {package_version}" in html
-    assert 'class="install-routes"' in html
+    assert all(asset_name in publish_workflow for asset_name in installer_assets)
     assert html.index("Download for Windows") < html.index(
         'python -m pip install "openhcs[gui,viz,bioformats,mcp,cellprofiler-compat]"'
     )
-    assert "supported CellProfiler <code>.cppipe</code> imports" in normalized_html
-    assert "Available in the current beta" not in html
-    assert "0.6 beta" not in html
-    assert f"New in {package_version}" not in html
-    assert "https://openhcs.readthedocs.io/en/latest/" in html
-    assert "https://openhcs.readthedocs.io/en/latest/api/" in html
-    assert (
+
+    # The installer's limits are stated next to the download, not hidden.
+    for boundary in (
+        "CPU-only installers that include CellProfiler compatibility",
+        "local MCP, Napari, Fiji, and Bio-Formats",
+        "GPU libraries are optional and not included",
+        "Fiji downloads Java on first use",
+        "latest complete GitHub release may trail PyPI",
+        "Windows installer is unsigned",
+        "macOS installer is not notarized",
+    ):
+        assert boundary in normalized_html
+
+    # Every named integration links to its own project and shows its own mark.
+    for href, logo in (
+        ("https://cellprofiler.org/", "cellprofiler.png"),
+        ("https://napari.org/", "napari.svg"),
+        ("https://imagej.net/software/fiji/", "fiji.svg"),
+        ("https://www.openmicroscopy.org/bio-formats/", "bioformats.svg"),
+        ("https://cupy.dev/", "cupy.svg"),
+        ("https://pytorch.org/", "pytorch.svg"),
+        ("https://docs.jax.dev/", "jax.png"),
+        ("https://www.tensorflow.org/", "tensorflow.svg"),
+        ("https://clesperanto.github.io/pyclesperanto/", "pyclesperanto.png"),
+    ):
+        assert f'href="{href}"' in html
+        assert f'src="assets/logos/{logo}"' in html
+    for logo in ("platform-windows.svg", "platform-macos.svg", "python.svg"):
+        assert f'src="assets/logos/{logo}"' in html
+
+    for documentation_url in (
+        "https://openhcs.readthedocs.io/en/latest/",
+        "https://openhcs.readthedocs.io/en/latest/api/",
         "https://openhcs.readthedocs.io/en/latest/reference/"
-        "dimensionality_and_measurements.html"
-    ) in html
-    assert ">Install local MCP</a>" in html
-    assert "https://github.com/OpenHCSDev/OpenHCS/releases" in html
-    assert 'id="gallery"' in html
-    assert 'src="assets/gallery/' in html
-    assert "CellProfiler" in html and package_version in html
-    assert "GPU libraries + custom functions" in html
-    assert "Compute with" in html
-    assert "Your functions" in html
-    for backend_name in ("CuPy", "PyTorch", "JAX", "TensorFlow", "pyclesperanto"):
-        assert backend_name in html
-    assert "automatic memory conversion" in html
-    assert "openhcs[gpu]" in html
-    assert 'src="assets/logos/cellprofiler.png"' in html
-    assert 'src="assets/logos/napari.svg"' in html
-    assert 'src="assets/logos/fiji.svg"' in html
-    assert 'src="assets/logos/bioformats.svg"' in html
-    assert 'src="assets/logos/cupy.svg"' in html
-    assert 'src="assets/logos/pytorch.svg"' in html
-    assert 'src="assets/logos/jax.png"' in html
-    assert 'src="assets/logos/tensorflow.svg"' in html
-    assert 'src="assets/logos/pyclesperanto.png"' in html
-    assert "https://cellprofiler.org/" in html
+        "dimensionality_and_measurements.html",
+        "https://github.com/OpenHCSDev/OpenHCS/releases",
+    ):
+        assert f'href="{documentation_url}"' in html
+
+    for extra in ("openhcs[gpu]", "openhcs[bioformats]", "openhcs[gui,viz]"):
+        assert extra in html
+    assert "CellProfiler authors and contributors" in normalized_html
     assert "https://cellprofiler.org/citations" in html
     assert "https://doi.org/10.1186/s12859-021-04344-9" in html
-    assert "We thank the" in html
-    assert "CellProfiler authors and contributors" in normalized_html
-    assert (
-        "Third-party names and logos identify supported integrations" in normalized_html
-    )
     assert "does not imply affiliation or endorsement" in normalized_html
-    assert "OpenHCS is independent of CellProfiler" not in html
-    assert "https://napari.org/" in html
-    assert "https://imagej.net/software/fiji/" in html
-    assert "https://www.openmicroscopy.org/bio-formats/" in html
-    assert "https://cupy.dev/" in html
-    assert "https://pytorch.org/" in html
-    assert "https://docs.jax.dev/" in html
-    assert "https://www.tensorflow.org/" in html
-    assert "https://clesperanto.github.io/pyclesperanto/" in html
-    assert "Bio-Formats image I/O" in html
-    assert "openhcs[bioformats]" in html
-    assert 'class="works-with"' not in html
-    assert 'src="assets/logos/platform-windows.svg"' in html
-    assert 'src="assets/logos/platform-macos.svg"' in html
-    assert 'src="assets/logos/python.svg"' in html
-
-    cppipe_row = html.split('class="capability-index">02', 1)[1].split(
-        'class="capability-index">03', 1
-    )[0]
-    dimensionality_row = html.split('class="capability-index">03', 1)[1].split(
-        'class="capability-index">04', 1
-    )[0]
-    viewer_row = html.split('class="capability-index">04', 1)[1].split(
-        'class="capability-index">05', 1
-    )[0]
-    bioformats_row = html.split('class="capability-index">06', 1)[1].split(
-        "</article>", 1
-    )[0]
-    assert 'src="assets/logos/cellprofiler.png"' in cppipe_row
-    assert "function-defined, not a global 2D/3D switch" in dimensionality_row
-    assert 'src="assets/logos/napari.svg"' in viewer_row
-    assert 'src="assets/logos/fiji.svg"' in viewer_row
-    assert 'src="assets/logos/bioformats.svg"' in bioformats_row
-    assert package_version not in cppipe_row
-    assert package_version not in bioformats_row
-    assert "./docs/" not in html
-    assert "./coverage/" not in html
 
 
 def test_documentation_and_runtime_version_surfaces_use_package_authority():
@@ -497,106 +441,69 @@ def test_mcp_client_marks_project_from_registration_authority(tmp_path: Path):
         assert (site_dir / client.logo_path).is_file()
 
 
-def test_landing_page_uses_factual_copy_and_readable_proportions(
+def test_landing_page_claims_match_the_published_agent_record(
     tmp_path: Path,
 ):
     site_dir = tmp_path / "site"
     build_site(REPO_ROOT, site_dir)
     html = (site_dir / "index.html").read_text(encoding="utf-8")
     normalized_html = " ".join(html.split())
-    styles = (REPO_ROOT / "website/styles.css").read_text(encoding="utf-8")
-
-    assert "Turn high-content microscopy images into reproducible measurements." in html
-    assert "For imaging scientists and research software teams" in html
-    assert "many wells, sites, channels, Z planes, or time points" in normalized_html
-    assert "It keeps source selection, processing steps, and result definitions" in (
-        normalized_html
+    asset_root = REPO_ROOT / "website/assets/agent"
+    record = json.loads(
+        (asset_root / "cold-start-workflow-record.json").read_text(encoding="utf-8")
     )
-    assert "Is OpenHCS for my data?" in html
-    assert "Plane-local and volumetric analysis" in html
-    assert "function-defined, not a global 2D/3D switch" in normalized_html
-    assert "Watershed segmentation, 3D intensity" in normalized_html
-    assert "plane-local labels are not silently stitched across Z" in normalized_html
-    assert "From images and a question to a validated workflow." not in html
+    evidence = record["evidence"]
+    original = evidence["result_summary"]
+    corrected = evidence["post_qa_corrected_recapture"]
+
     assert html.count('src="assets/logos/openhcs-horizontal.svg"') == 1
     assert html.count('src="assets/logos/openhcs-stacked.svg"') == 1
     assert 'href="assets/logos/openhcs-favicon.svg"' in html
-    assert "<span>OpenHCS</span>" not in html
-    assert '<span class="brand-mark" aria-hidden="true">H</span>' not in html
-    assert 'class="hero-grid"' in html
-    assert 'class="release-summary"' not in html
-    assert "execution-progress.webm" not in html
-    assert "result-review.webm" not in html
-    assert "OpenHCS in use" in html
-    assert "Use OpenHCS through a local agent" in html
-    assert "without manually constructing the pipeline" in normalized_html
-    assert "Every pipeline remains editable in" in normalized_html
-    assert "the GUI and as generated Python" in normalized_html
-    assert "Auto-configured clients" in html
-    assert "These marks describe local setup compatibility" in normalized_html
-    assert "exact client, model, and version tested" in normalized_html
-    assert 'class="agent-evidence"' in html
-    assert 'id="agent-evidence-title"' in html
-    assert 'id="agent-workflow-showcase"' in html
-    assert 'id="agent-workflow-evidence"' in html
-    assert "neurite-outgrowth-workflow.webm" in html
-    assert "neurite-outgrowth-workflow.mp4" in html
-    assert "neurite-outgrowth-workflow-poster.webp" in html
-    assert "neurite-outgrowth-workflow-record.json" in html
-    assert "cold-start-workflow.mp4" not in html
-    assert "cold-start-workflow-uncut.mp4" in html
-    assert "cold-start-workflow-transcript.txt" in html
-    assert "cold-start-workflow-final.md" in html
-    assert "cold-start-workflow-events.jsonl" in html
-    assert "cold-start-workflow-record.json" in html
-    assert "cold-start-workflow-pipeline.py" in html
+
+    # Numbers and commits on the page are the numbers and commits in the record.
+    assert (
+        f"{original['neurons']} neurons and "
+        f"{original['spatial_graph_path_count']} spatial-graph paths"
+    ) in normalized_html
+    assert (
+        f"{corrected['result_summary']['neurons']} neurons and "
+        f"{corrected['result_summary']['spatial_graph_path_count']} "
+        "spatial-graph paths"
+    ) in normalized_html
+    assert corrected["release_fix_commit"][:9] in html
+    assert evidence["post_run_finding"]["release_fix_commit"][:9] in html
+    assert record["fixture"]["kind"].startswith("public NeuronCyto II")
+    assert "NeuronCyto II" in html
+
+    # The run's limits are said out loud.
     assert "One prompt; no later human steering" in html
     assert "no shell or repository access" in normalized_html
-    assert "NeuronCyto II" in html
-    assert "per-neuron morphology analysis" in normalized_html
-    assert "editable two-step pipeline" in normalized_html
-    assert "9 neurons and 25 spatial-graph paths" in normalized_html
-    assert "24 spatial-graph paths" in normalized_html
     assert "post-run MCP interaction replay" in normalized_html
     assert "not evidence of actions taken by the unattended agent" in normalized_html
-    assert "Uncut 10:47 run" in html
-    assert "973c51fd0" in html
-    assert "0eb5f77c0" in html
-    assert "Recordings are being prepared." not in html
-    assert "without supervision" not in html
-    assert "Open High-Content Screening" in html
-    assert "Open-source high-content image analysis" not in html
-    assert "Open High-Content Image Analysis" not in html
-    assert "ROI selection navigates the Z stack" in html
-    assert "See endpoint startup while the request is running" in html
-    assert "Review matching ROIs in Fiji" in html
-    assert "one bound Field 1 nuclear plane" in normalized_html
-    assert "native outlines follow the displayed nuclei" in normalized_html
-    assert "View images, ROIs, and measurements" in html
-    assert "Pipeline review" not in html
-    assert "interactive review" not in html
-    assert 'class="release-facts"' not in html
-    assert 'class="mcp-points"' not in html
-    for removed_slogan in (
-        "without the black box",
-        "See the whole experiment",
-        "Visual when you want it",
-        "Give your agent the same mental model",
-        "Install your way",
-        "open by design",
-    ):
-        assert removed_slogan not in html
 
-    assert "--max: 1280px;" in styles
-    assert "font-size: 17px;" in styles
-    assert "grid-template-columns: minmax(0, 1fr);" in styles
-    assert "font-size: clamp(3.25rem, 4.8vw, 4.65rem);" in styles
-    assert ".hero-intro h1 { max-width: none; }" in styles
-    assert ".capability-row p { color: var(--muted); font-size: 1rem; }" in styles
-    assert (
-        ".installer-boundary { padding: 1rem 1.25rem; color: var(--muted); "
-        "font-size: 0.74rem;"
-    ) in styles
+    # Every receipt the record names is linked from the page.
+    for linked_path in (
+        evidence["media"]["uncut_video_path"],
+        record["trace"]["transcript_path"],
+        record["trace"]["final_response_path"],
+        record["trace"]["event_log_path"],
+        evidence["pipeline_source_path"],
+        "cold-start-workflow-record.json",
+        "neurite-outgrowth-workflow-record.json",
+        "neurite-outgrowth-workflow.webm",
+        "neurite-outgrowth-workflow.mp4",
+        "neurite-outgrowth-workflow-poster.webp",
+    ):
+        assert f"assets/agent/{linked_path}" in html
+    for anchor in (
+        'id="principles"',
+        'id="gallery"',
+        'id="mcp"',
+        'id="install"',
+        'id="agent-workflow-showcase"',
+        'id="agent-workflow-evidence"',
+    ):
+        assert anchor in html
 
 
 def test_agent_workflow_evidence_record_matches_published_assets():
@@ -860,27 +767,32 @@ def test_gallery_uses_semantic_accessible_media_and_stable_paths(
             assert link.get("aria-label", "").strip()
 
 
-def test_gallery_layout_is_responsive_and_has_reduced_motion_fallback():
+def test_stylesheet_covers_catalog_markup_and_reduced_motion():
     styles = (REPO_ROOT / "website/styles.css").read_text(encoding="utf-8")
+    projection = _gallery_projection()
+    catalog_classes = {
+        css_class
+        for card in projection.cards
+        for attribute in re.findall(r'class="([^"]+)"', card.rendered_html)
+        for css_class in attribute.split()
+    } | {
+        css_class
+        for attribute in re.findall(r'class="([^"]+)"', projection.provenance_html)
+        for css_class in attribute.split()
+    }
 
-    assert "grid-template-columns: repeat(12, minmax(0, 1fr));" in styles
-    assert "align-items: start;" in styles
-    gallery_card_rule = styles.split(".gallery-card {", 1)[1].split("}", 1)[0]
-    assert "margin: 0;" in gallery_card_rule
-    assert ".gallery-card-wide { grid-column: span 7; }" in styles
-    assert ".gallery-card-compact { grid-column: span 5; }" in styles
-    assert ".gallery-card-viewer { grid-column: span 6; }" in styles
-    assert ".gallery-card-feature { grid-column: 1 / -1; }" in styles
+    unstyled = {
+        css_class
+        for css_class in catalog_classes
+        if re.search(rf"\.{re.escape(css_class)}(?![\w-])", styles) is None
+    }
+    assert not unstyled, f"gallery catalog emits unstyled classes: {sorted(unstyled)}"
     assert "@media (max-width: 900px)" in styles
-    assert (
-        ".gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }" in styles
-    )
     assert "@media (max-width: 600px)" in styles
-    assert ".gallery-grid { grid-template-columns: 1fr;" in styles
-    assert "position: absolute;\n    top: 0.8rem;\n    right: 0;" in styles
     reduced_motion = styles.split("@media (prefers-reduced-motion: reduce)", 1)[1]
     assert ".gallery-motion video { display: none; }" in reduced_motion
     assert ".gallery-motion-fallback { display: block;" in reduced_motion
+    assert "@media (prefers-color-scheme: dark)" in styles
 
 
 def test_public_policy_pages_are_staged_with_local_software_boundaries(

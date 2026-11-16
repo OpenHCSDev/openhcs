@@ -1,8 +1,11 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body, h1, h2, h3, p, ul, pre { margin: 0; }
-ul { padding: 0; list-style: none; }
-img, svg { display: block; max-width: 100%; }
-a { color: inherit; text-decoration: none; }
+body, h1, h2, h3, p, ul, ol, pre, dl, dd, figure { margin: 0; }
+ul, ol { padding: 0; }
+img, svg, video { display: block; max-width: 100%; }
 button, input { font: inherit; }
+table { border-collapse: collapse; }
 body { min-width: 320px; min-height: 100vh; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

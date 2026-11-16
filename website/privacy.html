@@ -7,28 +7,31 @@
       name="description"
       content="Privacy information for the OpenHCS website and local software."
     >
-    <meta name="theme-color" content="#0a0d16">
+    <meta name="theme-color" content="#15171d">
     <title>Privacy — OpenHCS</title>
     <link rel="icon" type="image/svg+xml" href="assets/logos/openhcs-favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="globals.css">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
 
-    <header class="site-header">
-      <a class="brand" href="index.html#top" aria-label="OpenHCS home">
-        <img class="brand-lockup" src="assets/logos/openhcs-horizontal.svg" alt="OpenHCS">
-      </a>
-      <nav aria-label="Primary navigation">
-        <a href="index.html">Home</a>
-        <a href="support.html">Support</a>
-        <a href="terms.html">Terms</a>
-        <a class="nav-github" href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
-      </nav>
+    <header class="masthead">
+      <div class="masthead-inner">
+        <a class="brand" href="index.html#top" aria-label="OpenHCS home">
+          <img class="brand-lockup" src="assets/logos/openhcs-horizontal.svg" alt="OpenHCS">
+        </a>
+        <nav aria-label="Primary navigation">
+          <a href="index.html">Home</a>
+          <a href="support.html">Support</a>
+          <a href="privacy.html" aria-current="page">Privacy</a>
+          <a href="terms.html">Terms</a>
+          <a href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
+        </nav>
+      </div>
     </header>
 
     <main class="policy-page" id="content">
@@ -157,18 +160,17 @@
       </div>
     </main>
 
-    <footer>
-      <div class="footer-brand">
+    <footer class="colophon">
+      <div class="colophon-inner">
         <img class="footer-brand-logo" src="assets/logos/openhcs-stacked.svg" alt="OpenHCS">
-        <small>Open High-Content Screening.</small>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="index.html">Home</a>
+          <a href="support.html">Support</a>
+          <a href="privacy.html" aria-current="page">Privacy</a>
+          <a href="terms.html">Terms</a>
+        </nav>
+        <p class="copyright">Open High-Content Screening · MIT License · OpenHCS contributors</p>
       </div>
-      <div class="footer-links">
-        <a href="index.html">Home</a>
-        <a href="support.html">Support</a>
-        <a href="privacy.html" aria-current="page">Privacy</a>
-        <a href="terms.html">Terms</a>
-      </div>
-      <span class="copyright">MIT License · OpenHCS contributors</span>
     </footer>
   </body>
 </html>

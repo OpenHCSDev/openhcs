@@ -63,8 +63,6 @@ REQUIRED_COPY = (
     "TensorFlow",
     "pyclesperanto",
     "custom functions",
-    "Compute with",
-    "Your functions",
     "Bio-Formats",
     "Bio-Formats image I/O",
     "openhcs[bioformats]",
