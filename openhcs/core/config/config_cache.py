@@ -17,6 +17,7 @@ from typing import (
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.config.config_document import ConfigDocumentCodec
 from openhcs.core.util.xdg_paths import get_config_file_path
+from objectstate import set_global_config
 
 logger = logging.getLogger(__name__)
 
@@ -134,9 +135,7 @@ def _fsync_directory(directory: Path) -> None:
 
 
 def _establish_global_pipeline_config(config: GlobalPipelineConfig) -> None:
-    from objectstate.lazy_factory import ensure_global_config_context
-
-    ensure_global_config_context(GlobalPipelineConfig, config)
+    set_global_config(GlobalPipelineConfig, config)
 
 
 def global_pipeline_config_cache_spec() -> ConfigCacheSpec[GlobalPipelineConfig]:

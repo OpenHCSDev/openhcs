@@ -18,7 +18,7 @@ from formbridge.services.pattern_data_manager import FUNC_EDITOR_PATTERN_TOKENS_
 from formbridge.services.scope_token_service import ScopeTokenService
 from objectstate import ObjectState, ObjectStateRegistry
 from objectstate.global_config import GlobalContextValues
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from objectstate.scope_key import ScopeKey
 
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
@@ -62,7 +62,7 @@ def plate_state() -> Iterator[ObjectState]:
         GlobalPipelineConfig(),
         dtype_config=DtypeConfig(default_dtype_conversion=GLOBAL_VALUE),
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
     global_state = ObjectState(object_instance=global_config, scope_id="")
     ObjectStateRegistry.register(global_state, _skip_snapshot=True)
     state = ObjectState(

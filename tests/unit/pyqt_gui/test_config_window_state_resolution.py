@@ -7,7 +7,7 @@ import pytest
 from objectstate import (
     ObjectState,
     ObjectStateRegistry,
-    set_global_config_for_editing,
+    set_global_config,
 )
 from pyqt_reactive.forms.parameter_form_manager import (
     FormManagerConfig,
@@ -760,7 +760,7 @@ def test_pipeline_streaming_enableable_placeholders_dim_after_build_and_toggle(
 ) -> None:
     """Lazy inherited streaming configs still receive enableable dimming."""
     ObjectStateRegistry.clear()
-    set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
 
     state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)

@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from objectstate.object_state import ObjectStateRegistry
 from pyqt_reactive.theming import ColorScheme
 
@@ -69,7 +69,7 @@ def caller_session(**kwargs) -> Iterator[Session]:
 
     ObjectStateRegistry.clear()
     global_config = kwargs.pop("global_config", GlobalPipelineConfig())
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
     persisted = kwargs.pop("persisted_scope_ids", None)
     if persisted is not None:
         write_dataset_scope_ids(list(persisted))

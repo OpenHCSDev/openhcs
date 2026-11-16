@@ -339,7 +339,7 @@ class OpenHCSAdapter(ToolAdapter):
     ) -> BenchmarkResult:
         """Execute a converted CellProfiler pipeline through the OpenHCS orchestrator."""
         from objectstate.lazy_factory import (
-            ensure_global_config_context,
+            set_global_config,
             rebuild_lazy_config_with_new_global_reference,
         )
 
@@ -431,7 +431,7 @@ class OpenHCSAdapter(ToolAdapter):
             output_suffix=output_suffix,
             compilation_debug_config=compilation_debug_config,
         )
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         pipeline_config = rebuild_lazy_config_with_new_global_reference(
             pipeline_config,
             global_config,

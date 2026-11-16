@@ -5,7 +5,7 @@ from abc import ABC
 from metaclass_registry import AutoRegisterMeta
 from objectstate.global_config import (
     get_current_global_config,
-    set_global_config_for_editing,
+    set_global_config,
 )
 
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig
@@ -60,7 +60,7 @@ def test_a_global_config_set_by_a_test_is_put_back_after_it():
     around_a_test = conftest.restored_global_configs.__wrapped__()
     before = get_current_global_config(GlobalPipelineConfig)
     next(around_a_test)
-    set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     assert get_current_global_config(GlobalPipelineConfig) is not before
     next(around_a_test, None)
     assert get_current_global_config(GlobalPipelineConfig) is before

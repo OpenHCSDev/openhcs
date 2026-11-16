@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.constants.input_source import ReadPipelineStart
@@ -160,7 +160,7 @@ def _compiler_contracts(
     pipeline_config: PipelineConfig,
 ) -> tuple[CallableContract, ...]:
     global_config = GlobalPipelineConfig()
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
     ObjectStateRegistry.clear()
     pipeline_state = ObjectState(pipeline_config, scope_id="pipeline")
 
