@@ -338,10 +338,7 @@ class OpenHCSAdapter(ToolAdapter):
         request: OpenHCSRunRequest,
     ) -> BenchmarkResult:
         """Execute a converted CellProfiler pipeline through the OpenHCS orchestrator."""
-        from objectstate.lazy_factory import (
-            set_global_config,
-            rebuild_lazy_config_with_new_global_reference,
-        )
+        from objectstate import set_global_config
 
         phase_timing = PhaseTimingTrace(
             run_id=f"{request.dataset_id}:{request.pipeline_name}:openhcs",
@@ -432,11 +429,6 @@ class OpenHCSAdapter(ToolAdapter):
             compilation_debug_config=compilation_debug_config,
         )
         set_global_config(GlobalPipelineConfig, global_config)
-        pipeline_config = rebuild_lazy_config_with_new_global_reference(
-            pipeline_config,
-            global_config,
-            GlobalPipelineConfig,
-        )
         observation_export_path = (
             MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(request.output_dir)
         )
