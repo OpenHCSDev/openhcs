@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 
-from PyQt6.QtTest import QTest
+from PySide6.QtTest import QTest
 
 from objectstate import ObjectStateRegistry
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService

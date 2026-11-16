@@ -217,8 +217,8 @@ jobs:
         run: |
           ulimit -c 0
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24 +extension GLX" python -u - <<'PY'
-          from PyQt6.QtGui import QOffscreenSurface, QOpenGLContext
-          from PyQt6.QtWidgets import QApplication
+          from PySide6.QtGui import QOffscreenSurface, QOpenGLContext
+          from PySide6.QtWidgets import QApplication
           from OpenGL.GL import GL_RENDERER, GL_VERSION, glGetString
 
           application = QApplication([])
@@ -444,7 +444,7 @@ jobs:
         run: |
           sudo apt-get update
           # ubuntu-latest (23.10+) no longer provides libgl1-mesa-glx; use libgl1.
-          # PyQt6 requires libEGL.so.1 (EGL) and libGL.so.1 (OpenGL).
+          # PySide6 requires libEGL.so.1 (EGL) and libGL.so.1 (OpenGL).
           sudo apt-get install -y libgl1
           sudo apt-get install -y libegl1 || sudo apt-get install -y libegl1-mesa
           sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 xvfb
@@ -588,7 +588,7 @@ jobs:
         run: |
           sudo apt-get update
           # ubuntu-latest (23.10+) no longer provides libgl1-mesa-glx; use libgl1.
-          # PyQt6 requires libEGL.so.1 (EGL) and libGL.so.1 (OpenGL).
+          # PySide6 requires libEGL.so.1 (EGL) and libGL.so.1 (OpenGL).
           sudo apt-get install -y libgl1
           sudo apt-get install -y libegl1 || sudo apt-get install -y libegl1-mesa
           sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 xvfb
@@ -714,7 +714,7 @@ jobs:
         run: |
           sudo apt-get update
           # ubuntu-latest (23.10+) no longer provides libgl1-mesa-glx; use libgl1.
-          # PyQt6 requires libEGL.so.1 (EGL) and libGL.so.1 (OpenGL).
+          # PySide6 requires libEGL.so.1 (EGL) and libGL.so.1 (OpenGL).
           sudo apt-get install -y libgl1
           sudo apt-get install -y libegl1 || sudo apt-get install -y libegl1-mesa
           sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 xvfb
@@ -2408,7 +2408,7 @@ jobs:
       - name: Install system dependencies (Linux)
         run: |
           sudo apt-get update
-          # PyQt6 requires libEGL.so.1 (EGL) and libGL.so.1 (OpenGL).
+          # PySide6 requires libEGL.so.1 (EGL) and libGL.so.1 (OpenGL).
           sudo apt-get install -y libgl1
           sudo apt-get install -y libegl1 || sudo apt-get install -y libegl1-mesa
           sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 xvfb

@@ -17,8 +17,8 @@ from functools import singledispatchmethod
 from typing import Any, Callable, Optional, Tuple
 
 from objectstate.object_state import ObjectStateRegistry
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QSplitter, QVBoxLayout
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QSplitter, QVBoxLayout
 from pyqt_reactive.animation import WindowFlashOverlay
 from formbridge.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
@@ -275,8 +275,8 @@ class PipelineEditorWidget(
         append_signature_diff_fields=False,
     )
 
-    step_selected = pyqtSignal(object)
-    status_message = pyqtSignal(str)
+    step_selected = Signal(object)
+    status_message = Signal(str)
 
     def __init__(
         self,
@@ -426,7 +426,7 @@ class PipelineEditorWidget(
         self.debug_toolbar.runtime_inspection_requested.connect(
             self.debug_workflow.show_runtime_inspection
         )
-        from PyQt6.QtGui import QKeySequence, QShortcut
+        from PySide6.QtGui import QKeySequence, QShortcut
 
         QShortcut(QKeySequence("Ctrl+C"), self, self._action_copy_steps)
         QShortcut(QKeySequence("Ctrl+V"), self, self._action_paste_steps)

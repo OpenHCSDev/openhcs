@@ -7,8 +7,8 @@ import time
 from concurrent.futures import CancelledError
 from dataclasses import replace
 
-from PyQt6 import sip
-from PyQt6.QtCore import QCoreApplication, QEvent
+import shiboken6
+from PySide6.QtCore import QCoreApplication, QEvent
 
 from openhcs.agent.dto.functions import (
     FunctionCatalogControlRequest,
@@ -428,7 +428,7 @@ def test_selector_destruction_does_not_own_shared_catalog_completion(qapp) -> No
     dialog.close()
     dialog.deleteLater()
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
-    assert sip.isdeleted(dialog)
+    assert not shiboken6.isValid(dialog)
     try:
         release.set()
         assert future.result(timeout=2).items == (entry,)

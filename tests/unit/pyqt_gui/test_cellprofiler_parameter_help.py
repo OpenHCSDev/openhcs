@@ -13,7 +13,7 @@ def test_parameter_help_content_uses_parameter_window_not_docstring_mirror(
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
 
     import openhcs  # noqa: F401 - activates source-checkout externals first
-    from PyQt6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     from formbridge.services.help_document import HelpDocumentFormat
     from pyqt_reactive.widgets.help_document_browser import HelpDocumentBrowser
     from pyqt_reactive.windows.help_window_manager import (
@@ -74,7 +74,7 @@ def test_callable_parameter_popup_uses_wrapper_owned_descriptions(
 
     import openhcs  # noqa: F401 - activates source-checkout externals first
     from arraybridge.decorators import numpy
-    from PyQt6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     from python_introspect import mark_enableable
     from pyqt_reactive.windows.help_window_manager import (
         HelpWindowManager,
@@ -175,7 +175,7 @@ def test_dataclass_help_replaces_parameter_window_without_reusing_parameter_dial
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
 
     import openhcs  # noqa: F401 - activates source-checkout externals first
-    from PyQt6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     from openhcs.core.config.pipeline_config import PathPlanningConfig
     from pyqt_reactive.windows.help_window_manager import (
         DocstringHelpWindow,
@@ -283,7 +283,7 @@ def test_nested_dataclass_form_uses_nested_dataclass_help_target(
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
 
     import openhcs  # noqa: F401 - activates source-checkout externals first
-    from PyQt6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     from objectstate import ObjectState
     from openhcs.core.config.pipeline_config import PathPlanningConfig, PipelineConfig
     from pyqt_reactive.forms.parameter_form_manager import (

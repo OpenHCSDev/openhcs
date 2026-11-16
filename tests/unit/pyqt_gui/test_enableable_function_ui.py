@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import wraps
 import inspect
 
-from PyQt6.QtTest import QTest
+from PySide6.QtTest import QTest
 
 from objectstate.global_config import set_global_config_for_editing
 from objectstate.object_state import ObjectState, ObjectStateRegistry

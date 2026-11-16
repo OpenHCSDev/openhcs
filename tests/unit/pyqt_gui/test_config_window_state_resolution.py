@@ -362,7 +362,7 @@ def test_pipeline_config_header_owns_live_tab_actions_and_commit_groups(
     qapp,
     qtbot,
 ) -> None:
-    from PyQt6.QtWidgets import QPushButton
+    from PySide6.QtWidgets import QPushButton
 
     state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
     window = OpenHCSConfigWindow(

@@ -113,7 +113,7 @@ _APPLICATION = []
 def qt_app():
     """The process's QApplication, kept alive for every widget test."""
 
-    from PyQt6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
 
     if not _APPLICATION:
         _APPLICATION.append(QApplication.instance() or QApplication([]))
@@ -174,7 +174,7 @@ def session_gui(**session_kwargs) -> Iterator[SessionGui]:
 def release_widgets(app, *widgets) -> None:
     """Delete widgets and process their deferred deletion before returning."""
 
-    from PyQt6.QtCore import QCoreApplication, QEvent
+    from PySide6.QtCore import QCoreApplication, QEvent
 
     # Run zero-delay timers the widgets queued first: pyqt-reactive's manager
     # header queues ``QTimer.singleShot(0, status_label.adjustSize)`` with no

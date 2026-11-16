@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Optional, Tuple
 
 from objectstate import DataclassFieldAccess
 from objectstate.object_state import ObjectState, ObjectStateRegistry
-from PyQt6.QtCore import pyqtSignal
+from PySide6.QtCore import Signal
 from formbridge.core.path_cache import PathCacheKey
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
@@ -162,17 +162,17 @@ class PlateManagerWidget(
 
     # A row click selects in the session; plate_selected then projects the
     # session's SelectionChanged, so each selection is announced once.
-    list_selection_changed = pyqtSignal(str)
+    list_selection_changed = Signal(str)
 
     # Qt projections of session events, for other GUI components.
-    plate_selected = pyqtSignal(str)
-    status_message = pyqtSignal(str)
-    orchestrator_config_changed = pyqtSignal(str, object)
-    compiled_artifact_inspection_changed = pyqtSignal(str, object)
-    runtime_progress_projection_changed = pyqtSignal(object)
-    debug_snapshot_available = pyqtSignal(object)
-    runtime_artifact_available = pyqtSignal(object)
-    clear_subprocess_logs = pyqtSignal()
+    plate_selected = Signal(str)
+    status_message = Signal(str)
+    orchestrator_config_changed = Signal(str, object)
+    compiled_artifact_inspection_changed = Signal(str, object)
+    runtime_progress_projection_changed = Signal(object)
+    debug_snapshot_available = Signal(object)
+    runtime_artifact_available = Signal(object)
+    clear_subprocess_logs = Signal()
 
     def __init__(
         self,

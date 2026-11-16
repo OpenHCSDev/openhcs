@@ -1,11 +1,6 @@
 import pytest
 
-try:
-    from PyQt6.QtWidgets import QTreeWidgetItem
-
-    PYQT_AVAILABLE = True
-except Exception:
-    PYQT_AVAILABLE = False
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from formbridge.services.zmq_server_info import BaseServerInfo
 from zmqruntime.messages import PongResponse
@@ -15,7 +10,6 @@ from openhcs.pyqt_gui.widgets.shared.server_browser.presentation_models import (
 )
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
 def test_server_row_presenter_renders_execution_server():
     info = BaseServerInfo.from_response(
         PongResponse.from_dict(
@@ -52,7 +46,6 @@ def test_server_row_presenter_renders_execution_server():
     assert len(created) == 1
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
 def test_server_row_presenter_populates_execution_children():
     info = BaseServerInfo.from_response(
         PongResponse.from_dict(

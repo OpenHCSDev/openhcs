@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 from objectstate.object_state import ObjectState, ObjectStateRegistry
-from PyQt6.QtCore import Qt
+from PySide6.QtCore import Qt
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 import openhcs.processing.backends.cellprofiler as cellprofiler_backend
@@ -617,7 +617,7 @@ def test_live_results_show_the_source_orchestrator_for_source_and_output_rows(
 
 
 def test_embedded_manager_navigation_selects_the_exact_live_row(tmp_path) -> None:
-    from PyQt6.QtWidgets import QMainWindow
+    from PySide6.QtWidgets import QMainWindow
 
     with session_gui() as gui:
         manager = gui.plate_manager

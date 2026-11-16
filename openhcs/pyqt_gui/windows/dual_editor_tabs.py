@@ -6,8 +6,8 @@ from functools import cache
 
 from objectstate.context_manager import config_context
 from objectstate.object_state import ObjectStateRegistry
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from python_introspect import SignatureAnalyzer
 from pyqt_reactive.widgets.function_list_editor import FunctionListEditorWidget
 from pyqt_reactive.widgets.shared import ActionTabMaterialization

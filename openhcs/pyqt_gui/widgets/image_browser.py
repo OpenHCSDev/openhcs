@@ -20,8 +20,8 @@ from typing import ClassVar
 
 from objectstate import ScopeKey, spawn_thread_with_context
 from objectstate.object_state import ObjectState, ObjectStateRegistry
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -457,8 +457,8 @@ class AxisGrid:
 class ImageBrowserWidget(QWidget):
     """Shows a dataset's image and result files and sends selections to viewers."""
 
-    _stream_status = pyqtSignal(str)
-    _stream_failed = pyqtSignal(str, str)
+    _stream_status = Signal(str)
+    _stream_failed = Signal(str, str)
 
     def __init__(
         self,

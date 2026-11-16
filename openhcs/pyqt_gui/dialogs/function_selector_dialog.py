@@ -8,9 +8,9 @@ from concurrent.futures import Future
 from dataclasses import dataclass, field
 from typing import Self
 
-from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
-from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
@@ -146,7 +146,7 @@ class FunctionSelectorDialog(QDialog):
     TABLE_PROPORTION = 820  # Increased for better function table visibility
 
     # Signals
-    function_selected = pyqtSignal(object)  # Selected function
+    function_selected = Signal(object)  # Selected function
 
     def __init__(
         self,
@@ -203,7 +203,7 @@ class FunctionSelectorDialog(QDialog):
         )
         FutureCompletion(future, self._apply_function_data)
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _apply_function_data(
         self,
         future: Future[FunctionCatalogPage],

@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 
 import pytest
-from PyQt6.QtCore import QEvent
-from PyQt6.QtWidgets import QDialog, QVBoxLayout
+from PySide6.QtCore import QEvent
+from PySide6.QtWidgets import QDialog, QVBoxLayout
 
 from formbridge.bridge.dto import (
     UiBridgeOperationStatusRequest,

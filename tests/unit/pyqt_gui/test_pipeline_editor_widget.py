@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 from objectstate.object_state import ObjectState, ObjectStateRegistry
-from PyQt6.QtCore import Qt
+from PySide6.QtCore import Qt
 from pyqt_reactive.forms.parameter_form_manager import (
     FormManagerConfig,
     ParameterFormManager,

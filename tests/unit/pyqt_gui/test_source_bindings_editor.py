@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from PyQt6.QtCore import QEvent, QEventLoop, QPoint, QPointF, QRect, Qt, QTimer
-from PyQt6.QtGui import QColor, QEnterEvent, QWheelEvent
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QEvent, QEventLoop, QPoint, QPointF, QRect, Qt, QTimer
+from PySide6.QtGui import QColor, QEnterEvent, QWheelEvent
+from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
@@ -75,7 +75,7 @@ from pyqt_reactive.forms.parameter_form_manager import (
     FormManagerConfig,
     ParameterFormManager,
 )
-from pyqt_reactive.forms.widget_strategies import PlaceholderConfig, PyQt6WidgetEnhancer
+from pyqt_reactive.forms.widget_strategies import PlaceholderConfig, PySide6WidgetEnhancer
 from formbridge.forms.parameter_info_types import InlineDataclassWidgetInfo, create_parameter_info
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollableFormMixin
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollViewport
@@ -1317,7 +1317,7 @@ def test_source_bindings_refresh_detaches_obsolete_subtrees_before_flash_replay(
     None
 ):
     from pyqt_reactive.animation.flash_mixin import WindowFlashOverlay
-    from PyQt6.QtWidgets import QDialog, QVBoxLayout
+    from PySide6.QtWidgets import QDialog, QVBoxLayout
 
     QtApplicationHarness.app()
     dialog = QDialog()
@@ -2874,7 +2874,7 @@ def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> 
     )
     assert first_placeholder == second_placeholder
 
-    PyQt6WidgetEnhancer.apply_placeholder_with_value(
+    PySide6WidgetEnhancer.apply_placeholder_with_value(
         container,
         first,
         first_placeholder,
@@ -2882,7 +2882,7 @@ def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> 
     assert widget.table("match_plan") is not None
     assert widget.table("match_plan").rowCount() == 1
 
-    PyQt6WidgetEnhancer.apply_placeholder_with_value(
+    PySide6WidgetEnhancer.apply_placeholder_with_value(
         container,
         second,
         second_placeholder,

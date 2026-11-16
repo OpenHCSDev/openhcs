@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from PyQt6.QtCore import QEventLoop, QObject, QTimer
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QEventLoop, QObject, QTimer
+from PySide6.QtWidgets import QApplication
 
 from objectstate import ObjectStateRegistry
 from objectstate.global_config import set_global_config_for_editing
@@ -77,7 +77,7 @@ def test_cross_window_change_debounces_placeholder_refresh() -> None:
 
 def test_dispatcher_notifies_source_root_without_self_flash(qapp) -> None:
     """Unsaved edits refresh live consumers without obscuring their source input."""
-    from PyQt6.QtCore import QEventLoop, QTimer
+    from PySide6.QtCore import QEventLoop, QTimer
 
     class SignalRecorder:
         def __init__(self) -> None:
@@ -310,7 +310,7 @@ def test_chrome_sync_refreshes_widgets_by_exact_objectstate_path() -> None:
 
 def test_resolved_change_refreshes_widget_values_outside_time_travel(qapp) -> None:
     """External ObjectState edits update visible widgets without time travel."""
-    from PyQt6.QtCore import QEventLoop, QTimer
+    from PySide6.QtCore import QEventLoop, QTimer
 
     class FakeChromeSync:
         def __init__(self) -> None:

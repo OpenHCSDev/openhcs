@@ -102,15 +102,15 @@ dependencies = [
     "psutil>=5.9.0",
 
     # External dependencies (PyPI versions for production builds)
-    "zmqruntime>=0.6.4,<0.7",
+    "zmqruntime>=0.6.5,<0.7",
     "pycodify>=0.2.1,<0.3",
-    "objectstate>=3.0.4,<4",
-    "python-introspect>=0.2.8,<0.3",
+    "objectstate>=5.0.0,<6",
+    "python-introspect>=0.3.0,<0.4",
     "metaclass-registry>=0.4.0,<0.5",
     "arraybridge>=0.4.1,<0.5",
     "polystore>=0.6.2,<0.7",
-    "formbridge>=0.1.3,<0.2",
-    "pyqt-reactive>=0.7.2,<0.8",
+    "formbridge>=0.2.0,<0.3",
+    "pyqt-reactive>=0.10.0,<0.11",
 ]
 
 [project.optional-dependencies]
@@ -143,10 +143,9 @@ cellprofiler-compat = [
 # TUI has external dependencies that require local development setup
 # For development, use pip install -e ".[dev,gui]" (custom build backend handles it)
 
-# PyQt6 Graphical User Interface (GUI) dependencies
+# PySide6 Graphical User Interface (GUI) dependencies
 gui = [
-    "PyQt6>=6.9.1",
-    "PyQt6-QScintilla>=2.14.1",
+    "PySide6-Essentials>=6.12.0",
     "pyqtgraph>=0.13.7",  # Used for system monitor visualization
     "PyOpenGL>=3.1.7",  # GPU-accelerated flash overlay rendering (optional, auto-fallback to QPainter)
     "GPUtil>=1.4.0",
@@ -263,8 +262,7 @@ gpu = [
 # All non-dev extras combined (TUI excluded - deprecated)
 all = [
     # GUI
-    "PyQt6>=6.9.1",
-    "PyQt6-QScintilla>=2.14.1",
+    "PySide6-Essentials>=6.12.0",
     "pyqtgraph>=0.13.7",
     "GPUtil>=1.4.0",
     # plotext removed - PyQt GUI now uses pyqtgraph instead

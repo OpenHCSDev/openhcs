@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from types import ModuleType, SimpleNamespace
 
-from PyQt6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QWidget
 
 from openhcs.authoring.session.live_measurements import LiveMeasurementTable
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope

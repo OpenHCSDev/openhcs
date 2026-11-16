@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 from pyqt_reactive.protocols.widget_adapters import PyQtWidgetMeta
 
 from openhcs.agent.ui_bridge_identities import (
@@ -46,8 +46,8 @@ class DebugToolbarWidget(QWidget, DebugActionSignals, metaclass=PyQtWidgetMeta):
     )
     UI_BRIDGE_WIDGET_IDENTITY = PipelineDebugToolbarWidgetIdentity
 
-    command_requested = pyqtSignal(object)
-    runtime_inspection_requested = pyqtSignal()
+    command_requested = Signal(object)
+    runtime_inspection_requested = Signal()
 
     def request_command(self, command: DebugCommand) -> None:
         self.command_requested.emit(command)

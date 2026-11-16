@@ -194,16 +194,16 @@ def test_snapshot_resource_decodes_once_against_original_schema(
 
 
 def test_managed_reply_uses_real_qt_frame_through_original_capture_ancestor(tmp_path):
-    from PyQt6.QtCore import QEventLoop, pyqtSignal
-    from PyQt6.QtGui import QColor, QImage, QPainter
-    from PyQt6.QtWidgets import QApplication, QWidget
+    from PySide6.QtCore import QEventLoop, Signal
+    from PySide6.QtGui import QColor, QImage, QPainter
+    from PySide6.QtWidgets import QApplication, QWidget
 
     # Same existing QApplication/Qt painter entrypoint as pyqt-reactive's qapp
     # fixture, without loading OpenHCS root-conftest process cleanup hooks.
     app = QApplication.instance() or QApplication([])
 
     class Canvas(QWidget):
-        frame_completed = pyqtSignal()
+        frame_completed = Signal()
 
         def paintEvent(self, event):
             painter = QPainter(self)

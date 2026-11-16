@@ -1,6 +1,6 @@
 """Qt projection of process-local custom-function domain changes."""
 
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from openhcs.processing.custom_functions.events import custom_function_changed
 
@@ -8,7 +8,7 @@ from openhcs.processing.custom_functions.events import custom_function_changed
 class CustomFunctionSignals(QObject):
     """Project domain changes through Qt's thread-aware signal delivery."""
 
-    functions_changed = pyqtSignal()
+    functions_changed = Signal()
 
     def __init__(self) -> None:
         super().__init__()

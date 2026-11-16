@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-OpenHCS PyQt6 GUI Launcher
+OpenHCS PySide6 GUI Launcher
 
-Launch script for the OpenHCS PyQt6 GUI application.
+Launch script for the OpenHCS PySide6 GUI application.
 Provides command-line interface and application initialization.
 """
 from __future__ import annotations
@@ -49,15 +49,14 @@ def _setup_macos_qt_platform() -> None:
         return
 
     try:
-        import PyQt6
+        import PySide6
 
-        pyqt6_path = Path(PyQt6.__file__).parent
-        plugin_path = pyqt6_path / "Qt6" / "plugins" / "platforms"
+        plugin_path = Path(PySide6.__file__).parent / "Qt" / "plugins" / "platforms"
         if plugin_path.exists():
             os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = str(plugin_path.parent)
             logging.info(f"Set QT_QPA_PLATFORM_PLUGIN_PATH to: {plugin_path.parent}")
         else:
-            logging.warning(f"PyQt6 plugins directory not found at: {plugin_path}")
+            logging.warning(f"PySide6 plugins directory not found at: {plugin_path}")
     except Exception as e:
         logging.warning(f"Could not set QT_QPA_PLATFORM_PLUGIN_PATH: {e}")
 
@@ -116,7 +115,7 @@ def parse_arguments():
         Parsed arguments
     """
     parser = argparse.ArgumentParser(
-        description="OpenHCS PyQt6 GUI - High-Content Screening Platform",
+        description="OpenHCS PySide6 GUI - High-Content Screening Platform",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -148,7 +147,7 @@ Examples:
     )
 
     parser.add_argument(
-        "--version", action="version", version=f"OpenHCS PyQt6 GUI {OPENHCS_VERSION}"
+        "--version", action="version", version=f"OpenHCS PySide6 GUI {OPENHCS_VERSION}"
     )
 
     from openhcs.desktop.update import UPDATE_SESSION_ARGUMENT
@@ -204,13 +203,13 @@ def check_dependencies():
     """
     missing_deps = []
 
-    # Check PyQt6
+    # Check PySide6
     try:
-        from PyQt6 import QtCore
+        import PySide6
 
-        logging.debug(f"PyQt6 version: {QtCore.PYQT_VERSION_STR}")
+        logging.debug(f"PySide6 version: {PySide6.__version__}")
     except ImportError:
-        missing_deps.append("PyQt6")
+        missing_deps.append("PySide6")
 
     # Check optional dependencies without importing their runtimes during startup.
     optional_deps = {
@@ -238,7 +237,7 @@ def main(
     startup_progress: GuiStartupProgressReporterABC | None = None,
 ):
     """
-    Main entry point for the OpenHCS PyQt6 GUI launcher.
+    Main entry point for the OpenHCS PySide6 GUI launcher.
 
     Returns:
         Exit code
@@ -277,7 +276,7 @@ def main(
             log_level=args.log_level,
             log_file=args.log_file,
         )
-        logging.info("Starting OpenHCS PyQt6 GUI...")
+        logging.info("Starting OpenHCS PySide6 GUI...")
         logging.info("Python version: %s", sys.version)
         logging.info("Platform: %s", sys.platform)
         if log_file is not None:
@@ -297,7 +296,7 @@ def main(
         from pyqt_reactive.process_signals import QtProcessSignalRelay
         from pyqt_reactive.utils.window_utils import install_global_window_bounds_filter
 
-        logging.info("Initializing PyQt6 application...")
+        logging.info("Initializing PySide6 application...")
         app = OpenHCSPyQtApp(sys.argv, runtime_context=runtime_context)
         process_signal_relay = QtProcessSignalRelay(app)
         install_global_window_bounds_filter(app)  # install once, early

@@ -1,8 +1,8 @@
 import pytest
 
 try:
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtWidgets import QApplication, QTreeWidget, QTreeWidgetItem
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication, QTreeWidget, QTreeWidgetItem
 
     PYQT_AVAILABLE = True
 except Exception:
@@ -11,7 +11,7 @@ except Exception:
 from pyqt_reactive.widgets.shared import TreeRebuildCoordinator
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
+@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PySide6 not available")
 def test_tree_rebuild_coordinator_preserves_selection_and_expansion():
     app = QApplication.instance()
     if app is None:

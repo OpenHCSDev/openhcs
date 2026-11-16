@@ -15,8 +15,8 @@ from objectstate.lazy_factory import (
     LazyDataclass,
     resolve_lazy_configurations_for_serialization,
 )
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QDialogButtonBox,
@@ -209,7 +209,7 @@ class StepBindingsTableEditor(QWidget):
     fields without a row (``explicit_source``, ``source_channel_counts``) are kept.
     """
 
-    changed = pyqtSignal()
+    changed = Signal()
 
     def __init__(
         self,

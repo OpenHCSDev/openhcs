@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from objectstate import ObjectStateRegistry
 from objectstate.global_config import set_global_config_for_editing
-from PyQt6.QtCore import Qt
+from PySide6.QtCore import Qt
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.shared.record_table_browser import LabelledValue
 

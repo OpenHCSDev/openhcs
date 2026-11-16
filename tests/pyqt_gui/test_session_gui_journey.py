@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 from objectstate.object_state import ObjectStateRegistry
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 
 from openhcs.authoring.session.operations.datasets import (

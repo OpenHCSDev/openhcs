@@ -229,25 +229,25 @@ def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy)
     elif destroy == "manager":
         original.manager.deleteLater()
     elif destroy == "immediate_manager":
-        sip.delete(original.manager)
+        shiboken6.delete(original.manager)
         QCoreApplication.processEvents()
     elif destroy == "manager_then_dock":
-        sip.delete(original.manager)
+        shiboken6.delete(original.manager)
         viewer.window.remove_dock_widget(original.dock)
     elif destroy == "manager_then_window":
-        sip.delete(original.manager)
-        sip.delete(viewer.window._qt_window)
+        shiboken6.delete(original.manager)
+        shiboken6.delete(viewer.window._qt_window)
     else:
-        sip.delete(viewer.window._qt_window)
+        shiboken6.delete(viewer.window._qt_window)
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     assert server.result_selection_surface is None
     assert controller._selection_observers == []
     assert original.manager._layer_connections == []
     assert not original.manager._viewer_selection_connected
-    assert sip.isdeleted(original.dock)
-    assert sip.isdeleted(original.manager)
-    assert sip.isdeleted(toolbars[0])
+    assert not shiboken6.isValid(original.dock)
+    assert not shiboken6.isValid(original.manager)
+    assert not shiboken6.isValid(toolbars[0])
 
     if destroy in ("window", "manager_then_window"):
         return

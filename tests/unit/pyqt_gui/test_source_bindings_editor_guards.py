@@ -162,7 +162,7 @@ def test_widget_has_one_optional_input_and_no_rendered_state() -> None:
 
 def test_new_filter_and_pairing_members_are_editable_without_a_widget_edit() -> None:
     """New-case test: a registered family member appears in its table's choices."""
-    from PyQt6.QtWidgets import QApplication, QComboBox
+    from PySide6.QtWidgets import QApplication, QComboBox
 
     from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
     from openhcs.core.source.source_metadata import (

@@ -6,7 +6,7 @@ import gc
 import weakref
 
 import pytest
-from PyQt6 import sip
+import shiboken6
 
 from openhcs.processing.custom_functions.events import (
     CustomFunctionChangedEvent,
@@ -144,8 +144,8 @@ def test_domain_event_releases_deleted_qt_adapter_with_live_python_wrapper(qapp)
     observations = []
     live_adapter.functions_changed.connect(lambda: observations.append("changed"))
 
-    sip.delete(adapter)
-    assert sip.isdeleted(adapter)
+    shiboken6.delete(adapter)
+    assert not shiboken6.isValid(adapter)
     custom_function_changed.emit()
 
     assert observations == ["changed"]
@@ -160,8 +160,8 @@ def test_qt_adapter_mixed_native_lifetime_orders(qapp, first_index) -> None:
         live_adapter.functions_changed.connect(lambda: observations.append("changed"))
         adapter_reference = weakref.ref(adapter)
         if index % 2:
-            sip.delete(adapter)
-            assert sip.isdeleted(adapter)
+            shiboken6.delete(adapter)
+            assert not shiboken6.isValid(adapter)
             assert adapter_reference() is adapter
             custom_function_changed.emit()
             assert observations == ["changed"]
@@ -172,6 +172,6 @@ def test_qt_adapter_mixed_native_lifetime_orders(qapp, first_index) -> None:
             gc.collect()
             custom_function_changed.emit()
             assert observations == ["changed"]
-        sip.delete(live_adapter)
+        shiboken6.delete(live_adapter)
         del live_adapter
         gc.collect()

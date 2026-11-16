@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from PyQt6.QtWidgets import QApplication, QProgressBar
+from PySide6.QtWidgets import QApplication, QProgressBar
 
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,

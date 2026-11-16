@@ -4,7 +4,7 @@ from dataclasses import dataclass, fields, is_dataclass, replace
 from types import MethodType, SimpleNamespace
 
 import pytest
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
 import openhcs.pyqt_gui.main as main_module
@@ -449,7 +449,7 @@ def test_lifecycle_workflow_adopts_a_saved_global_config_into_the_session(
 def test_lifecycle_workflow_projects_runtime_progress_without_retaining_state(
     qapp,
 ) -> None:
-    from PyQt6.QtWidgets import QProgressBar
+    from PySide6.QtWidgets import QProgressBar
 
     progress_bar = QProgressBar()
     session = SimpleNamespace(init_pending=set())
@@ -641,7 +641,7 @@ def test_main_close_attempts_every_top_level_owner_after_other_failures(
         lifecycle_workflow=SimpleNamespace(close=lambda: fail("resources")),
     )
     monkeypatch.setattr(
-        "PyQt6.QtCore.QTimer.singleShot",
+        "PySide6.QtCore.QTimer.singleShot",
         lambda _delay, _callback: calls.append("quit_scheduled"),
     )
 

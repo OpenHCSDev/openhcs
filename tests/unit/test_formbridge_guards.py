@@ -18,7 +18,7 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 PRODUCTION = REPOSITORY / "openhcs"
 FORMBRIDGE = REPOSITORY / "external" / "formbridge" / "src" / "formbridge"
 QT_BRIDGE = REPOSITORY / "external" / "pyqt-reactive" / "src" / "pyqt_reactive" / "bridge"
-TOOLKITS = ("PyQt6", "PyQt5", "PySide6", "PySide2", "qtpy")
+TOOLKITS = ("PySide6", "PyQt5", "PySide6", "PySide2", "qtpy")
 
 
 def test_headless_mcp_and_every_formbridge_module_load_no_toolkit() -> None:

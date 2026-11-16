@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
+from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
 from formbridge.core.path_cache import PathCacheKey, cache_path, get_initial_path
 from formbridge.services.async_operation_executor import AsyncOperationExecutor
 from formbridge.services.host_services import UiHostServices
@@ -23,7 +23,7 @@ class PyQtServiceAdapter(UiHostServices):
         Initialize the service adapter.
 
         Args:
-            main_window: Main PyQt6 window for dialog parenting
+            main_window: Main PySide6 window for dialog parenting
         """
         self.main_window = main_window
         self.app = QApplication.instance()
@@ -36,7 +36,7 @@ class PyQtServiceAdapter(UiHostServices):
         # Apply dark theme globally to ensure consistent dialog styling
         self._apply_dark_theme()
 
-        logger.debug("PyQt6 service adapter initialized")
+        logger.debug("PySide6 service adapter initialized")
 
     def _apply_dark_theme(self):
         """Apply dark theme globally for consistent dialog styling."""
@@ -183,7 +183,7 @@ class PyQtServiceAdapter(UiHostServices):
                 # Enable multi-selection in the list/tree views.
                 list_view = dialog.findChild(QWidget, "listView")
                 if list_view:
-                    from PyQt6.QtWidgets import QAbstractItemView
+                    from PySide6.QtWidgets import QAbstractItemView
 
                     list_view.setSelectionMode(
                         QAbstractItemView.SelectionMode.ExtendedSelection
@@ -191,7 +191,7 @@ class PyQtServiceAdapter(UiHostServices):
 
                 tree_view = dialog.findChild(QWidget, "treeView")
                 if tree_view:
-                    from PyQt6.QtWidgets import QAbstractItemView
+                    from PySide6.QtWidgets import QAbstractItemView
 
                     tree_view.setSelectionMode(
                         QAbstractItemView.SelectionMode.ExtendedSelection
@@ -200,7 +200,7 @@ class PyQtServiceAdapter(UiHostServices):
                 # Make the path bar editable so users can paste paths.
                 # In the non-native dialog, the path widget is a QComboBox ("lookInCombo").
                 try:
-                    from PyQt6.QtWidgets import QComboBox
+                    from PySide6.QtWidgets import QComboBox
 
                     look_in = dialog.findChild(QComboBox, "lookInCombo")
                     if look_in:

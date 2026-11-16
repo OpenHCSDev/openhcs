@@ -455,9 +455,9 @@ class GuiStartupOutputMirror:
 
 def _run_startup_window_child() -> int:
     """Run the isolated Qt progress surface until the parent reports readiness."""
-    from PyQt6.QtCore import QObject, QSize, Qt, pyqtSignal
-    from PyQt6.QtGui import QFont
-    from PyQt6.QtWidgets import (
+    from PySide6.QtCore import QObject, QSize, Qt, Signal
+    from PySide6.QtGui import QFont
+    from PySide6.QtWidgets import (
         QApplication,
         QDialog,
         QHBoxLayout,
@@ -476,8 +476,8 @@ def _run_startup_window_child() -> int:
     from openhcs.resources.brand import BrandAsset
 
     class _EventBridge(QObject):
-        event_received = pyqtSignal(dict)
-        parent_stream_closed = pyqtSignal()
+        event_received = Signal(dict)
+        parent_stream_closed = Signal()
 
     class _StartupWindow(QDialog):
         def __init__(self, color_scheme) -> None:
@@ -699,9 +699,9 @@ def main() -> int | None:
             startup_progress=progress,
         )
     except ImportError as error:
-        if "PyQt6" in str(error) or "pyqt_gui" in str(error):
+        if "PySide6" in str(error) or "pyqt_gui" in str(error):
             message = (
-                "PyQt6 GUI dependencies are unavailable. "
+                "PySide6 GUI dependencies are unavailable. "
                 "Install OpenHCS with the 'gui' extra."
             )
             progress.fail(message, traceback.format_exc())

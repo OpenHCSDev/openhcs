@@ -816,7 +816,7 @@ def run_installed_gui_smoke(
     journal = InstalledGuiSmokeEvidenceJournal(evidence_directory)
     journal.record(InstalledGuiSmokePhase.VALIDATING_PACKAGE)
 
-    from PyQt6.QtCore import QObject, QTimer, pyqtSignal
+    from PySide6.QtCore import QObject, QTimer, Signal
     from zmqruntime import OperationDeadline
 
     import openhcs
@@ -866,7 +866,7 @@ def run_installed_gui_smoke(
     worker_thread: threading.Thread | None = None
 
     class McpSmokeCompletion(QObject):
-        completed = pyqtSignal(object)
+        completed = Signal(object)
 
     completion = McpSmokeCompletion()
 

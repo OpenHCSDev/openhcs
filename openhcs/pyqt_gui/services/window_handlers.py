@@ -11,7 +11,7 @@ import logging
 import re
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 from pyqt_reactive.services.scope_window_factory import (
     ScopeWindowCreationRequest,
     ScopeWindowRegistry,

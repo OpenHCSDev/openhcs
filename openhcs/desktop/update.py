@@ -20,10 +20,10 @@ from uuid import uuid4
 
 from objectstate.object_state import ObjectStateRegistry
 from packaging.version import InvalidVersion, Version
-from PyQt6.QtCore import QByteArray, QObject, QUrl, pyqtSignal
-from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
-from PyQt6.QtWidgets import QMessageBox
+from PySide6.QtCore import QByteArray, QObject, QUrl, Signal
+from PySide6.QtGui import QDesktopServices
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
+from PySide6.QtWidgets import QMessageBox
 from python_introspect import dataclass_from_mapping, to_jsonable
 from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 
@@ -817,8 +817,8 @@ def parse_latest_release(
 class DesktopUpdateService(QObject):
     """Qt-native asynchronous latest-release check and browser handoff."""
 
-    check_completed = pyqtSignal(object)
-    check_failed = pyqtSignal(object)
+    check_completed = Signal(object)
+    check_failed = Signal(object)
 
     def __init__(
         self,

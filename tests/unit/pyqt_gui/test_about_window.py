@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from PyQt6.QtWidgets import QLabel
+from PySide6.QtWidgets import QLabel
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.pyqt_gui.main import OpenHCSMainWindow

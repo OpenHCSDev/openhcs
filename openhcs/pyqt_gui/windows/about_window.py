@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import platform
 
-from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR, QSize, Qt
-from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import (
+import PySide6
+from PySide6.QtCore import QSize, Qt, qVersion
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFrame,
@@ -95,7 +96,7 @@ class AboutOpenHCSWindow(QDialog):
             "\n".join(
                 (
                     f"Python {platform.python_version()}",
-                    f"Qt {QT_VERSION_STR} · PyQt {PYQT_VERSION_STR}",
+                    f"Qt {qVersion()} · PySide6 {PySide6.__version__}",
                     f"{platform.system()} {platform.release()} · {platform.machine()}",
                     "MIT License · Copyright © 2026 Tristan Simas",
                 )

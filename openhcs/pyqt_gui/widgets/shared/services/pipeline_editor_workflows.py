@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Callable, TypeAlias
 
 from objectstate.object_state import ObjectState
-from PyQt6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog
 from formbridge.managers.workflows import ManagerCodeExecutionWorkflow
 
 from openhcs.core.callable.callable_contract import CallableContract

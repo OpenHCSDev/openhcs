@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from formbridge.contracts import AgentError
 from openhcs.agent.dto.session import SessionOperationResult
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class QtSessionEventRelay(QObject):
     """Re-emit each session event record on this object's (Qt) thread."""
 
-    published = pyqtSignal(object)
+    published = Signal(object)
 
     def __init__(self, session: Session, parent: QObject | None = None) -> None:
         super().__init__(parent)

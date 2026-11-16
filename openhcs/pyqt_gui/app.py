@@ -1,7 +1,7 @@
 """
-OpenHCS PyQt6 Application
+OpenHCS PySide6 Application
 
-Main application class that initializes the PyQt6 application and
+Main application class that initializes the PySide6 application and
 manages global configuration and services.
 """
 
@@ -13,9 +13,9 @@ from collections.abc import Callable
 from objectstate import spawn_thread_with_context
 from polystore.base import storage_registry
 from polystore.filemanager import FileManager
-from PyQt6 import QtCore
-from PyQt6.QtCore import qInstallMessageHandler
-from PyQt6.QtWidgets import QApplication, QMessageBox
+from PySide6 import QtCore
+from PySide6.QtCore import qInstallMessageHandler
+from PySide6.QtWidgets import QApplication, QMessageBox
 from pyqt_reactive.utils.scroll_filter import install_shift_wheel_scrolling
 
 from openhcs import __version__ as OPENHCS_VERSION
@@ -137,7 +137,7 @@ class MainWindowStartupReadiness(QtCore.QObject):
 
 class OpenHCSPyQtApp(QApplication):
     """
-    OpenHCS PyQt6 Application.
+    OpenHCS PySide6 Application.
 
     Main application class that manages global state, configuration,
     and the main window lifecycle.
@@ -150,7 +150,7 @@ class OpenHCSPyQtApp(QApplication):
         runtime_context: PyQtGuiRuntimeContext,
     ):
         """
-        Initialize the OpenHCS PyQt6 application.
+        Initialize the OpenHCS PySide6 application.
 
         Args:
             argv: Command line arguments
@@ -193,7 +193,7 @@ class OpenHCSPyQtApp(QApplication):
         # Install global Shift+Wheel horizontal scrolling
         self._scroll_filter = install_shift_wheel_scrolling(self)
         logger.debug("Installed global Shift+Wheel horizontal scrolling")
-        logger.info("OpenHCS PyQt6 application initialized")
+        logger.info("OpenHCS PySide6 application initialized")
 
     @property
     def pipeline_runtime_config(self) -> GlobalPipelineConfig:

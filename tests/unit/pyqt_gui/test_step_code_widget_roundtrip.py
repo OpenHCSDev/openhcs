@@ -1,7 +1,7 @@
 """Exercise step code application with live function parameter widgets."""
 
 import pytest
-from PyQt6.QtWidgets import QVBoxLayout, QWidget
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 from objectstate import ObjectState, ObjectStateRegistry
 
 from openhcs.core.config.pipeline_config import PipelineConfig

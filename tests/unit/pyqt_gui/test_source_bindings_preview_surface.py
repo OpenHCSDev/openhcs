@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QPoint
-from PyQt6.QtGui import QPalette
+from PySide6.QtCore import QPoint
+from PySide6.QtGui import QPalette
 
 from openhcs.core.config.pipeline_config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.pyqt_gui.widgets.source_bindings_editor import SourceBindingsEditorWidget

@@ -25,9 +25,9 @@ def test_cleanup_destroys_native_window_tree_after_event_loop_exit(tmp_path):
             "faulthandler",
             "-c",
             """
-from PyQt6 import sip
-from PyQt6.QtCore import QTimer
-from PyQt6.QtWidgets import QWidget
+import shiboken6
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QWidget
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.pyqt_gui.app import OpenHCSPyQtApp
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
@@ -46,8 +46,8 @@ QTimer.singleShot(0, application.quit)
 assert application.exec() == 0
 application.cleanup()
 assert application.main_window is None
-assert sip.isdeleted(window), "cleanup left the native main window alive"
-assert sip.isdeleted(child), "cleanup left native child widgets alive"
+assert not shiboken6.isValid(window), "cleanup left the native main window alive"
+assert not shiboken6.isValid(child), "cleanup left native child widgets alive"
 application.cleanup()
 """,
         ],
