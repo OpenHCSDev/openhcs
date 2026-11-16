@@ -75,7 +75,7 @@ class DebugRuns:
                 artifact_id,
             )
             return artifact_id
-        artifacts = await self._session.compile_batch.compile_before_execution(
+        artifacts = await self._session.compile_before_execution(
             [request],
             {request.scope_id: debug_request.compile_config_params},
         )

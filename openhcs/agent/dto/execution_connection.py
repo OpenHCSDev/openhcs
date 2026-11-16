@@ -7,8 +7,6 @@ from dataclasses import dataclass, field
 from formbridge.connection import EndpointConnectionFields, EndpointConnectionSpec
 from python_introspect import project_dataclass
 
-from openhcs.runtime.zmq.zmq_config import OpenHCSZMQConfig
-from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,22 +17,6 @@ class ExecutionConnectionSpec(EndpointConnectionSpec):
         """Return the credential-free execution connection declaration."""
 
         return project_dataclass(ExecutionConnectionSpec, self)
-
-    def execution_client(
-        self,
-        config: OpenHCSZMQConfig,
-    ) -> ZMQExecutionClient:
-        """Construct the OpenHCS execution client for this exact connection."""
-
-        from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionClient
-
-        return ZMQExecutionClient(
-            port=self.port,
-            host=self.host,
-            persistent=self.persistent,
-            transport_mode=self.transport_mode,
-            config=config,
-        )
 
 
 @dataclass(frozen=True, kw_only=True)

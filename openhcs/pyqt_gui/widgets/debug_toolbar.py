@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
+from pyqt_reactive.protocols.widget_adapters import PyQtWidgetMeta
 
 from openhcs.agent.ui_bridge_identities import (
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PipelineDebugToolbarWidgetIdentity,
 )
-from openhcs.core.debug.debug_runtime import DebugCommandType
+from openhcs.core.debug.debug_runtime import DebugCommand, DebugCommandType
 from openhcs.core.execution.execution_state import ManagerExecutionState
 from formbridge.bridge.contracts import UiOwnedStateSurfaceDeclaration
 from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
@@ -19,6 +20,7 @@ from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
 )
 from openhcs.core.debug.debug_session_projection import DebugSessionProjectionContext
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
+    DebugActionSignals,
     DebugToolbarPlacement,
     InspectRuntimeValuesAction,
     PipelineDebugActionDeclarationBase,
@@ -28,7 +30,7 @@ from pyqt_reactive.widgets.shared.button_panel import ButtonPanel
 from pyqt_reactive.theming import ColorScheme
 
 
-class DebugToolbarWidget(QWidget):
+class DebugToolbarWidget(QWidget, DebugActionSignals, metaclass=PyQtWidgetMeta):
     """Compact command surface for bounded debug/test-mode runs."""
 
     UI_STATE_SURFACE_DECLARATIONS = (
@@ -46,6 +48,12 @@ class DebugToolbarWidget(QWidget):
 
     command_requested = pyqtSignal(object)
     runtime_inspection_requested = pyqtSignal()
+
+    def request_command(self, command: DebugCommand) -> None:
+        self.command_requested.emit(command)
+
+    def request_runtime_inspection(self) -> None:
+        self.runtime_inspection_requested.emit()
 
     def __init__(
         self,

@@ -188,10 +188,10 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerPayloadSummary,
     ViewerArrayValueSummary,
     ViewerPayloadRecord,
-    ViewerProtocolStatus,
     ViewerQtEnvironmentPolicy,
     ViewerStateControlOptions,
 )
+from zmqruntime.viewer_protocol import ViewerProtocolStatus
 from openhcs.runtime.viewer.viewer_contract_types import ViewerSettleProgress
 from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG

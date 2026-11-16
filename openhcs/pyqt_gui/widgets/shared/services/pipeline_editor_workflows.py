@@ -23,6 +23,7 @@ from openhcs.core.callable.function_patterns import normalize_function_pattern
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
+    DebugActionWorkflow,
     PipelineDebugActionDeclarationBase,
 )
 from openhcs.pyqt_gui.windows.debug_inspector_window import DebugInspectorWindow
@@ -199,7 +200,7 @@ class PipelineEditorFunctionPresentation:
 
 
 @dataclass(frozen=True, slots=True, weakref_slot=True)
-class PipelineEditorDebugWorkflow:
+class PipelineEditorDebugWorkflow(DebugActionWorkflow):
     """Owns debug-toolbar command dispatch and snapshot inspector routing."""
 
     editor: Any

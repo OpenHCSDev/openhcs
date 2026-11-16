@@ -62,11 +62,11 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
     ViewerControlResponseField,
-    ViewerProtocolStatus,
     ViewerServerLaunchRequest,
     SettlementFailed,
     SettlementRunning,
 )
+from zmqruntime.viewer_protocol import ViewerProtocolStatus
 from openhcs.runtime.viewer.viewer_contract_types import (
     SettlementComplete,
     ViewerSettleProgress,

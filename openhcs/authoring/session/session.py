@@ -307,7 +307,7 @@ class FinishedExecution:
     endpoint: PongResponse | None
 
 
-class Session:
+class Session(CompileBatch):
     """Datasets, their pipelines and executions, and the events they emit."""
 
     def __init__(
@@ -364,7 +364,6 @@ class Session:
         self.submitted_executions: dict[str, SubmittedExecution] = {}
         self.finished_executions: dict[str, FinishedExecution] = {}
 
-        self.compile_batch = CompileBatch(self)
         self.submission = ExecutionSubmission(self)
         self.execution_control = ExecutionControl(self)
         self.debug_runs = DebugRuns(self)
@@ -1116,9 +1115,6 @@ class Session:
 
     # -- compile --------------------------------------------------------------
 
-    async def compile_datasets(self, scope_ids: tuple[str, ...]) -> None:
-        await self.compile_batch.compile_datasets(scope_ids)
-
     # -- run ------------------------------------------------------------------
 
     def require_execution_allowed(self, scope_ids: Iterable[str]) -> None:
@@ -1195,7 +1191,7 @@ class Session:
                 dataset_pipeline_request(scope_id, self.global_config)
                 for scope_id in scope_ids
             ]
-            artifacts = await self.compile_batch.compile_before_execution(requests)
+            artifacts = await self.compile_before_execution(requests)
             self.publish(
                 StatusReported(
                     f"Compilation complete. Submitting {len(requests)} dataset(s) "

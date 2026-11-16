@@ -23,11 +23,7 @@ from openhcs.core.debug.debug_runtime import (
     ToggleDebugCommand,
 )
 
-from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.core.debug.debug_session_projection import DebugSessionProjectionContext
-from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
-PipelineEditorDebugWorkflow,
-)
 @dataclass(frozen=True, slots=True)
 class DebugActionDisabledReason:
     """Agent/UI facing disabled reason for one debug action."""
@@ -85,6 +81,26 @@ class OffToolbar(DebugToolbarPlacement):
 
     name = "hidden"
     shown = False
+
+
+class DebugActionWorkflow(ABC):
+    """What a debug action runs through in the editor: a debug command, or a runtime inspection."""
+
+    @abstractmethod
+    def run_command(self, command_type: type[DebugCommandType]) -> None: ...
+
+    @abstractmethod
+    def show_runtime_inspection(self) -> None: ...
+
+
+class DebugActionSignals(ABC):
+    """What a debug action emits through: a debug command, or a runtime inspection request."""
+
+    @abstractmethod
+    def request_command(self, command: DebugCommand) -> None: ...
+
+    @abstractmethod
+    def request_runtime_inspection(self) -> None: ...
 
 
 class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
@@ -187,13 +203,13 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
+    def invoke(cls, workflow: DebugActionWorkflow) -> None:
         """Invoke this action through the nominal editor workflow."""
 
     @classmethod
     @abstractmethod
-    def emit_from(cls, toolbar: DebugToolbarWidget) -> None:
-        """Emit this action's toolbar signal."""
+    def emit_from(cls, signals: DebugActionSignals) -> None:
+        """Emit this action through the toolbar's signals."""
 
 
 class PipelineDebugCommandActionDeclaration(PipelineDebugActionDeclarationBase):
@@ -206,12 +222,12 @@ class PipelineDebugCommandActionDeclaration(PipelineDebugActionDeclarationBase):
         return cls.require_identity()
 
     @classmethod
-    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
+    def invoke(cls, workflow: DebugActionWorkflow) -> None:
         workflow.run_command(cls.command_type())
 
     @classmethod
-    def emit_from(cls, toolbar: DebugToolbarWidget) -> None:
-        toolbar.command_requested.emit(DebugCommand(cls.command_type()))
+    def emit_from(cls, signals: DebugActionSignals) -> None:
+        signals.request_command(DebugCommand(cls.command_type()))
 
 
 class PipelineDebugAuxiliaryActionDeclaration(PipelineDebugActionDeclarationBase):
@@ -222,12 +238,12 @@ class PipelineDebugAuxiliaryActionDeclaration(PipelineDebugActionDeclarationBase
     confirmation_required: ClassVar[bool] = False
 
     @classmethod
-    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
+    def invoke(cls, workflow: DebugActionWorkflow) -> None:
         workflow.show_runtime_inspection()
 
     @classmethod
-    def emit_from(cls, toolbar: DebugToolbarWidget) -> None:
-        toolbar.runtime_inspection_requested.emit()
+    def emit_from(cls, signals: DebugActionSignals) -> None:
+        signals.request_runtime_inspection()
 
 
 class ToggleDebugModeAction(PipelineDebugCommandActionDeclaration):
@@ -236,7 +252,7 @@ class ToggleDebugModeAction(PipelineDebugCommandActionDeclaration):
     tooltip = "Debug toolbar active. Use Debug, Step, Pause, Restart, or Inspect."
 
     @classmethod
-    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
+    def invoke(cls, workflow: DebugActionWorkflow) -> None:
         workflow.show_status(cls.tooltip)
 
 
@@ -325,7 +341,7 @@ class StopDebugSessionAction(PipelineDebugCommandActionDeclaration):
     enabled_during_pending_execution = True
 
     @classmethod
-    def invoke(cls, workflow: PipelineEditorDebugWorkflow) -> None:
+    def invoke(cls, workflow: DebugActionWorkflow) -> None:
         workflow.stop_command()
 
 

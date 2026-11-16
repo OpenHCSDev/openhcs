@@ -32,12 +32,12 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
     ViewerShapePayloadProjection,
-    ViewerProtocolStatus,
     SettlementFailed,
     SettlementRunning,
     ViewerStateControlOptions,
     ViewerComponentValueOrdering,
 )
+from zmqruntime.viewer_protocol import ViewerProtocolStatus
 from openhcs.runtime.viewer.viewer_contract_types import (
     ViewerSettleProgress,
     ViewerControlResponse,
@@ -87,10 +87,10 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
-    ViewerProtocolStatus,
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
+from zmqruntime.viewer_protocol import ViewerProtocolStatus
 from openhcs.runtime.viewer.viewer_contract_types import (
     ViewerControlResponse,
     ViewerSettleProgress,

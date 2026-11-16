@@ -1482,7 +1482,7 @@ def test_a_standard_run_retires_only_its_targets_debug_summaries(
 
         monkeypatch.setattr(session, "connect_client", connect)
         monkeypatch.setattr(
-            session.compile_batch, "compile_before_execution", compile_before_execution
+            session, "compile_before_execution", compile_before_execution
         )
         _ready(session, target)
 
