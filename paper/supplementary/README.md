@@ -50,6 +50,8 @@ At 40 µM, the three blind analyses gave fold changes in branches per cell of 1.
 
 Smaller branching responses than MetaXpress persisted in total branches and branches per primary process, so cell-count denominators alone do not explain the differences. Spatial ground truth would be needed to separate errors in tracing and path assignment from differences in measurement definitions. The three blind agents' [task](personal_neurite_autonomous/TASK.rst), [acquisition information](personal_neurite_autonomous/ACQUISITION.json), [cohort](personal_neurite_autonomous/cohort.json) and reports for [analysis 1](personal_neurite_autonomous/author114/author-report.txt), [analysis 2](personal_neurite_autonomous/author115/author-report.txt) and [analysis 3](personal_neurite_autonomous/author116/author-report.txt) provide their methods and individual outputs.
 
+The retained Python pipelines and helper functions reproduce the source bytes captured at each analysis freeze. Their import paths belong to the software revision recorded in the cohort, rather than the current package layout.
+
 ## Supp. Figure 3. Processing speed with additional workers {#supplementary-figure-3.-processing-speed-with-additional-workers}
 
 ![Measured OpenHCS execution scaling at a fixed twelve-sample workload.](../figures/slas/submission_benchmark_schedule.png){width=6.5in}
