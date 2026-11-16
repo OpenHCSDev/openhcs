@@ -23,7 +23,7 @@
     <link rel="icon" type="image/svg+xml" href="assets/logos/openhcs-favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="globals.css">
     <link rel="stylesheet" href="styles.css">
   </head>
@@ -37,17 +37,12 @@
         <p class="kicker">For imaging scientists and research software teams</p>
         <h1>Check the whole plate before you run it.</h1>
         <p class="lede">
-          OpenHCS is open-source software for high-content microscopy: studies
-          with many wells, sites, channels, Z planes, or time points that all
-          have to be analysed the same way. It compiles your pipeline against
-          the actual plate first, so a bad setting fails in a second instead of
-          after a night of processing. Then it runs on your CPUs or GPUs.
-        </p>
-        <p class="lede">
-          Source selection, processing steps, and result definitions live in one
-          pipeline. You can edit that pipeline in the desktop app, as Python,
-          import it from a CellProfiler <code>.cppipe</code> file, or hand it to
-          a local agent. All four are looking at the same object.
+          Open-source analysis for high-content microscopy: many wells, sites,
+          channels, Z planes, or time points, all analysed the same way.
+          OpenHCS checks your pipeline against the plate before it runs, so a
+          bad setting fails in a second, not after a night of processing. Edit
+          the same pipeline in the desktop app, as Python, from a CellProfiler
+          <code>.cppipe</code>, or through a local agent.
         </p>
         <div class="actions">
           <a class="button button-primary" href="#install">Install OpenHCS {{ OPENHCS_VERSION }}</a>
@@ -61,63 +56,30 @@
 
       <section class="section" id="principles" aria-labelledby="principles-title">
         <h2 id="principles-title">How it is built</h2>
-        <p class="section-lede">
-          Six rules we hold the code to. They are why the software behaves the
-          way it does, and they are checked, not hoped for.
-        </p>
         <ol class="principles">
           <li>
             <h3>Check first, then run.</h3>
-            <p>
-              Every pipeline is compiled against the wells, sites, channels, and
-              planes you selected before any work starts. Missing inputs, wrong types, and
-              settings that cannot work stop the run at the door, not three
-              hours in.
-            </p>
+            <p>The pipeline is compiled against your selected wells, sites, channels, and planes before any work starts.</p>
           </li>
           <li>
             <h3>One pipeline, several ways in.</h3>
-            <p>
-              The GUI, generated Python, and the local agent all edit the same
-              typed pipeline. Build it visually, export the Python, change it in
-              your editor, and open it again. Nothing is translated between
-              formats, so nothing is lost between them.
-            </p>
+            <p>GUI, Python, and agent all edit the same typed object. Nothing is translated, so nothing is lost.</p>
           </li>
           <li>
             <h3>Say each thing once.</h3>
-            <p>
-              Each fact lives on the declaration that owns it: a function's
-              contract, a module's settings, an artifact's type. Lists of
-              functions, modules, and clients are derived from those
-              declarations, never copied into a second table that can drift.
-              <a href="https://openhcs.readthedocs.io/en/latest/architecture/nominal_ownership.html">How ownership works</a>.
-            </p>
+            <p>Each fact lives on the declaration that owns it; every list is derived from those. <a href="https://openhcs.readthedocs.io/en/latest/architecture/nominal_ownership.html">How</a>.</p>
           </li>
           <li>
             <h3>Fail loudly.</h3>
-            <p>
-              An unsupported CellProfiler module stops the import and names
-              itself. Plane labels are never quietly glued across Z. There are no
-              silent fallbacks: if OpenHCS cannot do what you asked, it says so.
-            </p>
+            <p>No silent fallbacks. If OpenHCS can't do what you asked, it says so and says where.</p>
           </li>
           <li>
             <h3>Show the receipts.</h3>
-            <p>
-              Every figure below has a capture and checksum record. The agent run
-              ships uncut, with its transcript, its tool-call log, and the Python
-              it wrote. If we quote a number, you can check it yourself.
-            </p>
+            <p>Every figure has a checksum record; the agent run ships uncut with its logs.</p>
           </li>
           <li>
             <h3>Open all the way down.</h3>
-            <p>
-              MIT licensed. The general parts (configuration, array conversion,
-              storage, process transport, code generation) are separate
-              libraries you can use without OpenHCS.
-              <a href="https://github.com/OpenHCSDev/OpenHCS#-the-openhcs-ecosystem">The libraries</a>.
-            </p>
+            <p>MIT licensed, built on <a href="https://github.com/OpenHCSDev/OpenHCS#-the-openhcs-ecosystem">libraries you can use on their own</a>.</p>
           </li>
         </ol>
       </section>
@@ -125,11 +87,7 @@
       <section class="section section-wide" id="gallery" aria-labelledby="gallery-title">
         <h2 id="gallery-title">Figures</h2>
         <p class="section-lede">
-          Screenshots and clips from real sessions, on public CellProfiler
-          example data and one neurite-outgrowth study. Click any figure for
-          full resolution. Clips with no visible pointer were driven through
-          the local MCP.
-          <a href="#agent-workflow-evidence">Jump to the agent run's records</a>.
+          Real sessions on public example data. Click any figure for full size.
         </p>
 
         <div class="gallery-grid">
@@ -140,10 +98,6 @@
 
       <section class="section" id="platform" aria-labelledby="platform-title">
         <h2 id="platform-title">What is in the box</h2>
-        <p class="section-lede">
-          The pieces, what each one does, and the extra to install if it is not
-          in the base package.
-        </p>
         <div class="ledger" role="region" aria-label="OpenHCS capabilities" tabindex="0">
           <table>
             <thead>
@@ -156,33 +110,23 @@
             <tbody>
               <tr>
                 <th scope="row">GUI and Python</th>
-                <td>
-                  Build a pipeline visually, export it as Python, edit it, and
-                  open it again. Same typed pipeline, function, and artifact
-                  model either way.
-                </td>
+                <td>Build visually, export Python, edit, re-open.</td>
                 <td><code>openhcs[gui]</code></td>
               </tr>
               <tr>
                 <th scope="row">
                   <a class="mark" href="https://cellprofiler.org/" aria-label="CellProfiler website"><img src="assets/logos/cellprofiler.png" width="120" height="120" alt=""></a>
-                  CellProfiler <code>.cppipe</code> import
+                  CellProfiler <code>.cppipe</code>
                 </th>
-                <td>
-                  Supported CellProfiler modules become ordinary OpenHCS steps.
-                  Unsupported modules fail clearly, by name.
-                  <a href="https://openhcs.readthedocs.io/en/latest/api/">API reference</a>.
-                </td>
+                <td>Supported modules import as ordinary steps; unsupported ones fail by name. <a href="https://openhcs.readthedocs.io/en/latest/api/">API</a>.</td>
                 <td><code>openhcs[cellprofiler-compat]</code></td>
               </tr>
               <tr>
                 <th scope="row">2D and 3D</th>
                 <td>
-                  Dimensionality is function-defined, not a global 2D/3D switch.
-                  Volumetric routes include Watershed segmentation, 3D intensity,
-                  size and shape, and occupied-volume measurements;
+                  Dimensionality is function-defined, not a global 2D/3D switch;
                   plane-local labels are not silently stitched across Z.
-                  <a href="https://openhcs.readthedocs.io/en/latest/reference/dimensionality_and_measurements.html">Capability reference</a>.
+                  <a href="https://openhcs.readthedocs.io/en/latest/reference/dimensionality_and_measurements.html">Reference</a>.
                 </td>
                 <td>included</td>
               </tr>
@@ -192,23 +136,16 @@
                   <a class="mark" href="https://imagej.net/software/fiji/" aria-label="Fiji website"><img src="assets/logos/fiji.svg" width="90" height="90" alt=""></a>
                   Napari and Fiji
                 </th>
-                <td>
-                  Stream images, ROIs, and measurements to Napari or Fiji while
-                  the pipeline runs. Each viewer runs in its own process.
-                </td>
+                <td>Stream images, ROIs, and measurements while the pipeline runs.</td>
                 <td><code>openhcs[gui,viz]</code></td>
               </tr>
               <tr>
                 <th scope="row">GPU libraries and custom functions</th>
                 <td>
-                  Decorate a plain Python function for
-                  <a href="https://cupy.dev/">CuPy</a>,
-                  <a href="https://pytorch.org/">PyTorch</a>,
-                  <a href="https://docs.jax.dev/">JAX</a>,
-                  <a href="https://www.tensorflow.org/">TensorFlow</a>, or
+                  Decorate any Python function for
+                  <a href="https://cupy.dev/">CuPy</a>, <a href="https://pytorch.org/">PyTorch</a>,
+                  <a href="https://docs.jax.dev/">JAX</a>, <a href="https://www.tensorflow.org/">TensorFlow</a>, or
                   <a href="https://clesperanto.github.io/pyclesperanto/">pyclesperanto</a>.
-                  It gets contract checks, a place in the UI, and automatic
-                  memory conversion between libraries.
                   <span class="compute-marks" aria-hidden="true">
                     <img src="assets/logos/cupy.svg" width="75" height="76" alt="">
                     <img src="assets/logos/pytorch.svg" width="90" height="109" alt="">
@@ -224,15 +161,12 @@
                   <a class="mark" href="https://www.openmicroscopy.org/bio-formats/" aria-label="Bio-Formats website"><img src="assets/logos/bioformats.svg" width="705" height="886" alt=""></a>
                   Bio-Formats image I/O
                 </th>
-                <td>Read microscopy formats and their dimension metadata.</td>
+                <td>Read microscopy formats and their metadata.</td>
                 <td><code>openhcs[bioformats]</code></td>
               </tr>
               <tr>
                 <th scope="row">Local MCP</th>
-                <td>
-                  Let an agent on your own machine build, check, and run
-                  pipelines. See below.
-                </td>
+                <td>Let an agent on your machine build and run pipelines.</td>
                 <td><code>openhcs[mcp]</code></td>
               </tr>
             </tbody>
@@ -245,12 +179,8 @@
         <div class="mcp-intro">
           <div>
             <p class="section-lede">
-              The local MCP server gives an agent the same pipeline model the GUI
-              uses. Point it at a microscopy folder or plate and say what you
-              want measured. It can find functions, build the pipeline, compile
-              it, run it, and look at the results. Whatever it builds stays
-              editable in the GUI and as generated Python, so you can check its
-              work.
+              The local MCP gives an agent the same pipeline the GUI uses. What
+              it builds stays editable, so you can check its work.
             </p>
             <div class="actions">
               <a class="button button-primary" href="#install">Install local MCP</a>
@@ -259,12 +189,7 @@
           </div>
           <aside class="client-support" aria-labelledby="supported-clients-title">
             <h3 id="supported-clients-title">Auto-configured clients</h3>
-            <p>
-              The installer registers OpenHCS with these clients when it finds
-              them. That means setup works; it is not a claim that every model
-              behind them does. The run below names the exact client, model, and
-              version we tested.
-            </p>
+            <p>Registered by the installer when found. Setup support, not a model guarantee.</p>
             <ul class="client-marks" aria-label="Agent clients with native OpenHCS registration">
               {{ MCP_CLIENT_MARKS }}
             </ul>
@@ -275,29 +200,22 @@
           <div class="agent-evidence-copy">
             <h3 id="agent-evidence-title">One prompt, one unattended run</h3>
             <p>
-              We gave Codex one prompt and a public
+              Codex got one prompt and two loose TIFF planes from a public
               <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5089663/">NeuronCyto II</a>
-              crossover field: two loose TIFF planes. With no further help it
-              mapped the planes to biological channels, built and compiled an
-              editable two-step pipeline in the live desktop app, and ran a
-              per-neuron morphology analysis. It wrote images, ROIs, SWC traces,
-              and measurements, and left a settled Napari result table: 9 neurons
-              and 25 spatial-graph paths.
+              field. It built, compiled, and ran a two-step neuron morphology
+              pipeline: 9 neurons and 25 spatial-graph paths.
             </p>
             <p>
-              Then a human looked at the output and found a bug where two
-              neurites cross. We fixed it in the tracing strategy,
-              <code>0eb5f77c0</code>, and a fresh run gives 9 neurons and 24
-              spatial-graph paths. The run had also exposed a missing SWC
-              inventory entry, fixed in the format owner, <code>973c51fd0</code>.
-              That is what the records are for.
+              A human then caught a crossing-neurite bug, fixed in
+              <code>0eb5f77c0</code>; a rerun gives 9 neurons and 24
+              spatial-graph paths. An SWC gap was fixed in <code>973c51fd0</code>.
             </p>
             <dl class="facts">
               <div><dt>Client</dt><dd>Codex 0.146.0</dd></div>
               <div><dt>Model</dt><dd>gpt-5.6-sol</dd></div>
               <div><dt>OpenHCS</dt><dd>0.7.13 at <code>f1c1d9b67</code></dd></div>
               <div><dt>Human help</dt><dd>One prompt; no later human steering</dd></div>
-              <div><dt>Access</dt><dd>OpenHCS MCP tools only; no shell or repository access</dd></div>
+              <div><dt>Access</dt><dd>MCP only; no shell or repository access</dd></div>
             </dl>
           </div>
           <figure class="agent-recording" id="agent-workflow-showcase">
@@ -314,12 +232,8 @@
               <a href="assets/agent/neurite-outgrowth-workflow.mp4">Download the neurite-outgrowth workflow showcase.</a>
             </video>
             <figcaption id="agent-workflow-caption">
-              <strong>From two TIFF planes to per-neuron morphology, 2:38.</strong>
-              The first 2:20 is cut from the uncut 10:47 run: function discovery,
-              the editable two-step pipeline, compilation, the neurite graph, the
-              ROI manager, and the measurements. The last part is a post-run MCP
-              interaction replay, labelled on screen, that steps through five
-              neurons so you can see the overlay and ROI rows move together. It is
+              <strong>2:38 cut.</strong> The first 2:20 is from the uncut run. The
+              end is a post-run MCP interaction replay, labelled on screen; it is
               not evidence of actions taken by the unattended agent.
             </figcaption>
           </figure>
@@ -327,45 +241,28 @@
 
         <div class="receipts" id="agent-workflow-evidence">
           <h3>The records</h3>
-          <p>
-            The uncut recording is the authority for what the agent did. The
-            rest lets you check it without trusting us.
-          </p>
           <div class="ledger" role="region" aria-label="Agent workflow evidence files" tabindex="0">
             <table>
-              <thead>
-                <tr><th scope="col">File</th><th scope="col">What it is</th></tr>
-              </thead>
               <tbody>
-                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-uncut.mp4">Uncut 10:47 run</a></th><td>The full screen recording, nothing removed.</td></tr>
-                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-transcript.txt">Transcript</a></th><td>Everything the model said during the run.</td></tr>
-                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-final.md">Final report</a></th><td>The model's closing summary, unedited.</td></tr>
-                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-events.jsonl">MCP event record</a></th><td>Every tool call in order, failures included.</td></tr>
-                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-record.json">Validation record</a></th><td>Checksums and acceptance checks for the files above.</td></tr>
-                <tr><th scope="row"><a href="assets/agent/neurite-outgrowth-workflow-record.json">Edit record</a></th><td>How the 2:38 cut was assembled from its two sources.</td></tr>
-                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-pipeline.py">Generated Python</a></th><td>The pipeline the agent built, byte for byte, as written for OpenHCS 0.7.13.</td></tr>
+                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-uncut.mp4">Uncut 10:47 run</a></th><td>The full recording.</td></tr>
+                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-transcript.txt">Transcript</a></th><td>Everything the model said.</td></tr>
+                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-final.md">Final report</a></th><td>Its closing summary.</td></tr>
+                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-events.jsonl">MCP event record</a></th><td>Every tool call, failures included.</td></tr>
+                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-record.json">Validation record</a></th><td>Checksums for all of the above.</td></tr>
+                <tr><th scope="row"><a href="assets/agent/neurite-outgrowth-workflow-record.json">Edit record</a></th><td>How the 2:38 cut was made.</td></tr>
+                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-pipeline.py">Generated Python</a></th><td>The pipeline it wrote, as of 0.7.13.</td></tr>
               </tbody>
             </table>
           </div>
-          <p class="note">
-            Tool calls that change things were pre-approved inside the isolated
-            recording session. This is one client and one model; it says nothing
-            about every registered client or model.
-          </p>
         </div>
       </section>
 
       <section class="section" id="install" aria-labelledby="install-title">
         <h2 id="install-title">Installation</h2>
-        <p class="section-lede">
-          Desktop installers include the GUI and local MCP setup. Use PyPI for
-          headless machines, GPU libraries, or a Python environment you already
-          have.
-        </p>
 
         <div class="install-routes">
           <div class="install-box" aria-labelledby="desktop-installers-title">
-            <h3 id="desktop-installers-title">Desktop installers <small>No Python setup required</small></h3>
+            <h3 id="desktop-installers-title">Desktop installers <small>No Python needed</small></h3>
             <a
               class="download"
               href="https://github.com/OpenHCSDev/OpenHCS/releases/latest/download/OpenHCS-Windows-Installer.exe"
@@ -381,11 +278,10 @@
               <span><strong>Download for macOS</strong><small>Open the DMG, then open OpenHCS Installer</small></span>
             </a>
             <p class="note">
-              Per-user, CPU-only installers that include CellProfiler compatibility,
+              CPU-only installers that include CellProfiler compatibility,
               local MCP, Napari, Fiji, and Bio-Formats. GPU libraries are optional and not included.
               Fiji downloads Java on first use. The latest complete GitHub release may trail PyPI.
-              Fair warning: the Windows installer is unsigned and the macOS
-              installer is not notarized, so your OS will ask whether you trust it.
+              The Windows installer is unsigned and the macOS installer is not notarized; your OS will ask you to confirm.
             </p>
           </div>
 
@@ -403,7 +299,7 @@
                 <tr><th scope="row">CUDA opt-in</th><td><code>openhcs[gui,gpu]</code></td></tr>
               </tbody>
             </table>
-            <p><a href="https://pypi.org/project/openhcs/">OpenHCS on PyPI</a> · current release PyPI {{ OPENHCS_VERSION }}</p>
+            <p><a href="https://pypi.org/project/openhcs/">OpenHCS on PyPI</a> · PyPI {{ OPENHCS_VERSION }}</p>
           </div>
         </div>
       </section>
