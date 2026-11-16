@@ -76,7 +76,7 @@ class SessionOperationButtons:
         request = self.request_for(operation)
         if request is None:
             return
-        self.report_result(self.session.invoke(operation, request))
+        self.report_result(operation.invoke(self.session, request))
 
     def report_result(self, result: SessionOperationResult) -> None:
         for error in result.errors:

@@ -17,12 +17,12 @@ from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConf
 from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.session import NoArgumentsRequest, SessionOperationResult
 
-from openhcs.authoring.session.session import Session
+from openhcs.authoring.session.session import Operation, Session
 _SESSION_OPERATIONS = LazyDiscoveryDict(enable_cache=False)
 
 
 class SessionOperation(
-    ABC,
+    Operation,
     metaclass=AutoRegisterMeta,
     registry_config=RegistryConfig(
         registry_dict=_SESSION_OPERATIONS,

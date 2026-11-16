@@ -40,7 +40,7 @@ def test_multi_pipeline_folder_adds_one_logical_row_per_pipeline(tmp_path) -> No
         tmp_path, "plate", "first.cppipe", "second.cppipe"
     )
     with caller_session() as session:
-        result = session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        result = AddDatasets.invoke(session, DatasetRootsRequest(roots=(str(root),)))
 
         first_scope, second_scope = _scope(root, first), _scope(root, second)
         assert "::" not in first_scope and "::" not in second_scope
@@ -66,7 +66,7 @@ def test_tutorial_final_pipeline_is_selected_and_shown_in_the_list(tmp_path) -> 
         "BBBC022_Analysis_Start.cppipe",
     )
     with session_gui() as gui:
-        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        AddDatasets.invoke(gui.session, DatasetRootsRequest(roots=(str(root),)))
         gui.settle()
 
         final_scope = _scope(root, final)
@@ -83,7 +83,7 @@ def test_list_refresh_keeps_the_selection_without_reannouncing_it(tmp_path) -> N
         tmp_path, "AdvancedSegmentation", "BBBC022_Analysis_Final.cppipe"
     )
     with session_gui() as gui:
-        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        AddDatasets.invoke(gui.session, DatasetRootsRequest(roots=(str(root),)))
         gui.settle()
         emissions = []
         gui.plate_manager.plate_selected.connect(emissions.append)
@@ -104,7 +104,7 @@ def test_deleting_the_selected_pipeline_row_moves_both_widgets_to_the_rest(
         "segmentation_final.cppipe",
     )
     with session_gui() as gui:
-        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        AddDatasets.invoke(gui.session, DatasetRootsRequest(roots=(str(root),)))
         gui.settle()
         start_scope, final_scope = _scope(root, start), _scope(root, final)
         assert gui.session.current_scope_id == final_scope
@@ -177,7 +177,7 @@ def test_config_window_edits_the_logical_pipeline_scope(tmp_path, monkeypatch) -
         "openhcs.pyqt_gui.widgets.plate_manager.OpenHCSConfigWindow", FakeConfigWindow
     )
     with session_gui() as gui:
-        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        AddDatasets.invoke(gui.session, DatasetRootsRequest(roots=(str(root),)))
         orchestrator = gui.session.orchestrator(scope_id)
         orchestrator._state = OrchestratorReady
         gui.session.refresh()
@@ -211,7 +211,7 @@ def test_pipeline_row_preview_reads_the_logical_config_scope(tmp_path) -> None:
     )
     scope_id = _scope(root, pipeline)
     with session_gui() as gui:
-        gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))
+        AddDatasets.invoke(gui.session, DatasetRootsRequest(roots=(str(root),)))
         gui.settle()
         (row,) = gui.plate_manager.plates
 

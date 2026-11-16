@@ -172,10 +172,9 @@ def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -
         workspace_root=workspaces,
     )
     try:
-        assert session.invoke(AddDatasets, AddDatasets.request(roots=(str(root),))).accepted
+        assert AddDatasets.invoke(session, AddDatasets.request(roots=(str(root),))).accepted
         (scope_id,) = session.dataset_scope_ids()
-        started = session.invoke(
-            InitializeDatasets, InitializeDatasets.request(scope_ids=(scope_id,))
+        started = InitializeDatasets.invoke(session, InitializeDatasets.request(scope_ids=(scope_id,))
         )
         assert started.accepted, started.errors
         deadline = time.monotonic() + STAGE_TIMEOUT_SECONDS

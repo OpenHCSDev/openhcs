@@ -151,8 +151,6 @@ from openhcs.core.debug.debug_runtime import (
 )
 
 from formbridge.contracts import AgentError
-from openhcs.authoring.session.operations import SessionOperation
-from openhcs.authoring.session.views import SessionView
 from zmqruntime.messages import PongResponse
 from openhcs.runtime.zmq.zmq_execution_client import (
 ZMQExecutionClient,
@@ -254,18 +252,22 @@ class UnrestrictedDatasetAccess(DatasetAccess):
         return path
 
 
+class Operation(ABC):
+    """What a session runs and a renderer presents; SessionOperation is the family."""
+
+
 class Renderer(ABC):
     """What presents renderer operations (windows, dialogs, editors)."""
 
     @abstractmethod
-    def presents(self, operation: type["SessionOperation"]) -> bool: ...
+    def presents(self, operation: type[Operation]) -> bool: ...
 
     @abstractmethod
-    def present(self, operation: type["SessionOperation"], request: object) -> None: ...
+    def present(self, operation: type[Operation], request: object) -> None: ...
 
     def unavailable_reason(
         self,
-        operation: type["SessionOperation"],
+        operation: type[Operation],
         request: object,
     ) -> AgentError | None:
         """Why the renderer cannot present ``operation`` now (default: it can)."""
@@ -274,21 +276,21 @@ class Renderer(ABC):
         return None
 
     @abstractmethod
-    def prompt(self, operation: type["SessionOperation"]) -> object | None:
+    def prompt(self, operation: type[Operation]) -> object | None:
         """Ask the user for a prompted operation's request (``None``: cancelled)."""
 
 
 class NoRenderer(Renderer):
     """A headless session presents nothing."""
 
-    def presents(self, operation: type["SessionOperation"]) -> bool:
+    def presents(self, operation: type[Operation]) -> bool:
         del operation
         return False
 
-    def present(self, operation: type["SessionOperation"], request: object) -> None:
+    def present(self, operation: type[Operation], request: object) -> None:
         raise RuntimeError(f"{operation.__name__} needs a renderer; none is attached.")
 
-    def prompt(self, operation: type["SessionOperation"]) -> object | None:
+    def prompt(self, operation: type[Operation]) -> object | None:
         raise RuntimeError(f"{operation.__name__} needs a renderer to prompt for it.")
 
 
@@ -307,7 +309,7 @@ class FinishedExecution:
     endpoint: PongResponse | None
 
 
-class Session(CompileBatch):
+class Session(CompileBatch, ExecutionSubmission, ExecutionControl, DebugRuns, ExecutionProgress):
     """Datasets, their pipelines and executions, and the events they emit."""
 
     def __init__(
@@ -364,10 +366,8 @@ class Session(CompileBatch):
         self.submitted_executions: dict[str, SubmittedExecution] = {}
         self.finished_executions: dict[str, FinishedExecution] = {}
 
-        self.submission = ExecutionSubmission(self)
-        self.execution_control = ExecutionControl(self)
-        self.debug_runs = DebugRuns(self)
-        self.progress = ExecutionProgress(self, interval_seconds=progress_interval_seconds)
+        self._debug_compile_artifacts: dict[str, str] = {}
+        self._start_progress(interval_seconds=progress_interval_seconds)
         self._work = AsyncOperationExecutor()
         self._closed = False
 
@@ -393,14 +393,6 @@ class Session(CompileBatch):
 
     # -- operations and views -------------------------------------------------
 
-    def invoke(self, operation: type["SessionOperation"], request: object):
-        """Run one operation (after its availability check) and return its result."""
-
-        return operation.invoke(self, request)
-
-    def view(self, view: type["SessionView"], *args, **kwargs):
-        return view.state_of(self, *args, **kwargs)
-
     def attach_renderer(self, renderer: Renderer) -> None:
         self.renderer = renderer
 
@@ -424,9 +416,9 @@ class Session(CompileBatch):
         if self._closed:
             return
         self._closed = True
-        self.progress.close()
+        self.close_progress()
         self._work.close()
-        self.execution_control.disconnect()
+        self.disconnect_client()
 
     # -- configuration --------------------------------------------------------
 
@@ -979,18 +971,18 @@ class Session(CompileBatch):
     def clear_execution_tracking(self, scope_id: str) -> None:
         execution_id = self.batch.remove_plate(scope_id)
         if execution_id:
-            self.progress.clear_execution(execution_id)
+            self.clear_execution_progress(execution_id)
 
     def retire_execution_tracking(self, scope_id: str) -> None:
         execution_id = self.batch.retire_execution(scope_id)
         if execution_id:
-            self.progress.clear_execution(execution_id)
+            self.clear_execution_progress(execution_id)
 
     # -- execution server -----------------------------------------------------
 
     async def connect_client(self) -> ZMQExecutionClient:
         return await self.client.connect(
-            progress_callback=self.progress.on_progress,
+            progress_callback=self.on_progress,
             persistent=self.client.config.persistent,
         )
 
@@ -1000,7 +992,7 @@ class Session(CompileBatch):
 
     async def attach_existing_server(self) -> bool:
         client = await self.client.connect_existing(
-            progress_callback=self.progress.on_progress,
+            progress_callback=self.on_progress,
             persistent=self.client.config.persistent,
             timeout=self.client.config.server_info_timeout_ms / 1000,
         )
@@ -1175,7 +1167,7 @@ class Session(CompileBatch):
 
         batch_number = self._begin_batch(scope_ids)
         try:
-            self.progress.reset_for_new_batch()
+            self.reset_progress_for_new_batch()
             self.live_measurements.clear()
             self.publish(LogsCleared())
             await self.connect_client()
@@ -1199,7 +1191,7 @@ class Session(CompileBatch):
                 )
             )
             for request in requests:
-                await self.submission.submit_execution(
+                await self.submit_execution(
                     request,
                     compile_artifact_id=artifacts[request.scope_id],
                     auxiliary_params=auxiliary_params,
@@ -1210,7 +1202,7 @@ class Session(CompileBatch):
         except Exception as error:
             logger.error("Failed to execute datasets: %s", error, exc_info=True)
             self.publish(ErrorReported(f"Failed to execute: {error}"))
-            await self.execution_control.handle_execution_failure()
+            await self.handle_execution_failure()
 
     def observation_export_params(
         self,
@@ -1233,7 +1225,7 @@ class Session(CompileBatch):
 
     def stop_execution(self, force: bool | None = None) -> None:
         self.execution_state, force_kill = self.execution_state.stop_request(force)
-        self.execution_control.stop(force=force_kill)
+        self.shut_down_execution_server(force=force_kill)
 
     def dataset_running(self, scope_id: str) -> None:
         self.publish(DatasetRunning(scope_id))
@@ -1285,7 +1277,7 @@ class Session(CompileBatch):
             self.retire_execution_tracking(scope_id)
             if self.execution_state.stop_pending and self.batch.all_batch_terminal():
                 self.execution_state = ManagerExecutionState.IDLE
-            self.execution_control.check_all_completed()
+            self.check_all_completed()
             self.refresh()
         self.publish(DatasetExecutionFinished(scope_id, completion))
         if status.emit_failure:
@@ -1329,7 +1321,7 @@ class Session(CompileBatch):
         summary = f"All done: {completed_count} completed, {failed_count} failed"
         if completed_count > 1 and self.global_config.analysis_consolidation_config.enabled:
             try:
-                consolidate_batch_results(self)
+                consolidate_batch_results(self.global_config, self.batch)
                 summary += ". Global summary created."
             except Exception as error:
                 logger.error("Failed to create global summary: %s", error, exc_info=True)
@@ -1356,7 +1348,7 @@ class Session(CompileBatch):
         active = self.debug_sessions.get(scope_id)
         if active is not None:
             self.debug_sessions[scope_id] = active.with_command(command_type)
-            await self.debug_runs.send_worker_command(
+            await self.send_debug_worker_command(
                 debug_session_id=active.debug_session_id,
                 command_type=command_type,
             )
@@ -1372,7 +1364,7 @@ class Session(CompileBatch):
         self._begin_batch((scope_id,))
         try:
             await self.connect_client()
-            self.progress.reset_for_new_batch()
+            self.reset_progress_for_new_batch()
             self.publish(StatusReported(f"Compiling debug run for {scope_id}..."))
             debug_request = DebugRunRequest(
                 debug_session_id=debug_session.debug_session_id,
@@ -1386,17 +1378,17 @@ class Session(CompileBatch):
                 replay_mode=PersistentPausedWorkerReplay,
             )
             request = dataset_pipeline_request(scope_id, self.global_config)
-            artifact_id = await self.debug_runs.compile_artifact_id(request, debug_request)
+            artifact_id = await self.debug_compile_artifact_id(request, debug_request)
             self.publish(StatusReported(f"Submitting debug run for {scope_id}..."))
-            await self.debug_runs.submit(
+            await self.submit_debug(
                 request,
                 compile_artifact_id=artifact_id,
-                debug_request=debug_request,
+                debug_config=debug_request.execution_config,
             )
         except Exception as error:
             logger.error("Failed to execute debug run: %s", error, exc_info=True)
             self.publish(ErrorReported(f"Failed to execute debug run: {error}"))
-            await self.execution_control.handle_execution_failure()
+            await self.handle_execution_failure()
 
     def record_debug_snapshot(
         self,

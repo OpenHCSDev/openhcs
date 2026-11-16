@@ -3845,7 +3845,7 @@ class SessionOperationInvocation(AgentDataclassInputMixin, AgentCapabilityInvoca
 
     def execute(self, context: object, *arguments: object) -> object:
         (request,) = arguments
-        return context.session.invoke(self.operation, request)
+        return self.operation.invoke(context.session, request)
 
 
 class SessionCapability(AgentCapabilityDeclaration):

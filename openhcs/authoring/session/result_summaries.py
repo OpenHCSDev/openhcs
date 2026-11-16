@@ -11,19 +11,22 @@ from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     consolidate_multi_plate_summaries,
 )
 
-from openhcs.authoring.session.session import Session
+from openhcs.authoring.session.execution_batch import ExecutionBatchRuntime
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+
 logger = logging.getLogger(__name__)
 
 
-def consolidate_batch_results(session: Session) -> None:
+def consolidate_batch_results(
+    config: GlobalPipelineConfig, batch: ExecutionBatchRuntime
+) -> None:
     """Write one global summary over every completed dataset's summary."""
 
-    config = session.global_config
     path_config = config.path_planning_config
     analysis_config = config.analysis_consolidation_config
     summary_paths: list[str] = []
     names: list[str] = []
-    for scope_id, status in session.batch.terminal_items():
+    for scope_id, status in batch.terminal_items():
         if status is not ExecutionCompleted:
             continue
         root = Path(scope_id)

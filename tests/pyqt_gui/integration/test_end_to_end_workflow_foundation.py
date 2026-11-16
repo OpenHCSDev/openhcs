@@ -637,8 +637,8 @@ def _access_plate_manager(context: WorkflowContext) -> WorkflowContext:
 
 def _add_and_select_plate(context: WorkflowContext) -> WorkflowContext:
     """Add synthetic plate through the session and select it in plate manager."""
-    result = context.plate_manager_widget.session.invoke(
-        AddDatasets,
+    result = AddDatasets.invoke(
+        context.plate_manager_widget.session,
         AddDatasets.request(roots=(str(context.synthetic_plate_dir),)),
     )
     assert result.accepted, result.errors

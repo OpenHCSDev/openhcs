@@ -58,8 +58,7 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
     services = GuiServiceStub()
     manager = PlateManagerWidget(services, session, gui_config=get_default_ui_config())
     try:
-        assert session.invoke(
-            AddDatasets, AddDatasets.request(roots=(str(root),))
+        assert AddDatasets.invoke(session, AddDatasets.request(roots=(str(root),))
         ).accepted
         (scope_id,) = session.dataset_scope_ids()
         session.set_pipeline_source(scope_id, source)

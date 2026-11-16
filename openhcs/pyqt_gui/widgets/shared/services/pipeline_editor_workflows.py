@@ -276,7 +276,7 @@ class PipelineEditorDebugWorkflow(DebugActionWorkflow):
         session = self.editor.session
 
         async def inspect() -> None:
-            view_model = await session.debug_runs.inspect_runtime(
+            view_model = await session.inspect_debug_runtime(
                 debug_session_id=active.debug_session_id,
             )
             session.main_thread.post(lambda: self._render_runtime_inspection(view_model))
@@ -358,7 +358,7 @@ class PipelineEditorDebugWorkflow(DebugActionWorkflow):
         if not export_root:
             return
         session.start(
-            session.debug_runs.export_artifact,
+            session.export_debug_artifact,
             debug_session_id=displayed.debug_session_id,
             artifact_ref=request.artifact_ref,
             export_root=export_root,

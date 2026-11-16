@@ -327,7 +327,7 @@ def test_spawned_worker_runtime_observation_crosses_server_zmq_to_artifact_ui() 
             main_thread=CallerThread(),
         )
         session.subscribe(apply_runtime_notification)
-        client.progress_callback = session.progress.on_progress
+        client.progress_callback = session.on_progress
         client.enable_progress_stream()
         time.sleep(0.15)
 

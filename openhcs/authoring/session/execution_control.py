@@ -16,25 +16,21 @@ from openhcs.core.execution.execution_state import (
     ExecutionCancelled, ExecutionFailed,
 )
 
-from openhcs.authoring.session.session import Session
 logger = logging.getLogger(__name__)
 
 
 class ExecutionControl:
     """Owns cancellation, failure terminalization and client teardown."""
 
-    def __init__(self, session: Session) -> None:
-        self._session = session
-
     def _shutdown_service(self) -> EndpointShutdownService:
-        config = self._session.client.config
+        config = self.client.config
         return EndpointShutdownService.for_endpoint(
             config,
             config.client_endpoint(config.default_port),
         )
 
     def check_all_completed(self) -> None:
-        session = self._session
+        session = self
         if not session.execution_state.busy:
             return
         if not session.batch.all_batch_terminal():
@@ -43,7 +39,7 @@ class ExecutionControl:
         session.main_thread.post(lambda: session.finish_batch(completed, failed))
 
     async def handle_execution_failure(self) -> None:
-        session = self._session
+        session = self
         if session.execution_state.stop_pending:
             # The batch was stopped (for example while it was still compiling):
             # the error is the stop arriving, so its datasets end cancelled.
@@ -59,8 +55,8 @@ class ExecutionControl:
             logger.warning("Error disconnecting old client: %s", error)
         session.refresh()
 
-    def stop(self, force: bool = False) -> None:
-        session = self._session
+    def shut_down_execution_server(self, force: bool = False) -> None:
+        session = self
         port = session.client.config.default_port
         shutdown_service = self._shutdown_service()
 
@@ -89,10 +85,10 @@ class ExecutionControl:
         threading.Thread(target=shut_down_server, daemon=True).start()
         if force:
             self.cancel_active_datasets()
-            threading.Thread(target=self.disconnect, daemon=True).start()
+            threading.Thread(target=self.disconnect_client, daemon=True).start()
 
     def cancel_active_datasets(self) -> None:
-        session = self._session
+        session = self
         for scope_id in session.batch.cancellable_plates():
             session.finish_dataset_execution(
                 ExecutionCancelled.completion_payload(
@@ -102,8 +98,8 @@ class ExecutionControl:
                 scope_id,
             )
 
-    def disconnect(self) -> None:
+    def disconnect_client(self) -> None:
         try:
-            self._session.client.disconnect_sync()
+            self.client.disconnect_sync()
         except Exception as error:
             logger.warning("Error disconnecting ZMQ client: %s", error)

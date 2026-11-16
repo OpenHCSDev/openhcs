@@ -525,8 +525,8 @@ def _events_of(session, kind):
 def test_debug_progress_with_a_snapshot_publishes_it_and_projects_the_frame():
     with caller_session() as session:
         _event, progress = _debug_progress_event(snapshot_id="snapshot-1")
-        session.progress.on_progress(progress.to_dict())
-        session.progress.rebuild()
+        session.on_progress(progress.to_dict())
+        session.rebuild_runtime_projection()
 
         (available,) = _events_of(session, DebugSnapshotAvailable)
         assert available.notification.debug_context.snapshot_id == "snapshot-1"
@@ -539,7 +539,7 @@ def test_debug_progress_without_a_snapshot_publishes_nothing():
         _event, progress = _debug_progress_event(
             snapshot_id=None, event_type=BeforeInvocationDebugBoundary
         )
-        session.progress.on_progress(progress.to_dict())
+        session.on_progress(progress.to_dict())
         assert _events_of(session, DebugSnapshotAvailable) == []
 
 
@@ -556,7 +556,7 @@ def test_debug_progress_attaches_the_snapshot_the_server_returns(monkeypatch):
         monkeypatch.setattr(
             type(session.client), "zmq_client", property(lambda _self: client)
         )
-        session.progress.on_progress(progress.to_dict())
+        session.on_progress(progress.to_dict())
         (available,) = _events_of(session, DebugSnapshotAvailable)
         assert available.notification.snapshot == snapshot
 
@@ -586,7 +586,7 @@ def test_live_measurement_progress_is_tabled_and_published():
             preview_count=1,
             truncated_previews=False,
         )
-        session.progress.on_progress(
+        session.on_progress(
             _progress_event(context=payload.to_context()).to_dict()
         )
 
@@ -609,7 +609,7 @@ def test_runtime_artifact_progress_is_published():
         event = _progress_event(
             context=RuntimeArtifactProgressPayload((address,)).to_context()
         )
-        session.progress.on_progress(event.to_dict())
+        session.on_progress(event.to_dict())
 
         (available,) = _events_of(session, RuntimeArtifactAvailable)
         assert available.notification.event == event
@@ -629,7 +629,7 @@ def test_progress_the_registry_rejects_publishes_nothing(monkeypatch):
             ),
             location=RuntimeArtifactLocation(path="/memory/result.pkl", backend="memory"),
         )
-        session.progress.on_progress(
+        session.on_progress(
             _progress_event(
                 context=RuntimeArtifactProgressPayload((address,)).to_context()
             ).to_dict()
@@ -647,7 +647,7 @@ def test_server_queue_snapshot_projects_queued_executions(monkeypatch):
 
     with caller_session() as session:
         monkeypatch.setattr(
-            session.progress._server_info_poller,
+            session._server_info_poller,
             "get_snapshot_copy",
             lambda: SimpleNamespace(
                 running_execution_entries=(),
@@ -660,7 +660,7 @@ def test_server_queue_snapshot_projects_queued_executions(monkeypatch):
                 ),
             ),
         )
-        session.progress.rebuild()
+        session.rebuild_runtime_projection()
 
         plate = session.runtime_projection.get_subject("plate-queued", "exec-queued")
         assert plate is not None

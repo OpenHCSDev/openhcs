@@ -847,7 +847,7 @@ def test_progress_from_a_worker_thread_reaches_the_live_row(tmp_path) -> None:
                 pid=1234,
             )
             worker = threading.Thread(
-                target=gui.session.progress.on_progress, args=(event.to_dict(),)
+                target=gui.session.on_progress, args=(event.to_dict(),)
             )
             worker.start()
             worker.join(timeout=2)
@@ -1362,7 +1362,7 @@ def test_a_failure_is_presented_only_after_the_run_finalizes(tmp_path) -> None:
 def test_stop_completion_resets_the_force_kill_state(tmp_path, monkeypatch) -> None:
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")
-        monkeypatch.setattr(session.execution_control, "stop", lambda force: None)
+        monkeypatch.setattr(session, "shut_down_execution_server", lambda force: None)
         _running(session, scope_id, "execution-1")
         session.stop_execution()
         assert session.execution_state is ManagerExecutionState.FORCE_KILL_READY
@@ -1384,15 +1384,15 @@ def test_stop_follows_the_execution_state_not_the_button_text(
         (scope_id,) = add_datasets(session, tmp_path, "plate")
         forces: list[bool] = []
         monkeypatch.setattr(
-            session.execution_control, "stop", lambda force: forces.append(force)
+            session, "shut_down_execution_server", lambda force: forces.append(force)
         )
         _running(session, scope_id, "execution-1")
 
-        assert session.invoke(StopExecution, StopExecution.request()).accepted
+        assert StopExecution.invoke(session, StopExecution.request()).accepted
         assert session.execution_state is ManagerExecutionState.FORCE_KILL_READY
         assert forces == [False]
 
-        assert session.invoke(StopExecution, StopExecution.request()).accepted
+        assert StopExecution.invoke(session, StopExecution.request()).accepted
         assert session.execution_state is ManagerExecutionState.STOPPING
         assert forces == [False, True]
 
