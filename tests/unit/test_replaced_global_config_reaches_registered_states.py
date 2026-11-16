@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 from arraybridge.decorators import DtypeConversion
 from objectstate import ObjectState, ObjectStateRegistry
-from objectstate.global_config import GlobalContextValues
 from objectstate import set_global_config
 from pyqt_reactive.windows.config_window import ConfigSaveParticipant, ConfigWindowTabSpec
 
@@ -61,13 +60,9 @@ def _states_below(scope_id: str) -> list[ObjectState]:
 
 @pytest.fixture
 def empty_registry() -> Iterator[None]:
-    previous_global = GlobalContextValues.capture(GlobalPipelineConfig)
+    # restored_object_states (conftest) puts the registry and stored configs back.
     ObjectStateRegistry.clear()
-    try:
-        yield
-    finally:
-        ObjectStateRegistry.clear()
-        previous_global.apply()
+    yield
 
 
 def test_headless_session_global_config_reaches_existing_step_states(
