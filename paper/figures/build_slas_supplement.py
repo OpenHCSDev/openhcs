@@ -12,6 +12,7 @@ from PIL import Image
 
 from build_slas_visual_story import FigureSheet, OUTPUT, digest
 from build_slas_neurite_views import BodySeparationView, VOLUME_REPAIR_SOURCE
+from build_slas_neurite_effects import NeuriteEffectFigure
 
 
 class SupplementFigure(FigureSheet):
@@ -160,9 +161,8 @@ def localisation_diagnostic():
     sheet.save(dpi=400)
 
 
-def treatment_endpoints():
-    """Additional endpoints from the existing well tables, not new analysis."""
-    from build_slas_neurite_effects import NeuriteEffectFigure
+def autonomous_treatment_endpoints():
+    """Render only the fixed-code cohort endpoint pages from validated tables."""
 
     for stem, first_letter, metrics in (
         ("supp_neurite_autonomous_endpoints", "A", ("cell_count", "total_outgrowth",
@@ -171,16 +171,20 @@ def treatment_endpoints():
                                                        "total_processes", "branches_per_process")),
     ):
         autonomous = SupplementFigure(stem, 10.4)
-        autonomous.heading("Additional responses from three independent blind analyses", 99)
+        autonomous.heading("Fixed-code re-evaluation of three frozen analyses", 99)
         NeuriteEffectFigure.draw_panels(
-            autonomous, NeuriteEffectFigure.cohort_tables(
-                autonomous, OUTPUT.parents[1] / "supplementary/personal_neurite_autonomous"),
+            autonomous, NeuriteEffectFigure.cohort_tables(autonomous),
             metrics=metrics, start_letter=first_letter,
         )
         autonomous.text(3, 6, "Dots: two technical wells per analysis/method; whiskers: between-well SD.", size=10)
         autonomous.text(3, 3, "Curve-specific DMSO normalization; algorithm comparison, not manual tracing truth.", size=10)
         autonomous.save()
 
+
+def treatment_endpoints():
+    """Render the cohort pages and the separately retained assisted comparison."""
+
+    autonomous_treatment_endpoints()
     sheet = SupplementFigure("supp_neurite_treatment_endpoints", 10.4)
     sheet.heading("Additional morphology responses after assisted repair", 99)
     NeuriteEffectFigure.draw_panels(

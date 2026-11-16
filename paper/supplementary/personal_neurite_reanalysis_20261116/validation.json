@@ -1,0 +1,23 @@
+{
+  "complete": true,
+  "analyses": [
+    {
+      "author": "author114",
+      "sites": 180,
+      "wells": 20,
+      "effect_rows": 90
+    },
+    {
+      "author": "author115",
+      "sites": 180,
+      "wells": 20,
+      "effect_rows": 90
+    },
+    {
+      "author": "author116",
+      "sites": 180,
+      "wells": 20,
+      "effect_rows": 90
+    }
+  ]
+}

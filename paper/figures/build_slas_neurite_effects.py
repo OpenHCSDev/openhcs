@@ -27,9 +27,12 @@ from compare_personal_neurite import (
 class NeuriteEffectFigure(FigureSheet):
     """Retained well tables supply every plotted method and author."""
 
-    @staticmethod
-    def cohort_tables(sheet: FigureSheet, cohort: Path):
-        """Author identity comes from the frozen cohort record, not plot order."""
+    publication_cohort = ROOT / "paper/supplementary/personal_neurite_reanalysis_20261116"
+
+    @classmethod
+    def cohort_tables(cls, sheet: FigureSheet):
+        """Author identity and the selected evaluation come from one cohort record."""
+        cohort = cls.publication_cohort
         record = cohort / "cohort.json"
         sheet.source(record)
         authors = json.loads(record.read_text())["authors"]

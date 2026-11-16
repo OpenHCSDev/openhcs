@@ -790,11 +790,10 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
     sheet.source(views_path)
     laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())["blind_cohort"])
     NeuriteEffectFigure.draw_panels(
-        sheet, NeuriteEffectFigure.cohort_tables(
-            sheet, ROOT / "paper/supplementary/personal_neurite_autonomous"),
+        sheet, NeuriteEffectFigure.cohort_tables(sheet),
         metrics=("mean_outgrowth",), bounds=(3, 48, 94, 49), start_letter="A",
     )
-    sheet.text(3, 44.5, "Analysis 1 · A02, site 2", size=11, weight="bold")
+    sheet.text(3, 44.5, "Original analysis 1 · A02, site 2", size=11, weight="bold")
     laboratory_view.draw_columns((3, 1, 94, 36), 41, (
         ("C  Raw", laboratory_view.draw_raw),
         ("D  Labels and paths", laboratory_view.draw_result),
