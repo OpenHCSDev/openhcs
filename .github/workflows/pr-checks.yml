@@ -106,10 +106,16 @@ jobs:
     timeout-minutes: 25
     env:
       QT_QPA_PLATFORM: offscreen
-      XDG_CACHE_HOME: ${{ runner.temp }}/openhcs-smoke-cache
-      XDG_CONFIG_HOME: ${{ runner.temp }}/openhcs-smoke-config
-      XDG_DATA_HOME: ${{ runner.temp }}/openhcs-smoke-data
     steps:
+      # The runner context exists only inside steps, not in job-level env.
+      - name: Keep XDG cache, config and data under the runner's temp directory
+        run: |
+          {
+            echo "XDG_CACHE_HOME=$RUNNER_TEMP/openhcs-smoke-cache"
+            echo "XDG_CONFIG_HOME=$RUNNER_TEMP/openhcs-smoke-config"
+            echo "XDG_DATA_HOME=$RUNNER_TEMP/openhcs-smoke-data"
+          } >> "$GITHUB_ENV"
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
