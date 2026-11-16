@@ -9,7 +9,7 @@ import html
 import re
 import shutil
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -80,10 +80,37 @@ GALLERY_RECORD_RELATIVE_PATH = "assets/gallery/release-media-record.json"
 
 @dataclass(frozen=True, slots=True)
 class WebsiteMcpClient:
-    """Website projection of one production-owned MCP registration target."""
+    """Website projection of one production-owned MCP registration target.
+
+    The first field identifies a registration target: a class that leaves it
+    unset or ``None`` is a base, not a target.
+    """
 
     target_id: str
     display_name: str
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.target_id, str)
+            or MCP_CLIENT_TARGET_ID_PATTERN.fullmatch(self.target_id) is None
+        ):
+            raise ValueError(f"invalid literal target_id: {self.target_id!r}")
+        if not isinstance(self.display_name, str) or not self.display_name.strip():
+            raise ValueError("no literal display_name")
+        object.__setattr__(self, "display_name", self.display_name.strip())
+
+    @classmethod
+    def declared_by(cls, class_node: ast.ClassDef) -> WebsiteMcpClient | None:
+        """Read this projection's fields from one registration declaration."""
+
+        literals = _literal_class_fields(class_node)
+        identity, *_ = fields(cls)
+        if literals.get(identity.name) is None:
+            return None
+        try:
+            return cls(**{field.name: literals.get(field.name) for field in fields(cls)})
+        except ValueError as error:
+            raise ValueError(f"MCP client target {class_node.name}: {error}") from error
 
     @property
     def logo_path(self) -> str:
@@ -210,34 +237,13 @@ def read_mcp_client_targets(repo_root: Path) -> tuple[WebsiteMcpClient, ...]:
     targets: list[WebsiteMcpClient] = []
     seen_target_ids: set[str] = set()
     for class_node in (node for node in module.body if isinstance(node, ast.ClassDef)):
-        fields = _literal_class_fields(class_node)
-        target_id = fields.get("target_id")
-        display_name = fields.get("display_name")
-        if target_id is None and display_name is None:
+        client = WebsiteMcpClient.declared_by(class_node)
+        if client is None:
             continue
-        if target_id is None:
-            continue
-        if (
-            not isinstance(target_id, str)
-            or MCP_CLIENT_TARGET_ID_PATTERN.fullmatch(target_id) is None
-        ):
-            raise ValueError(
-                f"MCP client target {class_node.name} has an invalid literal target_id: "
-                f"{target_id!r}"
-            )
-        if not isinstance(display_name, str) or not display_name.strip():
-            raise ValueError(
-                f"MCP client target {class_node.name} has no literal display_name."
-            )
-        if target_id in seen_target_ids:
-            raise ValueError(f"Duplicate MCP client target_id: {target_id!r}")
-        seen_target_ids.add(target_id)
-        targets.append(
-            WebsiteMcpClient(
-                target_id=target_id,
-                display_name=display_name.strip(),
-            )
-        )
+        if client.target_id in seen_target_ids:
+            raise ValueError(f"Duplicate MCP client target_id: {client.target_id!r}")
+        seen_target_ids.add(client.target_id)
+        targets.append(client)
     if not targets:
         raise ValueError("No registered MCP client targets were found.")
     return tuple(targets)
