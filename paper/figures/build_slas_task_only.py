@@ -1,4 +1,4 @@
-"""Render Figure 6 from retained postfreeze evaluations, without rescoring images.
+"""Render quantitative results and matched repairs from retained evaluations.
 
 Run from any directory. Defaults use the existing SLAS paper tree; --root and
 --output permit the same generator to render a separate handoff packet.
@@ -19,16 +19,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from build_slas_supplement import VolumeResultsFigure
+from build_slas_supplement import SupplementFigure, VolumeResultsFigure
+from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
+from build_slas_neurite_views import BRIGHT_OBJECT_SOURCE, CroppedComparison, NUCLEAR_SOURCE
+from build_slas_visual_story import BLUE, TEAL, ORANGE, FigureSheet
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_DIRECTORY = Path("paper/supplementary/task_only_analysis")
 H001_SOURCE = SOURCE_DIRECTORY / "h001-fresh586-postfreeze-evaluation.json"
 BBBC039_SOURCE = SOURCE_DIRECTORY / "bbbc039-fresh612-postfreeze-evaluation.json"
 STEM = "task_only_analysis"
-BLUE = "#216da5"
-TEAL = "#16877f"
-ORANGE = "#b76a29"
 
 
 def sha256(path: Path) -> str:
@@ -344,17 +344,14 @@ def build(root: Path, output: Path) -> None:
     print(f"Rendered Figure 7 to {output}")
 
 
-class AnalysisResultsFigure(VolumeResultsFigure):
-    """One canvas owns quantitative endpoints and all matched repair panels."""
+class AnalysisResultsFigure(SupplementFigure):
+    """Quantitative endpoints and the retained final 3D localization views."""
 
     def draw_panels(self):
         self.draw_quantitative()
-        self.draw_repairs()
-        super().draw_panels()
+        self.draw_localization()
 
     def draw_quantitative(self):
-        from build_slas_bbbc013_fresh23 import AssaySeries, MedianLog2Ratio, SOURCE
-
         sheet = self
         agents_path = SOURCE_DIRECTORY / "bbbc039-caicedo-retained-results.json"
         comparators_path = SOURCE_DIRECTORY / "bbbc039-caicedo-published-test50.csv"
@@ -431,27 +428,66 @@ class AnalysisResultsFigure(VolumeResultsFigure):
             if column == 0:
                 axis.set_ylabel("GFP N/C\n(log₂ ratio)")
 
-    def draw_repairs(self):
-        from build_slas_visual_story import TEAL
-        from build_slas_neurite_views import (
-            BRIGHT_OBJECT_SOURCE, CroppedComparison, NUCLEAR_SOURCE,
-        )
+    def draw_localization(self):
+        evaluation_path = ROOT / SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json"
+        self.source(evaluation_path)
+        evaluation = json.loads(evaluation_path.read_text())
+        threshold = evaluation["primary_threshold_voxels"]
+        result = evaluation["scores"][str(threshold)]
+        self.text(3, 52, "D  3D nuclear localization", size=14, weight="bold")
+        self.artwork("h002_measurement_first", (3, 8, 94, 39), crop=(1, 7.5, 99, 58))
+        self.text(50, 5,
+                  f"{result['true_positives']}/{result['reference_points']} reference centres matched within "
+                  f"{threshold} voxels; {result['false_positives']} unmatched predictions",
+                  size=12, ha="center", weight="bold", color=TEAL)
+        self.text(50, 1.5, "Partial reference annotations; physical voxel spacing unverified",
+                  size=11, ha="center")
 
-        sheet = self
-        sheet.source(ROOT / H001_SOURCE)
-        sheet.text(3, 51.5, "D  Bright-object repair", size=14, weight="bold")
-        CroppedComparison.read(sheet, BRIGHT_OBJECT_SOURCE).draw_row((3, 35, 44, 13), 48.5)
+
+class RepairResultsFigure(VolumeResultsFigure):
+    """The guide's procedure beside four separate recorded repair examples."""
+
+    def draw_panels(self):
+        self.draw_procedure()
+        self.draw_repairs()
+        super().draw_panels()
+
+    def draw_procedure(self):
+        self.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md")
+        self.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md")
+        self.text(3, 98, "Image review guides analysis repair", size=16, weight="bold", va="top")
+        stages = ("Brief + inputs", "Build + run", "Inspect results", "Revise + rerun", "Recheck")
+        for column, title in enumerate(stages):
+            left = 3 + column * 19
+            self.box(left, 88, 17, 6, title, size=11)
+            if column:
+                self.arrow((left - 2, 91), (left, 91))
+        self.text(50, 85, "Guide-directed procedure above; separate recorded analyses below",
+                  size=11, ha="center")
+
+    def draw_repairs(self):
+        self.source(Path(__file__))
+        self.source(ROOT / H001_SOURCE)
+        self.text(3, 81, "A  Bright-object repair", size=14, weight="bold")
         evaluation = load_bright_object_evaluation(ROOT)
         first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
-        sheet.text(47, 51.5, f"F1 {first_f1:.3f}→{final_f1:.3f}".replace("0.", "."),
-                   size=13, color=TEAL, weight="bold", ha="right")
-        sheet.text(53, 51.5, "E  Nuclear separation", size=14, weight="bold")
-        CroppedComparison.read(sheet, NUCLEAR_SOURCE).draw_row((53, 35, 44, 13), 48.5)
+        self.text(97, 81, f"F1 {first_f1:.3f} → {final_f1:.3f}",
+                  size=13, color=TEAL, weight="bold", ha="right")
+        CroppedComparison.read(self, BRIGHT_OBJECT_SOURCE).draw_row((3, 61, 94, 15.5), 78)
+        self.text(3, 58, "B  Nuclear separation", size=14, weight="bold")
+        CroppedComparison.read(self, NUCLEAR_SOURCE).draw_row((3, 38.5, 94, 15.5), 55.5)
 
 
 def submission_summary() -> None:
-    """Render the integrated A–G figure from retained inputs and published scores."""
-    sheet = AnalysisResultsFigure("submission_analysis_summary", 9.4)
+    """Render Figure 5 without rerunning an analysis or changing its scores."""
+    sheet = AnalysisResultsFigure("submission_analysis_summary", 8.6)
+    sheet.draw_panels()
+    sheet.save(dpi=400)
+
+
+def submission_repairs(*, input_root: Path = FigureSheet.default_input_root) -> None:
+    """Render Figure 4 from the same frozen first/final image regions."""
+    sheet = RepairResultsFigure("submission_analysis_repairs", 10.5, input_root=input_root)
     sheet.draw_panels()
     sheet.save(dpi=400)
 
@@ -552,6 +588,8 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--submission-summary", action="store_true")
+    parser.add_argument("--submission-repairs", action="store_true")
+    parser.add_argument("--input-root", type=Path, default=FigureSheet.default_input_root)
     parser.add_argument("--publish-briefs", action="store_true")
     arguments = parser.parse_args()
     root = arguments.root.resolve()
@@ -559,5 +597,7 @@ if __name__ == "__main__":
         publish_briefs()
     elif arguments.submission_summary:
         submission_summary()
+    elif arguments.submission_repairs:
+        submission_repairs(input_root=arguments.input_root)
     else:
         build(root, arguments.output or root / "paper/figures/slas")

@@ -1,218 +1,39 @@
 {
-  "generator_sha256": "e3b2c5b69cbf5c2a640d58d597d832a0997eacdbd05e677fa4d5037d7e60b6ce",
+  "generator_sha256": "c1db21d4b9780a9ba0c3f72e5bf58b58f929860c5c930ffbf06ba811eeff5318",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "531fbd26d502037bec06aeea0e8e6872096907f19006724e0d1bcf02a9fdc233",
-    "paper/figures/build_slas_task_only.py": "c69df6bc7b401b332e0587e02eb54321ca40d89b8fc765b0c067b7db7be6b23f",
+    "paper/figures/build_slas_supplement.py": "47edbc57715095bc048d3a7472472d04d56a585e9b898c1a61b6dc6ec844c195",
+    "paper/figures/build_slas_task_only.py": "5ba03c25f188f2212490aabc5005ba7d56fab15ae7e528a39d018b54043ad783",
     "paper/figures/build_slas_bbbc013_fresh23.py": "1a85869824e524d07533179547bb07a69eb016f5cf6276d42147aea1dbb7e37a",
     "paper/supplementary/task_only_analysis/bbbc039-caicedo-retained-results.json": "6556d68e6c65f7a2b97b4bb495635853e38e48d8add755b10e30aa2bea7d206c",
     "paper/supplementary/task_only_analysis/bbbc039-caicedo-published-test50.csv": "a8b8f7dda5dc99e3406332b125ea9a23ede4766c33abd8856d6fd3a3a9e69f3f",
     "paper/supplementary/task_only_analysis/bbbc007-fresh19-qualified-completion.rst": "53c9a2da8bf5718a792149d99007e773154d9712d02bf1eeb7e2cfc6761b4ef0",
     "paper/supplementary/task_only_analysis/bbbc007-fresh26-final-candidate.rst": "e3ef1a694642a100b3c65565c1d5d67092caf58dfdf46b99c510704a5166e3c6",
     "paper/supplementary/task_only_analysis/bbbc013-fresh23-plot-source.json": "834fd2de0c8d82c34bf152474f575371cfeaa59ea1e38a66e9cff70a270ec8d7",
-    "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json": "b0f70a14a4fe97cd5b6c9da9fb6363006ae2471aab5c2bc507bf1bdb32fa8789",
-    "paper/figures/slas/frozen_bright_object_views.json": "2d09d361e32493c524b746c1d37e286a59f3ec030c4f83c4a73aeab486864c99",
-    "paper/figures/build_slas_neurite_views.py": "9c25127cdfcd382c95caf2c31aaafbedb69349f68c2c78792eba31ba0c626984",
-    "paper/figures/slas/frozen_bright_objects/raw.tif": "26403a7c2a11921535499ff86798b73e09b8ac5786329bce8fa4a57fd9933fee",
-    "paper/figures/slas/frozen_bright_objects/first.tif": "228c8a684ea6768dd864355defa900434a21ca66c407670d6a742a5b90dccdfb",
-    "paper/figures/slas/frozen_bright_objects/final.tif": "6131cc1566bec4330957aac6e234791c2279ef393312ef4a4c2ee44a9a308fed",
-    "paper/figures/slas/frozen_bright_objects/original-author-report.txt": "caba4643b3b4a5ee3be0cfdae23bb1bb9e59a29714112ae9c7864f77539a787b",
-    "paper/figures/slas/frozen_nuclear_views.json": "212e71109bf41e45c8ddcacbd7cf556a91ba547c2010fec6c8caf8dc6547227f",
-    "paper/figures/slas/frozen_nuclear_objects/raw.tif": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
-    "paper/figures/slas/frozen_nuclear_objects/first.tif": "1494606506aa5484f273b2e1338099b4f9f649ad45d25b405b84e02fd5424311",
-    "paper/figures/slas/frozen_nuclear_objects/final.tif": "a0bb8f3ad817cab40199c711b4c931dc66ad87d9b9205baadabe03182657b437",
-    "paper/figures/slas/frozen_nuclear_objects/original-author-report.txt": "617d50281c43ba8c33efb2f949b14da8412ea750e72f6e8ecad2f102c8d2007b",
-    "paper/figures/slas/frozen_nuclear_objects/raw-identity.json": "eef69a2ead8952f39f4f27eafce5feb6880beacee3014a52263009ff67094c3b",
-    "paper/figures/slas/retina_fresh16_repair_provenance.json": "1af8b66e24d67342ea87ca93d6104abf4070ddf61b697d35082b0f0a75496d93",
-    "paper/figures/slas/retina_fresh16_repair.png": "31708c61976f48ac0cc2a3c660b5ef04d163fa3dfe1516290befcd01ef4a73c8",
-    "paper/figures/slas/frozen_h002_fresh22_views.json": "1221b5967b249f2f756daa6fba75fb744392089e9ce971e0be7bfeaf9b9e7292",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/staged-input/image.ome.tif": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/candidate01/staged-input_openhcs/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_volume_labels_step0.labels.tif": "1a3dab73c672a6d8beb7474ac5588b7f59a3e43dc416fbfecb92fd2b468ad635",
-    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/candidate02_retry/staged-input_openhcs/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_volume_labels_step0.labels.tif": "7e87eb19db78de259fe7476a3eedfee508de1dbb44ef92fdd7603aa8ff2e628a"
+    "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json": "ca34ddcfaea7dcdc16c4813f8665e3295bab08c3167571fdff4cc6d06984027d",
+    "paper/figures/slas/h002_measurement_first_provenance.json": "ff84d45b85eeafe668dab973f3fc8dc732c2492ed1d7d50299d706b3492c03d3",
+    "paper/figures/slas/h002_measurement_first.png": "95ab36dccf73276d2c50e34b11eb07e346d740ffedbcaef1940c82bb8562e3e1"
   },
-  "input_root": "/home/ts/wt/openhcs-paper--f738a663127a429b8218bddde0a67dc5--openhcs/frozen-root",
+  "input_root": "/",
   "ui_crops": [
     {
-      "source": "paper/figures/slas/retina_fresh16_repair.png",
+      "source": "paper/figures/slas/h002_measurement_first.png",
       "xyxy_pixels": [
-        81,
-        360,
-        893,
-        742
+        27,
+        164,
+        2673,
+        1270
       ],
       "source_size": [
         2700,
-        1620
-      ]
-    },
-    {
-      "source": "paper/figures/slas/retina_fresh16_repair.png",
-      "xyxy_pixels": [
-        944,
-        360,
-        1756,
-        742
-      ],
-      "source_size": [
-        2700,
-        1620
-      ]
-    },
-    {
-      "source": "paper/figures/slas/retina_fresh16_repair.png",
-      "xyxy_pixels": [
-        1807,
-        360,
-        2619,
-        742
-      ],
-      "source_size": [
-        2700,
-        1620
+        2190
       ]
     }
   ],
-  "display_transforms": [
-    {
-      "author_run": "H001_FRESH586_96",
-      "attempt": "a01 and a04",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "raw_window": [
-          8,
-          248
-        ],
-        "region_yyxx": [
-          29,
-          89,
-          155,
-          235
-        ],
-        "region_reason": "Same elongated bright-body repair near native y=59,x=195 identified in the original final REPORT.md; identical pixel-coordinate region in raw and both saved detections."
-      },
-      "source_shape_yx": [
-        254,
-        256
-      ],
-      "raw_window": [
-        8,
-        248
-      ],
-      "region_yyxx": [
-        29,
-        89,
-        155,
-        235
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 1,
-      "scale_unit": "px",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
-    },
-    {
-      "author_run": "H003_POSTPAUSE_88",
-      "attempt": "candidate01_retry01 \u2192 candidate06",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "region_yyxx": [
-          260,
-          350,
-          245,
-          335
-        ],
-        "raw_window": [
-          0,
-          255
-        ],
-        "selection_note": "Recorded C4 native centre Y300/X291;include repaired labels35/36,adjacent38 and diffuse bridge support. New explicit native crop,not a screen-coordinate reconstruction."
-      },
-      "source_shape_yx": [
-        400,
-        400
-      ],
-      "raw_window": [
-        0,
-        255
-      ],
-      "region_yyxx": [
-        260,
-        350,
-        245,
-        335
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 1,
-      "scale_unit": "px",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
-    },
-    {
-      "author_run": "H002_FRESH22_89",
-      "attempt": "candidate01 versus candidate02_retry; local repair only",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "fixed_axis": 0,
-        "index": 36,
-        "region_yyxx": [
-          90,
-          200,
-          0,
-          90
-        ],
-        "raw_window": [
-          569.0,
-          27314.0
-        ]
-      },
-      "source_shape_yx": [
-        256,
-        256
-      ],
-      "raw_window": [
-        569.0,
-        27314.0
-      ],
-      "region_yyxx": [
-        90,
-        200,
-        0,
-        90
-      ],
-      "raw_cmap": "gray",
-      "overlay_opacity": 0.7,
-      "units_per_pixel": 1,
-      "scale_unit": "voxels",
-      "pixel_aspect": 1,
-      "gamma": 1,
-      "analysis_rerun": false
-    },
-    {
-      "author_run": "H002_FRESH22_89",
-      "operation": "Rotate display 90 degrees counterclockwise",
-      "native_region_yyxx": [
-        90,
-        200,
-        0,
-        90
-      ],
-      "display_region_yyxx": [
-        166,
-        256,
-        90,
-        200
-      ],
-      "interpolation": "none; exact array index permutation",
-      "analysis_rerun": false
-    }
-  ],
+  "display_transforms": [],
   "output_sha256": {
-    "submission_analysis_summary.png": "bd4b45b4e34abf8fbd06d550c68d6f185d862e97c2b042e334eb8b6c398a8b4c",
-    "submission_analysis_summary.pdf": "64ac896ef1b6ec68b440a7d454e9f3b8355484ff37d64d0d79de306f8fe190c8",
-    "submission_analysis_summary.svg": "d84ba17d10666af1bdeec9a9ceb920e4d6da4c022be1aeb2f809fc196701dcad"
+    "submission_analysis_summary.png": "1d693e962851827fd708137b17e81b38594b8b11ca987b3ac3f82df49b1271a7",
+    "submission_analysis_summary.pdf": "5ab97df4e53419626432ab1e368f1f7bd74713d6460d8c2bfc7c756e34b3f6e3",
+    "submission_analysis_summary.svg": "498be391f005dd4d3eb839c94d133c6421b6bf852e3aacd613c32c6e42e577bd"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

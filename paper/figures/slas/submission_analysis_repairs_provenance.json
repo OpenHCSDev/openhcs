@@ -1,0 +1,214 @@
+{
+  "generator_sha256": "c1db21d4b9780a9ba0c3f72e5bf58b58f929860c5c930ffbf06ba811eeff5318",
+  "source_sha256": {
+    "paper/figures/build_slas_supplement.py": "47edbc57715095bc048d3a7472472d04d56a585e9b898c1a61b6dc6ec844c195",
+    "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md": "cb14d533fb87b91f80d6f8c647bb833b0444f2239357af6732b93485eae8cfd9",
+    "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md": "6aff1f00a2cfb11a658850831c511298010339acba99c080cabed437c544e28b",
+    "paper/figures/build_slas_task_only.py": "5ba03c25f188f2212490aabc5005ba7d56fab15ae7e528a39d018b54043ad783",
+    "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json": "b0f70a14a4fe97cd5b6c9da9fb6363006ae2471aab5c2bc507bf1bdb32fa8789",
+    "paper/figures/slas/frozen_bright_object_views.json": "2d09d361e32493c524b746c1d37e286a59f3ec030c4f83c4a73aeab486864c99",
+    "paper/figures/build_slas_neurite_views.py": "9c25127cdfcd382c95caf2c31aaafbedb69349f68c2c78792eba31ba0c626984",
+    "paper/figures/slas/frozen_bright_objects/raw.tif": "26403a7c2a11921535499ff86798b73e09b8ac5786329bce8fa4a57fd9933fee",
+    "paper/figures/slas/frozen_bright_objects/first.tif": "228c8a684ea6768dd864355defa900434a21ca66c407670d6a742a5b90dccdfb",
+    "paper/figures/slas/frozen_bright_objects/final.tif": "6131cc1566bec4330957aac6e234791c2279ef393312ef4a4c2ee44a9a308fed",
+    "paper/figures/slas/frozen_bright_objects/original-author-report.txt": "caba4643b3b4a5ee3be0cfdae23bb1bb9e59a29714112ae9c7864f77539a787b",
+    "paper/figures/slas/frozen_nuclear_views.json": "212e71109bf41e45c8ddcacbd7cf556a91ba547c2010fec6c8caf8dc6547227f",
+    "paper/figures/slas/frozen_nuclear_objects/raw.tif": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
+    "paper/figures/slas/frozen_nuclear_objects/first.tif": "1494606506aa5484f273b2e1338099b4f9f649ad45d25b405b84e02fd5424311",
+    "paper/figures/slas/frozen_nuclear_objects/final.tif": "a0bb8f3ad817cab40199c711b4c931dc66ad87d9b9205baadabe03182657b437",
+    "paper/figures/slas/frozen_nuclear_objects/original-author-report.txt": "617d50281c43ba8c33efb2f949b14da8412ea750e72f6e8ecad2f102c8d2007b",
+    "paper/figures/slas/frozen_nuclear_objects/raw-identity.json": "eef69a2ead8952f39f4f27eafce5feb6880beacee3014a52263009ff67094c3b",
+    "paper/figures/slas/retina_fresh16_repair_provenance.json": "1af8b66e24d67342ea87ca93d6104abf4070ddf61b697d35082b0f0a75496d93",
+    "paper/figures/slas/retina_fresh16_repair.png": "31708c61976f48ac0cc2a3c660b5ef04d163fa3dfe1516290befcd01ef4a73c8",
+    "paper/figures/slas/frozen_h002_fresh22_views.json": "1221b5967b249f2f756daa6fba75fb744392089e9ce971e0be7bfeaf9b9e7292",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/staged-input/image.ome.tif": "4159cea76f174acb51e11abc6885a0bb6aeaaf401f6371f362c9f4f100a891f7",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/candidate01/staged-input_openhcs/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_volume_labels_step0.labels.tif": "1a3dab73c672a6d8beb7474ac5588b7f59a3e43dc416fbfecb92fd2b468ad635",
+    "frozen-root/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/candidate02_retry/staged-input_openhcs/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_volume_labels_step0.labels.tif": "7e87eb19db78de259fe7476a3eedfee508de1dbb44ef92fdd7603aa8ff2e628a"
+  },
+  "input_root": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/frozen-root",
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/retina_fresh16_repair.png",
+      "xyxy_pixels": [
+        81,
+        360,
+        893,
+        742
+      ],
+      "source_size": [
+        2700,
+        1620
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_repair.png",
+      "xyxy_pixels": [
+        944,
+        360,
+        1756,
+        742
+      ],
+      "source_size": [
+        2700,
+        1620
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retina_fresh16_repair.png",
+      "xyxy_pixels": [
+        1807,
+        360,
+        2619,
+        742
+      ],
+      "source_size": [
+        2700,
+        1620
+      ]
+    }
+  ],
+  "display_transforms": [
+    {
+      "author_run": "H001_FRESH586_96",
+      "attempt": "a01 and a04",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "raw_window": [
+          8,
+          248
+        ],
+        "region_yyxx": [
+          29,
+          89,
+          155,
+          235
+        ],
+        "region_reason": "Same elongated bright-body repair near native y=59,x=195 identified in the original final REPORT.md; identical pixel-coordinate region in raw and both saved detections."
+      },
+      "source_shape_yx": [
+        254,
+        256
+      ],
+      "raw_window": [
+        8,
+        248
+      ],
+      "region_yyxx": [
+        29,
+        89,
+        155,
+        235
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "px",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H003_POSTPAUSE_88",
+      "attempt": "candidate01_retry01 \u2192 candidate06",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "region_yyxx": [
+          260,
+          350,
+          245,
+          335
+        ],
+        "raw_window": [
+          0,
+          255
+        ],
+        "selection_note": "Recorded C4 native centre Y300/X291;include repaired labels35/36,adjacent38 and diffuse bridge support. New explicit native crop,not a screen-coordinate reconstruction."
+      },
+      "source_shape_yx": [
+        400,
+        400
+      ],
+      "raw_window": [
+        0,
+        255
+      ],
+      "region_yyxx": [
+        260,
+        350,
+        245,
+        335
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "px",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H002_FRESH22_89",
+      "attempt": "candidate01 versus candidate02_retry; local repair only",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "fixed_axis": 0,
+        "index": 36,
+        "region_yyxx": [
+          90,
+          200,
+          0,
+          90
+        ],
+        "raw_window": [
+          569.0,
+          27314.0
+        ]
+      },
+      "source_shape_yx": [
+        256,
+        256
+      ],
+      "raw_window": [
+        569.0,
+        27314.0
+      ],
+      "region_yyxx": [
+        90,
+        200,
+        0,
+        90
+      ],
+      "raw_cmap": "gray",
+      "overlay_opacity": 0.7,
+      "units_per_pixel": 1,
+      "scale_unit": "voxels",
+      "pixel_aspect": 1,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "H002_FRESH22_89",
+      "operation": "Rotate display 90 degrees counterclockwise",
+      "native_region_yyxx": [
+        90,
+        200,
+        0,
+        90
+      ],
+      "display_region_yyxx": [
+        166,
+        256,
+        90,
+        200
+      ],
+      "interpolation": "none; exact array index permutation",
+      "analysis_rerun": false
+    }
+  ],
+  "output_sha256": {
+    "submission_analysis_repairs.png": "a95979cb777a4b28dd51095b03dd2ec463a5203805e2ec63805a210be49327c4",
+    "submission_analysis_repairs.pdf": "363773670ced202428f4b50c518008c9f616ca64e8b8a12389a0195be50cad57",
+    "submission_analysis_repairs.svg": "f9cf68a5878f838c4aa9d0eff9bbec503fa6753c1437335851792ffcb42c2233"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}
