@@ -91,6 +91,7 @@ jobs:
           PY
           )
           python -m pip install "${local_project_paths[@]}"
+          python -m pip install -e .
 
       - name: Test, build, and validate landing page
         run: |
