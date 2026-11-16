@@ -6,7 +6,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox, QWidget
 from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
 from openhcs.core.execution.execution_state import ManagerExecutionState
@@ -14,7 +14,6 @@ from openhcs.desktop.restart import DesktopSessionRestart
 from openhcs.desktop.update import DesktopUpdateError
 
 from zmqruntime import EndpointApplicationCompatibility
-from openhcs.pyqt_gui.main import OpenHCSMainWindow
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
 from openhcs.authoring.session.execution_client import (
 ZMQClientService,
@@ -67,7 +66,7 @@ class ZMQVersionRestartWorkflow(QObject):
     def __init__(
         self,
         *,
-        main_window: OpenHCSMainWindow,
+        main_window: QWidget,
         client_service: ZMQClientService,
         execution_state: Callable[[], ManagerExecutionState],
         execute_async: Callable[..., object],

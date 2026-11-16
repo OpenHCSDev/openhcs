@@ -84,7 +84,11 @@ from openhcs.core.pipeline.function_contracts import (
 
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.interop.cellprofiler.parser import ModuleBlock
-class CombineObjectsMethod(Enum, NumbaNumpyDefaultBackend):
+from enum import Enum
+from openhcs.processing.backends.cellprofiler._backend import CentrosomeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
+class CombineObjectsMethod(Enum):
     """Overlap policies exposed by CombineObjects settings."""
 
     MERGE = "merge"
@@ -93,7 +97,7 @@ class CombineObjectsMethod(Enum, NumbaNumpyDefaultBackend):
     SEGMENT = "segment"
 
 
-class MaskObjectsOverlapHandling(Enum, NativeNumpyBackend):
+class MaskObjectsOverlapHandling(Enum):
     """CellProfiler MaskObjects overlap handling mode."""
 
     MASK = "keep_overlapping_region"
@@ -102,7 +106,7 @@ class MaskObjectsOverlapHandling(Enum, NativeNumpyBackend):
     REMOVE_PERCENTAGE = "remove_depending_on_overlap"
 
 
-class MaskObjectsNumberingChoice(Enum, CentrosomeNumpyBackend):
+class MaskObjectsNumberingChoice(Enum):
     """CellProfiler MaskObjects output label numbering mode."""
 
     RENUMBER = "renumber"
@@ -142,7 +146,7 @@ class ImageStructuringElementModule(
         )
 
 
-class ClosingModule(ImageStructuringElementModule, ValidatedHighConfidenceModule):
+class ClosingModule(ValidatedHighConfidenceModule, ImageStructuringElementModule):
     module_name = "Closing"
     function_name = "closing"
 
@@ -201,7 +205,7 @@ class ObjectLineageTransformModule(ObjectLineageTransformContractModule):
 
 
 class CombineobjectsModule(
-    ObjectLabelsInputBindingMixin,
+    ValidatedHighConfidenceModule, ObjectLabelsInputBindingMixin,
     ObjectLabelDrivenPrimaryImageInputPolicy,
     PlaneRuntimeArtifactModule,
     ObjectArtifactInputModule,
@@ -279,7 +283,7 @@ class CombineobjectsModule(
         return (SourceStackLineageSourceRelation(source=source.ref()),)
 
 
-class DilateImageModule(ImageStructuringElementModule, ValidatedHighConfidenceModule):
+class DilateImageModule(ValidatedHighConfidenceModule, ImageStructuringElementModule):
     module_name = "DilateImage"
     function_name = "dilate_image"
     aliases = ("Dilation",)
@@ -309,7 +313,7 @@ class ZStackFunctionVariantModule:
 
 
 class DilateObjectsModule(
-    ZStackFunctionVariantModule,
+    ValidatedHighConfidenceModule, ZStackFunctionVariantModule,
     ObjectTransformContractModule,
     StructuringElementSettingsModule,
 ):
@@ -322,14 +326,14 @@ class DilateObjectsModule(
     )
 
 
-class ErodeImageModule(ImageStructuringElementModule, ValidatedHighConfidenceModule):
+class ErodeImageModule(ValidatedHighConfidenceModule, ImageStructuringElementModule):
     module_name = "ErodeImage"
     function_name = "erode_image"
     aliases = ("Erosion",)
 
 
 class ErodeObjectsModule(
-    ObjectLabelDrivenPrimaryImageInputPolicy,
+    ValidatedHighConfidenceModule, ObjectLabelDrivenPrimaryImageInputPolicy,
     LabelsObjectInputPolicy,
     ObjectLineageTransformModule,
     StructuringElementSettingsModule,
@@ -373,7 +377,7 @@ class ExpandShrinkMode(Enum):
 
 
 class ExpandOrShrinkObjectsModule(
-    LabelDimensionObjectArtifactOutputModule,
+    ValidatedHighConfidenceModule, LabelDimensionObjectArtifactOutputModule,
     ObjectTransformContractModule,
 ):
     module_name = "ExpandOrShrinkObjects"
@@ -404,7 +408,7 @@ class ExpandOrShrinkObjectsModule(
 
 
 class MaskObjectsModule(
-    ObjectLabelDrivenPrimaryImageInputPolicy,
+    ValidatedHighConfidenceModule, ObjectLabelDrivenPrimaryImageInputPolicy,
     LabelDimensionObjectArtifactOutputModule,
     ObjectLineageTransformContractModule,
 ):
@@ -511,13 +515,13 @@ class MaskObjectsModule(
         )
 
 
-class OpeningModule(ImageStructuringElementModule, ValidatedHighConfidenceModule):
+class OpeningModule(ValidatedHighConfidenceModule, ImageStructuringElementModule):
     module_name = "Opening"
     function_name = "opening"
 
 
 class RemoveHolesModule(
-    ZStackFunctionVariantModule,
+    ValidatedHighConfidenceModule, ZStackFunctionVariantModule,
     CellProfilerModule,
 ):
     module_name = "RemoveHoles"
@@ -535,7 +539,7 @@ class RemoveHolesModule(
 
 
 class ResizeObjectsModule(
-    ObjectLabelDrivenPrimaryImageInputPolicy,
+    ValidatedHighConfidenceModule, ObjectLabelDrivenPrimaryImageInputPolicy,
     LabelsObjectInputPolicy,
     InputObjectLabelWithoutParentImageOutputSourceContextPolicyMixin,
     ObjectLineageTransformModule,
@@ -642,7 +646,6 @@ class ResizeObjectsModule(
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
 from functools import lru_cache
 import logging
 import time
@@ -725,9 +728,6 @@ from openhcs.core.callable.processing_contracts import (
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
-from openhcs.processing.backends.cellprofiler._backend import CentrosomeNumpyBackend
-from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
-from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 HolePredicate = Callable[[int, bool], bool]
 ConnectivityStructureBuilder = Callable[[int], np.ndarray]
@@ -2029,7 +2029,7 @@ class MorphologyBackendStrategy(
         """Compact positive labels to 1..N."""
 
 
-class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
+class NumpyMorphologyBackendStrategy(NativeNumpyBackend, MorphologyBackendStrategy):
     """Independent NumPy/SciPy/skimage morphology backend."""
     def connected_components(
         self, mask: np.ndarray, *, connectivity: int = 2
@@ -2251,10 +2251,10 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
         return _scipy_relabel_sequential(labels)
 
 
-class CentrosomeNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
+class CentrosomeNumpyMorphologyBackendStrategy(CentrosomeNumpyBackend, NumpyMorphologyBackendStrategy):
     """Compatibility provider backed by absorbed NumPy morphology semantics."""
 
-class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
+class NumbaNumpyMorphologyBackendStrategy(NumbaNumpyDefaultBackend, NumpyMorphologyBackendStrategy):
     """Numba-accelerated NumPy morphology backend."""
     def prepare_backend(self) -> None:
         super().prepare_backend()
@@ -6673,7 +6673,7 @@ def resize_objects_3d(
 
 
 class FillObjectsModule(
-    ObjectLabelDrivenPrimaryImageInputPolicy,
+    ValidatedHighConfidenceModule, ObjectLabelDrivenPrimaryImageInputPolicy,
     LabelsObjectInputPolicy,
     ObjectArtifactInputModule,
     ObjectArtifactOutputModule,
@@ -6696,7 +6696,7 @@ class FillObjectsModule(
     )
 
 
-class MorphModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class MorphModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "Morph"
     function_name = "morph"
     input_image_setting = SettingNameFamily("Select the input image")
@@ -6725,7 +6725,7 @@ class MorphologicalskeletonModule(
 
 
 class ShrinkToObjectCentersModule(
-    ZStackFunctionVariantModule,
+    ValidatedHighConfidenceModule, ZStackFunctionVariantModule,
     ObjectTransformContractModule,
 ):
     module_name = "ShrinkToObjectCenters"
@@ -6734,7 +6734,7 @@ class ShrinkToObjectCentersModule(
 
 
 class SplitOrMergeObjectsModule(
-    PlaneRuntimeArtifactModule,
+    ValidatedHighConfidenceModule, PlaneRuntimeArtifactModule,
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
     LabelDimensionObjectArtifactOutputModule,

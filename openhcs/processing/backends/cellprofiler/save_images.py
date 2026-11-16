@@ -334,7 +334,7 @@ class SaveImagesRecordedMeasurementRow:
 
 
 class SaveImagesModule(
-    PlaneRuntimeArtifactModule,
+    ValidatedHighConfidenceModule, PlaneRuntimeArtifactModule,
     MeasurementArtifactOutputModule,
     CellProfilerModule,
 ):

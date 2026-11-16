@@ -244,7 +244,7 @@ class BothOverlapWormLabelOutputStrategy(WormLabelOutputStrategy):
 
 
 class UntangleWormsModule(
-    CurrentPayloadMeasurementRecordMixin,
+    ValidatedHighConfidenceModule, CurrentPayloadMeasurementRecordMixin,
     MeasurementArtifactOutputModule,
     LabelDimensionObjectArtifactOutputModule,
 ):
@@ -694,7 +694,7 @@ class FlipMode(Enum):
 
 
 class StraightenWormsModule(
-    StraightenWormsSpecialInputPolicy,
+    ValidatedHighConfidenceModule, StraightenWormsSpecialInputPolicy,
     ObjectArtifactInputModule,
     LabelDimensionObjectArtifactOutputModule,
     MeasurementArtifactOutputModule,
@@ -3138,7 +3138,7 @@ def _worm_descriptor_row(
 
 
 class IdentifyDeadWormsModule(
-    FieldDerivedMeasurementFeatureModule,
+    ValidatedHighConfidenceModule, FieldDerivedMeasurementFeatureModule,
     MeasurementArtifactOutputModule,
     ObjectArtifactOutputModule,
     CellProfilerModule,

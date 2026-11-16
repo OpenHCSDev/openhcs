@@ -107,7 +107,7 @@ def _parse_overwrite_mode(
     raise ValueError(f"Unsupported ExportToDatabase overwrite mode {value!r}.")
 
 
-class ExportToDatabaseModule(ArtifactExportModule, ValidatedHighConfidenceModule):
+class ExportToDatabaseModule(ValidatedHighConfidenceModule, ArtifactExportModule):
     """Nominal module owner for plate-scoped SQLite/CPA export semantics."""
 
     module_name = "ExportToDatabase"

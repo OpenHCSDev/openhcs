@@ -43,6 +43,7 @@ from zmqruntime.startup import EndpointStartupStatus
 import formbridge as formbridge_package
 import openhcs as openhcs_package
 from openhcs.agent.capabilities import (
+    CapabilityMcpBinder,
     AgentCapabilityDeclaration,
     AgentCapabilityInvocation,
     AgentCapabilityRegistry,
@@ -510,7 +511,7 @@ def _mcp_resource_function_name(resource_name: str) -> str:
     )
 
 
-class McpCapabilityBinder:
+class McpCapabilityBinder(CapabilityMcpBinder):
     """MCP transport primitives an invocation composes into its tool or resource.
 
     Each capability's invocation decides its parameters, decoding and execution;

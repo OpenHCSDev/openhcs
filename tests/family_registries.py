@@ -57,13 +57,15 @@ def family_registries() -> tuple[Registry, ...]:
     """
     global _modules_walked
     if len(sys.modules) != _modules_walked:
-        seen: set[type] = set()
+        # By identity: a class whose metaclass defines __eq__ without
+        # __hash__ (PyQt6.uic's ProxyMetaclass) is unhashable.
+        seen: set[int] = set()
         pending: list[type] = [object]
         while pending:
             for subclass in type.__subclasses__(pending.pop()):
-                if subclass in seen:
+                if id(subclass) in seen:
                     continue
-                seen.add(subclass)
+                seen.add(id(subclass))
                 pending.append(subclass)
                 if isinstance(subclass, AutoRegisterMeta):
                     registry = getattr(subclass, "__registry__", None)

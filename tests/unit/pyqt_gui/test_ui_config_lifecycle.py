@@ -182,7 +182,7 @@ def test_ui_config_reaches_the_session_progress_interval_and_transport() -> None
             manager.set_ui_config(updated)
 
             assert updated.progress.update_interval_ms == 50
-            assert session.progress._interval_seconds == 0.05
+            assert session._progress_interval_seconds == 0.05
             assert session.client.config == updated.zmq
         finally:
             manager.cleanup()

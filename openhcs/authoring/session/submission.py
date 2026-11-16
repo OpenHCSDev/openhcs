@@ -6,7 +6,7 @@ import logging
 import threading
 from dataclasses import dataclass
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from zmqruntime.execution import (
     CallbackExecutionStatusPollPolicy,
@@ -31,7 +31,6 @@ from openhcs.runtime.zmq.zmq_execution_client import ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 from zmqruntime.messages import PongResponse
-from openhcs.authoring.session.session import Session
 @dataclass(frozen=True, slots=True)
 class SubmittedExecution:
     """What the session submitted for one ordinary execution."""
@@ -46,9 +45,7 @@ logger = logging.getLogger(__name__)
 class ExecutionSubmission:
     """Submits executions, records their ids and follows their status."""
 
-    def __init__(self, session: Session) -> None:
-        self._session = session
-        self._poller = ExecutionStatusPoller()
+    _poller: ClassVar[ExecutionStatusPoller] = ExecutionStatusPoller()
 
     async def submit_execution(
         self,
@@ -60,21 +57,21 @@ class ExecutionSubmission:
     ) -> None:
         """Submit an ordinary execution and keep what was submitted, for evidence."""
 
-        client = self._session.client.require_client()
+        client = self.client.require_client()
         prepared = ZMQExecutionRequestBuilder.from_task(
             request.submission(
                 compile_artifact_id=compile_artifact_id,
                 auxiliary_params=auxiliary_params,
             )
         )
-        execution_id = await self._submit(
+        execution_id = await self._submit_request(
             request,
             compile_artifact_id=compile_artifact_id,
             send=lambda: client.submit_prepared_pipeline(prepared, timeout_ms=timeout_ms),
             label="execution",
         )
         if execution_id is not None:
-            self._session.submitted_executions[execution_id] = SubmittedExecution(
+            self.submitted_executions[execution_id] = SubmittedExecution(
                 scope_id=request.scope_id,
                 request=prepared,
                 endpoint=client.connected_endpoint,
@@ -87,8 +84,8 @@ class ExecutionSubmission:
         compile_artifact_id: str,
         debug_config: DebugExecutionConfig,
     ) -> None:
-        client = self._session.client.require_client()
-        await self._submit(
+        client = self.client.require_client()
+        await self._submit_request(
             request,
             compile_artifact_id=compile_artifact_id,
             send=lambda: client.submit_debug_pipeline(
@@ -98,7 +95,7 @@ class ExecutionSubmission:
             label="debug run",
         )
 
-    async def _submit(
+    async def _submit_request(
         self,
         request: DatasetPipelineRequest,
         *,
@@ -106,7 +103,7 @@ class ExecutionSubmission:
         send: Callable[[], dict],
         label: str,
     ) -> str | None:
-        session = self._session
+        session = self
         scope_id = request.scope_id
         logger.info(
             "Submit %s: dataset=%s execution_root=%s artifact_id=%s steps=%d "
@@ -136,7 +133,7 @@ class ExecutionSubmission:
     def follow(self, execution_id: str, scope_id: str) -> None:
         """Follow one execution on a background thread until it is terminal."""
 
-        session = self._session
+        session = self
 
         class _ClientDisconnected(RuntimeError):
             pass

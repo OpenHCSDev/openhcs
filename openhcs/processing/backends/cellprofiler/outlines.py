@@ -96,7 +96,7 @@ class OutlineSourceKind(str, Enum):
 
 
 class OverlayObjectsModule(
-    PlaneRuntimeArtifactModule,
+    ValidatedHighConfidenceModule, PlaneRuntimeArtifactModule,
     ObjectArtifactInputModule,
     CellProfilerModule,
 ):
@@ -156,7 +156,7 @@ from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultB
 
 
 class OverlayOutlinesModule(
-    ObjectLabelsInputBindingMixin,
+    ValidatedHighConfidenceModule, ObjectLabelsInputBindingMixin,
     ObjectArtifactInputModule,
 ):
     module_name = "OverlayOutlines"
@@ -689,7 +689,7 @@ class ObjectOutlineBackendStrategy(
         """Return a labeled inner outline image."""
 
 
-class NumbaNumpyObjectOutlineBackendStrategy(ObjectOutlineBackendStrategy, NumbaNumpyDefaultBackend):
+class NumbaNumpyObjectOutlineBackendStrategy(NumbaNumpyDefaultBackend, ObjectOutlineBackendStrategy):
     """Numba-accelerated NumPy object outline primitives."""
     def prepare_backend(self) -> None:
         labels = np.array([[0, 1, 1], [0, 1, 0], [2, 2, 0]], dtype=np.int32)

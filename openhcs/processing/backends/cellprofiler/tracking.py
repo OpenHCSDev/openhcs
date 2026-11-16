@@ -125,7 +125,7 @@ CellProfilerOutputRecordRequest,
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
 from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
-class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPolicy, NumbaNumpyDefaultBackend):
+class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPolicy):
     """TrackObjects emits object rows and image-level tracking counts together."""
 
     explicit_row_ownership_required = True
@@ -142,7 +142,7 @@ class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPol
 
 
 class TrackObjectsModule(
-    TrackObjectsObjectMeasurementRowPolicy,
+    ValidatedHighConfidenceModule, TrackObjectsObjectMeasurementRowPolicy,
     FieldDerivedMeasurementFeatureModule,
     NoObjectNameMeasurementRecordMixin,
     ObjectLabelDrivenPrimaryImageInputPolicy,
@@ -999,7 +999,7 @@ class ObjectTrackingBackendStrategy(
         """Return lost and merged counts from inter-frame label overlap."""
 
 
-class NumbaNumpyObjectTrackingBackendStrategy(ObjectTrackingBackendStrategy):
+class NumbaNumpyObjectTrackingBackendStrategy(NumbaNumpyDefaultBackend, ObjectTrackingBackendStrategy):
     """Numba implementation of TrackObjects dense-label primitives."""
     def prepare_backend(self) -> None:
         current = np.array([[0, 1], [2, 2]], dtype=np.int32)

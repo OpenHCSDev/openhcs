@@ -149,7 +149,7 @@ from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
 from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 
-class IntensityDistributionHeatmapMeasurement(Enum, NumbaNumpyDefaultBackend):
+class IntensityDistributionHeatmapMeasurement(Enum):
     """CellProfiler heatmap value families."""
 
     FRACTION_AT_DISTANCE = "Fraction at Distance"
@@ -197,7 +197,7 @@ class IntensityDistributionHeatmapGroup:
             )
 
 
-class IntensityDistributionSettingSchema(Enum, NativeNumpyBackend):
+class IntensityDistributionSettingSchema(Enum):
     """Exact repeating-group count layout for one CellProfiler revision."""
 
     def __new__(
@@ -429,7 +429,7 @@ class RadialDistributionFeatureDeclaration(
 
 
 class MeasureObjectIntensityDistributionModule(
-    LabelsObjectInputPolicy,
+    ValidatedHighConfidenceModule, LabelsObjectInputPolicy,
     MeasureObjectIntensityDistributionObjectMeasurementRowPolicy,
     PerObjectMeasurementExecutionModule,
     ImageMeasurementInputModule,
@@ -1869,7 +1869,7 @@ class RadialDistributionBackendStrategy(
         return geometry
 
 
-class NativeNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrategy):
+class NativeNumpyRadialDistributionBackendStrategy(NativeNumpyBackend, RadialDistributionBackendStrategy):
     """CellProfiler-native NumPy radial-distribution backend."""
     def measure(
         self, request: RadialDistributionMeasureRequest
@@ -1972,7 +1972,7 @@ class NativeNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStra
         )
 
 
-class NumbaNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrategy):
+class NumbaNumpyRadialDistributionBackendStrategy(NumbaNumpyDefaultBackend, RadialDistributionBackendStrategy):
     """Numba-accelerated NumPy radial-distribution backend."""
     def prepare_backend(self) -> None:
         labels = np.zeros((8, 8), dtype=np.int32)

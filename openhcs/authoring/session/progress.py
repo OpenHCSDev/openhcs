@@ -38,7 +38,6 @@ from openhcs.core.progress.live_measurements import LiveMeasurementPayloadError
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactPayloadError
 
-from openhcs.authoring.session.session import Session
 logger = logging.getLogger(__name__)
 
 
@@ -59,13 +58,12 @@ def execution_server_status_text(projection: ExecutionRuntimeProjection) -> str:
 class ExecutionProgress:
     """Owns progress registration, the runtime projection and server status."""
 
-    def __init__(self, session: Session, *, interval_seconds: float) -> None:
-        self._session = session
-        self._interval_seconds = interval_seconds
-        self._builder = RuntimeProjectionBuilder()
-        self._dirty = threading.Event()
-        self._closed = threading.Event()
-        self._registry_subscription = session.progress_tracker.subscribe_mutations(
+    def _start_progress(self, *, interval_seconds: float) -> None:
+        self._progress_interval_seconds = interval_seconds
+        self._projection_builder = RuntimeProjectionBuilder()
+        self._progress_dirty = threading.Event()
+        self._progress_closed = threading.Event()
+        self._registry_subscription = self.progress_tracker.subscribe_mutations(
             self._on_registry_mutation
         )
         self._server_info_poller = IntervalSnapshotPoller[ExecutionServerInfo](
@@ -73,71 +71,71 @@ class ExecutionProgress:
                 fetch_snapshot_fn=self._fetch_server_info_snapshot,
                 clone_snapshot_fn=lambda snapshot: snapshot,
                 poll_interval_seconds_value=1.0,
-                on_snapshot_changed_fn=lambda _snapshot: self.mark_dirty(),
+                on_snapshot_changed_fn=lambda _snapshot: self.mark_progress_dirty(),
                 on_poll_error_fn=lambda error: logger.debug(
                     "Server info poll failed: %s", error
                 ),
             )
         )
-        self._thread = threading.Thread(
-            target=self._run, name="openhcs-session-progress", daemon=True
+        self._progress_thread = threading.Thread(
+            target=self._run_progress, name="openhcs-session-progress", daemon=True
         )
-        self._thread.start()
+        self._progress_thread.start()
 
-    def set_interval(self, interval_seconds: float) -> None:
-        self._interval_seconds = interval_seconds
+    def set_progress_interval(self, interval_seconds: float) -> None:
+        self._progress_interval_seconds = interval_seconds
 
-    def close(self) -> None:
-        self._closed.set()
-        self._dirty.set()
+    def close_progress(self) -> None:
+        self._progress_closed.set()
+        self._progress_dirty.set()
         self._registry_subscription.release()
 
-    def _run(self) -> None:
-        while not self._closed.is_set():
-            self._closed.wait(self._interval_seconds)
-            if self._closed.is_set():
+    def _run_progress(self) -> None:
+        while not self._progress_closed.is_set():
+            self._progress_closed.wait(self._progress_interval_seconds)
+            if self._progress_closed.is_set():
                 return
-            client_connected = self._session.client.has_client()
-            if not (self._dirty.is_set() or client_connected):
+            client_connected = self.client.has_client()
+            if not (self._progress_dirty.is_set() or client_connected):
                 continue
             try:
-                self._session.main_thread.post(self._tick)
+                self.main_thread.post(self._progress_tick)
             except Exception as error:  # dispatcher closed during shutdown
                 logger.debug("Progress tick not dispatched: %s", error)
                 return
 
-    def _tick(self) -> None:
-        if self._session.client.has_client():
+    def _progress_tick(self) -> None:
+        if self.client.has_client():
             self._server_info_poller.tick()
-        if self._dirty.is_set():
-            self.rebuild()
+        if self._progress_dirty.is_set():
+            self.rebuild_runtime_projection()
 
-    def reset_for_new_batch(self) -> None:
-        tracker = self._session.progress_tracker
+    def reset_progress_for_new_batch(self) -> None:
+        tracker = self.progress_tracker
         for execution_id in list(tracker.get_execution_ids()):
             tracker.clear_execution(execution_id)
-        self._session.install_runtime_projection(RuntimeProjectionBundle.empty())
+        self.install_runtime_projection(RuntimeProjectionBundle.empty())
         self._server_info_poller.reset()
-        self.mark_dirty()
+        self.mark_progress_dirty()
 
-    def clear_execution(self, execution_id: str) -> None:
+    def clear_execution_progress(self, execution_id: str) -> None:
         """Remove one execution's progress and rebuild the projection."""
 
-        self._session.progress_tracker.clear_execution(execution_id)
-        self.rebuild()
+        self.progress_tracker.clear_execution(execution_id)
+        self.rebuild_runtime_projection()
 
-    def rebuild(self) -> None:
+    def rebuild_runtime_projection(self) -> None:
         """Rebuild the runtime projection from tracked events and publish it."""
 
-        self._dirty.clear()
-        tracker = self._session.progress_tracker
+        self._progress_dirty.clear()
+        tracker = self.progress_tracker
         events_by_execution = {
             execution_id: tracker.get_events(execution_id)
             for execution_id in tracker.get_execution_ids()
         }
         server_info = self._server_info_poller.get_snapshot_copy()
-        debug_context = self._session.current_debug_context()
-        bundle = self._builder.build(
+        debug_context = self.current_debug_context()
+        bundle = self._projection_builder.build(
             RuntimeProjectionSource(
                 events_by_execution=events_by_execution,
                 running_executions=(
@@ -153,13 +151,13 @@ class ExecutionProgress:
                 snapshots=() if debug_context is None else debug_context.snapshots,
             )
         )
-        self._session.install_runtime_projection(bundle)
-        self._session.publish(
+        self.install_runtime_projection(bundle)
+        self.publish(
             StatusReported(execution_server_status_text(bundle.execution))
         )
 
     def on_progress(self, message: dict) -> None:
-        session = self._session
+        session = self
         try:
             event = ProgressEvent.from_dict(message)
             if not session.progress_tracker.register_event(event.execution_id, event):
@@ -208,16 +206,16 @@ class ExecutionProgress:
         self,
         _mutation: EventRegistryMutation[ProgressEvent],
     ) -> None:
-        self.mark_dirty()
+        self.mark_progress_dirty()
 
-    def mark_dirty(self) -> None:
-        self._dirty.set()
+    def mark_progress_dirty(self) -> None:
+        self._progress_dirty.set()
 
     def server_info_snapshot(self) -> ExecutionServerInfo | None:
         return self._server_info_poller.get_snapshot_copy()
 
     def _fetch_server_info_snapshot(self) -> ExecutionServerInfo:
-        pong = self._session.client.require_client().get_server_info_snapshot()
+        pong = self.client.require_client().get_server_info_snapshot()
         parsed = BaseServerInfo.from_response(pong)
         if not isinstance(parsed, ExecutionServerInfo):
             raise ValueError(

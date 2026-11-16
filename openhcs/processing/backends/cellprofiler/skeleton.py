@@ -424,7 +424,7 @@ def _object_skeleton_slice_analysis(
 
 
 class MeasureImageSkeletonModule(
-    SourceQualifiedWideMeasurementRowsModule,
+    ValidatedHighConfidenceModule, SourceQualifiedWideMeasurementRowsModule,
     ImageMeasurementInputModule,
 ):
     module_name = "MeasureImageSkeleton"
@@ -440,7 +440,7 @@ class MeasureImageSkeletonModule(
 
 
 class MeasureObjectSkeletonModule(
-    PlaneRuntimeArtifactModule,
+    ValidatedHighConfidenceModule, PlaneRuntimeArtifactModule,
     ObjectArtifactInputModule,
     MeasurementArtifactOutputModule,
     CellProfilerModule,

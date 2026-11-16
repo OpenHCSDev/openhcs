@@ -202,7 +202,7 @@ class PlateManagerWidget(
     def set_ui_config(self, config: UIConfig) -> None:
         self._ui_config = config
         self.session.set_transport_config(config.zmq)
-        self.session.progress.set_interval(config.progress.update_interval_ms / 1000)
+        self.session.set_progress_interval(config.progress.update_interval_ms / 1000)
 
     def setup_ui(self) -> None:
         super().setup_ui()

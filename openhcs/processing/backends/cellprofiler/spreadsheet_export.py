@@ -1853,7 +1853,7 @@ def export_to_spreadsheet(
     )
 
 
-class ExportToSpreadsheetModule(ArtifactExportModule, ValidatedHighConfidenceModule):
+class ExportToSpreadsheetModule(ValidatedHighConfidenceModule, ArtifactExportModule):
     """Executable plate-scoped CellProfiler spreadsheet export declaration."""
 
     module_name = "ExportToSpreadsheet"

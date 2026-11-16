@@ -560,7 +560,7 @@ def test_runtime_inspection_renders_the_active_session(tmp_path, monkeypatch) ->
             return DebugViewModel(title=f"Runtime {debug_session_id}", sections=())
 
         monkeypatch.setattr(
-            harness.session.debug_runs, "inspect_runtime", inspect_runtime
+            harness.session, "inspect_debug_runtime", inspect_runtime
         )
 
         harness.workflow.show_runtime_inspection()
@@ -764,7 +764,7 @@ def test_debug_artifact_export_runs_through_the_session(tmp_path, monkeypatch) -
 
         assert harness.started == [
             (
-                harness.session.debug_runs.export_artifact,
+                harness.session.export_debug_artifact,
                 (),
                 {
                     "debug_session_id": "debug-1",
@@ -801,11 +801,11 @@ def test_session_reuses_the_persistent_paused_worker_across_commands(
 
         monkeypatch.setattr(session, "connect_client", connect)
         monkeypatch.setattr(
-            session.debug_runs, "compile_artifact_id", compile_artifact_id
+            session, "debug_compile_artifact_id", compile_artifact_id
         )
-        monkeypatch.setattr(session.debug_runs, "submit", submit)
+        monkeypatch.setattr(session, "submit", submit)
         monkeypatch.setattr(
-            session.debug_runs, "send_worker_command", send_worker_command
+            session, "send_debug_worker_command", send_worker_command
         )
 
         asyncio.run(

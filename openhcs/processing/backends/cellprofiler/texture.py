@@ -124,7 +124,7 @@ def _measure_texture_scope(value: str) -> CellProfilerMeasurementTargetScope:
 
 
 class MeasureTextureModule(
-    LabelsObjectInputPolicy,
+    ValidatedHighConfidenceModule, LabelsObjectInputPolicy,
     MeasureTextureObjectMeasurementRowPolicy,
     PerObjectMeasurementExecutionModule,
     ScopedMeasurementModule,
@@ -150,7 +150,7 @@ class MeasureTextureModule(
         "Number of angles to compute for Gabor",
     )
 
-    class MeasurementFeature(RuntimeMeasurementFeature, NumbaNumpyDefaultBackend):
+    class MeasurementFeature(RuntimeMeasurementFeature):
         """Haralick feature families emitted by MeasureTexture."""
 
         ANGULAR_SECOND_MOMENT = "AngularSecondMoment"
@@ -252,7 +252,7 @@ class HaralickTextureBackendStrategy(
         """Return one Haralick feature row per 2-D direction."""
 
 
-class NumbaNumpyObjectTextureCropBackendStrategy(ObjectTextureCropBackendStrategy, NativeNumpyBackend):
+class NumbaNumpyObjectTextureCropBackendStrategy(NumbaNumpyDefaultBackend, ObjectTextureCropBackendStrategy):
     """Numba-accelerated NumPy backend for object texture crop extraction."""
     def prepare_backend(self) -> None:
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
@@ -285,7 +285,7 @@ class NumbaNumpyObjectTextureCropBackendStrategy(ObjectTextureCropBackendStrateg
         return (object_labels.astype(np.int64, copy=False), tuple(crops))
 
 
-class NumbaNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy, NumbaNumpyDefaultBackend):
+class NumbaNumpyHaralickTextureBackendStrategy(NumbaNumpyDefaultBackend, HaralickTextureBackendStrategy):
     """Numba implementation of mahotas' default 2-D Haralick semantics."""
     def prepare_backend(self) -> None:
         image = np.arange(25, dtype=np.int64).reshape((5, 5))
@@ -307,7 +307,7 @@ class NumbaNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy, N
         return _haralick_features_numba(cooccurrence_matrices, ignore_zeros)
 
 
-class NativeNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy):
+class NativeNumpyHaralickTextureBackendStrategy(NativeNumpyBackend, HaralickTextureBackendStrategy):
     """Explicit mahotas backend used as the native reference implementation."""
     def haralick_features(
         self, pixel_data: np.ndarray, *, scale: int, ignore_zeros: bool

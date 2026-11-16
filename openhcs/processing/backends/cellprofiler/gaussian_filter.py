@@ -19,7 +19,7 @@ from openhcs.interop.cellprofiler.module_declarations import (
 from openhcs.core.artifacts.kinds import ImageArtifactType
 
 
-class GaussianFilterModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class GaussianFilterModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "GaussianFilter"
     function_name = "gaussian_filter"
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (

@@ -777,7 +777,7 @@ class _OverlapMeasurementModule:
 
 
 class MeasureImageOverlapModule(
-    _OverlapMeasurementModule,
+    ValidatedHighConfidenceModule, _OverlapMeasurementModule,
     NoObjectNameMeasurementRecordMixin,
     FieldDerivedMeasurementFeatureModule,
     MeasurementArtifactOutputModule,
@@ -812,7 +812,7 @@ class MeasureImageOverlapModule(
 
 
 class MeasureObjectOverlapModule(
-    _OverlapMeasurementModule,
+    ValidatedHighConfidenceModule, _OverlapMeasurementModule,
     NoObjectNameMeasurementRecordMixin,
     FieldDerivedMeasurementFeatureModule,
     ObjectArtifactInputModule,

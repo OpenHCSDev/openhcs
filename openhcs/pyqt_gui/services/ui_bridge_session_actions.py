@@ -91,7 +91,7 @@ class SessionOperationActionProvider(UiActionProviderABC):
             return UiActionDispatch(
                 errors=(AgentError(code="ui_action_cancelled", message="The user cancelled."),)
             )
-        result = self._session.invoke(operation, session_request)
+        result = operation.invoke(self._session, session_request)
         return UiActionDispatch(
             errors=result.errors,
             warnings=result.warnings,

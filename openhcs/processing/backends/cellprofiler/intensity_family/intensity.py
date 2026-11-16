@@ -74,6 +74,7 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 def _parse_image_intensity_percentiles(value: str) -> tuple[int, ...]:
     """Parse CellProfiler's comma-delimited percentile setting."""
 
@@ -83,7 +84,7 @@ def _parse_image_intensity_percentiles(value: str) -> tuple[int, ...]:
 
 
 class MeasureImageIntensityModule(
-    LabelsObjectInputPolicy,
+    ValidatedHighConfidenceModule, LabelsObjectInputPolicy,
     PerObjectMeasurementExecutionModule,
     FieldDerivedMeasurementFeatureModule,
     SourceQualifiedMeasurementFeatureModule,
@@ -125,7 +126,7 @@ class MeasureImageIntensityModule(
     ignored_settings = ("Measure the intensity only from areas enclosed by objects?",)
 
     @dataclass(frozen=True)
-    class MeasurementRows(ModuleOwnedResultMeasurementRows, NumbaNumpyDefaultBackend):
+    class MeasurementRows(ModuleOwnedResultMeasurementRows):
         """Project image-intensity records into exact CellProfiler features."""
 
         measurement_name: str
@@ -342,7 +343,6 @@ from openhcs.core.equivalence.measurement_features import (
     TieSensitiveLocationValueFeatureRelation,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
-from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 logger = logging.getLogger(__name__)
 ImageIntensityOutput: TypeAlias = np.ndarray | ImageMetadataPayload | MaskedImagePayload
@@ -397,7 +397,7 @@ class AutomaticHigh(Enum):
     EACH_IMAGE = "each_image"
 
 
-class RescaleIntensityModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class RescaleIntensityModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "RescaleIntensity"
     function_name = "rescale_intensity"
     setting_bindings = (
@@ -1033,7 +1033,7 @@ class ObjectIntensityBackendStrategy(
         return tuple((self.measure_prepared(image, labels) for image in images))
 
 
-class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
+class NumbaNumpyObjectIntensityBackendStrategy(NumbaNumpyDefaultBackend, ObjectIntensityBackendStrategy):
     """Numba-accelerated NumPy object-intensity backend."""
 
     sparse_foreground_max_fraction: ClassVar[float] = 0.6
@@ -1936,7 +1936,7 @@ class MeasureObjectIntensityObjectMeasurementRowPolicy(
 
 
 class MeasureObjectIntensityModule(
-    LabelsObjectInputPolicy,
+    ValidatedHighConfidenceModule, LabelsObjectInputPolicy,
     MeasureObjectIntensityObjectMeasurementRowPolicy,
     PerObjectMeasurementExecutionModule,
     ImageMeasurementInputModule,

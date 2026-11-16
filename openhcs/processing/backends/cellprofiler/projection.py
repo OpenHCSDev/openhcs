@@ -206,7 +206,7 @@ def make_projection(
 
 
 class MakeProjectionModule(
-    MeasurementArtifactOutputModule,
+    ValidatedHighConfidenceModule, MeasurementArtifactOutputModule,
     CellProfilerModule,
 ):
     module_name = "MakeProjection"

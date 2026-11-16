@@ -23,6 +23,7 @@ from openhcs.core.callable.function_patterns import normalize_function_pattern
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
+    DebugActionWorkflow,
     PipelineDebugActionDeclarationBase,
 )
 from openhcs.pyqt_gui.windows.debug_inspector_window import DebugInspectorWindow
@@ -199,7 +200,7 @@ class PipelineEditorFunctionPresentation:
 
 
 @dataclass(frozen=True, slots=True, weakref_slot=True)
-class PipelineEditorDebugWorkflow:
+class PipelineEditorDebugWorkflow(DebugActionWorkflow):
     """Owns debug-toolbar command dispatch and snapshot inspector routing."""
 
     editor: Any
@@ -275,7 +276,7 @@ class PipelineEditorDebugWorkflow:
         session = self.editor.session
 
         async def inspect() -> None:
-            view_model = await session.debug_runs.inspect_runtime(
+            view_model = await session.inspect_debug_runtime(
                 debug_session_id=active.debug_session_id,
             )
             session.main_thread.post(lambda: self._render_runtime_inspection(view_model))
@@ -357,7 +358,7 @@ class PipelineEditorDebugWorkflow:
         if not export_root:
             return
         session.start(
-            session.debug_runs.export_artifact,
+            session.export_debug_artifact,
             debug_session_id=displayed.debug_session_id,
             artifact_ref=request.artifact_ref,
             export_root=export_root,

@@ -4,7 +4,11 @@ from abc import ABC
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import ClassVar, Self
+from typing import Annotated, ClassVar, Self
+
+from annotated_types import Ge
+from pydantic import StrictBool, StrictInt
+from python_introspect.validation import validate_annotated_dataclass
 
 from metaclass_registry import AutoRegisterMeta
 from zmqruntime.messages import WireView
@@ -103,13 +107,13 @@ class ViewerSettleProgress(WireView):
     """
 
     phase: type[ViewerSettlePhase]
-    completed_update_count: int
-    total_update_count: int
+    completed_update_count: Annotated[StrictInt, Ge(0)]
+    total_update_count: Annotated[StrictInt, Ge(0)]
     active_route: str | None = None
-    active_route_work_unit_count: int = 0
-    active_route_work_unit_active: bool = False
-    processed_intake_item_count: int = 0
-    intake_item_active: bool = False
+    active_route_work_unit_count: Annotated[StrictInt, Ge(0)] = 0
+    active_route_work_unit_active: StrictBool = False
+    processed_intake_item_count: Annotated[StrictInt, Ge(0)] = 0
+    intake_item_active: StrictBool = False
 
     @property
     def routing(self) -> bool:
@@ -117,38 +121,15 @@ class ViewerSettleProgress(WireView):
         return self.active_route is not None
 
     def __post_init__(self) -> None:
-        if (
-            type(self.processed_intake_item_count) is not int
-            or self.processed_intake_item_count < 0
-        ):
-            raise ValueError("Viewer processed intake count must be non-negative.")
-        if type(self.intake_item_active) is not bool:
-            raise TypeError("Viewer intake activity must be boolean.")
-        if (
-            type(self.completed_update_count) is not int
-            or type(self.total_update_count) is not int
-            or self.completed_update_count < 0
-            or self.total_update_count < 0
-            or self.completed_update_count > self.total_update_count
-        ):
+        validate_annotated_dataclass(self)
+        if self.completed_update_count > self.total_update_count:
             raise ValueError(
                 "Viewer settle progress counts must satisfy 0 <= completed <= total."
-            )
-        if self.active_route is not None and not isinstance(self.active_route, str):
-            raise TypeError("Viewer settle active_route must be a string or None.")
-        if (
-            type(self.active_route_work_unit_count) is not int
-            or self.active_route_work_unit_count < 0
-        ):
-            raise ValueError(
-                "Viewer settle active-route work-unit count must be non-negative."
             )
         if self.active_route is None and self.active_route_work_unit_count:
             raise ValueError(
                 "Viewer settle work-unit progress requires an active route."
             )
-        if type(self.active_route_work_unit_active) is not bool:
-            raise TypeError("Viewer settle active work-unit state must be boolean.")
         if self.active_route is None and self.active_route_work_unit_active:
             raise ValueError(
                 "Viewer settle active work-unit state requires an active route."

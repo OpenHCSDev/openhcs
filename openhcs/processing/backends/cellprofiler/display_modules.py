@@ -1331,7 +1331,7 @@ class DisplayDataOnImageSpecialInputPolicy:
 
 
 class DisplayDataOnImageModule(
-    DisplayDataOnImageSpecialInputPolicy,
+    ValidatedHighConfidenceModule, DisplayDataOnImageSpecialInputPolicy,
     PriorMeasurementArtifactInputModule,
     ObjectArtifactInputModule,
     DisplayModule,
@@ -1496,7 +1496,7 @@ class DisplayDataOnImageModule(
 
 
 class DisplayDensityPlotModule(
-    DisplayMeasurementInputPolicy,
+    ValidatedHighConfidenceModule, DisplayMeasurementInputPolicy,
     PriorMeasurementArtifactInputModule,
     MeasurementArtifactOutputModule,
     DisplayModule,
@@ -1559,7 +1559,7 @@ class DisplayDensityPlotModule(
 
 
 class DisplayHistogramModule(
-    DisplayMeasurementInputPolicy,
+    ValidatedHighConfidenceModule, DisplayMeasurementInputPolicy,
     PriorMeasurementArtifactInputModule,
     MeasurementArtifactOutputModule,
     DisplayModule,
@@ -1610,7 +1610,7 @@ class DisplayHistogramModule(
 
 
 class DisplayPlatemapModule(
-    DisplayMeasurementInputPolicy,
+    ValidatedHighConfidenceModule, DisplayMeasurementInputPolicy,
     PriorMeasurementArtifactInputModule,
     MeasurementArtifactOutputModule,
     DisplayModule,
@@ -1681,7 +1681,7 @@ class DisplayPlatemapModule(
 
 
 class DisplayScatterPlotModule(
-    DisplayMeasurementInputPolicy,
+    ValidatedHighConfidenceModule, DisplayMeasurementInputPolicy,
     PriorMeasurementArtifactInputModule,
     MeasurementArtifactOutputModule,
     DisplayModule,

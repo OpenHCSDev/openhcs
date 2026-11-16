@@ -114,7 +114,7 @@ def test_launch_plan_projects_native_owners_without_materialization(
 
 def test_client_retains_same_admitted_launch_plan(setup, monkeypatch):
     _, request, spawn = setup
-    client = request.connection.execution_client(OpenHCSZMQConfig())
+    client = ZMQExecutionClient.for_connection(request.connection, OpenHCSZMQConfig())
     resolve = Mock(wraps=ExecutionRuntimeLaunchPlan.resolve)
     monkeypatch.setattr(ExecutionRuntimeLaunchPlan, "resolve", resolve)
     plan = client.runtime_launch_plan()
@@ -209,7 +209,7 @@ def test_admitted_plan_owns_materialization_and_child_configuration(
 
 def test_client_consumes_exact_admitted_plan_on_spawn_failure(setup, monkeypatch):
     _, request, intercepted_spawn = setup
-    client = request.connection.execution_client(OpenHCSZMQConfig())
+    client = ZMQExecutionClient.for_connection(request.connection, OpenHCSZMQConfig())
     plan = client.runtime_launch_plan()
 
     calls = []
@@ -234,7 +234,7 @@ def test_plan_closes_materialized_log_when_child_creation_fails(setup, monkeypat
     from openhcs.runtime.zmq import zmq_execution_client as module
 
     _, request, intercepted_spawn = setup
-    client = request.connection.execution_client(OpenHCSZMQConfig())
+    client = ZMQExecutionClient.for_connection(request.connection, OpenHCSZMQConfig())
     plan = client.runtime_launch_plan()
     launch = Mock(side_effect=OSError("controlled child creation failure"))
     monkeypatch.setattr(module.subprocess, "Popen", launch)
@@ -259,7 +259,7 @@ def test_connection_urls_share_effective_endpoint_owner(setup, tmp_path, monkeyp
         "default",
         Mock(side_effect=AssertionError("No platform fallback for URL projection")),
     )
-    endpoint = connection.execution_client(config).endpoint
+    endpoint = ZMQExecutionClient.for_connection(connection, config).endpoint
     assert connection.zmq_data_url(config) == endpoint.data_url(config)
     assert connection.zmq_control_url(config) == endpoint.control_url(config)
     assert connection.zmq_control_port(config) == endpoint.control_port(config)
@@ -286,14 +286,14 @@ def test_effective_connection_matches_configured_native_endpoint(
         Mock(side_effect=AssertionError("Do not recover a platform default")),
     )
     endpoint = connection.transport_endpoint(config)
-    assert endpoint == connection.execution_client(config).endpoint
+    assert endpoint == ZMQExecutionClient.for_connection(connection, config).endpoint
     assert endpoint.host == connection.host and endpoint.port == connection.port
     assert endpoint.transport_mode is (
         configured_mode if requested_mode is None else requested_mode
     )
     resolved = connection.resolved(config)
     assert resolved.transport_endpoint(OPENHCS_ZMQ_CONFIG) == endpoint
-    assert resolved.execution_client(config).endpoint == endpoint
+    assert ZMQExecutionClient.for_connection(resolved, config).endpoint == endpoint
     assert connection.transport_mode is requested_mode  # Input stays immutable.
     assert ZMQExecutionClient(config=config).endpoint == config.client_endpoint()
 
@@ -432,7 +432,7 @@ def test_catalog_route_uses_injected_config_owner(configured_mode, requested_mod
         host="127.0.0.1", port=5968, transport_mode=requested_mode
     )
     projected = service._endpoint_for_connection(connection)
-    assert projected.client_endpoint() == connection.execution_client(config).endpoint
+    assert projected.client_endpoint() == ZMQExecutionClient.for_connection(connection, config).endpoint
     provider.assert_called_once()
     factory.assert_not_called()
 

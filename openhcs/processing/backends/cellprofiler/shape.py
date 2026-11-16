@@ -60,13 +60,15 @@ from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.interop.cellprofiler.runtime.invocation import (
 CellProfilerMeasurementImage,
 )
-class ZeroFilledShapeFeature(RuntimeMeasurementFeatureSemanticMarker, NumbaNumpyDefaultBackend):
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
+from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
+class ZeroFilledShapeFeature(RuntimeMeasurementFeatureSemanticMarker):
     """Shape feature that is zero, not missing, for an empty label below the
     largest measured label."""
 
 
 class MeasureObjectSizeShapeModule(
-    LabelsObjectInputPolicy,
+    ValidatedHighConfidenceModule, LabelsObjectInputPolicy,
     CurrentPayloadMeasurementRecordMixin,
     DenseColumnarObjectMeasurementRowsMixin,
     DeclaredDomainCompactMeasuredObjectMeasurementRowPolicy,
@@ -487,8 +489,6 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
     _edt_1d_numba,
 )
 from openhcs.processing.backends.cellprofiler.zernike import shape_zernike_moments
-from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
-from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
@@ -1376,7 +1376,7 @@ class ShapeMeasurementBackendStrategy(
         """Return non-touching label color classes."""
 
 
-class NumbaNumpyShapeMeasurementBackendStrategy(ShapeMeasurementBackendStrategy):
+class NumbaNumpyShapeMeasurementBackendStrategy(NumbaNumpyDefaultBackend, ShapeMeasurementBackendStrategy):
     """Default NumPy shape backend built from Numba leaves."""
     def prepare_3d_shape_measurements(self) -> None:
         """Derive binary Lewiner geometry and warm both supported input layouts."""

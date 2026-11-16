@@ -115,7 +115,7 @@ def parse_image_math_operation(value: str) -> str:
 
 
 class ImageMathModule(
-    CellProfilerModule,
+    ValidatedHighConfidenceModule, CellProfilerModule,
 ):
     module_name = "ImageMath"
     function_name = "image_math"

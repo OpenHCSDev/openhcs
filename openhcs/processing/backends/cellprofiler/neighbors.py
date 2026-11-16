@@ -116,7 +116,7 @@ def _profile_elapsed(label: str, start: float, **fields: object) -> float:
     return now
 
 
-class DistanceMethod(Enum, NumbaNumpyDefaultBackend):
+class DistanceMethod(Enum):
     """CellProfiler MeasureObjectNeighbors distance method."""
 
     def __new__(
@@ -488,7 +488,7 @@ class NeighborTopologyBackendStrategy(
         """Return nearest-neighbor vectors and final object numbering."""
 
 
-class NumbaNumpyNeighborTopologyBackendStrategy(NeighborTopologyBackendStrategy):
+class NumbaNumpyNeighborTopologyBackendStrategy(NumbaNumpyDefaultBackend, NeighborTopologyBackendStrategy):
     """Numba-accelerated NumPy backend for neighbor topology."""
     def prepare_backend(self) -> None:
         working = np.array([[0, 1, 1], [0, 0, 2], [3, 0, 0]], dtype=np.int32)
@@ -1470,7 +1470,7 @@ class MeasureObjectNeighborsMeasurementRecordRowsMixin(
 
 
 class MeasureObjectNeighborsModule(
-    ObjectLabelDrivenPrimaryImageInputPolicy,
+    ValidatedHighConfidenceModule, ObjectLabelDrivenPrimaryImageInputPolicy,
     MeasureObjectNeighborsInputPolicy,
     MeasureObjectNeighborsMeasurementRecordRowsMixin,
     ObjectArtifactInputModule,

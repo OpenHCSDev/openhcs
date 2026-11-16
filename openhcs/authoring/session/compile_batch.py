@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from zmqruntime.execution import BatchSubmitWaitEngine, CallbackBatchSubmitWaitPolicy
 
@@ -25,19 +25,16 @@ from openhcs.core.execution.execution_state import ExecutionFailed
 from openhcs.constants.constants import OrchestratorCompileFailed, OrchestratorCompiled
 from openhcs.runtime.zmq.zmq_execution_signature import TransportValue
 
-from openhcs.authoring.session.session import Session
 logger = logging.getLogger(__name__)
 
 
 class CompileBatch:
-    """Compile-only batches and compile-before-execution."""
+    """A session's compile-only batches and compile-before-execution."""
 
-    def __init__(self, session: Session) -> None:
-        self._session = session
-        self._engine = BatchSubmitWaitEngine[DatasetPipelineRequest]()
+    _engine: ClassVar[BatchSubmitWaitEngine[DatasetPipelineRequest]] = BatchSubmitWaitEngine()
 
     async def compile_datasets(self, scope_ids: tuple[str, ...]) -> None:
-        session = self._session
+        session = self
         for scope_id in scope_ids:
             session.require_work_allowed(scope_id)
         for scope_id in scope_ids:
@@ -113,7 +110,7 @@ class CompileBatch:
     ) -> dict[str, str]:
         """Compile every request; return compile artifact ids by scope id."""
 
-        session = self._session
+        session = self
         client = session.client.require_client()
         requests = [
             request.with_config_params(config_params.get(request.scope_id))
@@ -176,7 +173,7 @@ class CompileBatch:
         )
 
     async def _submit(self, client, request: DatasetPipelineRequest) -> str:
-        self._session.set_compiled(request.scope_id, None)
+        self.set_compiled(request.scope_id, None)
         return await submit_compile(client, request)
 
     async def _wait(self, client, execution_id: str, request: DatasetPipelineRequest) -> None:
@@ -187,8 +184,8 @@ class CompileBatch:
                 scope_id=request.scope_id,
             )
         finally:
-            self._session.progress_tracker.clear_execution(execution_id)
-        self._session.set_compiled(
+            self.progress_tracker.clear_execution(execution_id)
+        self.set_compiled(
             request.scope_id,
             CompiledDataset(
                 compile_artifact_id=execution_id,
@@ -199,7 +196,7 @@ class CompileBatch:
 
     def _compile_failed(self, scope_id: str, error: Exception) -> None:
         logger.error("COMPILATION ERROR: %s: %s", scope_id, error, exc_info=True)
-        session = self._session
+        session = self
         session.clear_compile_pending((scope_id,))
         session.set_dataset_state(scope_id, OrchestratorCompileFailed)
         session.publish(

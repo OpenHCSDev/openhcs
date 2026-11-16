@@ -43,10 +43,8 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     NoObjectNameMeasurementRecordMixin,
     ProducedImageMeasurementRecordMixin,
 )
-from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-    FormattingMeasurementFeatureTemplate,
-    ModuleOwnedResultMeasurementRows,
-)
+from openhcs.interop.cellprofiler.runtime.measurement_rows import ModuleOwnedResultMeasurementRows
+from openhcs.interop.cellprofiler.module_measurement_features import FormattingMeasurementFeatureTemplate
 from openhcs.core.measurements.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
@@ -64,6 +62,7 @@ from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
+from enum import Enum
 class MaskSource(Enum):
     """Mask source domains exposed by MaskImage settings."""
 
@@ -79,7 +78,7 @@ class ResizeDimensionSpecification(Enum):
 
 
 class MaskImageModule(
-    ObjectArtifactInputModule,
+    ValidatedHighConfidenceModule, ObjectArtifactInputModule,
     CellProfilerModule,
 ):
     module_name = "MaskImage"
@@ -225,7 +224,7 @@ def _parse_tile_direction_setting(value: str) -> str:
     return coerce_cellprofiler_enum(TileStyle, value).value
 
 
-class ResizeModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class ResizeModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "Resize"
     function_name = "resize"
     function_variants = ("resize_volumetric",)
@@ -475,7 +474,7 @@ def _parse_tile_assembly_method(value: str) -> str:
     return normalized
 
 
-class TileModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class TileModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "Tile"
     function_name = "tile"
     input_image_setting = SettingNameFamily("Select an input image")
@@ -573,7 +572,6 @@ class TileModule(CellProfilerModule, ValidatedHighConfidenceModule):
 
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any
 import numpy as np
 from openhcs.core.payload.aligned_image_payload import ImagePayloadSliceStack
@@ -1397,7 +1395,7 @@ def flip_and_rotate(
 
 
 class FlipAndRotateModule(
-    NoObjectNameMeasurementRecordMixin,
+    ValidatedHighConfidenceModule, NoObjectNameMeasurementRecordMixin,
     ProducedImageMeasurementRecordMixin,
     MeasurementArtifactOutputModule,
 ):

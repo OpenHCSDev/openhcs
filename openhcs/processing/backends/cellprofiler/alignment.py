@@ -97,7 +97,7 @@ class _AlignShiftFieldRole(str, Enum):
     IMAGE_OUTPUT_INDEX = "image_output_index"
 
 
-class AlignOutputMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule, NumbaNumpyDefaultBackend):
+class AlignOutputMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule):
     """Declares Align measurement rows on the module MRO."""
 
     measurement_feature_family = "Align"
@@ -199,10 +199,10 @@ class AlignOutputMeasurementRecordRowsMixin(FieldDerivedMeasurementFeatureModule
 
 
 class AlignModule(
-    AlignOutputMeasurementRecordRowsMixin,
+    ValidatedHighConfidenceModule, AlignOutputMeasurementRecordRowsMixin,
     NoObjectNameMeasurementRecordMixin,
     DeclaredImageOutputPayloadMeasurementRecordMixin,
-    MeasurementArtifactOutputModule, ValidatedHighConfidenceModule):
+    MeasurementArtifactOutputModule):
     module_name = "Align"
     function_name = "align"
     group_by_role = TileAxis
@@ -510,7 +510,7 @@ class AlignmentBackendStrategy(
         """Return column/row offset maximizing mutual information."""
 
 
-class NumbaNumpyAlignmentBackendStrategy(AlignmentBackendStrategy):
+class NumbaNumpyAlignmentBackendStrategy(NumbaNumpyDefaultBackend, AlignmentBackendStrategy):
     """Numba-accelerated NumPy alignment primitives."""
     def prepare_backend(self) -> None:
         pixels = np.arange(16, dtype=np.float64).reshape((4, 4))

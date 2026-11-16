@@ -104,7 +104,7 @@ from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 class IdentifyTertiaryObjectsModule(
-    ObjectLabelDrivenPrimaryImageInputPolicy,
+    ValidatedHighConfidenceModule, ObjectLabelDrivenPrimaryImageInputPolicy,
     PairedPrimarySecondaryObjectInputPolicy,
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,
@@ -476,7 +476,7 @@ class SecondarySegmentationStrategy(
         """Segment secondary objects when primary labels are present."""
 
 
-class DistanceOnlySegmentationStrategy(SecondarySegmentationStrategy, NumbaNumpyDefaultBackend):
+class DistanceOnlySegmentationStrategy(SecondarySegmentationStrategy):
     method = SecondaryMethod.DISTANCE_N
 
     def _segment_non_empty(self, request: SecondarySegmentationRequest) -> np.ndarray:
@@ -487,7 +487,7 @@ class DistanceOnlySegmentationStrategy(SecondarySegmentationStrategy, NumbaNumpy
         )
 
 
-class DistanceMaskedSegmentationStrategy(SecondarySegmentationStrategy, NativeNumpyBackend):
+class DistanceMaskedSegmentationStrategy(SecondarySegmentationStrategy):
     method = SecondaryMethod.DISTANCE_B
     default_propagation_backend_provider = NumbaBackendProvider
 
@@ -550,7 +550,7 @@ class SecondaryDistanceTransformBackendStrategy(
 
 
 class NumpySecondaryDistanceTransformBackendStrategy(
-    SecondaryDistanceTransformBackendStrategy
+    NativeNumpyBackend, SecondaryDistanceTransformBackendStrategy
 ):
     """Reference NumPy/SciPy secondary distance-transform backend."""
 
@@ -672,7 +672,7 @@ class SecondaryPropagationBackendStrategy(
         )
 
 
-class NumbaSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrategy, NativeNumpyBackend):
+class NumbaSecondaryPropagationBackendStrategy(NumbaNumpyDefaultBackend, SecondaryPropagationBackendStrategy):
     """Numba implementation of regularized secondary-label propagation."""
     def prepare_backend(self) -> None:
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
@@ -748,7 +748,7 @@ class NumbaSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrate
 
 
 class NativeSecondaryPropagationBackendStrategy(
-    NumbaSecondaryPropagationBackendStrategy
+    NativeNumpyBackend, NumbaSecondaryPropagationBackendStrategy
 ):
     """Native compatibility key backed by absorbed propagation semantics."""
 
@@ -1407,7 +1407,7 @@ set_signature_analysis_target(
 
 
 class IdentifySecondaryObjectsModule(
-    PrimaryObjectLabelInputPolicy,
+    ValidatedHighConfidenceModule, PrimaryObjectLabelInputPolicy,
     OutputObjectThresholdMeasurementRecordRowsMixin,
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,

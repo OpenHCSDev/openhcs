@@ -159,9 +159,7 @@ def test_mask_and_object_maxima_strategies_are_registered_under_their_own_modes(
 
 
 def test_same_named_feature_templates_of_two_modules_are_both_registered() -> None:
-    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-        FormattingMeasurementFeatureTemplate,
-    )
+    from openhcs.interop.cellprofiler.module_measurement_features import FormattingMeasurementFeatureTemplate
     from openhcs.processing.backends.cellprofiler.classification import (
         ClassifyObjectsSingleMeasurementModule,
     )

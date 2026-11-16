@@ -65,14 +65,22 @@ from openhcs.runtime.viewer.viewer_controls import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.viewer.viewer_protocol import (
-    ViewerPayloadSummary, ViewerPayloadRecord, ViewerPayloadContent,
-    ViewerProjectionRecord, ViewerShapeCoordinateBounds,
-    ViewerControlField, ViewerControlResponseField, ViewerControlMessageType,
-    OpenHCSViewerControlMessageType, ViewerProtocolStatus,
-    ViewerImageColorControlOptions, ViewerNativeImageColorPresentation,
-    ViewerNativeWindowControlOptions, ViewerNativeWindowState,
+    ViewerPayloadSummary,
+    ViewerPayloadRecord,
+    ViewerPayloadContent,
+    ViewerProjectionRecord,
+    ViewerShapeCoordinateBounds,
+    ViewerControlField,
+    ViewerControlResponseField,
+    ViewerControlMessageType,
+    OpenHCSViewerControlMessageType,
+    ViewerImageColorControlOptions,
+    ViewerNativeImageColorPresentation,
+    ViewerNativeWindowControlOptions,
+    ViewerNativeWindowState,
     ViewerLayerRetirementResult,
 )
+from zmqruntime.viewer_protocol import ViewerProtocolStatus
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
 

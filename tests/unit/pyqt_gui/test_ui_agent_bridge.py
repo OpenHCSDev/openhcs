@@ -4146,7 +4146,7 @@ def test_selected_run_workflow_dispatches_stop_while_execution_is_active(
         session.execution_state = ManagerExecutionState.RUNNING
         forces = []
         monkeypatch.setattr(
-            session.execution_control, "stop", lambda force: forces.append(force)
+            session, "shut_down_execution_server", lambda force: forces.append(force)
         )
         bridge = _plate_manager_bridge(gui.plate_manager)
 

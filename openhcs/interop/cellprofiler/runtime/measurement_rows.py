@@ -7,20 +7,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from enum import Enum
 import json
-import re
-from string import Formatter
 from types import MappingProxyType
 from typing import Annotated, TypeVar, get_args, get_origin, get_type_hints
 
-from openhcs.core.axes.alias_property import AliasProperty
 import numpy as np
 
 from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
 )
-from metaclass_registry import RegisteredEnumMeta
-from metaclass_registry.strategies import str_enum_member_with_payload
 from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,
 )
@@ -46,11 +41,9 @@ from openhcs.core.object_labels.runtime_object_labels import (
     object_label_axis_centers,
     object_label_project_plane,
 )
-from openhcs.interop.cellprofiler.module_declarations import (
-    CellProfilerModule,
-)
 from openhcs.interop.cellprofiler.module_measurement_features import (
-    CellProfilerModuleAuthority,
+    CellProfilerMeasurementFeatureOwner,
+    FormattingMeasurementFeatureTemplate,
 )
 from openhcs.interop.cellprofiler.database_column_dialect import (
     CellProfilerObjectCoreMeasurementFeature,
@@ -136,88 +129,6 @@ def measurement_source_image_name_for_slice(
     return source_names[0]
 
 
-class FormattingMeasurementFeatureTemplate(
-    str,
-    CellProfilerModuleAuthority,
-    Enum,
-    metaclass=RegisteredEnumMeta,
-):
-    """Shared feature-name formatting contract for templated measurement names."""
-
-    # Members are enums nested in their module class and several share a short
-    # name (``MeasurementFeatureTemplate``); the qualified name is unique.
-    __registry_key__ = "__qualname__"
-
-    def __new__(
-        cls,
-        value: str,
-        measurement_dtype: type[object] | None = None,
-    ):
-        return str_enum_member_with_payload(
-            cls,
-            value,
-            payload_attribute="_measurement_dtype",
-            payload=measurement_dtype,
-        )
-
-    measurement_dtype = AliasProperty[type[object] | None]("_measurement_dtype")
-
-    @classmethod
-    def database_measurement_dtype(cls) -> type[object] | None:
-        """Return an external CellProfiler database type override, when declared."""
-
-        return None
-
-    def matches_feature_name(self, feature_name: str) -> bool:
-        """Match a concrete feature name against this exact declared template."""
-
-        template_parts: list[str] = []
-        field_tokens: list[str] = []
-        for index, (literal, field_name, _format_spec, _conversion) in enumerate(
-            Formatter().parse(self.value)
-        ):
-            template_parts.append(literal)
-            if field_name is not None:
-                token = f"OpenHCSFormatField{index}"
-                field_tokens.append(normalize_runtime_identifier(token))
-                template_parts.append(token)
-        pattern = re.escape(normalize_runtime_identifier("".join(template_parts)))
-        for token in field_tokens:
-            pattern = pattern.replace(re.escape(token), ".+")
-        return (
-            re.fullmatch(
-                pattern,
-                normalize_runtime_identifier(feature_name),
-            )
-            is not None
-        )
-
-    def database_field_spec(
-        self,
-        name: str,
-        *,
-        required: bool = False,
-    ) -> FieldSpec:
-        """Build the CellProfiler database declaration for one emitted field."""
-
-        database_dtype = type(self).database_measurement_dtype()
-        return FieldSpec(
-            name,
-            self.measurement_dtype if database_dtype is None else database_dtype,
-            required=required,
-        )
-
-    def feature_name(self, **values: RuntimeCallableArgument) -> str:
-        return self.value.format(**values)
-
-    def field_spec(self, name: str, *, required: bool = False) -> FieldSpec:
-        """Build one emitted field from this producer-owned feature declaration."""
-
-        if self.measurement_dtype is None:
-            raise TypeError(
-                f"{type(self).__name__}.{self.name} does not declare an emitted dtype."
-            )
-        return FieldSpec(name, self.measurement_dtype, required=required)
 
 
 @dataclass(frozen=True, slots=True)
@@ -361,9 +272,9 @@ class ModuleOwnedResultMeasurementRows(CellProfilerResultMeasurementRows):
         module_type: type[object],
         base_type: type[NestedDeclarationT],
     ) -> tuple[type[NestedDeclarationT], ...]:
-        if not issubclass(module_type, CellProfilerModule):
+        if not issubclass(module_type, CellProfilerMeasurementFeatureOwner):
             raise TypeError(
-                f"{cls.__name__} requires a CellProfilerModule owner, "
+                f"{cls.__name__} requires a CellProfilerMeasurementFeatureOwner, "
                 f"got {module_type.__name__}."
             )
         return module_type.declared_authority_types(base_type)

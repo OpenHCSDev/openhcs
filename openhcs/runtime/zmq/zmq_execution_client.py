@@ -85,6 +85,7 @@ from openhcs.runtime.zmq.zmq_execution_signature import (
 )
 
 from openhcs.core.debug.debug_runtime import DebugCommandType
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import (
 CustomFunctionRegistrationDestination,
 CustomFunctionRegistrationDestinationRequest,
@@ -961,6 +962,21 @@ class FunctionCatalogExecutionClient(
 
 class ZMQExecutionClient(ImportRootEndpoint, FunctionCatalogExecutionClient):
     """ZMQ client for OpenHCS pipeline execution with progress streaming."""
+
+    @classmethod
+    def for_connection(
+        cls,
+        connection: ExecutionConnectionSpec,
+        config: OpenHCSZMQConfig,
+    ) -> ZMQExecutionClient:
+        """The execution client for this exact connection."""
+        return cls(
+            port=connection.port,
+            host=connection.host,
+            persistent=connection.persistent,
+            transport_mode=connection.transport_mode,
+            config=config,
+        )
 
     config: OpenHCSZMQConfig
 

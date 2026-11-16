@@ -113,7 +113,7 @@ def enhance_or_suppress_features(
         .payload_with(np.asarray(result, dtype=np.float32), image.mask)
     )
 
-class EnhanceOrSuppressFeaturesModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class EnhanceOrSuppressFeaturesModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "EnhanceOrSuppressFeatures"
     function_name = "enhance_or_suppress_features"
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
@@ -428,7 +428,7 @@ def _prepare_enhance_or_suppress_features() -> None:
         smoothing_value=2.0,
     )
 
-class MatchTemplateModule(CellProfilerModule, ValidatedHighConfidenceModule):
+class MatchTemplateModule(ValidatedHighConfidenceModule, CellProfilerModule):
     module_name = "MatchTemplate"
     function_name = "match_template"
     template_binding = SourceFileSettingBinding("Template", "template_path")

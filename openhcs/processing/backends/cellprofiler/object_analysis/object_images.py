@@ -78,7 +78,7 @@ class ImageMode(Enum):
 
 
 class ConvertObjectsToImageModule(
-    ObjectLabelDrivenPrimaryImageInputPolicy,
+    ValidatedHighConfidenceModule, ObjectLabelDrivenPrimaryImageInputPolicy,
     LabelsObjectInputPolicy,
     ObjectArtifactInputModule,
     CellProfilerModule,
@@ -386,7 +386,7 @@ def convert_objects_to_image(
 
 
 class ConvertImageToObjectsModule(
-    MeasurementArtifactOutputModule,
+    ValidatedHighConfidenceModule, MeasurementArtifactOutputModule,
     ObjectArtifactOutputModule,
     CellProfilerModule,
 ):

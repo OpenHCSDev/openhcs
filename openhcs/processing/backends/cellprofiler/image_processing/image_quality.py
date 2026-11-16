@@ -99,7 +99,7 @@ from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepCo
 from openhcs.processing.backends.cellprofiler._backend import CentrosomeNumpyBackend
 from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
 from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
-class ImageQualityThresholdMethod(Enum, NumbaNumpyDefaultBackend):
+class ImageQualityThresholdMethod(Enum):
     """Threshold algorithms exposed by MeasureImageQuality settings."""
 
     def __new__(
@@ -148,7 +148,7 @@ class ImageQualityThresholdMethod(Enum, NumbaNumpyDefaultBackend):
         return f"{class_token}{otsu_objective.descriptor_token}"
 
 
-class ImageQualityOtsuObjective(Enum, NativeNumpyBackend):
+class ImageQualityOtsuObjective(Enum):
     """Objective used to select a CellProfiler image-quality Otsu threshold."""
 
     WEIGHTED_VARIANCE = ("Weighted variance", "W")
@@ -166,7 +166,7 @@ class ImageQualityOtsuObjective(Enum, NativeNumpyBackend):
         return self._descriptor_token
 
 
-class ImageQualityThresholdAggregate(Enum, CentrosomeNumpyBackend):
+class ImageQualityThresholdAggregate(Enum):
     """Experiment-level reductions declared by MeasureImageQuality."""
 
     def __new__(cls, value: str, reducer: Callable[[np.ndarray], np.floating]):
@@ -191,7 +191,7 @@ class ImageQualityThresholdAggregate(Enum, CentrosomeNumpyBackend):
 
 
 class MeasureImageQualityModule(
-    SourceQualifiedInputPayloadMeasurementRecordMixin,
+    ValidatedHighConfidenceModule, SourceQualifiedInputPayloadMeasurementRecordMixin,
     FieldDerivedMeasurementFeatureModule,
     SourceQualifiedMeasurementFeatureModule,
     ImageMeasurementInputModule,
@@ -1004,7 +1004,7 @@ class YenImageQualityThresholdStrategy(PrimitiveImageQualityThresholdStrategy):
     primitive = lambda primitives, values: primitives.yen_threshold(values)
 
 
-class NumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
+class NumpyImageQualityBackendStrategy(NativeNumpyBackend, ImageQualityBackendStrategy):
     """Independent NumPy implementation of image-quality primitives."""
     def haralick_h3(self, image: np.ndarray, *, scale: int) -> float:
         image_array = np.asarray(image, dtype=np.float32)
@@ -1035,7 +1035,7 @@ class NumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
         return _radial_power_spectrum_numpy(centered)
 
 
-class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
+class NumbaNumpyImageQualityBackendStrategy(NumbaNumpyDefaultBackend, NumpyImageQualityBackendStrategy):
     """Numba-accelerated NumPy image-quality backend."""
     def prepare_backend(self) -> None:
         image = np.arange(25, dtype=np.float32).reshape((5, 5))
@@ -1072,7 +1072,7 @@ class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
         )
 
 
-class CentrosomeNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
+class CentrosomeNumpyImageQualityBackendStrategy(CentrosomeNumpyBackend, NumpyImageQualityBackendStrategy):
     """Compatibility provider backed by absorbed image-quality primitives."""
 
 def image_quality_backend(

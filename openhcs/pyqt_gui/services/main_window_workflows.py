@@ -173,8 +173,8 @@ class MainWindowPipelineActions:
             if not selected:
                 return
             file_path = Path(selected)
-        result = session.invoke(
-            LoadPipelineFile,
+        result = LoadPipelineFile.invoke(
+            session,
             PipelineFileRequest(scope_id=session.current_scope_id, path=str(file_path)),
         )
         if result.errors:

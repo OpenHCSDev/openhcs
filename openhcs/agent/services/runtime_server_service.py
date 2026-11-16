@@ -274,7 +274,7 @@ class ZMQRuntimeServerGateway(RuntimeServerGatewayABC):
             if timeout_ms is None
             else replace(self._config, control_timeout_ms=timeout_ms)
         )
-        return connection.execution_client(config)
+        return ZMQExecutionClient.for_connection(connection, config)
 
 
 class RuntimeServerService:
@@ -295,7 +295,7 @@ class RuntimeServerService:
     ) -> RuntimeBootstrapState:
         connection = request.connection.resolved(self._config)
         config = replace(self._config, server_host=connection.host)
-        client = connection.execution_client(config)
+        client = ZMQExecutionClient.for_connection(connection, config)
         endpoint = client.endpoint
         if not endpoint.transport_mode.declaration.endpoint_is_local(
             endpoint.host, endpoint.port
@@ -362,7 +362,7 @@ class RuntimeServerService:
         """Admit native lifecycle writes, then close one proven owned incarnation."""
         handle = request.handle
         config = replace(self._config, server_host=handle.connection.host)
-        client = handle.connection.execution_client(config)
+        client = ZMQExecutionClient.for_connection(handle.connection, config)
         # Resolve actual transport writes in THIS launch environment, not only
         # the caller's serialized plan. Never let a forged path admit a lock.
         for path in client.runtime_launch_plan().transport_write_paths:

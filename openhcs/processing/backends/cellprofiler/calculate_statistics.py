@@ -581,9 +581,9 @@ def calculate_statistics(
 
 
 class CalculateStatisticsModule(
-    CalculateStatisticsInputPolicy,
+    ValidatedHighConfidenceModule, CalculateStatisticsInputPolicy,
     MeasurementArtifactOutputModule,
-    CellProfilerModule, ValidatedHighConfidenceModule):
+    CellProfilerModule):
     module_name = "CalculateStatistics"
     function_name = "calculate_statistics"
     measurement_category_prefixes = (
