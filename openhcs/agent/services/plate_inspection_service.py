@@ -53,7 +53,6 @@ from openhcs.core.dataset_sources.source import AutoDetectedSource, DatasetSourc
 from openhcs.core.plate.plate_image_inventory import (
     PlateFileKind,
     PlateFileInventory,
-    PlateFileInventoryQuery,
     PlateFileRecord,
     PlateImageInventory,
     PlateImageSampler,
@@ -61,6 +60,7 @@ from openhcs.core.plate.plate_image_inventory import (
     PlateResultFilePreviewReader,
     PlateResultFileInventory,
 )
+from openhcs.core.plate.plate_file_inventory import PlateFileInventoryQuery
 from openhcs.core.axes.axis_declarations import Axis, AxisFamily
 from openhcs.core.components.parser_metaprogramming import (
     FilenameParseResult,

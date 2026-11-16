@@ -71,7 +71,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     normalize_cellprofiler_setting_name,
     parse_cellprofiler_int,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -81,6 +81,8 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
+from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 
 class MeasureTextureObjectMeasurementRowPolicy(

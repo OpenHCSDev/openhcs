@@ -17,7 +17,7 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionSucceeded,
     OmitRuntimeRecords,
 )
-from openhcs.runtime.viewer.viewer_protocol import ViewerControlResponse
+from openhcs.runtime.viewer.viewer_contract_types import ViewerControlResponse
 from openhcs.runtime.zmq.zmq_server_hooks import ZMQResultsSummaryEnricher
 from openhcs.runtime.zmq.zmq_worker_execution import ZMQWorkerExecutionRequest
 

@@ -41,13 +41,16 @@ from openhcs.runtime.viewer.viewer_component_system import (
 )
 from openhcs.runtime.viewer.viewer_protocol import (
     ViewerComponentValueOrdering,
-    ViewerSettlePhase,
-    SettlementComplete,
     SettlementFailed,
     SettlementRunning,
-    ViewerSettleProgress,
     ViewerNativeWindowGeometry,
+    ViewerNativeWindowPresentation,
     ViewerNativeWindowState,
+)
+from openhcs.runtime.viewer.viewer_contract_types import (
+    ViewerSettlePhase,
+    SettlementComplete,
+    ViewerSettleProgress,
 )
 from openhcs.core.axes.axis_declarations import ColourAxis
 
@@ -62,7 +65,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class NapariNativeWindowPresentation:
+class NapariNativeWindowPresentation(ViewerNativeWindowPresentation):
     """The existing detached Qt window owns geometry and focus, not a cache."""
 
     window: QWidget

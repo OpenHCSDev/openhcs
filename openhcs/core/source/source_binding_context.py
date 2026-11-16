@@ -7,6 +7,7 @@ from pathlib import Path
 
 from openhcs.core.config.pipeline_config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.core.source.source_bindings_preview import SourceInventory
+from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS
 
 
 @dataclass(frozen=True)

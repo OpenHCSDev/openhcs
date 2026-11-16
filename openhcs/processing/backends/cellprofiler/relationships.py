@@ -820,7 +820,7 @@ class RelateObjectsDistanceAggregateFeatureSemantics(
         return feature.unqualified_feature_name
 
 
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -853,6 +853,7 @@ from openhcs.core.object_labels.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 ParentObjectLabelsInput = Annotated[
     ObjectLabelValue,

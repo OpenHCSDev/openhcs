@@ -55,8 +55,10 @@ from openhcs.runtime.viewer.viewer_component_system import (
 )
 from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageType,
-    ViewerControlResponse,
     SettlementRunning,
+)
+from openhcs.runtime.viewer.viewer_contract_types import (
+    ViewerControlResponse,
     ViewerSettleProgress,
 )
 from tests.unit.viewer_axes_fixture import STREAM_AXES

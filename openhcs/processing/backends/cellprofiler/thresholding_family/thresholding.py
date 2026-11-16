@@ -92,7 +92,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_float,
     parse_cellprofiler_int,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
@@ -155,6 +155,9 @@ CellProfilerOutputRecordRequest,
 )
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
+from openhcs.processing.backends.cellprofiler._backend import CentrosomeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 CELLPROFILER_BASIC_THRESHOLD_SMOOTHING_SCALE = 1.3488
 SCIPY_CONSTANT_BOUNDARY_MODE = "constant"
 CELLPROFILER_THRESHOLD_SMOOTHING_TRUNCATE_SIGMAS = 4.0

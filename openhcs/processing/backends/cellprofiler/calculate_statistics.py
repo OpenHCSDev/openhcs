@@ -40,8 +40,8 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowValueField,
     MeasurementScope,
     MeasurementSubject,
-    ObjectLocationFeatureMarker,
 )
+from openhcs.core.measurements.measurement_declarations import ObjectLocationFeatureMarker
 from openhcs.core.payload.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,

@@ -91,7 +91,7 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.core.callable.processing_contracts import (
     Pure2DContract,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
@@ -145,6 +145,8 @@ from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.pipeline.function_contracts import (
     SliceAlignedLabels,
 )
+from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 
 class IntensityDistributionHeatmapMeasurement(Enum, NumbaNumpyDefaultBackend):

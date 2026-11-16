@@ -48,7 +48,7 @@ from openhcs.core.object_labels.runtime_object_labels import (
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
     NumbaBackendProvider,
@@ -152,6 +152,7 @@ from openhcs.core.callable.processing_contracts import (
 from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.payload_axes import ColourSampleAxisSpec, PayloadAxes
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 
 class OverlayOutlinesModule(

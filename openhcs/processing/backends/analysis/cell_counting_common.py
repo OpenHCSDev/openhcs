@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -23,7 +24,6 @@ class DetectionMethod(Enum):
     THRESHOLD = "threshold"
 
 
-DetectionMethodHandler = Callable[..., CellCountResult]
 
 
 def detect_cells_single_method(
@@ -84,10 +84,6 @@ def colocalization_analyzer_catalog(
     }
 
 
-ColocalizationAnalyzer = Callable[
-    [CellCountResult, CellCountResult, float, float, float],
-    MultiChannelResult,
-]
 
 
 def analyze_colocalization(
@@ -177,6 +173,15 @@ class MultiChannelResult:
     chan_2_only_count: int
     colocalization_metrics: dict[str, Any]
     overlap_positions: list[tuple[float, float]]
+
+
+DetectionMethodHandler = Callable[..., CellCountResult]
+
+ColocalizationAnalyzer = Callable[
+    [CellCountResult, CellCountResult, float, float, float],
+    MultiChannelResult,
+]
+
 
 
 @dataclass(frozen=True, slots=True)

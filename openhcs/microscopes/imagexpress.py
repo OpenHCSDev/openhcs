@@ -19,11 +19,11 @@ from polystore.filemanager import FileManager
 from openhcs.microscopes.vendor_layout import VirtualMappingSource
 from openhcs.core.dataset_sources.interfaces import (
     DiskImageFileListingMetadataHandler,
-    FilenameParseResult,
     FilenameParser,
     MetadataComponentValueSet,
     FilenameParserCapability,
 )
+from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.axes.axis_declarations import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 

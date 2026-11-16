@@ -75,7 +75,7 @@ from openhcs.interop.cellprofiler.setting_names import (
     setting_values,
     split_symbol_names,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     CentrosomeBackendProvider,
@@ -96,6 +96,9 @@ from openhcs.core.payload.runtime_image_values import ImagePayload
 
 from openhcs.core.callable.function_patterns import FunctionInvocationKey
 from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.processing.backends.cellprofiler._backend import CentrosomeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 class ImageQualityThresholdMethod(Enum, NumbaNumpyDefaultBackend):
     """Threshold algorithms exposed by MeasureImageQuality settings."""
 

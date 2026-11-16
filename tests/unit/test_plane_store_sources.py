@@ -38,10 +38,8 @@ from openhcs.core.source.source_bindings import (
     TextEquals,
 )
 from openhcs.core.source.source_metadata import SourceFilterClause
-from openhcs.core.steps.function_io import (
-    save_materialized_data,
-    update_metadata_for_zarr_conversion,
-)
+from openhcs.core.steps.function_io import save_materialized_data
+from openhcs.core.dataset_sources.openhcs_format import update_metadata_for_zarr_conversion
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import OmeZarrStoreAdapter
 from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter

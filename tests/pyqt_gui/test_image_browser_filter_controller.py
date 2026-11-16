@@ -15,12 +15,12 @@ from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.plate.plate_image_inventory import (
     PlateImageInventory,
-    PlateFileInventoryQuery,
     PlateFileKind,
     PlateFileInventory,
     PlateResultFileInventory,
     PlateResultFileRecord,
 )
+from openhcs.core.plate.plate_file_inventory import PlateFileInventoryQuery
 from openhcs.core.dataset_sources.interfaces import (
     AnalysisResultDirectory,
     FilenameParserCapability,

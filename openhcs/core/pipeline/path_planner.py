@@ -51,6 +51,9 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes.axis_declarations import AxisFamily, Ungrouped
 from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
+from openhcs.core.pipeline.artifact_planning import ArtifactGraph
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS
 
 logger = logging.getLogger(__name__)
 

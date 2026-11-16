@@ -704,7 +704,7 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
     branchpoints as _branchpoints,
     endpoints as _endpoints,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
@@ -725,6 +725,9 @@ from openhcs.core.callable.processing_contracts import (
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
+from openhcs.processing.backends.cellprofiler._backend import CentrosomeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NativeNumpyBackend
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 HolePredicate = Callable[[int, bool], bool]
 ConnectivityStructureBuilder = Callable[[int], np.ndarray]

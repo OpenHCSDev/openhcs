@@ -38,13 +38,15 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlPingMode,
     ViewerControlPingRequest,
-    ViewerControlResponse,
     ViewerGraphicalSessionUnavailableError,
     ViewerLaunchContext,
     ViewerProcessPlatform,
     ViewerQtEnvironmentPolicy,
     ViewerRuntimeEndpoint,
     SettlementRunning,
+)
+from openhcs.runtime.viewer.viewer_contract_types import (
+    ViewerControlResponse,
     ViewerSettleProgress,
 )
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG

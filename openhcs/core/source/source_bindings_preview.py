@@ -8,6 +8,7 @@ from pathlib import Path
 
 from openhcs.core.source.source_binding_workspace import SourceSetAssembler, SourceBindingWorkspaceProjector, SourceCandidate
 from openhcs.core.source.source_bindings import NamedSourceBinding
+from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS
 
 
 def _active_source_bindings(

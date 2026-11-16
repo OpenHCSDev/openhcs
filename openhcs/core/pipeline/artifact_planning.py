@@ -40,6 +40,9 @@ from openhcs.core.callable.callable_declarations import FunctionStepExecutionSco
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.util.step_dependencies import NoMainFlowInput, PipelineStartInput, StepOutputInput, UnresolvedStepInput
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.core.callable.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.callable.invocation_artifacts import CompositeInvocationContractProvider
+from openhcs.core.callable.invocation_artifacts import callable_contract_artifact_declarations
 
 
 class AutomaticArtifactOutputMaterializationStrategy(

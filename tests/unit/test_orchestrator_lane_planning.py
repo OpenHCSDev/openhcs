@@ -70,10 +70,10 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.progress.types import ProgressExecutionContext
-from openhcs.runtime.viewer.viewer_protocol import (
+from openhcs.runtime.viewer.viewer_protocol import SettlementRunning
+from openhcs.runtime.viewer.viewer_contract_types import (
     ViewerControlResponse,
     ViewerPersistenceMode,
-    SettlementRunning,
     ViewerSettleProgress,
 )
 from openhcs.core.progress.types import (

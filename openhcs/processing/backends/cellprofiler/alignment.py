@@ -73,7 +73,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_recording import (
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     ModuleOwnedResultMeasurementRows,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -88,6 +88,7 @@ from openhcs.core.callable.processing_contracts import (
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfidenceModule
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 
 
 class _AlignShiftFieldRole(str, Enum):

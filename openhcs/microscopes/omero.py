@@ -27,10 +27,10 @@ from openhcs.core.dataset_sources.source import (
 )
 from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
-    FilenameParseResult,
     MetadataComponentValueSet,
     MetadataHandler,
 )
+from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.domains.microscopy.axes import Microscopy
 
 logger = logging.getLogger(__name__)

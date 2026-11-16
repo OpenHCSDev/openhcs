@@ -36,9 +36,9 @@ from openhcs.constants import Backend
 from openhcs.core.config.pipeline_config import StreamingConfig
 from openhcs.core.plate.plate_image_inventory import (
     PlateFileKind,
-    PlateFileInventoryQuery,
     PlateFileRecord,
 )
+from openhcs.core.plate.plate_file_inventory import PlateFileInventoryQuery
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source.source_image_provenance import (
     SourceImageProvenance,

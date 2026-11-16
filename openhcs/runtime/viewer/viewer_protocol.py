@@ -31,11 +31,16 @@ from python_introspect.validation import validate_annotated_dataclass
 from pydantic import StrictInt
 from polystore.backend_registry import register_cleanup_callback
 from polystore.streaming_constants import StreamingDataType
+from openhcs.runtime.viewer.viewer_contract_types import (
+    ViewerControlResponse,
+    ViewerPersistenceMode,
+    ViewerSettlePhase,
+    ViewerSettleProgress,
+)
 from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
 from zmqruntime.config import NonBlankString, TransportMode, ZMQConfig
 from zmqruntime.messages import (
-    WireView,
     ControlRequestHeader,
     ControlMessageType,
     EndpointApplicationCompatibility,
@@ -71,7 +76,6 @@ from zmqruntime.viewer_protocol import (
     ViewerDeclaredWireValue,
     ViewerSourceSpatialDomainPayload,
     ViewerControlResponseField,
-    ViewerProtocolStatus,
     ViewerTransportEndpoint,
 )
 
@@ -105,7 +109,6 @@ from openhcs.runtime.viewer.viewer_controls import (
 )
 from openhcs.runtime.zmq.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
-from openhcs.runtime.napari.napari_streaming_handlers import NapariNativeWindowPresentation
 ViewerComponentValue: TypeAlias = ViewerScalar | tuple[ViewerScalar, ...]
 NaturalTokenKey: TypeAlias = tuple[int, int | str]
 NaturalTextKey: TypeAlias = tuple[NaturalTokenKey, ...]
@@ -119,53 +122,9 @@ _EXECUTION_OWNED_VIEWER_PROCESSES = EndpointProcessGroup()
 register_cleanup_callback(_EXECUTION_OWNED_VIEWER_PROCESSES.stop_all)
 
 
-class ViewerSettlePhase(ABC, metaclass=AutoRegisterMeta):
-    """Where one viewer's incremental settlement stands.
-
-    Each phase is a subclass; ``name`` is its wire spelling.
-    """
-
-    __registry_key__ = "name"
-    __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type[ViewerSettlePhase]]] = {}
-
-    name: ClassVar[str | None] = None
-    running: ClassVar[bool] = False
-    """Display work is still queued or active."""
-    settled: ClassVar[bool] = False
-    """Every queued update is displayed."""
-    failed: ClassVar[bool] = False
-    """Display work failed; settlement will not complete."""
-    idle_completion_percent: ClassVar[float] = 0.0
-    """Completion reported when there were no updates to settle."""
-
-    @classmethod
-    def validate(cls, progress: ViewerSettleProgress) -> None:
-        """Reject progress this phase cannot report."""
-
-
 class SettlementRunning(ViewerSettlePhase):
     name = "running"
     running = True
-
-
-class SettlementComplete(ViewerSettlePhase):
-    name = "complete"
-    settled = True
-    idle_completion_percent = 100.0
-
-    @classmethod
-    def validate(cls, progress: ViewerSettleProgress) -> None:
-        if progress.intake_item_active:
-            raise ValueError("Completed settlement cannot have active intake.")
-        if (
-            progress.completed_update_count != progress.total_update_count
-            or progress.routing
-        ):
-            raise ValueError(
-                "Completed viewer settlement must have no active route and all "
-                "updates completed."
-            )
 
 
 class SettlementFailed(ViewerSettlePhase):
@@ -282,7 +241,7 @@ class ViewerNativeWindowControlOptions(ViewerProjectionRecord):
     geometry: ViewerNativeWindowGeometry | None = None
     focus: bool = False
 
-    def apply_to(self, presentation: NapariNativeWindowPresentation) -> None:
+    def apply_to(self, presentation: ViewerNativeWindowPresentation) -> None:
         """The declaration owns which requested native effects run and their order."""
         if self.geometry is not None:
             presentation.position(self.geometry)
@@ -299,6 +258,19 @@ class ViewerNativeWindowState(ViewerProjectionRecord):
 
     def wire_overrides(self):
         return {**super().wire_overrides(), "geometry": self.geometry.to_wire_mapping()}
+
+
+class ViewerNativeWindowPresentation(ABC):
+    """A running viewer's detached native window: focus it, place it, read its state."""
+
+    @abstractmethod
+    def focus(self) -> None: ...
+
+    @abstractmethod
+    def position(self, geometry: ViewerNativeWindowGeometry) -> None: ...
+
+    @abstractmethod
+    def snapshot(self) -> ViewerNativeWindowState: ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -639,139 +611,6 @@ class ViewerFamilyIdentity:
     """Inherited viewer identity for runtime protocol records."""
 
     viewer_family: type[ViewerFamily]
-
-
-class ViewerPersistenceMode(Enum):
-    """Viewer lifecycle ownership mode derived from streaming persistence."""
-
-    PERSISTENT = ("persistent", False)
-    NON_PERSISTENT = ("non-persistent", True)
-
-    def __new__(
-        cls,
-        value: str,
-        execution_session_owns_process: bool,
-    ) -> Self:
-        member = object.__new__(cls)
-        member._value_ = value
-        member.execution_session_owns_process = execution_session_owns_process
-        return member
-
-    @classmethod
-    def from_flag(cls, persistent: bool) -> Self:
-        if persistent:
-            return cls.PERSISTENT
-        return cls.NON_PERSISTENT
-
-
-@dataclass(frozen=True, slots=True)
-class ViewerControlResponse:
-    """Typed view of a viewer control-message response."""
-
-    payload: Mapping[str, object]
-
-    @property
-    def status(self) -> ViewerProtocolStatus:
-        status_value = self.payload.get(ViewerControlResponseField.STATUS.value)
-        if status_value is None:
-            raise ValueError("Viewer control response is missing a status field.")
-        return ViewerProtocolStatus(str(status_value))
-
-    def succeeded(self) -> bool:
-        return self.status is ViewerProtocolStatus.SUCCESS
-
-
-@dataclass(frozen=True, slots=True)
-class ViewerSettleProgress(WireView):
-    """Typed progress for one viewer's incremental settlement cycle.
-
-    It travels as declared fields beside the control reply's header.
-    """
-
-    phase: type[ViewerSettlePhase]
-    completed_update_count: int
-    total_update_count: int
-    active_route: str | None = None
-    active_route_work_unit_count: int = 0
-    active_route_work_unit_active: bool = False
-    processed_intake_item_count: int = 0
-    intake_item_active: bool = False
-
-    @property
-    def routing(self) -> bool:
-        """An update is being routed to a layer."""
-        return self.active_route is not None
-
-    def __post_init__(self) -> None:
-        if (
-            type(self.processed_intake_item_count) is not int
-            or self.processed_intake_item_count < 0
-        ):
-            raise ValueError("Viewer processed intake count must be non-negative.")
-        if type(self.intake_item_active) is not bool:
-            raise TypeError("Viewer intake activity must be boolean.")
-        if (
-            type(self.completed_update_count) is not int
-            or type(self.total_update_count) is not int
-            or self.completed_update_count < 0
-            or self.total_update_count < 0
-            or self.completed_update_count > self.total_update_count
-        ):
-            raise ValueError(
-                "Viewer settle progress counts must satisfy 0 <= completed <= total."
-            )
-        if self.active_route is not None and not isinstance(self.active_route, str):
-            raise TypeError("Viewer settle active_route must be a string or None.")
-        if (
-            type(self.active_route_work_unit_count) is not int
-            or self.active_route_work_unit_count < 0
-        ):
-            raise ValueError(
-                "Viewer settle active-route work-unit count must be non-negative."
-            )
-        if self.active_route is None and self.active_route_work_unit_count:
-            raise ValueError(
-                "Viewer settle work-unit progress requires an active route."
-            )
-        if type(self.active_route_work_unit_active) is not bool:
-            raise TypeError("Viewer settle active work-unit state must be boolean.")
-        if self.active_route is None and self.active_route_work_unit_active:
-            raise ValueError(
-                "Viewer settle active work-unit state requires an active route."
-            )
-        self.phase.validate(self)
-
-    @classmethod
-    def complete(cls, total_update_count: int = 0) -> ViewerSettleProgress:
-        """Return terminal successful settlement progress."""
-
-        return cls(
-            phase=SettlementComplete,
-            completed_update_count=total_update_count,
-            total_update_count=total_update_count,
-        )
-
-    @property
-    def progress_marker(self) -> tuple[int, int, int]:
-        return (
-            self.processed_intake_item_count,
-            self.completed_update_count,
-            self.active_route_work_unit_count,
-        )
-
-    @property
-    def work_unit_active(self) -> bool:
-        return self.intake_item_active or self.active_route_work_unit_active
-
-    def heartbeat_due(self, elapsed_seconds: float, interval_seconds: float) -> bool:
-        """An unchanged observation is re-published only while work is running."""
-        return self.work_unit_active and elapsed_seconds >= interval_seconds
-
-    @property
-    def completion_percent(self) -> float:
-        if self.total_update_count:
-            return 100.0 * self.completed_update_count / self.total_update_count
-        return self.phase.idle_completion_percent
 
 
 class ViewerComponentValueOrdering:

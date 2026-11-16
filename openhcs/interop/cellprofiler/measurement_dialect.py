@@ -22,9 +22,9 @@ from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     ObjectCoreMeasurementFeature,
-    RuntimeMeasurementRowIdentityContract,
     RuntimeMeasurementFeatureDeclaration,
 )
+from openhcs.core.measurements.measurement_declarations import RuntimeMeasurementRowIdentityContract
 from openhcs.interop.cellprofiler import (
     measurement_semantic_profiles as _measurement_semantic_profiles,  # noqa: F401
 )

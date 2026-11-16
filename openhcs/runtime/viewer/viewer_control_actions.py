@@ -32,8 +32,8 @@ from zmqruntime.viewer_protocol import (
 from openhcs.runtime.viewer.viewer_protocol import (
     OpenHCSViewerControlMessageType,
     ViewerControlField,
-    ViewerSettleProgress,
 )
+from openhcs.runtime.viewer.viewer_contract_types import ViewerSettleProgress
 
 from openhcs.core.config.streaming_config_factory import ViewerProcessLaunchConfig
 ControlReply = dict[str, object]

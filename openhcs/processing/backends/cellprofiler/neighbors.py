@@ -87,7 +87,7 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -105,6 +105,7 @@ from openhcs.interop.cellprofiler.module_declarations import ValidatedHighConfid
 
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
 

@@ -45,7 +45,7 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, required_axis_roles, special_inputs)
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.payload.runtime_image_values import RuntimeArrayData
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.image_normalization import (
     normalize_cellprofiler_image_payload,
 )
@@ -104,7 +104,7 @@ from openhcs.interop.cellprofiler.setting_names import (
     optional_setting_value,
     required_setting_value,
 )
-(
+from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
@@ -124,6 +124,7 @@ CellProfilerOutputRecordRequest,
 )
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.processing.backends.cellprofiler._backend import MethodKeyedStrategy
+from openhcs.processing.backends.cellprofiler._backend import NumbaNumpyDefaultBackend
 class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPolicy, NumbaNumpyDefaultBackend):
     """TrackObjects emits object rows and image-level tracking counts together."""
 

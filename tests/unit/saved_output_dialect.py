@@ -10,10 +10,8 @@ from __future__ import annotations
 
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.measurements.measurement_dialect import PlainMeasurementDialect
-from openhcs.core.measurements.runtime_measurements import (
-    MeasurementScope,
-    RuntimeMeasurementRowIdentityContract,
-)
+from openhcs.core.measurements.runtime_measurements import MeasurementScope
+from openhcs.core.measurements.measurement_declarations import RuntimeMeasurementRowIdentityContract
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
