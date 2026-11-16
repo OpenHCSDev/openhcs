@@ -865,7 +865,7 @@ def test_progress_from_a_worker_thread_reaches_the_live_row(tmp_path) -> None:
             live = gui.plate_manager._format_item_content(row, 0, None)
             assert "Executing 25.0%" in live.layout.status_prefix
     finally:
-        dispatcher.close()
+        dispatcher.close_dispatch()
 
 
 # ---------------------------------------------------------------------------

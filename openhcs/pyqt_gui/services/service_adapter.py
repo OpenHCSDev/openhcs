@@ -74,7 +74,7 @@ class PyQtServiceAdapter(UiHostServices):
     def close(self):
         """Fence UI dispatch and retire the owned async-operation executor."""
 
-        self.ui_dispatcher.close()
+        self.ui_dispatcher.close_dispatch()
         self._async_operations.close()
 
     def create_message_box(
