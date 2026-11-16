@@ -89,12 +89,12 @@ The current main layout has six figures and one table: native editing and custom
 function authoring (Figure 1); process architecture with integration logos
 (Figure 2); CellProfiler output coverage and measured execution/total times,
 with a fixed serial estimate compared with measured workers (Figure 3); the
-intended autonomous analysis procedure (Figure 4);
-treatment responses from three independent blind agents with a separate
-laboratory neurite demonstration (Figure 5); and quantitative endpoints followed
-by bright-object, nuclear, retinal and three-dimensional body repairs (Figure 6).
+agent analysis procedure beside bright-object, nuclear, retinal and
+three-dimensional body repairs (Figure 4); quantitative endpoints and final
+three-dimensional nuclear localization (Figure 5); and treatment responses from
+three independent blind agents with matched microscopy views (Figure 6).
 Table 1 distinguishes development access, comparison populations, references and metrics for the main agent results. Supp. Table 5 retains the timing boundaries moved out of the main text. Supp. Table 4 retains the complete 27-row task/model/protocol mapping; principal assay findings remain in their Results subsections and figures.
-Full trial results and reference types are retained in Supplementary Data 8, including all three original final BBBC039 pipelines. Analysis 4's byte-identical source recovery is bound to its native readback and closing SHA256 record; it is not a new experiment. Figure 6F places the matched retinal triptych in one full-width row, with the separate body comparison beneath it.
+Full trial results and reference types are retained in Supplementary Data 8, including all three original final BBBC039 pipelines. Analysis 4's byte-identical source recovery is bound to its native readback and closing SHA256 record; it is not a new experiment. Figure 4C places the matched retinal triptych in one full-width row, with the separate body comparison beneath it.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, measured worker scaling and prospective held-out results.
 Measurement definitions precede the neurite plots; nuclear-error observations
@@ -104,8 +104,10 @@ in `supplementary/README_before_readability_20261015.md`, with the detailed
 resource tables beside their condensed version in `supplementary/task_only_analysis/`.
 
 `PYTHONPATH=paper/figures python paper/figures/build_slas_task_only.py --submission-summary`
-regenerates the heterogeneous results panels from the retained score and endpoint
-tables, without rerunning analysis. `--publish-briefs` exports the original
+regenerates Figure 5 from the retained score tables and final localization artwork.
+`--submission-repairs` regenerates Figure 4 from the frozen first/final detections;
+`--input-root` selects an existing hash-checked archived input root. Neither reruns
+scientific analysis. `--publish-briefs` exports the original
 instruction files and their trial mapping to JSON and Markdown data files. It
 never rewrites the authored reading supplement. The archive preserves full operational TASK files;
 the typeset supplement consolidates scientific briefs and marks technical hints.
@@ -121,7 +123,7 @@ PYTHONPATH=paper/figures python -c \
 ```
 
 The existing `FigureSheet` owns retained-image placement, crops and output
-receipts. Figure 6 uses post-freeze evaluation records through
+receipts. Figures 4–5 use post-freeze evaluation records through
 `build_slas_task_only.py`; its wider assay views remain in the supplement.
 `PYTHONPATH=paper/figures python paper/figures/build_slas_supplement.py`
 regenerates the consolidated supplement from retained artwork without rerunning
@@ -256,9 +258,12 @@ indices because physical spacing is unverified; retinal bars use the original
 CZI calibration. Laboratory neurite bars retain their 200-pixel geometry and
 show 271 µm, derived from the hash-checked acquisition declaration; the public
 NeuronCyto view retains pixel units because its physical calibration is unverified.
-Figure 4 shows only the guide's procedure. `AnalysisResultsFigure` in `build_slas_task_only.py` draws the single integrated Figure 6: quantitative endpoints A–D and bright-object/nuclear repairs E–F, inheriting retinal/body drawing G–H from `VolumeResultsFigure`. The old two continued-sheet entrypoints are removed. Final-only localisation views
-come from the retained `MeasurementFirstVolumeFigure` artwork in Supp. Figure
-4M–O (`build_slas_supplement.final_volume_views`), not a repair panel. FigureSheet's
+`RepairResultsFigure` in `build_slas_task_only.py` draws Figure 4: a compact
+procedure strip and the four matched repair examples, inheriting retinal/body
+drawing from `VolumeResultsFigure`. `AnalysisResultsFigure` draws Figure 5:
+quantitative endpoints A–C and the final localization views in D. Those views
+reuse the retained `MeasurementFirstVolumeFigure` artwork, also preserved in
+Supp. Figure 6M–O, and are separate from the body-separation repair. FigureSheet's
 vertical canvas crop removes unused space without shrinking the retained axes
 or type. Editorial colours and marker styles do not change detections.
 
