@@ -3,7 +3,7 @@
 from concurrent.futures import Future
 
 import pytest
-from PyQt6.QtTest import QTest
+from PySide6.QtTest import QTest
 from pyqt_reactive.widgets.shared.abstract_table_browser import ColumnPresentation
 
 from openhcs.agent.dto.functions import FunctionCatalogEntry, catalog_page

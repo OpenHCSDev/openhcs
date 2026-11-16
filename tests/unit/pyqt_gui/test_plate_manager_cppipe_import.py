@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from objectstate.object_state import ObjectStateRegistry
-from PyQt6.QtCore import Qt
+from PySide6.QtCore import Qt
 
 from openhcs.constants.constants import OrchestratorReady
 from openhcs.agent.dto.session import DatasetRootsRequest

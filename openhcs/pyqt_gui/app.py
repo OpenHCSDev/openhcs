@@ -1,7 +1,7 @@
 """
-OpenHCS PyQt6 Application
+OpenHCS PySide6 Application
 
-Main application class that initializes the PyQt6 application and
+Main application class that initializes the PySide6 application and
 manages global configuration and services.
 """
 
@@ -13,9 +13,9 @@ from collections.abc import Callable
 from objectstate import spawn_thread_with_context
 from polystore.base import storage_registry
 from polystore.filemanager import FileManager
-from PyQt6 import QtCore
-from PyQt6.QtCore import qInstallMessageHandler
-from PyQt6.QtWidgets import QApplication, QMessageBox
+from PySide6 import QtCore
+from PySide6.QtCore import qInstallMessageHandler
+from PySide6.QtWidgets import QApplication, QMessageBox
 from pyqt_reactive.utils.scroll_filter import install_shift_wheel_scrolling
 
 from openhcs import __version__ as OPENHCS_VERSION
@@ -137,7 +137,7 @@ class MainWindowStartupReadiness(QtCore.QObject):
 
 class OpenHCSPyQtApp(QApplication):
     """
-    OpenHCS PyQt6 Application.
+    OpenHCS PySide6 Application.
 
     Main application class that manages global state, configuration,
     and the main window lifecycle.
@@ -150,7 +150,7 @@ class OpenHCSPyQtApp(QApplication):
         runtime_context: PyQtGuiRuntimeContext,
     ):
         """
-        Initialize the OpenHCS PyQt6 application.
+        Initialize the OpenHCS PySide6 application.
 
         Args:
             argv: Command line arguments
@@ -193,7 +193,7 @@ class OpenHCSPyQtApp(QApplication):
         # Install global Shift+Wheel horizontal scrolling
         self._scroll_filter = install_shift_wheel_scrolling(self)
         logger.debug("Installed global Shift+Wheel horizontal scrolling")
-        logger.info("OpenHCS PyQt6 application initialized")
+        logger.info("OpenHCS PySide6 application initialized")
 
     @property
     def pipeline_runtime_config(self) -> GlobalPipelineConfig:
@@ -218,26 +218,13 @@ class OpenHCSPyQtApp(QApplication):
         )
         logger.info("Storage registry initialization started in background")
 
-        # CRITICAL FIX: Establish global config context for lazy dataclass resolution
-        # This was missing and caused placeholder resolution to fall back to static defaults
-        from objectstate.global_config import set_global_config_for_editing
-        from objectstate.lazy_factory import ensure_global_config_context
         from objectstate.object_state import (
             ObjectState,
             ObjectStateRegistry,
         )
 
-        from openhcs.core.config.pipeline_config import GlobalPipelineConfig
-
-        # Set for editing (UI placeholders) - this uses threading.local() storage
-        set_global_config_for_editing(
-            GlobalPipelineConfig, self.pipeline_runtime_config
-        )
-
-        # ALSO ensure context for orchestrator creation (required by orchestrator.__init__)
-        ensure_global_config_context(GlobalPipelineConfig, self.pipeline_runtime_config)
-
-        # Register GlobalPipelineConfig ObjectState (singleton, persists for app lifetime)
+        # Register GlobalPipelineConfig ObjectState (singleton, persists for app lifetime).
+        # Registering it at the global scope makes its object the global config.
         # This is the root of the ObjectState hierarchy
         # scope_id="" (empty string) for global scope - visible to all orchestrators
         global_state = ObjectState(
@@ -251,12 +238,6 @@ class OpenHCSPyQtApp(QApplication):
             scope_id=UIConfig.object_state_scope_id(),
         )
         ObjectStateRegistry.register(ui_state, _skip_snapshot=True)
-
-        # ARCHITECTURAL FIX: Do NOT set contextvars at app startup
-        # contextvars is ONLY for temporary nested contexts (inside with config_context() blocks)
-        # threading.local() is the single source of truth for persistent global config
-        # Placeholder resolution will automatically fall back to threading.local() via get_base_global_config()
-        # This eliminates the dual storage architecture smell
 
         logger.info(
             "Global configuration context established for lazy dataclass resolution"

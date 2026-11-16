@@ -3,9 +3,9 @@
 from dataclasses import fields
 from typing import get_type_hints
 
-from PyQt6.QtGui import QColor, QKeySequence
-from PyQt6.QtWidgets import QCheckBox
-from PyQt6.QtTest import QTest
+from PySide6.QtGui import QColor, QKeySequence
+from PySide6.QtWidgets import QCheckBox
+from PySide6.QtTest import QTest
 
 
 def _wait_until(qapp, predicate, *, attempts: int = 400) -> None:

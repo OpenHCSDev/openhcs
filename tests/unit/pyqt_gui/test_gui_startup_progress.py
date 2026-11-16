@@ -476,7 +476,7 @@ def test_launcher_version_uses_source_version_authority(
         launch.parse_arguments()
 
     assert exit_info.value.code == 0
-    assert capsys.readouterr().out.strip() == f"OpenHCS PyQt6 GUI {OPENHCS_VERSION}"
+    assert capsys.readouterr().out.strip() == f"OpenHCS PySide6 GUI {OPENHCS_VERSION}"
 
 
 def test_stream_tee_preserves_terminal_text_and_mirrors_real_lines() -> None:
@@ -702,7 +702,7 @@ def test_application_reports_ready_after_deferred_initialization() -> None:
 def test_application_cleanup_restores_its_predecessor_exception_hook(
     monkeypatch,
 ) -> None:
-    from PyQt6.QtCore import QEvent
+    from PySide6.QtCore import QEvent
 
     from openhcs.pyqt_gui.app import OpenHCSPyQtApp
 
@@ -748,7 +748,7 @@ def test_application_cleanup_restores_its_predecessor_exception_hook(
 def test_show_main_window_reports_ready_only_after_deferred_work(
     monkeypatch,
 ) -> None:
-    from PyQt6 import QtCore
+    from PySide6 import QtCore
 
     from openhcs.pyqt_gui import app as app_module
     from openhcs.pyqt_gui.app import OpenHCSPyQtApp
@@ -807,7 +807,7 @@ def test_show_main_window_reports_ready_only_after_deferred_work(
 
 
 def test_readiness_gate_reports_only_after_initialized_paint(qapp) -> None:
-    from PyQt6 import QtCore, QtGui, QtWidgets
+    from PySide6 import QtCore, QtGui, QtWidgets
 
     from openhcs.pyqt_gui.app import MainWindowStartupReadiness
 
@@ -834,7 +834,7 @@ def test_readiness_gate_reports_only_after_initialized_paint(qapp) -> None:
 
 
 def test_readiness_gate_tracks_a_real_widget_paint(qapp) -> None:
-    from PyQt6 import QtWidgets
+    from PySide6 import QtWidgets
 
     from openhcs.pyqt_gui.app import MainWindowStartupReadiness
 
@@ -861,7 +861,7 @@ def test_readiness_gate_tracks_a_real_widget_paint(qapp) -> None:
 
 
 def test_readiness_gate_routes_ready_callback_failure_once(qapp) -> None:
-    from PyQt6 import QtCore, QtGui, QtWidgets
+    from PySide6 import QtCore, QtGui, QtWidgets
 
     from openhcs.pyqt_gui.app import MainWindowStartupReadiness
 
@@ -889,7 +889,7 @@ def test_readiness_gate_routes_ready_callback_failure_once(qapp) -> None:
 
 
 def test_readiness_gate_cancels_when_window_closes_before_ready(qapp) -> None:
-    from PyQt6 import QtCore, QtGui, QtWidgets
+    from PySide6 import QtCore, QtGui, QtWidgets
 
     from openhcs.pyqt_gui.app import MainWindowStartupReadiness
 

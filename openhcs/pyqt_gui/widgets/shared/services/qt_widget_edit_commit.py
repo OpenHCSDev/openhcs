@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QEventLoop, QThread
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QEventLoop, QThread
+from PySide6.QtWidgets import QApplication
 
 
 class QtWidgetEditCommitError(RuntimeError):

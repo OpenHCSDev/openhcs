@@ -1,10 +1,10 @@
 """Native bridge actions consume generic row-disclosure declarations."""
 
 import pytest
-from PyQt6 import sip
-from PyQt6.QtCore import QCoreApplication, QEvent, Qt
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QListWidgetItem
+import shiboken6
+from PySide6.QtCore import QCoreApplication, QEvent, Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QListWidgetItem
 
 from pyqt_reactive.core import ReorderableListWidget
 from pyqt_reactive.services.widget_tree_projection import (
@@ -57,7 +57,7 @@ def preview_target(qapp):
             focusable=True,
         ),
     )
-    if not sip.isdeleted(view):
+    if shiboken6.isValid(view):
         view.close()
         view.deleteLater()
 
@@ -125,7 +125,7 @@ def test_closing_view_cancels_accepted_row_action(qtbot, preview_target, action_
     view.close()
     # Deliver the real close's deferred deletion before the accepted zero-timer.
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
-    assert sip.isdeleted(view)
+    assert not shiboken6.isValid(view)
     with qtbot.captureExceptions() as exceptions:
         QCoreApplication.processEvents()
     assert not exceptions

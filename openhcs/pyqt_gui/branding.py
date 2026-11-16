@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QRectF, QSize, Qt
-from PyQt6.QtGui import QIcon, QPainter, QPixmap
-from PyQt6.QtSvg import QSvgRenderer
+from PySide6.QtCore import QRectF, QSize, Qt
+from PySide6.QtGui import QIcon, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
 
 from openhcs.resources.brand import BrandAsset, brand_asset_bytes
 

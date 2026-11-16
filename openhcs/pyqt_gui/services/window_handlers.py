@@ -11,7 +11,7 @@ import logging
 import re
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 from pyqt_reactive.services.scope_window_factory import (
     ScopeWindowCreationRequest,
     ScopeWindowRegistry,
@@ -52,7 +52,7 @@ class OpenHCSWindowCreationAuthority:
         request: ScopeWindowCreationRequest,
     ) -> Optional[QWidget]:
         """Create GlobalPipelineConfig editor window."""
-        from objectstate import ObjectStateRegistry, set_global_config_for_editing
+        from objectstate import ObjectStateRegistry, set_global_config
 
         from openhcs.core.config.pipeline_config import GlobalPipelineConfig
         from openhcs.core.config.config_cache import save_global_config_sync
@@ -94,7 +94,7 @@ class OpenHCSWindowCreationAuthority:
             if not save_global_config_sync(new_config):
                 raise RuntimeError("Failed to persist GlobalPipelineConfig.")
             if not self._emit_main_window_global_config_changed(new_config):
-                set_global_config_for_editing(GlobalPipelineConfig, new_config)
+                set_global_config(GlobalPipelineConfig, new_config)
             logger.info("Global config saved via window")
 
         def handle_ui_save(new_config: UIConfig) -> None:

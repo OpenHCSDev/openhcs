@@ -6,12 +6,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from objectstate.object_state import ObjectState, ObjectStateRegistry
-from PyQt6 import sip
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import (
+import shiboken6
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QDockWidget,
@@ -35,7 +35,6 @@ from pyqt_reactive.services.widget_tree_projection import (
 from formbridge.services.window_code_document import WindowCodeDocument, WindowCodeDocumentDriver
 from pyqt_reactive.services.window_manager import WindowManager
 from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
-from pyqt_reactive.widgets.editors import simple_code_editor
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared import (
     BaseFormDialog,
@@ -1126,7 +1125,7 @@ def test_qt_top_level_target_contains_deletion_after_discovery(
     qapp.processEvents()
 
     def stale_discovery() -> tuple[QWidget, ...]:
-        sip.delete(stale_window)
+        shiboken6.delete(stale_window)
         return (stale_window,)
 
     monkeypatch.setattr(
@@ -2354,7 +2353,6 @@ def test_simple_code_editor_windows_register_code_documents(monkeypatch) -> None
     applied_sources: list[str] = []
     before_scopes = set(WindowManager.get_code_document_scopes())
     service = SimpleCodeEditorService(parent)
-    monkeypatch.setattr(simple_code_editor, "QSCINTILLA_AVAILABLE", False)
 
     service.edit_code(
         "pipeline_steps = []\n",
@@ -3551,7 +3549,7 @@ class BridgeSessions:
     @classmethod
     def get(cls) -> Session:
         if cls.current is None:
-            ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+            set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
             cls.current = Session(
                 transport_config=OpenHCSZMQConfig(
                     default_port=session_port(), persistent=False

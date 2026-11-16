@@ -2,13 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
-try:
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtWidgets import QTreeWidgetItem
-
-    PYQT_AVAILABLE = True
-except ImportError:
-    PYQT_AVAILABLE = False
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from formbridge.services.zmq_server_info import BaseServerInfo, ExecutionServerInfo
 from formbridge.services.zmq_server_scan_service import StartingEndpointObservation
@@ -91,7 +86,6 @@ def _sync(tree):
     )
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
 def test_connected_startup_observation_projects_connected_execution_row() -> None:
     tree = _FakeTree()
     manager = SimpleNamespace(
@@ -115,7 +109,6 @@ def test_connected_startup_observation_projects_connected_execution_row() -> Non
     assert row.data(0, Qt.ItemDataRole.UserRole) is observation
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
 def test_execution_server_row_is_removed_by_authoritative_missing_scan(
     monkeypatch,
 ):
@@ -134,7 +127,6 @@ def test_execution_server_row_is_removed_by_authoritative_missing_scan(
     assert tree.topLevelItemCount() == 0
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
 def test_removed_execution_server_row_stays_absent_on_later_scans(
     monkeypatch,
 ):
@@ -154,7 +146,6 @@ def test_removed_execution_server_row_stays_absent_on_later_scans(
     assert tree.topLevelItemCount() == 0
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
 def test_launching_viewer_row_keeps_nominal_viewer_identity(monkeypatch):
     manager = SimpleNamespace(
         list_viewers=lambda: (
@@ -181,7 +172,6 @@ def test_launching_viewer_row_keeps_nominal_viewer_identity(monkeypatch):
     assert payload.viewer_type is ViewerType.NAPARI
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
 def test_launching_viewer_row_tracks_current_viewer_snapshot(monkeypatch):
     viewer = SimpleNamespace(
         port=5555,

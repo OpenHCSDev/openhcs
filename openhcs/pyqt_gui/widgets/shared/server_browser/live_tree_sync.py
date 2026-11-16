@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
 from formbridge.services.tree_item_key import EndpointPortProviderABC
 from formbridge.services.zmq_server_info import BaseServerInfo
 from formbridge.services.zmq_server_scan_service import StartingEndpointObservation

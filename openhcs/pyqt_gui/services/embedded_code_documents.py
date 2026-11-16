@@ -8,7 +8,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 from formbridge.services.window_code_document import WindowCodeDocumentDriver
 from pyqt_reactive.services.window_manager import WindowManager
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 
 
 class EmbeddedCodeDocumentRegistrationABC(ABC, metaclass=AutoRegisterMeta):

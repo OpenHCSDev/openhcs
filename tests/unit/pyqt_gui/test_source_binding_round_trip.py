@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from PyQt6.QtWidgets import QCheckBox
+from PySide6.QtWidgets import QCheckBox
 
 from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
 from openhcs.core.source.source_bindings import (

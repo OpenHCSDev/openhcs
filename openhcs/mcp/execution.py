@@ -102,7 +102,7 @@ class McpTransportExecutor(AsyncOperationExecutor):
         if self._closed:
             return
         try:
-            self.dispatcher.close()
+            self.dispatcher.close_dispatch()
         finally:
             try:
                 super().close()

@@ -13,7 +13,7 @@ from functools import singledispatchmethod
 from formbridge.services.scope_token_service import ScopeTokenService
 from objectstate import ScopeKey
 from objectstate.object_state import ObjectStateRegistry
-from PyQt6.QtCore import QTimer
+from PySide6.QtCore import QTimer
 from pyqt_reactive.services.time_travel_navigation import FunctionScopeRef, NavigationTarget
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_navigation import RegisteredWindowNavigationRequest

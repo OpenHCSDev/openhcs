@@ -120,7 +120,7 @@ def test_main_window_opens_and_closes_panes_and_leaves_no_process(tmp_path) -> N
 def _run_main_window(port: int):
     from dataclasses import replace
 
-    from PyQt6.QtCore import QTimer
+    from PySide6.QtCore import QTimer
 
     from openhcs.core.config.pipeline_config import GlobalPipelineConfig
     from openhcs.pyqt_gui.app import OpenHCSPyQtApp

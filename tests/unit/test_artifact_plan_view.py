@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from openhcs.runtime.zmq.zmq_execution_signature import OpenHCSExecutionConfigBundle

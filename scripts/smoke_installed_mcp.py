@@ -761,9 +761,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                     f"Packaged knowledge manifest is missing: {manifest_path}"
                 )
             console_scripts = _load_installed_console_scripts()
-            if importlib.util.find_spec("PyQt6") is None:
+            if importlib.util.find_spec("PySide6") is None:
                 raise AssertionError(
-                    "The combined local client installation is missing the PyQt6 UI."
+                    "The combined local client installation is missing the PySide6 UI."
                 )
 
             result = asyncio.run(_run_protocol_smoke())

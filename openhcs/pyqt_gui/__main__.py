@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-OpenHCS PyQt6 GUI - Module Entry Point
+OpenHCS PySide6 GUI - Module Entry Point
 
-Allows running the PyQt6 GUI directly with:
+Allows running the PySide6 GUI directly with:
     python -m openhcs.pyqt_gui
 
 This is a convenience wrapper around the launch script.

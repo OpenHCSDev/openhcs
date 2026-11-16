@@ -1,5 +1,5 @@
 """
-Shared widgets and utilities for PyQt6 GUI.
+Shared widgets and utilities for PySide6 GUI.
 
 Provides reusable components for parameter editing, type-based form generation,
 and other common UI patterns.

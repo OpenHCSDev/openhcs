@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 
 import numpy as np
-from PyQt6.QtWidgets import QSizePolicy
+from PySide6.QtWidgets import QSizePolicy
 
 import pyqt_reactive.widgets.system_monitor as system_monitor
 from formbridge.services.system_metrics_sampler import (

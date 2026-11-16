@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PyQt6.QtWidgets import QApplication, QScrollArea, QWidget
+from PySide6.QtWidgets import QApplication, QScrollArea, QWidget
 from objectstate import ObjectState, ObjectStateRegistry
 
 from openhcs.core.config.pipeline_config import PipelineConfig

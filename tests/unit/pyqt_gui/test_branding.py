@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import QSize
+from PySide6.QtCore import QSize
 
 from openhcs.pyqt_gui.branding import (
     openhcs_application_icon,

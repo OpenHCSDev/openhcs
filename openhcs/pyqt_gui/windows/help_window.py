@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PyQt6.QtCore import QSignalBlocker, Qt
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QSignalBlocker, Qt
+from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QHBoxLayout,

@@ -1,5 +1,5 @@
 """
-Synthetic Plate Generator Window for PyQt6
+Synthetic Plate Generator Window for PySide6
 
 Provides a user-friendly interface for generating synthetic microscopy plates
 for testing OpenHCS without requiring real microscopy data.
@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
@@ -19,8 +19,8 @@ from PyQt6.QtWidgets import (
     QWidget,
     QFileDialog,
 )
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QFont
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QFont
 
 from pyqt_reactive.forms.parameter_form_manager import ParameterFormManager
 from formbridge.forms.layout_constants import CURRENT_LAYOUT
@@ -44,7 +44,7 @@ class SyntheticPlateGeneratorWindow(QDialog):
     """
 
     # Signals
-    plate_generated = pyqtSignal(str, str)  # output_dir path, pipeline_path
+    plate_generated = Signal(str, str)  # output_dir path, pipeline_path
 
     def __init__(self, color_scheme: Optional[ColorScheme] = None, parent=None):
         """

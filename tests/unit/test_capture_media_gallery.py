@@ -416,8 +416,8 @@ def test_viewer_still_ingests_real_native_qt_snapshot_without_rerendering(
     monkeypatch: pytest.MonkeyPatch,
     viewer_type: ViewerType,
 ) -> None:
-    from PyQt6.QtCore import pyqtSignal
-    from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
+    from PySide6.QtCore import Signal
+    from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
     from pyqt_reactive.services.window_snapshot import (
         QtWindowSnapshotRequest,
         QtWindowSnapshotService,
@@ -425,7 +425,7 @@ def test_viewer_still_ingests_real_native_qt_snapshot_without_rerendering(
     )
 
     class NativeWindow(QWidget):
-        frame_completed = pyqtSignal()
+        frame_completed = Signal()
 
         def paintEvent(self, event):
             super().paintEvent(event)
@@ -572,7 +572,7 @@ def test_shared_native_snapshot_ingestion_refuses_invalid_resource_without_movin
     tmp_path: Path,
     invalid: str,
 ) -> None:
-    from PyQt6.QtWidgets import QLabel
+    from PySide6.QtWidgets import QLabel
     from pyqt_reactive.services.window_snapshot import (
         QtWindowSnapshotRequest,
         QtWindowSnapshotService,

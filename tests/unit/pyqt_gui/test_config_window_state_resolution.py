@@ -7,7 +7,7 @@ import pytest
 from objectstate import (
     ObjectState,
     ObjectStateRegistry,
-    set_global_config_for_editing,
+    set_global_config,
 )
 from pyqt_reactive.forms.parameter_form_manager import (
     FormManagerConfig,
@@ -362,7 +362,7 @@ def test_pipeline_config_header_owns_live_tab_actions_and_commit_groups(
     qapp,
     qtbot,
 ) -> None:
-    from PyQt6.QtWidgets import QPushButton
+    from PySide6.QtWidgets import QPushButton
 
     state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
     window = OpenHCSConfigWindow(
@@ -760,7 +760,7 @@ def test_pipeline_streaming_enableable_placeholders_dim_after_build_and_toggle(
 ) -> None:
     """Lazy inherited streaming configs still receive enableable dimming."""
     ObjectStateRegistry.clear()
-    set_global_config_for_editing(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
 
     state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)

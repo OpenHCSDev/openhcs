@@ -1,5 +1,5 @@
 """
-OpenHCS PyQt6 GUI Integration Testing Framework - Refactored Foundation
+OpenHCS PySide6 GUI Integration Testing Framework - Refactored Foundation
 
 Mathematical simplification approach applied to GUI testing framework.
 Eliminates code duplication through algebraic factoring and parameterization.
@@ -22,13 +22,13 @@ from zmqruntime import EndpointShutdownMode
 from zmqruntime.shutdown import EndpointShutdownService
 from zmqruntime.transport import DataControlPortPairAuthority
 
-# Skip entire module in CPU-only mode to avoid PyQt6 imports
+# Skip entire module in CPU-only mode to avoid PySide6 imports
 if os.getenv("OPENHCS_CPU_ONLY", "false").lower() == "true":
-    pytest.skip("PyQt6 GUI tests skipped in CPU-only mode", allow_module_level=True)
+    pytest.skip("PySide6 GUI tests skipped in CPU-only mode", allow_module_level=True)
 
-from PyQt6.QtCore import QEvent, QObject, QTimer, pyqtSignal
-from PyQt6.QtTest import QTest
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QEvent, QObject, QTimer, Signal
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QLabel,
@@ -329,7 +329,7 @@ ERROR_KEYWORDS = ["error", "exception", "recursion", "warning", "unexpected"]
 class ErrorDialogMonitor(QObject):
     """Unified error dialog monitoring system."""
 
-    error_detected = pyqtSignal(str)
+    error_detected = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -949,7 +949,7 @@ def _reset_field(context: WorkflowContext) -> WorkflowContext:
     print(f"  Resetting {field_name} to lazy state")
 
     # Properly click the reset button with Qt event processing
-    from PyQt6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
 
     reset_button.click()
     QApplication.processEvents()  # Process the click event
@@ -1268,7 +1268,7 @@ class TestPyQtGUIWorkflowFoundation:
         """Own one real OpenHCS application for the complete workflow matrix."""
         import sys
 
-        from objectstate.global_config import get_current_global_config
+        from objectstate import get_live_global_config
 
         from openhcs.pyqt_gui.app import OpenHCSPyQtApp
 
@@ -1298,10 +1298,11 @@ class TestPyQtGUIWorkflowFoundation:
                 pipeline_runtime=_create_test_global_config(),
             ),
         )
-        if get_current_global_config(GlobalPipelineConfig) is None:
-            raise AssertionError("OpenHCS did not establish its global config context.")
-
         app.create_main_window()
+        if get_live_global_config(GlobalPipelineConfig) is None:
+            raise AssertionError(
+                "The main window's session did not register the global config."
+            )
         app.show_main_window()
         _wait_for_gui(TIMING.WINDOW_DELAY)
 
@@ -1336,7 +1337,7 @@ class TestPyQtGUIWorkflowFoundation:
     def cleanup_gui_state(self, application_lifecycle):
         """Automatically cleanup GUI state between tests with error monitoring."""
         # Setup: Clear any existing state
-        from PyQt6.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication
 
         from openhcs.pyqt_gui.main import OpenHCSMainWindow
 

@@ -106,7 +106,7 @@ result = main(["mcp", "--transport", "stdio"])
 assert result == 31
 assert sys.argv[1:] == []
 assert "openhcs.gui_startup" not in sys.modules
-assert not any(name == "PyQt6" or name.startswith("PyQt6.") for name in sys.modules)
+assert not any(name == "PySide6" or name.startswith("PySide6.") for name in sys.modules)
 """
     completed = subprocess.run(
         [sys.executable, "-c", script],
@@ -126,7 +126,7 @@ def test_actual_skills_route_in_a_fresh_process_is_headless(tmp_path):
 import sys
 from openhcs.cli import main
 assert main(['skills', 'sync', '--skills-dir', {str(destination)!r}, '--dry-run']) == 0
-assert not any(name.split('.')[0] in ('PyQt6', 'napari', 'torch', 'httpx', 'requests') for name in sys.modules)
+assert not any(name.split('.')[0] in ('PySide6', 'napari', 'torch', 'httpx', 'requests') for name in sys.modules)
 assert 'openhcs.gui_startup' not in sys.modules
 assert 'openhcs.mcp.bootstrap' not in sys.modules
 """

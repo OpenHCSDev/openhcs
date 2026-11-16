@@ -8,8 +8,8 @@ from types import SimpleNamespace
 import pytest
 from objectstate import ObjectStateRegistry
 from packaging.version import Version
-from PyQt6.QtNetwork import QNetworkReply, QNetworkRequest
-from PyQt6.QtWidgets import QMessageBox, QWidget
+from PySide6.QtNetwork import QNetworkReply, QNetworkRequest
+from PySide6.QtWidgets import QMessageBox, QWidget
 from zmqruntime.process_launch import (
     BackgroundProcessPlatform,
     WindowsBackgroundProcesses,

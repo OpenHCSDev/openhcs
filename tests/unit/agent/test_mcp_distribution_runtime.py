@@ -164,14 +164,14 @@ import sys
 original_import = builtins.__import__
 
 def reject_pyqt(name, globals=None, locals=None, fromlist=(), level=0):
-    if name == 'PyQt6' or name.startswith('PyQt6.'):
+    if name == 'PySide6' or name.startswith('PySide6.'):
         raise AssertionError(f'headless MCP startup imported {name}')
     return original_import(name, globals, locals, fromlist, level)
 
 builtins.__import__ = reject_pyqt
 from openhcs.mcp.server import build_server
 build_server()
-assert not any(name == 'PyQt6' or name.startswith('PyQt6.') for name in sys.modules)
+assert not any(name == 'PySide6' or name.startswith('PySide6.') for name in sys.modules)
 """
 
     completed = subprocess.run(
@@ -193,7 +193,7 @@ import sys
 original_import = builtins.__import__
 
 def reject_pyqt(name, globals=None, locals=None, fromlist=(), level=0):
-    if name == 'PyQt6' or name.startswith('PyQt6.'):
+    if name == 'PySide6' or name.startswith('PySide6.'):
         raise AssertionError(f'headless hosted MCP startup imported {name}')
     return original_import(name, globals, locals, fromlist, level)
 
@@ -214,7 +214,7 @@ settings = McpHttpResourceServerSettings(
     ),
 )
 build_http_server(settings)
-assert not any(name == 'PyQt6' or name.startswith('PyQt6.') for name in sys.modules)
+assert not any(name == 'PySide6' or name.startswith('PySide6.') for name in sys.modules)
 assert not any(name == 'openhcs.pyqt_gui' or name.startswith('openhcs.pyqt_gui.') for name in sys.modules)
 """
 

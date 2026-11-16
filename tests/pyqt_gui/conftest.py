@@ -1,7 +1,7 @@
 """
-PyQt6 GUI test configuration and fixtures.
+PySide6 GUI test configuration and fixtures.
 
-This module provides common fixtures and configuration for PyQt6 GUI tests.
+This module provides common fixtures and configuration for PySide6 GUI tests.
 """
 
 import pytest
@@ -60,10 +60,10 @@ def mock_color_scheme():
     """Provide a mock color scheme for testing."""
     import os
 
-    # Skip PyQt6 imports in CPU-only mode
+    # Skip PySide6 imports in CPU-only mode
     if os.getenv("OPENHCS_CPU_ONLY", "false").lower() == "true":
-        pytest.skip("PyQt6 GUI tests skipped in CPU-only mode")
+        pytest.skip("PySide6 GUI tests skipped in CPU-only mode")
 
-    from openhcs.pyqt_gui.shared.color_scheme import PyQt6ColorScheme
+    from openhcs.pyqt_gui.shared.color_scheme import PySide6ColorScheme
 
-    return PyQt6ColorScheme()
+    return PySide6ColorScheme()

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from functools import singledispatchmethod
 from typing import Callable
 
-from PyQt6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem
 from formbridge.services.zmq_server_info import (
     BaseServerInfo,
     ExecutionServerInfo,

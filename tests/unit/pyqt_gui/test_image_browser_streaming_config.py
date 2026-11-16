@@ -3,9 +3,9 @@
 from types import SimpleNamespace
 
 from objectstate import ObjectState, ObjectStateRegistry
-from objectstate.global_config import set_global_config_for_editing
-from PyQt6 import sip
-from PyQt6.QtTest import QTest
+from objectstate.global_config import set_global_config
+import shiboken6
+from PySide6.QtTest import QTest
 from pyqt_reactive.widgets.shared.responsive_layout_widgets import (
     ResponsiveParameterRow,
 )
@@ -44,7 +44,7 @@ def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
     global_config = GlobalPipelineConfig(
         streaming_defaults=StreamingDefaults(host="global-host"),
     )
-    set_global_config_for_editing(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
     try:
         global_state = ObjectState(global_config, scope_id="")
         ObjectStateRegistry.register(global_state, _skip_snapshot=True)
@@ -193,9 +193,9 @@ def test_streaming_enableable_is_title_only_and_targets_its_config_group(qapp) -
             assert enabled_label.isHidden()
             assert nested.labels["enabled"] is enabled_label
             assert enabled_label.parentWidget() is None
-            assert not sip.isdeleted(enabled_label)
-            assert not sip.isdeleted(enabled_widget)
-            assert not sip.isdeleted(enabled_reset)
+            assert shiboken6.isValid(enabled_label)
+            assert shiboken6.isValid(enabled_widget)
+            assert shiboken6.isValid(enabled_reset)
             assert not source_rows
             assert not visible_empty_rows
 

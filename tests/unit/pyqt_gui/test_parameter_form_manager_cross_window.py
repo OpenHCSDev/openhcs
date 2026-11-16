@@ -1,10 +1,12 @@
 from types import SimpleNamespace
 
-from PyQt6.QtCore import QEventLoop, QObject, QTimer
-from PyQt6.QtWidgets import QApplication
+from objectstate.field_access import DottedFieldPath
+
+from PySide6.QtCore import QEventLoop, QObject, QTimer
+from PySide6.QtWidgets import QApplication
 
 from objectstate import ObjectStateRegistry
-from objectstate.global_config import set_global_config_for_editing
+from objectstate.global_config import set_global_config
 from objectstate.object_state import ObjectState
 from openhcs.core.config.pipeline_config import GlobalPipelineConfig, PipelineConfig
 from pyqt_reactive.forms.parameter_form_chrome_sync import ParameterFormChromeSync
@@ -77,7 +79,7 @@ def test_cross_window_change_debounces_placeholder_refresh() -> None:
 
 def test_dispatcher_notifies_source_root_without_self_flash(qapp) -> None:
     """Unsaved edits refresh live consumers without obscuring their source input."""
-    from PyQt6.QtCore import QEventLoop, QTimer
+    from PySide6.QtCore import QEventLoop, QTimer
 
     class SignalRecorder:
         def __init__(self) -> None:
@@ -128,6 +130,15 @@ def test_dispatcher_notifies_source_root_without_self_flash(qapp) -> None:
 
         def sync_enabled_field_visuals(self, value):
             del value
+
+        # pyqt-reactive 0.10's dispatcher finds the root through the form
+        # tree and asks the source for the ObjectState path of its field.
+        @property
+        def form_tree(self):
+            return SimpleNamespace(root=lambda: self)
+
+        def _object_state_path_for_field(self, field_name):
+            return DottedFieldPath(self.field_id).child(field_name)
 
         def _on_live_context_changed(self):
             if self._block_cross_window_updates:
@@ -310,7 +321,7 @@ def test_chrome_sync_refreshes_widgets_by_exact_objectstate_path() -> None:
 
 def test_resolved_change_refreshes_widget_values_outside_time_travel(qapp) -> None:
     """External ObjectState edits update visible widgets without time travel."""
-    from PyQt6.QtCore import QEventLoop, QTimer
+    from PySide6.QtCore import QEventLoop, QTimer
 
     class FakeChromeSync:
         def __init__(self) -> None:
@@ -447,7 +458,7 @@ def test_list_enum_placeholder_preview_refreshes_structural_child_paths() -> Non
     global_config = GlobalPipelineConfig()
     global_state = ObjectState(global_config, scope_id="")
     ObjectStateRegistry.register(global_state, _skip_snapshot=True)
-    set_global_config_for_editing(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
 
     plate_state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
     ObjectStateRegistry.register(plate_state, _skip_snapshot=True)

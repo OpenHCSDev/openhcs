@@ -7,7 +7,7 @@ import pytest
 from pathlib import Path
 from types import SimpleNamespace
 
-from PyQt6.QtWidgets import QMessageBox, QWidget
+from PySide6.QtWidgets import QMessageBox, QWidget
 from pyqt_reactive.theming import ColorScheme
 from zmqruntime import EndpointApplication
 
@@ -181,7 +181,7 @@ def test_version_mismatch_dialog_is_themed_and_reports_both_versions(
 
     dialog_service.create_message_box = create_message_box
     qapp.processEvents()
-    from PyQt6.QtCore import QTimer
+    from PySide6.QtCore import QTimer
 
     QTimer.singleShot(
         0,

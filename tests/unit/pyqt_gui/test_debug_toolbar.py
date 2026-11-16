@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 
 from objectstate.lazy_factory import PREVIEW_LABEL_REGISTRY
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from pyqt_reactive.theming import ColorScheme
 
 from openhcs.constants.constants import OrchestratorReady

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, pyqtSlot
-from PyQt6.QtWidgets import QTreeWidgetItem
+from PySide6.QtCore import Qt, QTimer, Signal, Slot
+from PySide6.QtWidgets import QTreeWidgetItem
 from formbridge.services.zmq_server_info import BaseServerInfo, ExecutionServerInfo
 from formbridge.services.zmq_server_scan_service import (
     EndpointObservationSnapshot,
@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 class ZMQServerManagerWidget(UiLiveOverviewWidget, ZMQServerBrowserWidgetABC):
     """OpenHCS adapter for generic ZMQ browser UI + OpenHCS progress semantics."""
 
-    _progress_registry_changed = pyqtSignal()
+    _progress_registry_changed = Signal()
 
     def _schedule_orphan_viewer_sweep(self) -> None:
         """Report live viewer endpoints this process does not own once.
@@ -126,7 +126,7 @@ class ZMQServerManagerWidget(UiLiveOverviewWidget, ZMQServerBrowserWidgetABC):
 
         def _manager_callback(_instance) -> None:
             try:
-                from PyQt6.QtCore import QMetaObject, Qt
+                from PySide6.QtCore import QMetaObject, Qt
 
                 QMetaObject.invokeMethod(
                     self,
@@ -357,13 +357,13 @@ class ZMQServerManagerWidget(UiLiveOverviewWidget, ZMQServerBrowserWidgetABC):
 
         self._progress_registry_changed.emit()
 
-    @pyqtSlot()
+    @Slot()
     def _queue_progress_refresh(self) -> None:
         self._progress_dirty = True
         if self._progress_timer is not None and not self._progress_timer.isActive():
             self._progress_timer.start(self._progress_config.update_interval_ms)
 
-    @pyqtSlot()
+    @Slot()
     def _update_from_progress(self) -> None:
         """Render the latest coalesced progress snapshot."""
         if not self._progress_dirty:
@@ -387,7 +387,7 @@ class ZMQServerManagerWidget(UiLiveOverviewWidget, ZMQServerBrowserWidgetABC):
         item.setData(0, Qt.ItemDataRole.UserRole, data)
         return item
 
-    @pyqtSlot()
+    @Slot()
     def refresh_launching_viewers_only(self) -> None:
         if self._lifecycle_state.is_cleaning_up():
             return

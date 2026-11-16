@@ -6,8 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
     QDialog,
     QGroupBox,
     QHBoxLayout,
@@ -80,8 +80,8 @@ class DebugArtifactActionsModel:
 class DebugInspectorWindow(QDialog):
     """Window that renders a renderer-independent debug view model."""
 
-    artifact_open_requested = pyqtSignal(object)
-    artifact_export_requested = pyqtSignal(object)
+    artifact_open_requested = Signal(object)
+    artifact_export_requested = Signal(object)
 
     def __init__(
         self,

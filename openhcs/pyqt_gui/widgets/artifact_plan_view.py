@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QTableWidget,

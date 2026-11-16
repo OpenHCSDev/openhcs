@@ -41,6 +41,7 @@ from openhcs.core.steps.function_artifact_materialization import (
 )
 from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
+from objectstate import set_global_config
 
 MAX_INSPECTION_AXES = 8
 MAX_INSPECTION_STEPS = 24
@@ -108,13 +109,11 @@ class CompileInspectionGatewayABC(ABC):
 
 class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
     def _compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
-        from objectstate.lazy_factory import ensure_global_config_context
-
         from openhcs.core.config.pipeline_config import GlobalPipelineConfig
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
         from openhcs.core.progress.types import set_progress_queue
 
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             request.global_pipeline_config,
         )

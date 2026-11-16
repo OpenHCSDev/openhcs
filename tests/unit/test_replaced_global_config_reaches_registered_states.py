@@ -14,8 +14,7 @@ from pathlib import Path
 import pytest
 from arraybridge.decorators import DtypeConversion
 from objectstate import ObjectState, ObjectStateRegistry
-from objectstate.global_config import GlobalContextValues
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from pyqt_reactive.windows.config_window import ConfigSaveParticipant, ConfigWindowTabSpec
 
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
@@ -61,13 +60,9 @@ def _states_below(scope_id: str) -> list[ObjectState]:
 
 @pytest.fixture
 def empty_registry() -> Iterator[None]:
-    previous_global = GlobalContextValues.capture(GlobalPipelineConfig)
+    # restored_object_states (conftest) puts the registry and stored configs back.
     ObjectStateRegistry.clear()
-    try:
-        yield
-    finally:
-        ObjectStateRegistry.clear()
-        previous_global.apply()
+    yield
 
 
 def test_headless_session_global_config_reaches_existing_step_states(
@@ -76,7 +71,7 @@ def test_headless_session_global_config_reaches_existing_step_states(
     """The MCP server's session has no GUI to register the global state for it."""
 
     before = _global_config(BEFORE)
-    ensure_global_config_context(GlobalPipelineConfig, before)
+    set_global_config(GlobalPipelineConfig, before)
     session = Session(
         transport_config=OpenHCSZMQConfig(default_port=29873, persistent=False),
         global_config=before,
@@ -117,7 +112,7 @@ def test_saved_global_config_reaches_saved_values_of_existing_step_states(
 
     plate = "/isolated/global-save-plate"
     before = _global_config(BEFORE)
-    ensure_global_config_context(GlobalPipelineConfig, before)
+    set_global_config(GlobalPipelineConfig, before)
     global_state = ObjectState(before, scope_id="")
     ObjectStateRegistry.register(global_state, _skip_snapshot=True)
     ObjectStateRegistry.register(
@@ -132,7 +127,7 @@ def test_saved_global_config_reaches_saved_values_of_existing_step_states(
             ConfigWindowTabSpec(
                 state=global_state,
                 save_participant=ConfigSaveParticipant(
-                    apply=lambda config: ensure_global_config_context(
+                    apply=lambda config: set_global_config(
                         GlobalPipelineConfig, config
                     ),
                     rollback=lambda config: None,

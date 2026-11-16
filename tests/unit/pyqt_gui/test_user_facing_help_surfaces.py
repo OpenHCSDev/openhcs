@@ -5,7 +5,7 @@ import inspect
 import textwrap
 from pathlib import Path
 
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from formbridge.services.help_document import HelpDocumentFormat
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.widgets.shared.clickable_help_components import HelpButton

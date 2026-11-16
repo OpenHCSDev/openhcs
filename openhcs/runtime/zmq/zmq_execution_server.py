@@ -62,6 +62,7 @@ from openhcs.runtime.zmq.zmq_server_hooks import (
     ZMQWorkerCleanup,
 )
 from openhcs.runtime.zmq.zmq_worker_execution import ZMQWorkerExecutionRequest
+from objectstate import set_global_config
 
 logger = logging.getLogger(__name__)
 
@@ -894,11 +895,7 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
     def _ensure_request_global_config_context(
         request_context: ZMQExecutionContext,
     ) -> None:
-        from objectstate.lazy_factory import (
-            ensure_global_config_context,
-        )
-
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             request_context.configs.global_pipeline,
         )

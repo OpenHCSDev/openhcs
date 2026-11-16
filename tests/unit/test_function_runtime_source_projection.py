@@ -2151,7 +2151,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
 
     import tifffile
     from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
+    from objectstate import set_global_config
 
     from openhcs.core.config.pipeline_config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -2200,7 +2200,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         compilation = (
             PipelineOrchestrator(
                 tmp_path,
@@ -3234,7 +3234,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
 
     import tifffile
     from objectstate import ObjectStateRegistry
-    from objectstate.lazy_factory import ensure_global_config_context
+    from objectstate import set_global_config
 
     from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.config.pipeline_config import (
@@ -3295,7 +3295,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     ObjectStateRegistry.clear()
     set_progress_queue(SimpleQueue())
     try:
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         compilation = (
             PipelineOrchestrator(
                 tmp_path,

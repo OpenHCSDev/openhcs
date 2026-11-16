@@ -1,5 +1,5 @@
 """
-Step Parameter Editor Widget for PyQt6 GUI.
+Step Parameter Editor Widget for PySide6 GUI.
 
 Mirrors the Textual TUI StepParameterEditorWidget with type hint-based form generation.
 Handles FunctionStep parameter editing with nested dataclass support.
@@ -10,7 +10,7 @@ import dataclasses
 from functools import partial
 from typing import Callable, Optional, Union, get_args, get_origin
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QPushButton,
@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
     QTreeWidget,
     QTreeWidgetItem,
 )
-from PyQt6.QtCore import pyqtSignal, QTimer
+from PySide6.QtCore import Signal, QTimer
 
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.abstract import AbstractStep
@@ -99,7 +99,7 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
     """
 
     # Signals
-    step_parameter_changed = pyqtSignal()
+    step_parameter_changed = Signal()
 
     def showEvent(self, event):
         """Override showEvent to apply initial enabled styling when widget becomes visible."""

@@ -3,7 +3,7 @@
 import inspect
 
 import pytest
-from PyQt6.QtTest import QTest
+from PySide6.QtTest import QTest
 
 
 def _config_types() -> tuple[type, ...]:

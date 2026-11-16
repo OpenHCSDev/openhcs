@@ -7,9 +7,9 @@ Combines image browsing and metadata viewing in a single window with tabs.
 from objectstate import ScopeKey
 import logging
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -168,7 +168,7 @@ class PlateViewerWindow(BaseFormDialog):
             Qt.TextInteractionFlag.TextSelectableByMouse
         )  # Allow copying
         # Enable elision (text will be cut with ... when too long)
-        from PyQt6.QtWidgets import QSizePolicy
+        from PySide6.QtWidgets import QSizePolicy
 
         title_label.setSizePolicy(
             QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
@@ -231,7 +231,7 @@ class PlateViewerWindow(BaseFormDialog):
 
         # Add the tab widget's content area (stacked widget) below the tab row
         # The tab bar is already in tab_row, so we only add the content pane here
-        from PyQt6.QtWidgets import QStackedWidget
+        from PySide6.QtWidgets import QStackedWidget
 
         content_container = QWidget()
         content_layout = QVBoxLayout(content_container)
@@ -283,7 +283,7 @@ class PlateViewerWindow(BaseFormDialog):
         if index != self._metadata_tab_index:
             return
 
-        from PyQt6.QtCore import QSignalBlocker
+        from PySide6.QtCore import QSignalBlocker
 
         self._metadata_viewer_loaded = True
         metadata_viewer = self._create_metadata_viewer_tab()
@@ -300,7 +300,7 @@ class PlateViewerWindow(BaseFormDialog):
     def _create_metadata_viewer_tab(self) -> QWidget:
         """Create the metadata viewer tab."""
         # Create scroll area for metadata content
-        from PyQt6.QtWidgets import QScrollArea
+        from PySide6.QtWidgets import QScrollArea
 
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -343,7 +343,7 @@ class PlateViewerWindow(BaseFormDialog):
 
     def _consolidate_results(self):
         """Manually trigger analysis results consolidation."""
-        from PyQt6.QtWidgets import QMessageBox
+        from PySide6.QtWidgets import QMessageBox
 
         try:
             # Find results directories from the metadata handler's format contract.

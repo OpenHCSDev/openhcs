@@ -105,7 +105,7 @@ def smoke_pycodify() -> None:
 
 
 def smoke_pyqt_reactive() -> None:
-    from PyQt6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     from objectstate import ObjectState
     from pyqt_reactive.forms.parameter_form_manager import (
         FormManagerConfig,

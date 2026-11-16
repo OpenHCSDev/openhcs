@@ -73,6 +73,7 @@ from openhcs.core.dataset_sources.interfaces import (
     MetadataHandler,
     FilenameParserCapability,
 )
+from objectstate import get_saved_global_config
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -952,12 +953,7 @@ class PlateInspectionPathPlanningConfigProvider:
     """Resolve the saved global path-planning config used for result discovery."""
 
     def path_planning_config(self) -> PathPlanningConfig:
-        from objectstate import get_current_global_config
-
-        global_config = get_current_global_config(
-            GlobalPipelineConfig,
-            use_live=False,
-        )
+        global_config = get_saved_global_config(GlobalPipelineConfig)
         if global_config is None:
             return PathPlanningConfig()
         return global_config.path_planning_config

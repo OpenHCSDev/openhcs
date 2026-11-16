@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from PyQt6.QtCore import QEvent, QEventLoop, QPoint, QPointF, QRect, Qt, QTimer
-from PyQt6.QtGui import QColor, QEnterEvent, QWheelEvent
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QEvent, QEventLoop, QPoint, QPointF, QRect, Qt, QTimer
+from PySide6.QtGui import QColor, QEnterEvent, QWheelEvent
+from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
@@ -70,12 +70,12 @@ from objectstate import (
     get_base_type_for_lazy,
     replace_raw,
 )
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from pyqt_reactive.forms.parameter_form_manager import (
     FormManagerConfig,
     ParameterFormManager,
 )
-from pyqt_reactive.forms.widget_strategies import PlaceholderConfig, PyQt6WidgetEnhancer
+from pyqt_reactive.forms.widget_strategies import PlaceholderConfig, PySide6WidgetEnhancer
 from formbridge.forms.parameter_info_types import InlineDataclassWidgetInfo, create_parameter_info
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollableFormMixin
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollViewport
@@ -594,7 +594,7 @@ def test_pipeline_source_bindings_table_edits_recreate_container_and_children() 
 def test_pipeline_source_bindings_edit_refreshes_step_lazy_preview() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     binding = NamedSourceBinding(alias="DNA")
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
@@ -658,7 +658,7 @@ def test_pipeline_source_bindings_edit_refreshes_step_lazy_preview() -> None:
 def test_pipeline_step_source_bindings_refresh_open_step_editor_preview() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     binding = NamedSourceBinding(alias="DNA")
     plate_state = ObjectState(PipelineConfig(), scope_id="plate")
     step_state = ObjectState(
@@ -736,7 +736,7 @@ def test_pipeline_step_source_bindings_refresh_open_step_editor_preview() -> Non
 def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     plate_state = ObjectState(PipelineConfig(), scope_id="plate")
     step_state = ObjectState(
         FunctionStep(func=lambda image: image),
@@ -873,7 +873,7 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
 def test_source_bindings_enableable_chrome_uses_nominal_step_config() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -967,7 +967,7 @@ def test_source_bindings_enableable_chrome_uses_nominal_step_config() -> None:
 def test_source_bindings_enableable_reset_to_inherited_true_is_path_scoped() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(
+    set_global_config(
         GlobalPipelineConfig,
         GlobalPipelineConfig(
             step_source_bindings_config=StepSourceBindingsConfig(enabled=True),
@@ -1058,7 +1058,7 @@ def test_source_bindings_enableable_reset_from_false_to_inherited_value_is_path_
 
     for inherited_enabled in (True, False):
         ObjectStateRegistry.clear()
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             GlobalPipelineConfig(
                 step_source_bindings_config=StepSourceBindingsConfig(
@@ -1137,7 +1137,7 @@ def test_source_bindings_enableable_reset_from_false_to_inherited_value_is_path_
 def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -1317,7 +1317,7 @@ def test_source_bindings_refresh_detaches_obsolete_subtrees_before_flash_replay(
     None
 ):
     from pyqt_reactive.animation.flash_mixin import WindowFlashOverlay
-    from PyQt6.QtWidgets import QDialog, QVBoxLayout
+    from PySide6.QtWidgets import QDialog, QVBoxLayout
 
     QtApplicationHarness.app()
     dialog = QDialog()
@@ -1365,7 +1365,7 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
 ):
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -1489,7 +1489,7 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
 def test_source_bindings_inherited_table_combo_activation_materializes_child() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -1581,7 +1581,7 @@ def test_source_bindings_inherited_table_combo_activation_materializes_child() -
 def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -1669,7 +1669,7 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
 def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     state = ObjectState(PipelineConfig(), scope_id="plate")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     manager = ParameterFormManager(
@@ -2306,7 +2306,7 @@ def test_source_bindings_child_reset_noops_for_already_inherited_table_preview()
 ):
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     inherited_filter = SourceFilterClause(
         SourceFileName,
         TextContains,
@@ -2608,7 +2608,7 @@ def test_source_filters_fit_complete_rows_and_bar_inside_scoped_section() -> Non
 def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
-    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    set_global_config(GlobalPipelineConfig, GlobalPipelineConfig())
     inherited_rule = MetadataExtractionRule(
         source=FromFileName,
         pattern=r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif",
@@ -2874,7 +2874,7 @@ def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> 
     )
     assert first_placeholder == second_placeholder
 
-    PyQt6WidgetEnhancer.apply_placeholder_with_value(
+    PySide6WidgetEnhancer.apply_placeholder_with_value(
         container,
         first,
         first_placeholder,
@@ -2882,7 +2882,7 @@ def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> 
     assert widget.table("match_plan") is not None
     assert widget.table("match_plan").rowCount() == 1
 
-    PyQt6WidgetEnhancer.apply_placeholder_with_value(
+    PySide6WidgetEnhancer.apply_placeholder_with_value(
         container,
         second,
         second_placeholder,

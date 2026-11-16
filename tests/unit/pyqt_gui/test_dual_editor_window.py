@@ -8,8 +8,8 @@ import pytest
 from formbridge.protocols import codegen_provider, component_selection
 from formbridge.protocols.component_selection import FunctionSelectionProviderABC
 from objectstate import ObjectState, ObjectStateRegistry
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QLabel
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QLabel
 from pyqt_reactive.services.window_navigation import RegisteredWindowNavigationRequest
 from pyqt_reactive.widgets.shared import ActionTabMaterialization
 
@@ -38,10 +38,10 @@ class NoSelectionProvider(FunctionSelectionProviderABC):
 
 
 class PlateSignals(QObject):
-    orchestrator_config_changed = pyqtSignal(str, object)
-    compiled = pyqtSignal(str, object)
-    runtime = pyqtSignal(object)
-    debug = pyqtSignal(object)
+    orchestrator_config_changed = Signal(str, object)
+    compiled = Signal(str, object)
+    runtime = Signal(object)
+    debug = Signal(object)
 
 
 @pytest.fixture
@@ -150,7 +150,7 @@ def test_edit_marks_dirty_and_save_hands_the_step_to_the_caller(open_step_editor
 
 
 def test_empty_step_name_is_refused(open_step_editor, monkeypatch) -> None:
-    from PyQt6.QtWidgets import QMessageBox
+    from PySide6.QtWidgets import QMessageBox
 
     warnings: list[str] = []
     monkeypatch.setattr(
@@ -167,7 +167,7 @@ def test_empty_step_name_is_refused(open_step_editor, monkeypatch) -> None:
 
 
 def test_mutation_guard_blocks_save(open_step_editor, monkeypatch) -> None:
-    from PyQt6.QtWidgets import QMessageBox
+    from PySide6.QtWidgets import QMessageBox
 
     errors: list[str] = []
     monkeypatch.setattr(

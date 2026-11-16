@@ -257,7 +257,7 @@ def test_callback_timeout_after_side_effect_is_not_prestart_cancellation(queued)
 def test_closed_dispatcher_rejects_without_invocation():
     executor = McpTransportExecutor()
     calls = []
-    executor.dispatcher.close()
+    executor.dispatcher.close_dispatch()
 
     async def exercise():
         with pytest.raises(MainThreadDispatcherClosedError):
@@ -285,7 +285,7 @@ def test_worker_call_never_runs_on_the_worker_thread():
         assert calls == []
         assert dispatcher.call(lambda: "original-main") == "original-main"
     finally:
-        dispatcher.close()
+        dispatcher.close_dispatch()
 
 
 def test_transport_rejects_worker_start_without_affinity_claim():

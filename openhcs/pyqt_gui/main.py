@@ -1,5 +1,5 @@
 """
-OpenHCS PyQt6 Main Window
+OpenHCS PySide6 Main Window
 
 Main application window using WindowManager for clean window abstraction.
 """
@@ -17,9 +17,9 @@ from typing import TYPE_CHECKING
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from polystore.base import storage_registry
 from polystore.filemanager import FileManager
-from PyQt6.QtCore import QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QKeySequence, QShowEvent
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QAction, QKeySequence, QShowEvent
+from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QLabel,
@@ -36,11 +36,11 @@ from pyqt_reactive.services.application_shortcuts import ShortcutLifecycle
 from pyqt_reactive.services.time_travel_navigation import TimeTravelNavigator
 from pyqt_reactive.services.window_manager import WindowManager
 from formbridge.services.zmq_server_scan_service import EndpointObservationSnapshot
-from pyqt_reactive.widgets import (
+from pyqt_reactive.widgets.status_indicator import (
     StatusIndicator,
     StatusState,
 )
-from pyqt_reactive.widgets.editors.simple_code_editor import QScintillaCodeEditorDialog
+from pyqt_reactive.widgets.editors.simple_code_editor import CodeEditorDialog
 from pyqt_reactive.widgets.shared.dock_layout import DockLayoutStore, DockPane
 from pyqt_reactive.widgets.system_monitor import SystemMonitorWidget
 from zmqruntime import EndpointConnectionCancelledError
@@ -116,6 +116,7 @@ from openhcs.desktop.zmq_version_restart import (
 )
 
 from zmqruntime.startup import EndpointStartupStatus
+from objectstate import get_live_global_config
 logger = logging.getLogger(__name__)
 
 
@@ -174,7 +175,7 @@ class MainWindowUiServices(PyQtServiceAdapter):
 
 class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
     """
-    Main OpenHCS PyQt6 application window.
+    Main OpenHCS PySide6 application window.
 
     Implements QDockWidget system to replace textual-window floating windows
     with native Qt docking, providing better desktop integration.
@@ -190,9 +191,9 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
     )
     UI_BRIDGE_WIDGET_IDENTITY = MainWindowWidgetIdentity
 
-    config_changed = pyqtSignal(object)  # GlobalPipelineConfig
-    ui_config_changed = pyqtSignal(object)  # UIConfig
-    status_message = pyqtSignal(str)  # Status message
+    config_changed = Signal(object)  # GlobalPipelineConfig
+    ui_config_changed = Signal(object)  # UIConfig
+    status_message = Signal(str)  # Status message
 
     def __init__(
         self,
@@ -283,7 +284,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         self.apply_initial_theme()
 
         logger.info(
-            "OpenHCS PyQt6 main window initialized (deferred initialization pending)"
+            "OpenHCS PySide6 main window initialized (deferred initialization pending)"
         )
 
     @property
@@ -1137,7 +1138,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         """Open file dialog to select results directory and consolidate analysis results."""
         from pathlib import Path
 
-        from PyQt6.QtWidgets import QFileDialog, QMessageBox
+        from PySide6.QtWidgets import QFileDialog, QMessageBox
 
         # Select results directory
         results_dir = QFileDialog.getExistingDirectory(
@@ -1167,15 +1168,13 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             return
 
         try:
-            from objectstate.global_config import get_current_global_config
-
             from openhcs.core.config.pipeline_config import GlobalPipelineConfig
             from openhcs.processing.backends.analysis.consolidate_analysis_results import (
                 consolidate_analysis_results,
             )
 
             # Get global config
-            global_config = get_current_global_config(GlobalPipelineConfig)
+            global_config = get_live_global_config(GlobalPipelineConfig)
 
             # Run consolidation
             summary_df = consolidate_analysis_results(
@@ -1206,7 +1205,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
 
     def _on_merge_metaxpress_summaries(self):
         """Open file dialog to select multiple MetaXpress summaries and merge them (concat rows)."""
-        from PyQt6.QtWidgets import QFileDialog, QMessageBox
+        from PySide6.QtWidgets import QFileDialog, QMessageBox
 
         # Open file dialog to select multiple CSV files
         file_dialog = QFileDialog(self)
@@ -1263,7 +1262,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
 
     def _on_concat_metaxpress_summaries(self):
         """Open file dialog to select multiple MetaXpress summaries and concatenate them (keep all headers)."""
-        from PyQt6.QtWidgets import QFileDialog, QMessageBox
+        from PySide6.QtWidgets import QFileDialog, QMessageBox
 
         # Open file dialog to select multiple CSV files
         file_dialog = QFileDialog(self)
@@ -1320,7 +1319,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         """Open file dialog to select directory and run experimental analysis."""
         from pathlib import Path
 
-        from PyQt6.QtWidgets import QFileDialog, QMessageBox
+        from PySide6.QtWidgets import QFileDialog, QMessageBox
 
         # Select the directory the experimental-analysis defaults describe.
         analysis_dir = QFileDialog.getExistingDirectory(
@@ -1532,10 +1531,10 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
 
         # Accept close event
         event.accept()
-        logger.info("OpenHCS PyQt6 application closed")
+        logger.info("OpenHCS PySide6 application closed")
 
         # Force application quit with a short delay
-        from PyQt6.QtCore import QTimer
+        from PySide6.QtCore import QTimer
 
         QTimer.singleShot(100, lambda: QApplication.instance().quit())
 
@@ -1588,7 +1587,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
         template = get_default_template()
 
         # Open code editor
-        editor = QScintillaCodeEditorDialog(
+        editor = CodeEditorDialog(
             parent=self,
             initial_content=template,
             title="Create Custom Function",

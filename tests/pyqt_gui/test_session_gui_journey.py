@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 from objectstate.object_state import ObjectStateRegistry
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 
 from openhcs.authoring.session.operations.datasets import (
@@ -115,4 +115,4 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
         manager.close()
         release_widgets(application, manager)
         session.close()
-        dispatcher.close()
+        dispatcher.close_dispatch()

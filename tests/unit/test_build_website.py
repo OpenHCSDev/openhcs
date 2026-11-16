@@ -70,8 +70,8 @@ import sys
 
 class RejectQtImport(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
-        if fullname == "PyQt6" or fullname.startswith("PyQt6."):
-            raise ModuleNotFoundError("static gallery catalog imported PyQt6")
+        if fullname == "PySide6" or fullname.startswith("PySide6."):
+            raise ModuleNotFoundError("static gallery catalog imported PySide6")
         return None
 
 sys.meta_path.insert(0, RejectQtImport())

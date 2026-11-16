@@ -15,7 +15,7 @@ import pytest
 def native_opengl(qapp) -> None:
     """Require a native OpenGL context; request it before creating a viewer."""
 
-    from PyQt6.QtGui import QGuiApplication, QOffscreenSurface, QOpenGLContext
+    from PySide6.QtGui import QGuiApplication, QOffscreenSurface, QOpenGLContext
 
     surface = QOffscreenSurface()
     surface.create()

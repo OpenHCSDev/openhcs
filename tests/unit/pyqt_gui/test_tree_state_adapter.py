@@ -1,8 +1,8 @@
 import pytest
 
 try:
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtWidgets import QApplication, QTreeWidget, QTreeWidgetItem
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication, QTreeWidget, QTreeWidgetItem
 
     PYQT_AVAILABLE = True
 except Exception:
@@ -13,7 +13,7 @@ from pyqt_reactive.widgets.shared import TreeNodeIdentity, TreeStateAdapter
 from zmqruntime.messages import PongResponse, ServerRole
 
 
-@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PyQt6 not available")
+@pytest.mark.skipif(not PYQT_AVAILABLE, reason="PySide6 not available")
 def test_tree_state_adapter_restores_expansion_and_selection_by_key():
     app = QApplication.instance()
     if app is None:

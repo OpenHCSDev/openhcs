@@ -83,7 +83,7 @@ def test_session_package_imports_no_qt_and_no_gui() -> None:
                 else []
             )
             for name in names:
-                if name.split(".")[0] == "PyQt6" or name.startswith("openhcs.pyqt_gui"):
+                if name.split(".")[0] == "PySide6" or name.startswith("openhcs.pyqt_gui"):
                     offenders.append(f"{path.relative_to(PACKAGE)}:{node.lineno} {name}")
     assert offenders == []
 
@@ -94,7 +94,7 @@ def test_agent_dtos_load_no_pyqt() -> None:
         "import openhcs.agent.dto as dto\n"
         "for info in pkgutil.iter_modules(dto.__path__, 'openhcs.agent.dto.'):\n"
         "    importlib.import_module(info.name)\n"
-        "print(sorted(m for m in sys.modules if m.split('.')[0] == 'PyQt6'))\n"
+        "print(sorted(m for m in sys.modules if m.split('.')[0] == 'PySide6'))\n"
     )
     completed = subprocess.run(
         [sys.executable, "-c", script],

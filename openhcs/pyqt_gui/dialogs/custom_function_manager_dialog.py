@@ -7,8 +7,8 @@ Automatically refreshes when custom functions change via signals.
 
 from types import FunctionType
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QListWidgetItem,
     QVBoxLayout,
     QHBoxLayout,
@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 from pyqt_reactive.theming import ColorScheme
-from pyqt_reactive.widgets.editors.simple_code_editor import QScintillaCodeEditorDialog
+from pyqt_reactive.widgets.editors.simple_code_editor import CodeEditorDialog
 from pyqt_reactive.widgets.shared import BaseFormDialog
 from openhcs.processing.custom_functions import CustomFunctionManager
 from openhcs.processing.custom_functions.signals import custom_function_signals
@@ -178,7 +178,7 @@ class CustomFunctionManagerDialog(BaseFormDialog):
         template = get_default_template()
 
         # Open code editor
-        editor = QScintillaCodeEditorDialog(
+        editor = CodeEditorDialog(
             parent=self,
             initial_content=template,
             title="Create Custom Function",
@@ -220,7 +220,7 @@ class CustomFunctionManagerDialog(BaseFormDialog):
             code = self.manager.get_function_code(func_name)
 
             # Open code editor with existing code
-            editor = QScintillaCodeEditorDialog(
+            editor = CodeEditorDialog(
                 parent=self,
                 initial_content=code,
                 title=f"Edit Custom Function: {func_name}",

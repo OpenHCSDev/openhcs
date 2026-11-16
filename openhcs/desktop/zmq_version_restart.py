@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QMessageBox, QWidget
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QMessageBox, QWidget
 from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
 from openhcs.core.execution.execution_state import ManagerExecutionState
@@ -60,8 +60,8 @@ class ZMQVersionRestartDialogPresenter:
 class ZMQVersionRestartWorkflow(QObject):
     """Own the complete state-preserving response to endpoint incompatibility."""
 
-    replacement_completed = pyqtSignal()
-    replacement_failed = pyqtSignal(str)
+    replacement_completed = Signal()
+    replacement_failed = Signal(str)
 
     def __init__(
         self,

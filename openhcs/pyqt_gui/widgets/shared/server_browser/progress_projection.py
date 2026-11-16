@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Sequence
 
-from PyQt6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem
 from formbridge.services.zmq_server_info import ExecutionServerInfo
 from pyqt_reactive.widgets.shared import TreeStateAdapter, TreeSyncAdapter
 

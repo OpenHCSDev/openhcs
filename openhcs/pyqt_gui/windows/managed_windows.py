@@ -6,7 +6,7 @@ Each window is created by a factory function passed to WindowManager.
 
 from pathlib import Path
 
-from PyQt6.QtWidgets import QDialog, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QVBoxLayout
 
 from openhcs.agent.ui_bridge_identities import (
     ImageBrowserWindowIdentity,
@@ -155,7 +155,7 @@ class ZMQServerManagerWindow(_ManagedChildCleanupWindow):
         self.setModal(False)
         self.resize(600, 400)
 
-        from PyQt6.QtWidgets import QVBoxLayout
+        from PySide6.QtWidgets import QVBoxLayout
 
         from openhcs.pyqt_gui.widgets.shared.zmq_server_manager import (
             ZMQServerManagerWidget,

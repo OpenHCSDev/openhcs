@@ -5,8 +5,8 @@ from types import SimpleNamespace
 from weakref import ref
 
 from objectstate.object_state import ObjectStateRegistry
-from PyQt6.QtCore import QCoreApplication, QEvent, pyqtSignal
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import QCoreApplication, QEvent, Signal
+from PySide6.QtWidgets import QApplication, QMainWindow
 from formbridge.services.zmq_server_scan_service import EndpointObservationSnapshot
 from pyqt_reactive.theming import ColorScheme
 from zmqruntime.messages import PongResponse, ServerRole
@@ -16,7 +16,7 @@ from openhcs.pyqt_gui.services.main_window_workflows import MainWindowEmbeddedWi
 
 
 class _MainWindowStatusBarHarness(QMainWindow):
-    status_message = pyqtSignal(str)
+    status_message = Signal(str)
 
     def _on_object_state_unregistered(self, _scope_id, _state) -> None:
         pass
@@ -141,7 +141,7 @@ def test_reopened_main_window_has_one_live_status_subscription(
 ) -> None:
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
-    monkeypatch.setattr("PyQt6.QtCore.QTimer.singleShot", lambda *_args: None)
+    monkeypatch.setattr("PySide6.QtCore.QTimer.singleShot", lambda *_args: None)
     app = QApplication.instance() or QApplication([])
 
     def build_window() -> _MainWindowLifecycleHarness:

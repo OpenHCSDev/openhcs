@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from types import SimpleNamespace
 
-from PyQt6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog
 from formbridge.services.async_operation_executor import AsyncOperationExecutorClosedError
 
 from openhcs.core.execution.execution_state import ManagerExecutionState

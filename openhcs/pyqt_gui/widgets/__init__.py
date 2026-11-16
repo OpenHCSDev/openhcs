@@ -1,4 +1,4 @@
-"""OpenHCS PyQt6 widget package.
+"""OpenHCS PySide6 widget package.
 
 Widget classes live in their concrete modules. Keep this package initializer
 import-light so sibling widget modules can import each other without package
