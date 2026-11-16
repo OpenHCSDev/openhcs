@@ -521,16 +521,13 @@ def build_site(repo_root: Path, output_dir: Path) -> tuple[str, ...]:
         shutil.copy2(source, destination)
 
     package_version = read_package_version(repo_root)
+    contact_email = read_package_contact_email(repo_root)
     for relative_name in HTML_SOURCE_FILES:
         project_shared_fragments(output_dir / relative_name, source_dir)
         project_release_version(output_dir / relative_name, package_version)
+        project_contact_email(output_dir / relative_name, contact_email)
     project_gallery_markup(output_dir / "index.html", gallery_projection)
     project_mcp_client_marks(output_dir / "index.html", mcp_clients)
-    contact_email = read_package_contact_email(repo_root)
-    for relative_name in HTML_SOURCE_FILES:
-        if relative_name == "index.html":
-            continue
-        project_contact_email(output_dir / relative_name, contact_email)
     (output_dir / ".nojekyll").write_text("", encoding="utf-8")
     return validate_site(output_dir)
 
