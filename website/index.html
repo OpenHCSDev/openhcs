@@ -30,28 +30,7 @@
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
 
-    <header class="masthead">
-      <div class="masthead-inner">
-        <a class="brand" href="#top" aria-label="OpenHCS home">
-          <img class="brand-lockup" src="assets/logos/openhcs-horizontal.svg" alt="OpenHCS">
-        </a>
-        <nav aria-label="Primary navigation">
-          <a href="#principles">Principles</a>
-          <a href="#gallery">Figures</a>
-          <a href="#mcp">Agents</a>
-          <a href="#install">Install</a>
-          <a href="https://openhcs.readthedocs.io/en/latest/">Docs</a>
-          <a href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
-        </nav>
-      </div>
-      <p class="dateline">
-        <span>Release {{ OPENHCS_VERSION }}</span>
-        <span>Open High-Content Screening</span>
-        <span>MIT licensed</span>
-        <span>Python 3.11+</span>
-        <span>Windows · macOS · Linux</span>
-      </p>
-    </header>
+{{ OPENHCS_MASTHEAD }}
 
     <main id="content">
       <section class="title-block" id="top">
@@ -364,7 +343,7 @@
                 <tr><th scope="row"><a href="assets/agent/cold-start-workflow-events.jsonl">MCP event record</a></th><td>Every tool call in order, failures included.</td></tr>
                 <tr><th scope="row"><a href="assets/agent/cold-start-workflow-record.json">Validation record</a></th><td>Checksums and acceptance checks for the files above.</td></tr>
                 <tr><th scope="row"><a href="assets/agent/neurite-outgrowth-workflow-record.json">Edit record</a></th><td>How the 2:38 cut was assembled from its two sources.</td></tr>
-                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-pipeline.py">Generated Python</a></th><td>The pipeline the agent built. Opens in OpenHCS.</td></tr>
+                <tr><th scope="row"><a href="assets/agent/cold-start-workflow-pipeline.py">Generated Python</a></th><td>The pipeline the agent built, byte for byte, as written for OpenHCS 0.7.13.</td></tr>
               </tbody>
             </table>
           </div>
@@ -430,34 +409,6 @@
       </section>
     </main>
 
-    <footer class="colophon">
-      <div class="colophon-inner">
-        <img class="footer-brand-logo" src="assets/logos/openhcs-stacked.svg" alt="OpenHCS">
-        <nav class="footer-links" aria-label="Footer navigation">
-          <a href="https://pypi.org/project/openhcs/">PyPI</a>
-          <a href="https://openhcs.readthedocs.io/en/latest/">Documentation</a>
-          <a href="https://openhcs.readthedocs.io/en/latest/api/">API reference</a>
-          <a href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
-          <a href="support.html">Support</a>
-          <a href="privacy.html">Privacy</a>
-          <a href="terms.html">Terms</a>
-        </nav>
-        <p>
-          CellProfiler interoperability and validation build on its open-source
-          software, documentation, and public example corpus. We thank the
-          CellProfiler authors and contributors.
-          <a href="https://cellprofiler.org/citations">CellProfiler citation guidance</a>
-          includes
-          <a href="https://doi.org/10.1186/s12859-021-04344-9">Stirling et al. (2021)</a>.
-        </p>
-        <p>
-          Third-party names and logos identify supported integrations, compatible
-          clients, platforms, or software used by OpenHCS. They remain the property
-          of their respective projects or owners; their appearance does not imply
-          affiliation or endorsement.
-        </p>
-        <p class="copyright">Open High-Content Screening · MIT License · OpenHCS contributors</p>
-      </div>
-    </footer>
+{{ OPENHCS_COLOPHON }}
   </body>
 </html>

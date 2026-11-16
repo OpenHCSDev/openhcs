@@ -1234,8 +1234,9 @@ class MultiPlateOverviewGalleryScenarioCatalog(GalleryScenarioCatalog):
         label="Workspace",
         heading="Seven assay plates, one workspace",
         description=(
-            "Five deterministic examples and two imported CellProfiler workflows "
-            "retain independent state in one session."
+            "Five generated example plates and two imported CellProfiler "
+            "pipelines, each with its own settings, open side by side in one "
+            "session."
         ),
         proof=(
             "Seven independently configured assay plates are visible in one workspace."
@@ -1263,8 +1264,8 @@ class PipelineEditorGalleryScenarioCatalog(GalleryScenarioCatalog):
         label="Authoring",
         heading="CellProfiler steps in the same pipeline model",
         description=(
-            "The 12-step Comet Assay uses OpenHCS compilation, configuration, "
-            "viewers, and results."
+            "CellProfiler's 12-step Comet Assay, imported as ordinary steps. It "
+            "compiles, configures, and displays like any other OpenHCS pipeline."
         ),
         proof=(
             "The imported CellProfiler Comet Assay is visible as twelve pipeline steps."
@@ -1475,11 +1476,11 @@ class ZmqStartupCompileGalleryScenarioCatalog(GalleryScenarioCatalog):
     declaration = MotionGalleryScenario(
         scenario_id="zmq-startup-compile",
         label="Local MCP",
-        heading="See endpoint startup while the request is running",
+        heading="Watch the execution server start mid-request",
         description=(
-            "A pointer-free MCP compile request immediately adds the execution "
-            "endpoint, streams catalog-preparation phases into the browser and "
-            "status bar, and settles connected."
+            "An MCP compile request, no mouse involved. The execution server "
+            "shows up right away, its startup steps stream into the server list "
+            "and status bar, and it finishes connected."
         ),
         proof=(
             "An execution endpoint appears during the compile request and reports "
@@ -1537,9 +1538,9 @@ class CurrentNeuriteResultGalleryScenarioCatalog(GalleryScenarioCatalog):
         label="Current neuronal result",
         heading="Neuronal labels and inspectable paths",
         description=(
-            "A native Napari window shows enhanced neuronal signal with unified "
-            "labels and the retained path ROI list. Selecting a row highlights "
-            "its path in the image."
+            "Napari shows the enhanced neuronal signal, one label per neuron, "
+            "and the list of traced paths. Pick a row and its path lights up in "
+            "the image."
         ),
         proof=(
             "The still is captured through the explicitly connected viewer's "
@@ -1565,9 +1566,9 @@ class StitchedNeuriteOverviewGalleryScenarioCatalog(GalleryScenarioCatalog):
         label="Napari",
         heading="Inspect a stitched mosaic as one result",
         description=(
-            "OpenHCS stitches the source fields before analysis and returns one "
-            "inspectable neuron-ROI layer spanning the mosaic, so residual faint-"
-            "process misses remain visible in the same viewer."
+            "OpenHCS stitches the fields before analysis and returns one neuron "
+            "layer across the whole mosaic. Faint processes it missed stay "
+            "visible in the same view instead of being hidden."
         ),
         proof=(
             "The still is captured through the explicitly connected viewer's "

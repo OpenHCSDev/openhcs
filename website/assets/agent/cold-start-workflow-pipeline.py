@@ -4,23 +4,21 @@ from openhcs.constants.constants import (
     AllComponents,
     VariableComponents,
 )
-from openhcs.core.config.pipeline_config import (
+from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyStepMaterializationConfig,
     PipelineConfig,
 )
-from openhcs.core.source.source_bindings import (
+from openhcs.core.source_bindings import (
     ComponentSelector,
     LazySourceBindingsConfig,
     NamedSourceBinding,
-    SourceSelector,
-)
-from openhcs.core.source.source_metadata import (
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
+    SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (

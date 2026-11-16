@@ -70,6 +70,8 @@ REQUIRED_COPY = (
 ALLOWED_REMOTE_SCHEMES = {"data", "https", "mailto"}
 RELEASE_VERSION_TOKEN = "{{ OPENHCS_VERSION }}"
 CONTACT_EMAIL_TOKEN = "{{ OPENHCS_CONTACT_EMAIL }}"
+MASTHEAD_TOKEN = "{{ OPENHCS_MASTHEAD }}"
+COLOPHON_TOKEN = "{{ OPENHCS_COLOPHON }}"
 MCP_CLIENT_MARKS_TOKEN = "{{ MCP_CLIENT_MARKS }}"
 MCP_CLIENT_REGISTRATION_SOURCE = "openhcs/mcp/client_registration.py"
 MCP_CLIENT_TARGET_ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
@@ -88,6 +90,46 @@ class WebsiteMcpClient:
         """Return the presentation asset derived from the stable target id."""
 
         return f"assets/logos/client-{self.target_id}.svg"
+
+
+@dataclass(frozen=True, slots=True)
+class SharedPageFragment:
+    """Markup every public page carries, written once under ``website/partials``."""
+
+    token: str
+    relative_path: str
+
+    def render(self, source_dir: Path, page_name: str) -> str:
+        """Return the fragment with the page's own links marked as current."""
+
+        fragment = (source_dir / self.relative_path).read_text(encoding="utf-8")
+        own_link = f'href="{page_name}"'
+        return fragment.replace(own_link, f'{own_link} aria-current="page"').rstrip(
+            "\n"
+        )
+
+
+SHARED_PAGE_FRAGMENTS = (
+    SharedPageFragment(MASTHEAD_TOKEN, "partials/masthead.html"),
+    SharedPageFragment(COLOPHON_TOKEN, "partials/colophon.html"),
+)
+
+
+def project_shared_fragments(page_path: Path, source_dir: Path) -> None:
+    """Insert every shared fragment into one staged public page."""
+
+    document = page_path.read_text(encoding="utf-8")
+    for fragment in SHARED_PAGE_FRAGMENTS:
+        token_count = document.count(fragment.token)
+        if token_count != 1:
+            raise ValueError(
+                f"Public page {page_path.name} must contain exactly one "
+                f"{fragment.token!r}; found {token_count}."
+            )
+        document = document.replace(
+            fragment.token, fragment.render(source_dir, page_path.name)
+        )
+    page_path.write_text(document, encoding="utf-8")
 
 
 def read_package_version(repo_root: Path) -> str:
@@ -230,16 +272,17 @@ def project_mcp_client_marks(
     )
 
 
-def project_release_version(index_path: Path, package_version: str) -> None:
-    """Project the package-owned version into the staged landing page."""
+def project_release_version(page_path: Path, package_version: str) -> None:
+    """Project the package-owned version into one staged public page."""
 
-    html = index_path.read_text(encoding="utf-8")
+    html = page_path.read_text(encoding="utf-8")
     token_count = html.count(RELEASE_VERSION_TOKEN)
     if token_count == 0:
         raise ValueError(
-            f"Landing page contains no {RELEASE_VERSION_TOKEN!r} release token"
+            f"Public page {page_path.name} contains no "
+            f"{RELEASE_VERSION_TOKEN!r} release token"
         )
-    index_path.write_text(
+    page_path.write_text(
         html.replace(RELEASE_VERSION_TOKEN, package_version),
         encoding="utf-8",
     )
@@ -300,7 +343,10 @@ def referenced_source_files(source_dir: Path) -> tuple[str, ...]:
 
     source_dir = source_dir.resolve()
     referenced: set[str] = set()
-    for relative_name in HTML_SOURCE_FILES:
+    for relative_name in (
+        *HTML_SOURCE_FILES,
+        *(fragment.relative_path for fragment in SHARED_PAGE_FRAGMENTS),
+    ):
         document_path = source_dir / relative_name
         collector = _ReferenceCollector()
         collector.feed(document_path.read_text(encoding="utf-8"))
@@ -313,7 +359,7 @@ def referenced_source_files(source_dir: Path) -> tuple[str, ...]:
                 or not parsed.path
             ):
                 continue
-            candidate = (document_path.parent / unquote(parsed.path)).resolve()
+            candidate = (source_dir / unquote(parsed.path)).resolve()
             if not candidate.is_relative_to(source_dir) or not candidate.is_file():
                 continue
             referenced.add(candidate.relative_to(source_dir).as_posix())
@@ -356,6 +402,8 @@ def validate_site(site_dir: Path) -> tuple[str, ...]:
         for token in (
             RELEASE_VERSION_TOKEN,
             CONTACT_EMAIL_TOKEN,
+            MASTHEAD_TOKEN,
+            COLOPHON_TOKEN,
             MCP_CLIENT_MARKS_TOKEN,
             GALLERY_CARDS_TOKEN,
             GALLERY_PROVENANCE_TOKEN,
@@ -472,11 +520,11 @@ def build_site(repo_root: Path, output_dir: Path) -> tuple[str, ...]:
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
 
+    package_version = read_package_version(repo_root)
+    for relative_name in HTML_SOURCE_FILES:
+        project_shared_fragments(output_dir / relative_name, source_dir)
+        project_release_version(output_dir / relative_name, package_version)
     project_gallery_markup(output_dir / "index.html", gallery_projection)
-    project_release_version(
-        output_dir / "index.html",
-        read_package_version(repo_root),
-    )
     project_mcp_client_marks(output_dir / "index.html", mcp_clients)
     contact_email = read_package_contact_email(repo_root)
     for relative_name in HTML_SOURCE_FILES:

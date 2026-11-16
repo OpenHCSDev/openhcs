@@ -25,6 +25,7 @@ from scripts.build_website import (
     GALLERY_RECORD_RELATIVE_PATH,
     MCP_CLIENT_MARKS_TOKEN,
     RELEASE_VERSION_TOKEN,
+    SHARED_PAGE_FRAGMENTS,
     build_site,
     read_mcp_client_targets,
     read_package_contact_email,
@@ -679,9 +680,11 @@ def test_neurite_showcase_edit_record_matches_source_and_published_assets():
             )
 
 
-def test_public_pages_use_the_project_name_expansion():
+def test_public_pages_use_the_project_name_expansion(tmp_path: Path):
+    site_dir = tmp_path / "site"
+    build_site(REPO_ROOT, site_dir)
     for page_name in ("index.html", "privacy.html", "support.html", "terms.html"):
-        document = (REPO_ROOT / "website" / page_name).read_text(encoding="utf-8")
+        document = (site_dir / page_name).read_text(encoding="utf-8")
         assert "Open High-Content Screening" in document
         assert "Open High-Content Image Analysis" not in document
 
@@ -701,7 +704,7 @@ def test_gallery_uses_semantic_accessible_media_and_stable_paths(
     collector = _GalleryMarkupCollector()
     collector.feed(html)
 
-    assert 'href="#gallery"' in html
+    assert 'href="index.html#gallery"' in html
     assert 'aria-labelledby="gallery-title"' in html
     assert "time-lapse" not in html
     assert "five-phase compilation" not in html
@@ -850,6 +853,24 @@ def test_public_policy_pages_are_staged_with_local_software_boundaries(
         lowered_document = document.lower()
         assert "chatgpt web" not in lowered_document
         assert "hosted mcp" not in lowered_document
+
+
+def test_every_page_carries_the_shared_masthead_and_colophon(tmp_path: Path):
+    site_dir = tmp_path / "site"
+    build_site(REPO_ROOT, site_dir)
+
+    for page_name in ("index.html", "privacy.html", "support.html", "terms.html"):
+        source = (REPO_ROOT / "website" / page_name).read_text(encoding="utf-8")
+        staged = (site_dir / page_name).read_text(encoding="utf-8")
+        for fragment in SHARED_PAGE_FRAGMENTS:
+            assert source.count(fragment.token) == 1
+            assert fragment.token not in staged
+        assert '<header class="masthead">' not in source
+        assert '<footer class="colophon">' not in source
+        assert staged.count('<header class="masthead">') == 1
+        assert staged.count('<footer class="colophon">') == 1
+        assert f'href="{page_name}" aria-current="page"' in staged
+        assert f"Release {read_package_version(REPO_ROOT)}" in staged
 
 
 def test_website_source_uses_package_metadata_tokens():

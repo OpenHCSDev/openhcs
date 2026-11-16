@@ -19,20 +19,7 @@
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
 
-    <header class="masthead">
-      <div class="masthead-inner">
-        <a class="brand" href="index.html#top" aria-label="OpenHCS home">
-          <img class="brand-lockup" src="assets/logos/openhcs-horizontal.svg" alt="OpenHCS">
-        </a>
-        <nav aria-label="Primary navigation">
-          <a href="index.html">Home</a>
-          <a href="support.html">Support</a>
-          <a href="privacy.html">Privacy</a>
-          <a href="terms.html" aria-current="page">Terms</a>
-          <a href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
-        </nav>
-      </div>
-    </header>
+{{ OPENHCS_MASTHEAD }}
 
     <main class="policy-page" id="content">
       <header class="policy-hero">
@@ -126,17 +113,6 @@
       </div>
     </main>
 
-    <footer class="colophon">
-      <div class="colophon-inner">
-        <img class="footer-brand-logo" src="assets/logos/openhcs-stacked.svg" alt="OpenHCS">
-        <nav class="footer-links" aria-label="Footer navigation">
-          <a href="index.html">Home</a>
-          <a href="support.html">Support</a>
-          <a href="privacy.html">Privacy</a>
-          <a href="terms.html" aria-current="page">Terms</a>
-        </nav>
-        <p class="copyright">Open High-Content Screening · MIT License · OpenHCS contributors</p>
-      </div>
-    </footer>
+{{ OPENHCS_COLOPHON }}
   </body>
 </html>
