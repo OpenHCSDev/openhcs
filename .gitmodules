@@ -34,3 +34,7 @@
 	path = external/formbridge
 	url = https://github.com/OpenHCSDev/formbridge.git
 	branch = main
+[submodule "external/ui-theme"]
+	path = external/ui-theme
+	url = https://github.com/OpenHCSDev/ui-theme.git
+	branch = main

@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+from objectstate.field_access import DottedFieldPath
+
 from PySide6.QtCore import QEventLoop, QObject, QTimer
 from PySide6.QtWidgets import QApplication
 
@@ -128,6 +130,15 @@ def test_dispatcher_notifies_source_root_without_self_flash(qapp) -> None:
 
         def sync_enabled_field_visuals(self, value):
             del value
+
+        # pyqt-reactive 0.10's dispatcher finds the root through the form
+        # tree and asks the source for the ObjectState path of its field.
+        @property
+        def form_tree(self):
+            return SimpleNamespace(root=lambda: self)
+
+        def _object_state_path_for_field(self, field_name):
+            return DottedFieldPath(self.field_id).child(field_name)
 
         def _on_live_context_changed(self):
             if self._block_cross_window_updates:
