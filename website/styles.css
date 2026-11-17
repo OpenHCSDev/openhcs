@@ -107,6 +107,14 @@ main { width: min(calc(100% - 2 * var(--gutter)), var(--page)); margin: 0 auto; 
   padding: 2.5rem 0 2rem;
 }
 .title-text { grid-column: 1; grid-row: 1; }
+.title-mark.is-floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
 .title-mark {
   grid-column: 2;
   grid-row: 1;

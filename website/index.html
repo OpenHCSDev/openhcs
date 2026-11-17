@@ -352,5 +352,39 @@
     </main>
 
 {{ OPENHCS_COLOPHON }}
+    <script>
+      // The intro's mark glides to the centre and stays behind the page as you scroll.
+      (() => {
+        const mark = document.querySelector(".title-mark");
+        const still = matchMedia("(prefers-reduced-motion: reduce), (max-width: 600px)");
+        if (!mark) return;
+        let start = null;
+        const place = () => {
+          if (!start) return;
+          const p = Math.min(1, scrollY / (innerHeight * 0.8));
+          const e = p * p * (3 - 2 * p);
+          const scale = 1 + (Math.min(innerWidth * 0.7, 960) / start.w - 1) * e;
+          const cx = start.cx + (innerWidth / 2 - start.cx) * e;
+          const cy = (start.cy - scrollY) * (1 - e) + (innerHeight / 2) * e;
+          mark.style.transform = `translate(${cx - start.w / 2}px, ${cy - start.h / 2}px) scale(${scale})`;
+          mark.style.opacity = String(0.07 - 0.025 * e);
+        };
+        const measure = () => {
+          mark.classList.remove("is-floating");
+          mark.removeAttribute("style");
+          start = null;
+          if (still.matches) return;
+          const r = mark.getBoundingClientRect();
+          start = { cx: r.left + r.width / 2, cy: r.top + scrollY + r.height / 2, w: r.width, h: r.height };
+          mark.style.width = `${r.width}px`;
+          mark.classList.add("is-floating");
+          place();
+        };
+        addEventListener("scroll", () => requestAnimationFrame(place), { passive: true });
+        addEventListener("resize", measure);
+        still.addEventListener("change", measure);
+        measure();
+      })();
+    </script>
   </body>
 </html>
