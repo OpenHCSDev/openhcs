@@ -19,8 +19,17 @@ from typing import Iterable, get_type_hints
 from objectstate import get_base_type_for_lazy, semantic_values_equal
 
 
-# Import LazyStepMaterializationConfig for type hints
-from openhcs.core.config.pipeline_config import StepSourceBindingsConfig
+from openhcs.core.config.pipeline_config import (
+    LazyDtypeConfig,
+    LazyFijiStreamingConfig,
+    LazyNapariStreamingConfig,
+    LazyProcessingConfig,
+    LazyStepMaterializationConfig,
+    LazyStepPartitionFilterConfig,
+    LazyStepSourceBindingsConfig,
+    LazyStreamingDefaults,
+    StepSourceBindingsConfig,
+)
 
 
 # def get_step_id(step: 'AbstractStep') -> str:
@@ -151,14 +160,14 @@ class AbstractStep(abc.ABC):
         description: str = None,
         enabled: bool = True,
         debug_pause: bool = False,
-        dtype_config: object = None,
-        processing_config: object = None,
-        source_bindings: object = None,
-        step_partition_filter_config: object = None,
-        step_materialization_config: object = None,
-        streaming_defaults: object = None,
-        napari_streaming_config: object = None,
-        fiji_streaming_config: object = None,
+        dtype_config: LazyDtypeConfig = LazyDtypeConfig(),
+        processing_config: LazyProcessingConfig = LazyProcessingConfig(),
+        source_bindings: LazyStepSourceBindingsConfig = LazyStepSourceBindingsConfig(),
+        step_partition_filter_config: LazyStepPartitionFilterConfig = LazyStepPartitionFilterConfig(),
+        step_materialization_config: LazyStepMaterializationConfig = LazyStepMaterializationConfig(),
+        streaming_defaults: LazyStreamingDefaults = LazyStreamingDefaults(),
+        napari_streaming_config: LazyNapariStreamingConfig = LazyNapariStreamingConfig(),
+        fiji_streaming_config: LazyFijiStreamingConfig = LazyFijiStreamingConfig(),
     ) -> None:
         """
         Initialize a step. These attributes are primarily used during the
