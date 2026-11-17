@@ -75,6 +75,10 @@ In the one-worker twelve-sample charts, CellProfiler times are estimated from me
 
 ## Supplementary Data 5. Agent-developed analyses
 
+### Source definitions
+
+BBBC identifiers refer to the Broad Bioimage Benchmark Collection. H003 denotes the BBBC007v1 DNA/actin fields, H004 the public NeuronCyto II image 1, and P001 the laboratory DAPI/calcein neurite fields. Public neurite tracing used paired TIFFs from NeuronCyto II image 1 [@NeuronCytoII]; coordinate-level manual traces and verified physical calibration were unavailable. Separate laboratory tracing used nine DAPI/calcein fields from one coded well, distinct from the 20-well drug-response cohort.
+
 ### Analysis index
 
 Use the following linked records to match each named analysis to its result, instructions, selected pipeline and available resources. The 20 task-level result rows include a repair and a grouped three-agent cohort; they are not 20 independent trials. H001 and H002 retain their original task aliases, and repairs remain part of the same analysis rather than receiving a new quality rank.
