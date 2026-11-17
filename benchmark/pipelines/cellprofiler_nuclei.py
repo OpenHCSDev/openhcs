@@ -26,10 +26,8 @@ from skimage.feature import peak_local_max
 
 from openhcs.core.memory.decorators import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.materialization.presets import csv_materializer
-from openhcs.processing.backends.analysis.cell_counting_cpu import (
-    materialize_segmentation_masks,
-)
+from openhcs.core.materialization.core import MaterializationSpec
+from openhcs.core.materialization.options import CsvOptions, ROIOptions
 
 
 @dataclass
@@ -90,7 +88,7 @@ def declump_shape(binary: np.ndarray, min_distance: int = 7) -> np.ndarray:
 @artifact_outputs(
     (
         "nuclei_measurements",
-        csv_materializer(
+        MaterializationSpec(CsvOptions(
             fields=[
                 "slice_index",
                 "nuclei_count",
@@ -98,10 +96,9 @@ def declump_shape(binary: np.ndarray, min_distance: int = 7) -> np.ndarray:
                 "mean_area",
                 "mean_intensity",
             ],
-            analysis_type="nuclei_counts",
-        ),
+        )),
     ),
-    ("segmentation_masks", materialize_segmentation_masks),
+    ("segmentation_masks", MaterializationSpec(ROIOptions())),
 )
 def identify_primary_objects(
     image: np.ndarray,
