@@ -9,7 +9,7 @@ import html
 import re
 import shutil
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -24,21 +24,13 @@ from scripts.website_gallery_projection import (
 HTML_SOURCE_FILES = (
     "index.html",
     "privacy.html",
+    "records.html",
     "support.html",
     "terms.html",
 )
 SOURCE_FILES = HTML_SOURCE_FILES + (
     "styles.css",
     "globals.css",
-    "assets/logos/bioformats.svg",
-    "assets/logos/cellprofiler.png",
-    "assets/logos/cupy.svg",
-    "assets/logos/fiji.svg",
-    "assets/logos/jax.png",
-    "assets/logos/napari.svg",
-    "assets/logos/pyclesperanto.png",
-    "assets/logos/pytorch.svg",
-    "assets/logos/tensorflow.svg",
 )
 ASSET_SOURCES = {
     "assets/logos/openhcs-favicon.svg": (
@@ -50,6 +42,7 @@ ASSET_SOURCES = {
     "assets/logos/openhcs-stacked.svg": (
         "openhcs/resources/assets/openhcs-lockup-stacked.svg"
     ),
+    "assets/figures/shared-workflow.png": "paper/figures/slas/shared_workflow.png",
 }
 REQUIRED_COPY = (
     "PyPI",
@@ -63,8 +56,6 @@ REQUIRED_COPY = (
     "TensorFlow",
     "pyclesperanto",
     "custom functions",
-    "Compute with",
-    "Your functions",
     "Bio-Formats",
     "Bio-Formats image I/O",
     "openhcs[bioformats]",
@@ -72,6 +63,10 @@ REQUIRED_COPY = (
 ALLOWED_REMOTE_SCHEMES = {"data", "https", "mailto"}
 RELEASE_VERSION_TOKEN = "{{ OPENHCS_VERSION }}"
 CONTACT_EMAIL_TOKEN = "{{ OPENHCS_CONTACT_EMAIL }}"
+MASTHEAD_TOKEN = "{{ OPENHCS_MASTHEAD }}"
+COLOPHON_TOKEN = "{{ OPENHCS_COLOPHON }}"
+MARK_TOKEN = "{{ OPENHCS_MARK }}"
+MARK_SOURCE = "openhcs/resources/assets/openhcs-mark-mono.svg"
 MCP_CLIENT_MARKS_TOKEN = "{{ MCP_CLIENT_MARKS }}"
 MCP_CLIENT_REGISTRATION_SOURCE = "openhcs/mcp/client_registration.py"
 MCP_CLIENT_TARGET_ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
@@ -80,16 +75,113 @@ GALLERY_RECORD_RELATIVE_PATH = "assets/gallery/release-media-record.json"
 
 @dataclass(frozen=True, slots=True)
 class WebsiteMcpClient:
-    """Website projection of one production-owned MCP registration target."""
+    """Website projection of one production-owned MCP registration target.
+
+    The first field identifies a registration target: a class that leaves it
+    unset or ``None`` is a base, not a target.
+    """
 
     target_id: str
     display_name: str
+
+    def __post_init__(self) -> None:
+        if MCP_CLIENT_TARGET_ID_PATTERN.fullmatch(self.target_id) is None:
+            raise ValueError(f"invalid literal target_id: {self.target_id!r}")
+        if not self.display_name.strip():
+            raise ValueError("empty display_name")
+        object.__setattr__(self, "display_name", self.display_name.strip())
+
+    @classmethod
+    def declared_by(cls, class_node: ast.ClassDef) -> WebsiteMcpClient | None:
+        """Read this projection's fields from one registration declaration."""
+
+        literals = _literal_class_fields(class_node)
+        identity, *_ = fields(cls)
+        if literals.get(identity.name) is None:
+            return None
+        declared = {field.name: literals.get(field.name) for field in fields(cls)}
+        # The one type test: AST literals are untyped until decoded here.
+        untyped = sorted(name for name, value in declared.items() if not isinstance(value, str))
+        if untyped:
+            raise ValueError(
+                f"MCP client target {class_node.name} needs literal strings for {untyped}"
+            )
+        try:
+            return cls(**declared)
+        except ValueError as error:
+            raise ValueError(f"MCP client target {class_node.name}: {error}") from error
 
     @property
     def logo_path(self) -> str:
         """Return the presentation asset derived from the stable target id."""
 
         return f"assets/logos/client-{self.target_id}.svg"
+
+
+@dataclass(frozen=True, slots=True)
+class SharedPageFragment:
+    """Markup every public page carries, written once under ``website/partials``."""
+
+    token: str
+    relative_path: str
+
+    def render(self, source_dir: Path, page_name: str) -> str:
+        """Return the fragment with the page's own links marked as current."""
+
+        fragment = (source_dir / self.relative_path).read_text(encoding="utf-8")
+        own_link = f'href="{page_name}"'
+        return fragment.replace(own_link, f'{own_link} aria-current="page"').rstrip(
+            "\n"
+        )
+
+
+SHARED_PAGE_FRAGMENTS = (
+    SharedPageFragment(MASTHEAD_TOKEN, "partials/masthead.html"),
+    SharedPageFragment(COLOPHON_TOKEN, "partials/colophon.html"),
+)
+
+
+def project_shared_fragments(page_path: Path, source_dir: Path) -> None:
+    """Insert every shared fragment into one staged public page."""
+
+    document = page_path.read_text(encoding="utf-8")
+    for fragment in SHARED_PAGE_FRAGMENTS:
+        token_count = document.count(fragment.token)
+        if token_count != 1:
+            raise ValueError(
+                f"Public page {page_path.name} must contain exactly one "
+                f"{fragment.token!r}; found {token_count}."
+            )
+        document = document.replace(
+            fragment.token, fragment.render(source_dir, page_path.name)
+        )
+    page_path.write_text(document, encoding="utf-8")
+
+
+def project_inline_mark(index_path: Path, repo_root: Path) -> None:
+    """Inline the brand mark so page CSS can animate its processing chevron.
+
+    The geometry stays owned by the brand asset; only the root element's
+    accessibility attributes change, because on the page the mark is
+    decorative.
+    """
+
+    document = index_path.read_text(encoding="utf-8")
+    token_count = document.count(MARK_TOKEN)
+    if token_count != 1:
+        raise ValueError(
+            f"Landing page must contain exactly one {MARK_TOKEN!r}; found {token_count}."
+        )
+    mark = (repo_root / MARK_SOURCE).read_text(encoding="utf-8").strip()
+    mark, replaced = re.subn(
+        r'<svg ([^>]*?) role="img" aria-label="[^"]*">',
+        r'<svg class="title-mark" \1 aria-hidden="true" focusable="false">',
+        mark,
+        count=1,
+    )
+    if replaced != 1:
+        raise ValueError(f"Unexpected root element in {MARK_SOURCE}.")
+    index_path.write_text(document.replace(MARK_TOKEN, mark), encoding="utf-8")
 
 
 def read_package_version(repo_root: Path) -> str:
@@ -170,34 +262,13 @@ def read_mcp_client_targets(repo_root: Path) -> tuple[WebsiteMcpClient, ...]:
     targets: list[WebsiteMcpClient] = []
     seen_target_ids: set[str] = set()
     for class_node in (node for node in module.body if isinstance(node, ast.ClassDef)):
-        fields = _literal_class_fields(class_node)
-        target_id = fields.get("target_id")
-        display_name = fields.get("display_name")
-        if target_id is None and display_name is None:
+        client = WebsiteMcpClient.declared_by(class_node)
+        if client is None:
             continue
-        if target_id is None:
-            continue
-        if (
-            not isinstance(target_id, str)
-            or MCP_CLIENT_TARGET_ID_PATTERN.fullmatch(target_id) is None
-        ):
-            raise ValueError(
-                f"MCP client target {class_node.name} has an invalid literal target_id: "
-                f"{target_id!r}"
-            )
-        if not isinstance(display_name, str) or not display_name.strip():
-            raise ValueError(
-                f"MCP client target {class_node.name} has no literal display_name."
-            )
-        if target_id in seen_target_ids:
-            raise ValueError(f"Duplicate MCP client target_id: {target_id!r}")
-        seen_target_ids.add(target_id)
-        targets.append(
-            WebsiteMcpClient(
-                target_id=target_id,
-                display_name=display_name.strip(),
-            )
-        )
+        if client.target_id in seen_target_ids:
+            raise ValueError(f"Duplicate MCP client target_id: {client.target_id!r}")
+        seen_target_ids.add(client.target_id)
+        targets.append(client)
     if not targets:
         raise ValueError("No registered MCP client targets were found.")
     return tuple(targets)
@@ -232,16 +303,17 @@ def project_mcp_client_marks(
     )
 
 
-def project_release_version(index_path: Path, package_version: str) -> None:
-    """Project the package-owned version into the staged landing page."""
+def project_release_version(page_path: Path, package_version: str) -> None:
+    """Project the package-owned version into one staged public page."""
 
-    html = index_path.read_text(encoding="utf-8")
+    html = page_path.read_text(encoding="utf-8")
     token_count = html.count(RELEASE_VERSION_TOKEN)
     if token_count == 0:
         raise ValueError(
-            f"Landing page contains no {RELEASE_VERSION_TOKEN!r} release token"
+            f"Public page {page_path.name} contains no "
+            f"{RELEASE_VERSION_TOKEN!r} release token"
         )
-    index_path.write_text(
+    page_path.write_text(
         html.replace(RELEASE_VERSION_TOKEN, package_version),
         encoding="utf-8",
     )
@@ -302,7 +374,10 @@ def referenced_source_files(source_dir: Path) -> tuple[str, ...]:
 
     source_dir = source_dir.resolve()
     referenced: set[str] = set()
-    for relative_name in HTML_SOURCE_FILES:
+    for relative_name in (
+        *HTML_SOURCE_FILES,
+        *(fragment.relative_path for fragment in SHARED_PAGE_FRAGMENTS),
+    ):
         document_path = source_dir / relative_name
         collector = _ReferenceCollector()
         collector.feed(document_path.read_text(encoding="utf-8"))
@@ -315,7 +390,7 @@ def referenced_source_files(source_dir: Path) -> tuple[str, ...]:
                 or not parsed.path
             ):
                 continue
-            candidate = (document_path.parent / unquote(parsed.path)).resolve()
+            candidate = (source_dir / unquote(parsed.path)).resolve()
             if not candidate.is_relative_to(source_dir) or not candidate.is_file():
                 continue
             referenced.add(candidate.relative_to(source_dir).as_posix())
@@ -358,6 +433,9 @@ def validate_site(site_dir: Path) -> tuple[str, ...]:
         for token in (
             RELEASE_VERSION_TOKEN,
             CONTACT_EMAIL_TOKEN,
+            MASTHEAD_TOKEN,
+            COLOPHON_TOKEN,
+            MARK_TOKEN,
             MCP_CLIENT_MARKS_TOKEN,
             GALLERY_CARDS_TOKEN,
             GALLERY_PROVENANCE_TOKEN,
@@ -474,17 +552,15 @@ def build_site(repo_root: Path, output_dir: Path) -> tuple[str, ...]:
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
 
-    project_gallery_markup(output_dir / "index.html", gallery_projection)
-    project_release_version(
-        output_dir / "index.html",
-        read_package_version(repo_root),
-    )
-    project_mcp_client_marks(output_dir / "index.html", mcp_clients)
+    package_version = read_package_version(repo_root)
     contact_email = read_package_contact_email(repo_root)
     for relative_name in HTML_SOURCE_FILES:
-        if relative_name == "index.html":
-            continue
+        project_shared_fragments(output_dir / relative_name, source_dir)
+        project_release_version(output_dir / relative_name, package_version)
         project_contact_email(output_dir / relative_name, contact_email)
+    project_gallery_markup(output_dir / "index.html", gallery_projection)
+    project_inline_mark(output_dir / "index.html", repo_root)
+    project_mcp_client_marks(output_dir / "index.html", mcp_clients)
     (output_dir / ".nojekyll").write_text("", encoding="utf-8")
     return validate_site(output_dir)
 

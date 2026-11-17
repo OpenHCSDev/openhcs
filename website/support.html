@@ -7,29 +7,19 @@
       name="description"
       content="Support routes and capability boundaries for OpenHCS and its local MCP integration."
     >
-    <meta name="theme-color" content="#0a0d16">
+    <meta name="theme-color" content="#0c0d10">
     <title>Support — OpenHCS</title>
     <link rel="icon" type="image/svg+xml" href="assets/logos/openhcs-favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="globals.css">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
 
-    <header class="site-header">
-      <a class="brand" href="index.html#top" aria-label="OpenHCS home">
-        <img class="brand-lockup" src="assets/logos/openhcs-horizontal.svg" alt="OpenHCS">
-      </a>
-      <nav aria-label="Primary navigation">
-        <a href="index.html">Home</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
-        <a class="nav-github" href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
-      </nav>
-    </header>
+{{ OPENHCS_MASTHEAD }}
 
     <main class="policy-page" id="content">
       <header class="policy-hero">
@@ -139,18 +129,6 @@
       </div>
     </main>
 
-    <footer>
-      <div class="footer-brand">
-        <img class="footer-brand-logo" src="assets/logos/openhcs-stacked.svg" alt="OpenHCS">
-        <small>Open High-Content Screening.</small>
-      </div>
-      <div class="footer-links">
-        <a href="index.html">Home</a>
-        <a href="support.html" aria-current="page">Support</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
-      </div>
-      <span class="copyright">MIT License · OpenHCS contributors</span>
-    </footer>
+{{ OPENHCS_COLOPHON }}
   </body>
 </html>
