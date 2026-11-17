@@ -92,9 +92,9 @@ with a fixed serial estimate compared with measured workers (Figure 3); the
 agent analysis procedure beside bright-object, nuclear, retinal and
 three-dimensional body repairs (Figure 4); quantitative endpoints and final
 three-dimensional nuclear localization (Figure 5); and treatment responses from
-three independent blind agents with compact treatment-specific correlation bars
-(Figure 6). Matched microscopy and the detailed scientist-assisted neurite
-comparison remain linked data rather than repeated reading-copy panels.
+three independent blind agents with one grouped treatment-specific correlation
+axis and matched raw/detection/overlay views (Figure 6). Full-resolution microscopy
+and the detailed scientist-assisted neurite comparison remain linked data.
 Table 1 distinguishes development access, comparison populations, references and
 metrics for the main agent results. Supp. Table 3 defines timing boundaries.
 The complete [27-row task/model/protocol mapping](supplementary/analysis_protocols.md)
@@ -143,7 +143,7 @@ Generators, editable artwork, native captures and provenance receipts are in
 and the retained public NeuronCyto II demonstration. Figure receipts distinguish
 historical analysis from later authoring and viewer checks. The initial public
 NeuronCyto comparison is retained in [Supplementary Data 7](supplementary/analysis_records.md#supplementary-data-7-public-neuroncyto-demonstration-and-references),
-not in the main drug-response figure. Regenerate only those two relocated
+not in the main drug-response figure. Regenerate these two retained-image
 composites with `submission_neurite_results` and `public_neurite_initial_comparison`
 in `build_slas_visual_story.py`, using the same hash-verified archived input root.
 This changes presentation, not any scientific analysis.
