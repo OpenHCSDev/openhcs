@@ -129,7 +129,7 @@ class SessionMeasuredRun:
     def row(self) -> DatasetRowState:
         (row,) = (
             row
-            for row in self.session.view(DatasetListView).rows
+            for row in DatasetListView.state_of(self.session).rows
             if row.scope_id == self._scope_id
         )
         return row
