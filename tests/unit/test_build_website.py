@@ -76,10 +76,13 @@ class RejectQtImport(importlib.abc.MetaPathFinder):
         return None
 
 sys.meta_path.insert(0, RejectQtImport())
+# Appended, as the installed-test runner does, so an installed openhcs
+# still wins under PYTHONSAFEPATH while the checkout's scripts/ resolves.
+sys.path.append(sys.argv[1])
 import scripts.gallery_catalog
 """
     result = subprocess.run(
-        (sys.executable, "-c", script),
+        (sys.executable, "-c", script, str(REPO_ROOT)),
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,

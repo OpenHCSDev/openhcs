@@ -41,7 +41,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install OpenHCS with its declared dependencies
+      - name: Install website test dependencies
         # The validate step imports openhcs, so it needs exactly what
         # pyproject.toml declares. The repository's own libraries come from
         # their submodules, found by the same discovery the release-floor
@@ -51,7 +51,7 @@ jobs:
           mapfile -t local_project_paths < <(
             python -c "from scripts.validate_local_release_floors import discover_local_projects; print(*(project.path.parent for project in discover_local_projects()), sep='\n')"
           )
-          python -m pip install "${local_project_paths[@]}" -e .
+          python -m pip install "${local_project_paths[@]}" .
 
       - name: Test, build, and validate landing page
         run: |

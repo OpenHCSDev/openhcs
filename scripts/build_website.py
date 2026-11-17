@@ -85,13 +85,10 @@ class WebsiteMcpClient:
     display_name: str
 
     def __post_init__(self) -> None:
-        if (
-            not isinstance(self.target_id, str)
-            or MCP_CLIENT_TARGET_ID_PATTERN.fullmatch(self.target_id) is None
-        ):
+        if MCP_CLIENT_TARGET_ID_PATTERN.fullmatch(self.target_id) is None:
             raise ValueError(f"invalid literal target_id: {self.target_id!r}")
-        if not isinstance(self.display_name, str) or not self.display_name.strip():
-            raise ValueError("no literal display_name")
+        if not self.display_name.strip():
+            raise ValueError("empty display_name")
         object.__setattr__(self, "display_name", self.display_name.strip())
 
     @classmethod
@@ -102,8 +99,15 @@ class WebsiteMcpClient:
         identity, *_ = fields(cls)
         if literals.get(identity.name) is None:
             return None
+        declared = {field.name: literals.get(field.name) for field in fields(cls)}
+        # The one type test: AST literals are untyped until decoded here.
+        untyped = sorted(name for name, value in declared.items() if not isinstance(value, str))
+        if untyped:
+            raise ValueError(
+                f"MCP client target {class_node.name} needs literal strings for {untyped}"
+            )
         try:
-            return cls(**{field.name: literals.get(field.name) for field in fields(cls)})
+            return cls(**declared)
         except ValueError as error:
             raise ValueError(f"MCP client target {class_node.name}: {error}") from error
 
