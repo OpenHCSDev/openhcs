@@ -454,14 +454,14 @@ class RepairResultsFigure(VolumeResultsFigure):
     def draw_repairs(self):
         self.source(Path(__file__))
         self.source(ROOT / H001_SOURCE)
-        self.text(3, 81, "A  Bright-object repair", size=14, weight="bold")
+        self.text(3, 96, "A  Bright-object repair", size=14, weight="bold")
         evaluation = load_bright_object_evaluation(ROOT)
         first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
-        self.text(97, 81, f"F1 {first_f1:.3f} → {final_f1:.3f}",
+        self.text(97, 96, f"F1 {first_f1:.3f} → {final_f1:.3f}",
                   size=13, color=TEAL, weight="bold", ha="right")
-        CroppedComparison.read(self, BRIGHT_OBJECT_SOURCE).draw_row((3, 61, 94, 15.5), 78)
-        self.text(3, 58, "B  Nuclear separation", size=14, weight="bold")
-        CroppedComparison.read(self, NUCLEAR_SOURCE).draw_row((3, 38.5, 94, 15.5), 55.5)
+        CroppedComparison.read(self, BRIGHT_OBJECT_SOURCE).draw_row((3, 75, 94, 14), 92)
+        self.text(3, 71, "B  Nuclear separation", size=14, weight="bold")
+        CroppedComparison.read(self, NUCLEAR_SOURCE).draw_row((3, 50, 94, 14), 67)
 
 
 def submission_summary() -> None:
@@ -474,13 +474,12 @@ def submission_summary() -> None:
 def submission_repairs(*, input_root: Path = FigureSheet.default_input_root) -> None:
     """Render Figure 4 from the same frozen first/final image regions."""
     submission_autonomous_loop()
-    panels = RepairResultsFigure("submission_analysis_repair_panels", 8.1, input_root=input_root)
+    panels = RepairResultsFigure("submission_analysis_repair_panels", 6.0, input_root=input_root)
     panels.draw_panels()
-    panels.crop_vertical(0, .84)
     panels.save(dpi=400)
-    sheet = SupplementFigure("submission_analysis_repairs", 10.6, input_root=input_root)
-    sheet.artwork("submission_autonomous_loop", (3, 66, 94, 33))
-    sheet.artwork("submission_analysis_repair_panels", (3, 1, 94, 64))
+    sheet = SupplementFigure("submission_analysis_repairs", 8.3, input_root=input_root)
+    sheet.artwork("submission_autonomous_loop", (3, 57, 94, 42))
+    sheet.artwork("submission_analysis_repair_panels", (3, 1, 94, 55))
     sheet.save(dpi=400)
 
 

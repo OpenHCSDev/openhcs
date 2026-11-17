@@ -53,18 +53,18 @@ class VolumeResultsFigure(SupplementFigure):
     """Matched retinal and volume repairs, separate from final-only views."""
 
     def draw_panels(self):
-        self.text(3, 35.5, "C  Retinal repair", size=14, weight="bold")
+        self.text(3, 46, "C  Retinal repair", size=14, weight="bold")
         for column, (heading, left) in enumerate((
             ("Raw", 3), ("First result", 34.96), ("Final result", 66.92),
         )):
             x = 3 + column * 32
-            self.text(x, 33.2, heading, size=self.plot_font_size, weight="bold")
-            self.artwork("retina_fresh16_repair", (x, 20, 30.7, 12.5),
+            self.text(x, 42, heading, size=self.plot_font_size, weight="bold")
+            self.artwork("retina_fresh16_repair", (x, 28, 30.7, 11),
                          crop=(left, 22.2, left + 30.08, 45.8))
-        self.text(3, 17.6, "D  3D body separation", size=14, weight="bold")
-        self.text(97, 17.6, "Z = 36 voxels", size=self.plot_font_size, ha="right")
+        self.text(3, 24, "D  3D body separation", size=14, weight="bold")
+        self.text(97, 24, "Z = 36 voxels", size=self.plot_font_size, ha="right")
         view = BodySeparationView.read(self, VOLUME_REPAIR_SOURCE)
-        view.draw_columns((3, 2, 94, 12.5), 15.5, view.label_panels)
+        view.draw_columns((3, 2, 94, 15), 20, view.label_panels)
 
 
 def infrastructure():
