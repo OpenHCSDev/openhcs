@@ -117,7 +117,7 @@ class SessionMeasuredRun:
         for force in (False, True):
             if not self.session.execution_state.busy:
                 break
-            self.session.invoke(StopExecution, StopExecutionRequest(force=force))
+            StopExecution.invoke(self.session, StopExecutionRequest(force=force))
             deadline = time.monotonic() + STOP_GRACE_SECONDS
             while self.session.execution_state.busy and time.monotonic() < deadline:
                 self.session.events_after(
@@ -149,7 +149,7 @@ class SessionMeasuredRun:
 
     def _require(self, operation, request) -> SessionOperationResult:
         self._sequence = self.session.event_log.last_sequence
-        result = self.session.invoke(operation, request)
+        result = operation.invoke(self.session, request)
         if not result.accepted:
             raise RuntimeError(
                 f"{operation.operation_id} was rejected: "
