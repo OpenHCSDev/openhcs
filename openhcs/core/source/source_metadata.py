@@ -73,7 +73,8 @@ class SourceFilterMatchType(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
 
-    def normalize_clause_value(self, clause: SourceFilterClause) -> None:
+    @classmethod
+    def normalize_clause_value(cls, clause: SourceFilterClause) -> None:
         object.__setattr__(clause, "value", None)
     """The clause carries a comparison operand."""
 
