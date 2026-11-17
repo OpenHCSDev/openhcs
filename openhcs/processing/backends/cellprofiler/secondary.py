@@ -419,8 +419,8 @@ class SecondarySegmentationRequest:
 
 
 class SecondarySegmentationStrategy(
-    EnumKeyedStrategyMixin[SecondaryMethod],
-    MethodKeyedStrategy, ABC,
+    MethodKeyedStrategy,
+    EnumKeyedStrategyMixin[SecondaryMethod], ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Segmentation strategy for one closed secondary-object method."""
@@ -817,8 +817,8 @@ class SecondaryObjectLabels:
 
 
 class ThresholdCalculator(
-    EnumKeyedStrategyMixin[ThresholdMethod],
-    MethodKeyedStrategy, ABC,
+    MethodKeyedStrategy,
+    EnumKeyedStrategyMixin[ThresholdMethod], ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Threshold strategy for one closed CellProfiler threshold method."""

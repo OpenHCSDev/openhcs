@@ -722,7 +722,7 @@ def sobel_components(
 
 
 class CupyEdgeMagnitudeStrategy(
-    EnumKeyedStrategyMixin[EdgeMagnitudeMethod], MethodKeyedStrategy, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[EdgeMagnitudeMethod], metaclass=AutoRegisterMeta
 ):
 
     @abstractmethod

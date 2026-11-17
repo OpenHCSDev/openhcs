@@ -1910,7 +1910,7 @@ class CellProfilerThresholdRequest:
 
 
 class GlobalThresholdMethodStrategy(
-    EnumKeyedStrategyMixin[CellProfilerThresholdMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[CellProfilerThresholdMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal implementation for one CellProfiler global threshold method."""
 
