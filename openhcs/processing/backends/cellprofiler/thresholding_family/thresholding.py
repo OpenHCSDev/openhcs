@@ -1330,8 +1330,12 @@ class NumbaLogTransformConversion:
     log_max: float
 
 
-class NumbaNumpyThresholdPrimitiveBackendStrategy(NumbaNumpyDefaultBackend, ThresholdPrimitiveBackendStrategy):
-    """Numba-backed threshold primitives for NumPy-memory images."""
+class NumpyThresholdPrimitives(ThresholdPrimitiveBackendStrategy):
+    """Threshold primitives for NumPy-memory images, shared by every NumPy provider.
+
+    Declares no memory type, so it is not registered itself; each provider
+    subclass adds its own provider mixin and default flag.
+    """
     def prepare_backend(self) -> None:
         values = np.linspace(0.01, 1.0, 32, dtype=np.float64)
         image = values[:25].reshape((5, 5))
@@ -1493,10 +1497,12 @@ class NumbaNumpyThresholdPrimitiveBackendStrategy(NumbaNumpyDefaultBackend, Thre
         return float(_li_threshold_numba(values, _li_tolerance_numba(values)))
 
 
-class CentrosomeNumpyThresholdPrimitiveBackendStrategy(
-    CentrosomeNumpyBackend, NumbaNumpyThresholdPrimitiveBackendStrategy
-):
-    """Compatibility provider backed by absorbed threshold primitives."""
+class NumbaNumpyThresholdPrimitiveBackendStrategy(NumbaNumpyDefaultBackend, NumpyThresholdPrimitives):
+    """Numba-backed threshold primitives for NumPy-memory images."""
+
+
+class CentrosomeNumpyThresholdPrimitiveBackendStrategy(CentrosomeNumpyBackend, NumpyThresholdPrimitives):
+    """Centrosome provider backed by the same absorbed threshold primitives."""
 
 def threshold_primitives(
     *, backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION
