@@ -363,11 +363,11 @@
           if (!start) return;
           const p = Math.min(1, scrollY / (innerHeight * 0.8));
           const e = p * p * (3 - 2 * p);
-          const scale = 1 + (Math.min(innerWidth * 0.7, 960) / start.w - 1) * e;
+          const scale = 1 + (Math.min(innerWidth, 1500) / start.w - 1) * e;
           const cx = start.cx + (innerWidth / 2 - start.cx) * e;
           const cy = (start.cy - scrollY) * (1 - e) + (innerHeight / 2) * e;
           mark.style.transform = `translate(${cx - start.w / 2}px, ${cy - start.h / 2}px) scale(${scale})`;
-          mark.style.opacity = String(0.07 - 0.025 * e);
+          mark.style.opacity = String(0.07 - 0.045 * e);
         };
         const measure = () => {
           mark.classList.remove("is-floating");
