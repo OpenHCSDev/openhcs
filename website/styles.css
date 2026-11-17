@@ -8,6 +8,7 @@
   color-scheme: dark;
   --page-bg: #15161a;
   --soft-bg: #202126;
+  --card-bg: rgba(32, 33, 38, 0.62);
   --ink: #e9e9ea;
   --ink-soft: #a6a7ad;
   --rule: #33353b;
@@ -66,6 +67,13 @@ code, pre, kbd { font-family: var(--mono); font-size: 0.88em; }
   border: 1px solid var(--rule-strong);
 }
 .skip-link:focus { top: 1rem; }
+
+/* Cards: a frosted panel the background mark shows through, softened. */
+.install-box, .client-support, .ledger table, .facts, .support-card, .boundary-table table {
+  background: var(--card-bg);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
 
 /* ---------- Header band: the logo needs a dark ground ---------- */
 .masthead { background: var(--band); color: var(--band-ink); }
