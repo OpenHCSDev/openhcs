@@ -101,8 +101,9 @@ main { width: min(calc(100% - 2 * var(--gutter)), var(--page)); margin: 0 auto; 
 .title-block { position: relative; max-width: var(--measure); padding: 2.5rem 0 2rem; }
 .title-mark {
   position: absolute;
-  top: 2rem;
+  top: 50%;
   left: calc(100% + 3rem);
+  transform: translateY(-50%);
   width: 20rem;
   height: auto;
   opacity: 0.07;
