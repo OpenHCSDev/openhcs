@@ -1,8 +1,8 @@
 {
-  "generator_sha256": "17da5750fd1f2a54cbd00e5fd0e9806db2df5ca597e8e106140b120e2542960e",
+  "generator_sha256": "b7027fe9ceb6e87870e890831f887c558bd9c78e7be6bc79afb27f29d202244d",
   "source_sha256": {
     "paper/supplementary/personal_neurite_reanalysis_20261116/cohort.json": "ba00f4319d759f228fc9dcebefb60aac2167f2fbc0ca5b2da44d964a206d7227",
-    "paper/figures/build_slas_neurite_effects.py": "32c1d5585c08e73f71f69f7135bce6f65e62c670f9e63af0c7d48930d6afb78c",
+    "paper/figures/build_slas_neurite_effects.py": "a5530084df4db295ecd1d9298d479b67c8b3dd07ce3ed5ad7cce83a6b400bf49",
     "paper/figures/compare_personal_neurite.py": "a53ecc4f5ae2df00c38b81b6ead6c0454d18b9a81ccdd4ee491ae28c19a0ec6f",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author114/joined_wells.csv": "a31c1a3a6f503de056672bcb911d560698c651db30eb65d44306dba9982c8e7c",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author114/treatment_effects.csv": "6137f2a734372fbcced9827fdf330b5186bbe1f73528c73ff11cb0072cb061e5",
@@ -18,9 +18,9 @@
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "submission_neurite_results.png": "044f2d9ae05671abe98d5adae0f31d8b46d41c27f85d6829ec89b9785df1ae29",
-    "submission_neurite_results.pdf": "c579ca31e3c45111cba01d249a0a9ade153089f454812eab9e61762d764cec8f",
-    "submission_neurite_results.svg": "b884a1a06a12307d25a60ce2b01f0ca52212439b41b9adf43b4259ba180a7f53"
+    "submission_neurite_results.png": "f8af22bb7311e3bb864486c76aac3f2fd972a2c35ab9beb756b611e459206e41",
+    "submission_neurite_results.pdf": "8cddec53fb97a5cb459fa2c241220051c0404a9c20c6b4b080579a21eab24ff0",
+    "submission_neurite_results.svg": "4edb050d7487042a64294cbb4023088b6b4f52c6f517f881d6a70d5135b73391"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

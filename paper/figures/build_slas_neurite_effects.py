@@ -165,7 +165,7 @@ class NeuriteEffectFigure(FigureSheet):
 
     @classmethod
     def draw_correlation_bars(cls, sheet, tables, *, metrics,
-                              bounds=(.16, .075, .80, .165), start_letter="E"):
+                              bounds=(.16, .045, .80, .19), start_letter="E"):
         """Compact primary-endpoint correlations; the heatmap retains all nine."""
         labels, panels, counts = cls.read_correlations(sheet, tables, metrics)
         declarations = endpoint_declarations()
@@ -178,19 +178,18 @@ class NeuriteEffectFigure(FigureSheet):
                 positions = [index * (len(labels) + 1) + run for index in range(len(metrics))]
                 bars = axis.barh(positions, [row[run] for row in values], height=.8,
                                  color=colour, label=label, zorder=3)
-                axis.bar_label(bars, fmt="%.3f", padding=3, fontsize=9)
+                axis.bar_label(bars, fmt="%.3f", padding=3, fontsize=10.5)
             axis.set(xlim=(0, 1.20), xticks=(0, .5, 1),
                      ylim=(len(metrics) * (len(labels) + 1) - 1.4, -.6),
                      yticks=[index * (len(labels) + 1) + (len(labels) - 1) / 2
                              for index in range(len(metrics))],
                      yticklabels=[fill(declarations[metric].absolute_label, 14) for metric in metrics])
-            axis.tick_params(labelsize=10)
-            axis.set_title(f"{chr(ord(start_letter) + column)}  {cls.condition_title(condition)} · correlations",
+            axis.tick_params(labelsize=11)
+            axis.set_title(f"{chr(ord(start_letter) + column)}  {cls.condition_title(condition)} · Pearson r",
                            loc="left", fontsize=sheet.plot_font_size, fontweight="bold", color=BLUE)
             axis.spines[["top", "right"]].set_visible(False)
             axis.grid(axis="x", color="#e7ebef", linewidth=.6)
             axis.set_axisbelow(True)
-            axis.set_xlabel("Pearson r", fontsize=10)
         return counts
 
     @staticmethod

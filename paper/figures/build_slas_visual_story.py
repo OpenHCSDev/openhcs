@@ -876,22 +876,22 @@ def submission_autonomous_loop():
         sheet.text(x + 14.5, y + 10.8, title, size=11, weight="bold",
                    color=color, ha="center", va="center")
         if icon == "clipboard-list":
-            sheet.asset(icons / "user-round.svg", (x+1, y+1, 6, 8))
-            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+6, 2.5, 3))
-            sheet.asset(icons / "clipboard-list.svg", (x+7, y+0.5, 2.5, 4.5))
+            sheet.asset(icons / "user-round.svg", (x+1, y+1, 5.5, 8))
+            sheet.asset(icons / "circle-question-mark.svg", (x+6.5, y+6, 2, 3))
+            sheet.asset(icons / "clipboard-list.svg", (x+6.5, y+0.5, 2, 4.5))
         elif icon == "microscope":
             sheet.source(ROOT / "website/assets/logos/README.md")
-            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+4.8, 8, 4.6))
-            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+0.4, 8, 4.6))
+            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+4.8, 7, 4.6))
+            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+0.4, 7, 4.6))
         elif icon == "workflow":
-            sheet.asset(icons / "list-tree.svg", (x+1.3, y+0.5, 8, 9))
+            sheet.asset(icons / "list-tree.svg", (x+1.3, y+0.5, 7, 9))
         elif icon == "scan-eye":
-            sheet.asset(icons / "clipboard-check.svg", (x+1.3, y+0.5, 8, 9))
+            sheet.asset(icons / "clipboard-check.svg", (x+1.3, y+0.5, 7, 9))
         elif icon == "files":
-            sheet.asset(icons / "circle-check-big.svg", (x+1.3, y+0.5, 8, 9))
+            sheet.asset(icons / "circle-check-big.svg", (x+1.3, y+0.5, 7, 9))
         else:
-            sheet.asset(icons / f"{icon}.svg", (x + 1.3, y + 0.5, 8, 9))
-        sheet.text(x + 10.2, y + 4.7, detail, size=9.4, va="center",
+            sheet.asset(icons / f"{icon}.svg", (x + 1.3, y + 0.5, 7, 9))
+        sheet.text(x + 8.8, y + 4.7, detail, size=10.5, va="center",
                    linespacing=1.4, zorder=4)
     for start, end in (((31,70.5),(35,70.5)), ((64,70.5),(68,70.5)),
                        ((82.5,64),(82.5,60)), ((68,53.5),(64,53.5)),

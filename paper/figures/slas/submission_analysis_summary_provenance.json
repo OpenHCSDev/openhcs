@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "17da5750fd1f2a54cbd00e5fd0e9806db2df5ca597e8e106140b120e2542960e",
+  "generator_sha256": "b7027fe9ceb6e87870e890831f887c558bd9c78e7be6bc79afb27f29d202244d",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "493fd02570394db0299c39ea4eac3b5687e032a1e049f4f537bd1a8884f0077c",
+    "paper/figures/build_slas_supplement.py": "7f157d70bbf7849e847fb4566a2092a2341aba7777008a7e1f63c1b9bc40c985",
     "paper/figures/build_slas_task_only.py": "c65dc96ad90549d4bd24cfc1935384d48f916f17add4bf4aef9b58c4af9397b5",
     "paper/figures/build_slas_bbbc013_fresh23.py": "1a85869824e524d07533179547bb07a69eb016f5cf6276d42147aea1dbb7e37a",
     "paper/supplementary/task_only_analysis/bbbc039-caicedo-retained-results.json": "6556d68e6c65f7a2b97b4bb495635853e38e48d8add755b10e30aa2bea7d206c",
@@ -32,8 +32,8 @@
   "display_transforms": [],
   "output_sha256": {
     "submission_analysis_summary.png": "dda9a02cb4d70eb3d13974dd9a7709fdd5d43dbe2223d3302f6368106cf632e7",
-    "submission_analysis_summary.pdf": "1ba1dd69b3ac8c755f79fc7160b3ce84458fb2abf25c795832ebe3b10c81c6cd",
-    "submission_analysis_summary.svg": "ac2bb74a219503c1023d256c41ff0964e97776f4a1023c2b0d1b7b80e7d4930f"
+    "submission_analysis_summary.pdf": "20017694d2f01c0c451e6d7e94b72f5382b764e00ee4fde5d2601ea73e69f265",
+    "submission_analysis_summary.svg": "157f10a8143d6a28e2a0f404d1d7b111343def8857314c7255f707db8b4d5ad5"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
