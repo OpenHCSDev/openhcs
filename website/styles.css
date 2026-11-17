@@ -120,10 +120,19 @@ main { width: min(calc(100% - 2 * var(--gutter)), var(--page)); margin: 0 auto; 
   grid-row: 1;
   width: 100%;
   height: auto;
-  opacity: 0.07;
-  filter: var(--glyph-filter);
+  color: color-mix(in srgb, var(--ink) calc(var(--mark-alpha, 0.07) * 100%), transparent);
   pointer-events: none;
   user-select: none;
+}
+/* Every few seconds the processing chevron nudges forward in the execution blue. */
+.title-mark #processing-chevron {
+  transform-box: fill-box;
+  animation: chevron-pulse 3.6s ease-in-out infinite;
+}
+.title-mark.is-settled #processing-chevron { animation: none; }
+@keyframes chevron-pulse {
+  0%, 70%, 100% { fill: currentColor; transform: none; }
+  82% { fill: color-mix(in srgb, var(--role-exec) 35%, transparent); transform: translateX(6%); }
 }
 .section { max-width: var(--measure); padding: 1.75rem 0 2rem; border-top: 1px solid var(--rule); }
 .section-wide { max-width: none; }
@@ -344,6 +353,7 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) {
   .gallery-motion video { display: none; }
+  .title-mark #processing-chevron { animation: none; }
   .gallery-motion-fallback { display: block; height: 100%; }
   .gallery-motion-fallback img { width: 100%; height: 100%; object-fit: contain; }
 }

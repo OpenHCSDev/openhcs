@@ -34,7 +34,7 @@
 
     <main id="content">
       <section class="title-block" id="top">
-        <img class="title-mark" src="assets/logos/openhcs-mark-mono.svg" width="320" height="224" alt="" aria-hidden="true">
+{{ OPENHCS_MARK }}
         <div class="title-text">
           <h1>One editable bioimage analysis, shared by scientists, code and AI agents.</h1>
           <p class="lede">
@@ -367,7 +367,8 @@
           const cx = start.cx + (innerWidth / 2 - start.cx) * e;
           const cy = (start.cy - scrollY) * (1 - e) + (innerHeight / 2) * e;
           mark.style.transform = `translate(${cx - start.w / 2}px, ${cy - start.h / 2}px) scale(${scale})`;
-          mark.style.opacity = String(0.07 - 0.045 * e);
+          mark.style.setProperty("--mark-alpha", String(0.07 - 0.045 * e));
+          mark.classList.toggle("is-settled", e > 0.5);
         };
         const measure = () => {
           mark.classList.remove("is-floating");

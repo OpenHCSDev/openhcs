@@ -41,7 +41,6 @@ ASSET_SOURCES = {
     "assets/logos/openhcs-stacked.svg": (
         "openhcs/resources/assets/openhcs-lockup-stacked.svg"
     ),
-    "assets/logos/openhcs-mark-mono.svg": "openhcs/resources/assets/openhcs-mark-mono.svg",
     "assets/figures/shared-workflow.png": "paper/figures/slas/shared_workflow.png",
 }
 REQUIRED_COPY = (
@@ -65,6 +64,8 @@ RELEASE_VERSION_TOKEN = "{{ OPENHCS_VERSION }}"
 CONTACT_EMAIL_TOKEN = "{{ OPENHCS_CONTACT_EMAIL }}"
 MASTHEAD_TOKEN = "{{ OPENHCS_MASTHEAD }}"
 COLOPHON_TOKEN = "{{ OPENHCS_COLOPHON }}"
+MARK_TOKEN = "{{ OPENHCS_MARK }}"
+MARK_SOURCE = "openhcs/resources/assets/openhcs-mark-mono.svg"
 MCP_CLIENT_MARKS_TOKEN = "{{ MCP_CLIENT_MARKS }}"
 MCP_CLIENT_REGISTRATION_SOURCE = "openhcs/mcp/client_registration.py"
 MCP_CLIENT_TARGET_ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
@@ -150,6 +151,32 @@ def project_shared_fragments(page_path: Path, source_dir: Path) -> None:
             fragment.token, fragment.render(source_dir, page_path.name)
         )
     page_path.write_text(document, encoding="utf-8")
+
+
+def project_inline_mark(index_path: Path, repo_root: Path) -> None:
+    """Inline the brand mark so page CSS can animate its processing chevron.
+
+    The geometry stays owned by the brand asset; only the root element's
+    accessibility attributes change, because on the page the mark is
+    decorative.
+    """
+
+    document = index_path.read_text(encoding="utf-8")
+    token_count = document.count(MARK_TOKEN)
+    if token_count != 1:
+        raise ValueError(
+            f"Landing page must contain exactly one {MARK_TOKEN!r}; found {token_count}."
+        )
+    mark = (repo_root / MARK_SOURCE).read_text(encoding="utf-8").strip()
+    mark, replaced = re.subn(
+        r'<svg ([^>]*?) role="img" aria-label="[^"]*">',
+        r'<svg class="title-mark" \1 aria-hidden="true" focusable="false">',
+        mark,
+        count=1,
+    )
+    if replaced != 1:
+        raise ValueError(f"Unexpected root element in {MARK_SOURCE}.")
+    index_path.write_text(document.replace(MARK_TOKEN, mark), encoding="utf-8")
 
 
 def read_package_version(repo_root: Path) -> str:
@@ -403,6 +430,7 @@ def validate_site(site_dir: Path) -> tuple[str, ...]:
             CONTACT_EMAIL_TOKEN,
             MASTHEAD_TOKEN,
             COLOPHON_TOKEN,
+            MARK_TOKEN,
             MCP_CLIENT_MARKS_TOKEN,
             GALLERY_CARDS_TOKEN,
             GALLERY_PROVENANCE_TOKEN,
@@ -526,6 +554,7 @@ def build_site(repo_root: Path, output_dir: Path) -> tuple[str, ...]:
         project_release_version(output_dir / relative_name, package_version)
         project_contact_email(output_dir / relative_name, contact_email)
     project_gallery_markup(output_dir / "index.html", gallery_projection)
+    project_inline_mark(output_dir / "index.html", repo_root)
     project_mcp_client_marks(output_dir / "index.html", mcp_clients)
     (output_dir / ".nojekyll").write_text("", encoding="utf-8")
     return validate_site(output_dir)
