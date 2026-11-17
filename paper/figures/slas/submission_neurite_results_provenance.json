@@ -1,8 +1,8 @@
 {
-  "generator_sha256": "8b59a11166070db42abf062c631cc6b9760d666ed7bb45f5db7180ec0545e39c",
+  "generator_sha256": "06ad29e27b13053c612204b62f72d13392ba8bb653387cf9f2d60c40ba93c2f3",
   "source_sha256": {
     "paper/supplementary/personal_neurite_reanalysis_20261116/cohort.json": "ba00f4319d759f228fc9dcebefb60aac2167f2fbc0ca5b2da44d964a206d7227",
-    "paper/figures/build_slas_neurite_effects.py": "1e5ebd914e687bf5132185220612f6d09193fb94bb323392df8fd5f28e49d84a",
+    "paper/figures/build_slas_neurite_effects.py": "60d8e3dded7ce19e4118e4b75a0973f1768cc2c0bab70a089c49ee8cab54f76c",
     "paper/figures/compare_personal_neurite.py": "a53ecc4f5ae2df00c38b81b6ead6c0454d18b9a81ccdd4ee491ae28c19a0ec6f",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author114/joined_wells.csv": "a31c1a3a6f503de056672bcb911d560698c651db30eb65d44306dba9982c8e7c",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author114/treatment_effects.csv": "6137f2a734372fbcced9827fdf330b5186bbe1f73528c73ff11cb0072cb061e5",
@@ -13,16 +13,16 @@
     "paper/supplementary/personal_neurite_reanalysis_20261116/author116/joined_wells.csv": "a2c7fb85cc0d5db766668a0e94f95ed3ff941d0c9248666492c22587351f7ee5",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author116/treatment_effects.csv": "3e77b1dfb6fdcc441b966b5949800c59a7e97e64d8c310b2af1ce74f7c1fd8b4",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author116/source_evidence.json": "2dd47495fe0846c5c461f2c24b346764f4bbffa8226f0c34cbc5541214f6b612",
-    "paper/figures/slas/blind_neurite_example_provenance.json": "66136e3d34373b08f885725cbdf3cc109b4bc519380ecca5add83c8eb24d94ab",
+    "paper/figures/slas/blind_neurite_example_provenance.json": "f519dbf7659f457e93d8bd8bc88e98d13d89f19fc2c994f2c69412c299e45abf",
     "paper/figures/slas/blind_neurite_example.png": "865a4ac1c16155a58df6edea1096f931665e7fbd82fc6bf40ffcf24aecd353d9"
   },
-  "input_root": "/",
+  "input_root": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/frozen-root",
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "submission_neurite_results.png": "f97619458805ec0dcfad39588151b1ff046718eabffe588e9247f9f8b7ee0843",
-    "submission_neurite_results.pdf": "369ae5d678855db824f9481518845b69cc78129c4afb88fb64591277d49218e0",
-    "submission_neurite_results.svg": "8e399414558dc59fe7aa0ebe5219d8fe6922b8400d5729023601e67cb13f5f58"
+    "submission_neurite_results.png": "a18d6a42454f4d6263f946a181169e188237018f2817b3b9b33a6021ee3d68b1",
+    "submission_neurite_results.pdf": "0c6f20981f05957fb412932e0257ccc4c3669237ec419d305f2d583ef047e096",
+    "submission_neurite_results.svg": "3b5244dd727bf409df88f0def5b3db16a07fd8a53778cb307ddb375b9295558e"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

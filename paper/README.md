@@ -95,8 +95,8 @@ three-dimensional nuclear localization (Figure 5); and treatment responses from
 three independent blind agents with one grouped treatment-specific correlation
 axis and matched raw/detection/overlay views (Figure 6). Full-resolution microscopy
 and the detailed scientist-assisted neurite comparison remain linked data.
-Table 1 distinguishes development access, comparison populations, references and
-metrics for the main agent results. Supp. Table 3 defines timing boundaries.
+Supp. Table 6 retains the complete evaluation design: development access,
+comparison populations, references and metrics for the main agent results. Supp. Table 3 defines timing boundaries.
 The complete [27-row task/model/protocol mapping](supplementary/analysis_protocols.md)
 and [seven-row software-check table](supplementary/software_check_coverage.md)
 are downloadable data linked from the supplement; every row and source link is
@@ -112,6 +112,8 @@ resource tables beside their condensed version in `supplementary/task_only_analy
 
 `PYTHONPATH=paper/figures python paper/figures/build_slas_task_only.py --submission-summary`
 regenerates Figure 5 from the retained score tables and final localization artwork.
+Its nuclear-score axis is explicitly truncated; concentration units sit above
+horizontal dose ticks so the unchanged localization images can be displayed larger.
 `--submission-repairs` regenerates Figure 4 from the frozen first/final detections;
 `--input-root` selects an existing hash-checked archived input root. Neither reruns
 scientific analysis. `--publish-briefs` exports the original

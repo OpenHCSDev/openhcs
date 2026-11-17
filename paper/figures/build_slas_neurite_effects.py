@@ -184,7 +184,7 @@ class NeuriteEffectFigure(FigureSheet):
         axis.set(ylim=(min(0, *(value for _, _, values in groups for value in values)), 1.20),
                  yticks=(0, .5, 1), xticks=range(len(groups)),
                  xticklabels=[f"{cls.condition_title(condition)}\n"
-                              f"{fill(declarations[metric].absolute_label, 24)}"
+                              f"{fill(declarations[metric].absolute_label, 16)}"
                               for condition, metric, _ in groups])
         axis.tick_params(labelsize=11.5)
         axis.set_title(f"{start_letter}  Pearson r against MetaXpress", loc="left",

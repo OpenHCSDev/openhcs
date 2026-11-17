@@ -793,7 +793,7 @@ def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_r
         sheet, tables, metrics=NeuriteEffectFigure.primary_metrics,
     )
     sheet.source(OUTPUT / "blind_neurite_example_provenance.json")
-    sheet.source_image(OUTPUT / "blind_neurite_example.png", (3, 1, 94, 28))
+    sheet.source_image(OUTPUT / "blind_neurite_example.png", (3, 1, 94, 26.5))
     sheet.save(dpi=600)
 
 
@@ -899,8 +899,8 @@ def submission_autonomous_loop():
                        ((82.5,64),(82.5,60)), ((68,53.5),(64,53.5)),
                        ((35,53.5),(31,53.5))):
         sheet.arrow(start, end)
-    sheet.route(((49.5,60),(49.5,61),(66,61),(66,80),(82.5,80),(82.5,77)), color=ORANGE, dashed=True)
-    sheet.text(49.5, 61.5, "Return to 3: build and run", size=9, ha="center", color=ORANGE,
+    sheet.route(((49.5,60),(49.5,62),(70,62),(70,64)), color=ORANGE, dashed=True)
+    sheet.text(48, 61.0, "Return to 3: build and run", size=9, ha="right", color=ORANGE,
                bbox={"facecolor": "white", "edgecolor": "none", "pad": 0})
     sheet.crop_vertical(.45, .815)
     sheet.save()
