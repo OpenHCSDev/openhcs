@@ -17,12 +17,14 @@ from openhcs.core.equivalence.measurement_features import (
     object_measurement_feature_matches_marker,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.measurements.runtime_measurements import (
+from openhcs.core.measurements.measurement_declarations import (
     MeasurementScope,
-    MeasurementStatistic,
-    ObjectCoreMeasurementFeature,
     ObjectIdentifierFeatureMarker,
     ObjectLocationFeatureMarker,
+)
+from openhcs.core.measurements.runtime_measurements import (
+    MeasurementStatistic,
+    ObjectCoreMeasurementFeature,
 )
 
 

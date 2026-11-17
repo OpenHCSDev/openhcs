@@ -58,10 +58,12 @@ from benchmark.equivalence.row_identity import (
     RuntimeObjectMeasurementRowIdentity,
 )
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.measurements.runtime_measurements import (
+from openhcs.core.measurements.measurement_declarations import (
     ObjectCountFeatureMarker,
     ObjectIdentifierFeatureMarker,
     ObjectLocationFeatureMarker,
+)
+from openhcs.core.measurements.runtime_measurements import (
     RuntimeMeasurementFeatureSemanticMarker,
 )
 from openhcs.core.artifact_store.runtime_stores import StoredRuntimeValue
