@@ -159,6 +159,16 @@
           OpenHCS executes pipelines itself; it does not drive another
           application. Built from separately published libraries.
         </p>
+        <figure class="diagram">
+          <a href="assets/figures/shared-workflow.png" aria-label="Open the OpenHCS process diagram at full size">
+            <img src="assets/figures/shared-workflow.png" width="2100" height="1530" loading="lazy" decoding="async"
+              alt="Diagram: the UI process (forms, Python, MCP, CellProfiler import) sends compile and run requests to the ZMQ execution server, which sends work to worker processes running steps on CPU or GPU with NumPy, CuPy, PyTorch, TensorFlow, JAX and pyclesperanto. Workers read and write image sources and outputs (Bio-Formats, OME-Zarr, image folders, OMERO) and stream images and ROIs to napari and Fiji viewer processes.">
+          </a>
+          <figcaption>
+            Editor, execution server, workers and viewers run as separate processes around one editable pipeline.
+            Figure 2 of the <a href="https://github.com/OpenHCSDev/OpenHCS/blob/main/paper/manuscript.md">manuscript</a>.
+          </figcaption>
+        </figure>
         <dl class="engine">
           <div>
             <dt>Compile, then execute</dt>

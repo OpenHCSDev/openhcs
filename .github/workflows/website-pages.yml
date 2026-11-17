@@ -9,6 +9,7 @@ on:
       - "scripts/**"
       - "tests/**"
       - "docs/source/_static/ui.png"
+      - "paper/figures/slas/shared_workflow.png"
       - "docs/media_gallery_capture.md"
       - "pyproject.toml"
       - ".gitmodules"

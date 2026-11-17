@@ -41,6 +41,7 @@ ASSET_SOURCES = {
     "assets/logos/openhcs-stacked.svg": (
         "openhcs/resources/assets/openhcs-lockup-stacked.svg"
     ),
+    "assets/figures/shared-workflow.png": "paper/figures/slas/shared_workflow.png",
 }
 REQUIRED_COPY = (
     "PyPI",
