@@ -35,6 +35,12 @@ from openhcs.core.source.source_image_provenance import SourceImageIdentity
 
 
 from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
+from openhcs.core.config.pipeline_config import SourceBindingsConfig
+from openhcs.core.io.virtual_workspace_metadata import OpenHCSMetadataPayload
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source.source_metadata import SourceFilterClause, SourceMetadataMapping
+from openhcs.core.source.source_projection import SourceProjection
+from polystore.filemanager import FileManager
 
 LookupValueT = TypeVar("LookupValueT")
 

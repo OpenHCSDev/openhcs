@@ -17,6 +17,10 @@ from openhcs.core.source.source_matching import (
 )
 from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.dataset_sources.interfaces import FilenameParser
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.source.source_image_provenance import SourceImageProvenanceIdentity
 
 ParsedFilenameValue: TypeAlias = str | int | float | bool | None
 FunctionOutputComponentValue: TypeAlias = str | int

@@ -16,6 +16,11 @@ from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan, 
 from openhcs.core.artifacts.relations import AssembledStackGroupLineageSourceRelation, GroupLineageSourceRelation, SourceStackLineageSourceRelation
 from openhcs.core.artifacts.streaming import AutomaticStreaming
 from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeatureOwner
+from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
+from openhcs.core.artifacts.plans import ArtifactPlan
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
+from openhcs.core.artifacts.streaming import ViewerStreaming
 
 
 MergedT = TypeVar("MergedT")

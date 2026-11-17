@@ -24,6 +24,8 @@ from openhcs.core.source.source_metadata import DurableSourceMetadata, SourceVox
 from openhcs.core.source.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection, SourcePlaneProjection, SourceProjectionMetadataSerializer, SourceProjectionSet
 from openhcs.core.source.source_tile_geometry import SourceTileLayout
 from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
+from openhcs.core.source.source_metadata import SourceMetadataMapping
+from openhcs.core.source.source_projection import SourceProjection
 
 
 @dataclass(frozen=True)

@@ -41,6 +41,8 @@ from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.payload.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 
 
 class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):

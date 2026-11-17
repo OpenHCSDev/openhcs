@@ -112,6 +112,9 @@ from openhcs.core.debug.debug_runtime import (
     BeforeInvocationDebugBoundary,
     ExceptionDebugBoundary,
 )
+from openhcs.core.axes.component_group_scope import RuntimeFixedComponentValues
+from openhcs.core.callable.function_patterns import CompiledFunctionGroup, CompiledFunctionInvocation
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 
 logger = logging.getLogger(__name__)
 

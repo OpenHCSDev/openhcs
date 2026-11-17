@@ -33,6 +33,7 @@ from openhcs.core.source.source_spatial_domain import (
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
 from openhcs.core.measurements.measurement_declarations import MeasurementScope, RuntimeMeasurementFeatureRelation, RuntimeMeasurementFeatureRelationDeclaration, RuntimeMeasurementFeatureSemanticMarker
 from openhcs.core.measurements.measurement_dialect import MeasurementDialect
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
 
 
 @dataclass(kw_only=True)

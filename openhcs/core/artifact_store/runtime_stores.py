@@ -32,6 +32,8 @@ from openhcs.core.source.source_matching import (
 )
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.axes.axis_declarations import PartitionAxis
+from openhcs.core.artifact_store.runtime_artifact_values import ArtifactKey
+from openhcs.core.artifacts.kinds import ArtifactType
 
 
 @dataclass(frozen=True)

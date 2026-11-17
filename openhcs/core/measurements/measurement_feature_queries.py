@@ -46,6 +46,7 @@ from openhcs.core.payload.runtime_tabular_values import (
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
+from openhcs.core.measurements.measurement_dialect import MeasurementDialectLike
 
 MeasurementValueIndexResult = tuple[dict[int, float], list[float]]
 OptionalMeasurementValueIndexResult = MeasurementValueIndexResult | None

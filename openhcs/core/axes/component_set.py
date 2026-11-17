@@ -6,6 +6,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
 from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis, is_axis
+from openhcs.core.axes.axis_declarations import Axis
 
 
 @dataclass(slots=True)

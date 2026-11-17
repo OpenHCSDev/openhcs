@@ -54,6 +54,7 @@ from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractVa
 from openhcs.core.pipeline.artifact_planning import ArtifactGraph
 from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.config.pipeline_config import EMPTY_SOURCE_BINDINGS
+from openhcs.core.axes.axis_declarations import Axis
 
 logger = logging.getLogger(__name__)
 

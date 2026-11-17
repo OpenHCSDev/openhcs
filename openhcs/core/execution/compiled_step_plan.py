@@ -22,6 +22,10 @@ from openhcs.core.source.source_bindings import (
     CompiledSourceUniversePlan,
 )
 from openhcs.core.util.step_dependencies import UnresolvedStepInput
+from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.axes.component_group_scope import ComponentGroupScope
+from openhcs.core.callable.function_patterns import CompiledFunctionPattern
+from openhcs.core.util.step_dependencies import StepInputDependency
 
 StreamingConfig = Any
 

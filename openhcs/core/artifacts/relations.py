@@ -23,6 +23,7 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan, ArtifactPlan
 from openhcs.core.measurements.runtime_measurements import MeasurementSubject
 from openhcs.core.measurements.runtime_measurements import MeasurementScope
+from openhcs.core.artifacts.plans import ArtifactSpecRef
 
 
 @dataclass(frozen=True)

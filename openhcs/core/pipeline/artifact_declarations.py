@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Optional
 
 from openhcs.core.callable.function_patterns import DEFAULT_GROUP_KEY
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.callable.function_patterns import FunctionInvocationKey
 
 
 class MissingArtifactInputError(ValueError):

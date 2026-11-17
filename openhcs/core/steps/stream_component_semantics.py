@@ -49,6 +49,7 @@ from openhcs.runtime.viewer.viewer_component_system import (
 )
 from openhcs.core.axes.axis_declarations import AxisFamily
 from openhcs.core.axes.axis_declarations import ColourAxis
+from openhcs.core.config.streaming_config_factory import StreamingViewerSurface
 
 StreamComponentMetadata = SourceComponentMetadata | None
 ComponentDisplayName: TypeAlias = str | int | float | bool | None

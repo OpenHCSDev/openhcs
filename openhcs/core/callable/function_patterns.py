@@ -37,6 +37,9 @@ from openhcs.core.callable.processing_preparation import CallablePreparation
 from openhcs.core.callable.function_reference import FunctionReference
 from openhcs.core.payload.runtime_image_values import project_image_mask_to_data_domain
 from openhcs.core.payload.runtime_image_values import ImagePayload, owned_runtime_value
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.callable.callable_contract import CallableContract
 
 FunctionPatternCallable: TypeAlias = Callable | FunctionReference
 FunctionPatternSyntax: TypeAlias = Callable | tuple | list | dict

@@ -51,6 +51,8 @@ from openhcs.core.source.source_spatial_domain import (
 )
 from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
 from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from typing import ClassVar
 
 
 

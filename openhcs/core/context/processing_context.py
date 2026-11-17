@@ -36,6 +36,7 @@ from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.context.step_execution_observation import StepExecutionObservation
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.core.config.pipeline_config import StreamingConfig
 
 _RuntimeStepValue = TypeVar("_RuntimeStepValue")
 
