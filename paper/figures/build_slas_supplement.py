@@ -53,18 +53,18 @@ class VolumeResultsFigure(SupplementFigure):
     """Matched retinal and volume repairs, separate from final-only views."""
 
     def draw_panels(self):
-        self.text(3, 46, "C  Retinal repair", size=14, weight="bold")
+        self.text(2, 45.5, "C  Retinal repair", size=14, weight="bold")
         for column, (heading, left) in enumerate((
             ("Raw", 3), ("First result", 34.96), ("Final result", 66.92),
         )):
-            x = 3 + column * 32
+            x = 2 + column * 32
             self.text(x, 42, heading, size=self.plot_font_size, weight="bold")
-            self.artwork("retina_fresh16_repair", (x, 28, 30.7, 11),
+            self.artwork("retina_fresh16_repair", (x, 26, 30.7, 14.5),
                          crop=(left, 22.2, left + 30.08, 45.8))
-        self.text(3, 24, "D  3D body separation", size=14, weight="bold")
-        self.text(97, 24, "Z = 36 voxels", size=self.plot_font_size, ha="right")
+        self.text(2, 23.5, "D  3D body separation", size=14, weight="bold")
+        self.text(98, 23.5, "Z = 36 voxels", size=self.plot_font_size, ha="right")
         view = BodySeparationView.read(self, VOLUME_REPAIR_SOURCE)
-        view.draw_columns((3, 2, 94, 15), 20, view.label_panels)
+        view.draw_columns((2, 1, 96, 17.5), 20, view.label_panels)
 
 
 def infrastructure():
@@ -179,15 +179,19 @@ def autonomous_treatment_endpoints():
         autonomous.text(3, 6, "Dots: two technical wells per analysis/method; whiskers: between-well SD.", size=10)
         autonomous.text(3, 3, "Curve-specific DMSO normalization; algorithm comparison, not manual tracing truth.", size=10)
         autonomous.save()
+    autonomous_correlations()
 
-    correlations = SupplementFigure("supp_neurite_autonomous_correlations", 6.4)
-    correlations.heading("Well-level correlations with MetaXpress", 98)
+
+def autonomous_correlations():
+    """Render each treatment's matched-well correlations separately."""
+    correlations = SupplementFigure("supp_neurite_autonomous_correlations", 7.2)
+    correlations.heading("Correlations with MetaXpress, by treatment", 99)
     counts = NeuriteEffectFigure.draw_correlations(
         correlations, NeuriteEffectFigure.cohort_tables(correlations),
     )
     if len(counts) != 1:
         raise ValueError("Correlations require the same matched wells for all analyses")
-    correlations.text(50, 7, f"Pearson r across {next(iter(counts))} matched wells; both drugs and all doses.",
+    correlations.text(50, 7, f"Pearson r across {next(iter(counts))} matched wells per treatment; all doses.",
                       size=11, ha="center")
     correlations.text(50, 2, "Absolute well measurements; correlation does not establish equal magnitudes.",
                       size=11, ha="center")

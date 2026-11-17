@@ -36,10 +36,10 @@ Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from th
 
 ## Supp. Figure 2, continued. Correlations with MetaXpress
 
-![Well-level correlations for all nine endpoints and three corrected analyses.](../figures/slas/supp_neurite_autonomous_correlations.png){width=6.5in}
+![Treatment-specific correlations for all nine endpoints and three corrected analyses.](../figures/slas/supp_neurite_autonomous_correlations.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Each cell shows Pearson r between an analysis and MetaXpress across the 20 matched wells, including both drugs and all doses. The correlations use absolute well measurements, not normalized fold changes. OpenHCS well values average nine fields. High correlation does not establish agreement in measurement magnitude; the dose-response curves show those differences separately.
+Separate FC-A and Y27632 panels show Pearson r between each of the three analyses and MetaXpress for every endpoint. Each coefficient uses the ten matched wells within that treatment, across all doses; the two drug series are not pooled. Correlations use absolute well measurements, not normalized fold changes. OpenHCS well values average nine fields. High correlation does not establish agreement in measurement magnitude; the dose-response curves show those differences separately.
 :::
 
 ## Supp. Figure 2, continued. Scientist-assisted neurite analysis {#supplementary-figure-2-continued.-scientist-assisted-neurite-analysis}
