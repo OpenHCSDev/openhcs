@@ -34,13 +34,13 @@
 
     <main id="content">
       <section class="title-block" id="top">
-        <h1>Open-source analysis software for high-content microscopy.</h1>
+        <h1>One editable bioimage analysis, shared by scientists, code and AI agents.</h1>
         <p class="lede">
-          For plates with many wells, sites, channels, Z planes, or time points.
-          Pipelines are compiled and checked against the selected data before
-          they run. The same pipeline can be edited in the desktop app, as
-          Python, imported from a CellProfiler <code>.cppipe</code>, or built by
-          a local agent over MCP.
+          Open-source analysis for high-content microscopy: plates with many
+          wells, sites, channels, Z planes, or time points. Graphical controls,
+          Python and agents over MCP edit the same pipeline, and CellProfiler
+          <code>.cppipe</code> pipelines import into it. Pipelines are compiled
+          and checked against the selected data before they run.
         </p>
         <div class="actions">
           <a class="button button-primary" href="#install">Install OpenHCS {{ OPENHCS_VERSION }}</a>
@@ -147,6 +147,43 @@
               <tr><th scope="row">OMERO data source</th><td class="check">✓</td><td><code>openhcs[omero]</code></td></tr>
               <tr><th scope="row">Local MCP server for agents</th><td class="check">✓</td><td><code>openhcs[mcp]</code></td></tr>
               <tr><th scope="row">Windows, macOS, Linux; MIT license</th><td class="check">✓</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="results" aria-labelledby="results-title">
+        <h2 id="results-title">Measured results</h2>
+        <p class="section-lede">
+          From the <a href="https://github.com/OpenHCSDev/OpenHCS/blob/main/paper/manuscript.md">OpenHCS manuscript</a>
+          (draft); pipelines, scores and timing records are in its supplementary data.
+        </p>
+        <div class="ledger" role="region" aria-label="Measured results" tabindex="0">
+          <table>
+            <thead>
+              <tr><th scope="col">Test</th><th scope="col">Result</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">CellProfiler pipelines imported (official examples, tutorials, CellProfiler 4 benchmark)</th>
+                <td>30 of 30 reproduce native CellProfiler 4.2.8.1 outputs: label images exactly, measurements within 1e-6.</td>
+              </tr>
+              <tr>
+                <th scope="row">Execution time against CellProfiler</th>
+                <td>All 30 faster on one CPU core. Twelve samples, four workers: median 12.7× faster processing, 11.1× including setup, against a serial CellProfiler estimate.</td>
+              </tr>
+              <tr>
+                <th scope="row">Nuclear detection by agents from a written brief, no labels or training (BBBC039 test split)</th>
+                <td>Caicedo F1 0.792–0.823; expert-configured CellProfiler pipelines 0.790 and 0.811; learned methods 0.840–0.898.</td>
+              </tr>
+              <tr>
+                <th scope="row">Neurite outgrowth, three agents blinded to treatment (20 wells, 180 fields)</th>
+                <td>Mean outgrowth per cell correlated with MetaXpress at Pearson r 0.963–0.996; increases found at every nonzero dose of both drugs.</td>
+              </tr>
+              <tr>
+                <th scope="row">Protein translocation controls (BBBC013, 96 wells)</th>
+                <td>Z′ 0.849 (LY294002) and 0.726 (Wortmannin); above 0.5 is the usual threshold for an excellent screening assay.</td>
+              </tr>
             </tbody>
           </table>
         </div>
