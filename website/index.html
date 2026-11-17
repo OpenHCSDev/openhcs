@@ -7,7 +7,7 @@
       name="description"
       content="OpenHCS is open-source analysis software for high-content microscopy. Pipelines are validated before they run and can be edited in the desktop GUI, as Python, from CellProfiler, or through a local agent."
     >
-    <meta name="theme-color" content="#15171d">
+    <meta name="theme-color" content="#0c0d10">
     <meta property="og:title" content="OpenHCS | Open High-Content Screening">
     <meta
       property="og:description"
@@ -57,7 +57,6 @@
         </a>
         <figcaption>
           Editor, execution server, workers and viewers run as separate processes around one editable pipeline.
-          Figure 2 of the <a href="https://github.com/OpenHCSDev/OpenHCS/blob/main/paper/manuscript.md">manuscript</a>.
         </figcaption>
       </figure>
 
@@ -172,7 +171,7 @@
           application. Built from separately published libraries.
         </p>
         <dl class="engine">
-          <div>
+          <div class="role-exec">
             <dt>Compile, then execute</dt>
             <dd>
               Before any image is processed, the compiler connects declared
@@ -181,16 +180,15 @@
               fail at compile time; workers reuse the plan instead of rebuilding it.
             </dd>
           </div>
-          <div>
+          <div class="role-work">
             <dt>Worker processes</dt>
             <dd>
               Samples are distributed across worker processes (threads optional).
               Each worker loads its libraries and GPU context once and reuses them
-              for every sample it is assigned. Adding workers shortened every one
-              of the 30 imported CellProfiler pipelines.
+              for every sample it is assigned.
             </dd>
           </div>
-          <div>
+          <div class="role-work">
             <dt>Mixed array libraries, CPU and GPU</dt>
             <dd>
               <a href="https://github.com/OpenHCSDev/ArrayBridge">ArrayBridge</a>
@@ -199,7 +197,7 @@
               different libraries run in one pipeline without conversion code.
             </dd>
           </div>
-          <div>
+          <div class="role-view">
             <dt>One storage layer</dt>
             <dd>
               <a href="https://github.com/OpenHCSDev/PolyStore">PolyStore</a>
@@ -208,7 +206,7 @@
               saved. Results keep their source coordinates and producing step.
             </dd>
           </div>
-          <div>
+          <div class="role-exec">
             <dt>Separate processes</dt>
             <dd>
               <a href="https://github.com/OpenHCSDev/ZMQRuntime">ZMQRuntime</a>
@@ -218,43 +216,6 @@
             </dd>
           </div>
         </dl>
-      </section>
-
-      <section class="section" id="results" aria-labelledby="results-title">
-        <h2 id="results-title">Measured results</h2>
-        <p class="section-lede">
-          From the <a href="https://github.com/OpenHCSDev/OpenHCS/blob/main/paper/manuscript.md">OpenHCS manuscript</a>
-          (draft); pipelines, scores and timing records are in its supplementary data.
-        </p>
-        <div class="ledger" role="region" aria-label="Measured results" tabindex="0">
-          <table>
-            <thead>
-              <tr><th scope="col">Test</th><th scope="col">Result</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">CellProfiler pipelines imported (official examples, tutorials, CellProfiler 4 benchmark)</th>
-                <td>30 of 30 reproduce native CellProfiler 4.2.8.1 outputs: label images exactly, measurements within 1e-6.</td>
-              </tr>
-              <tr>
-                <th scope="row">Execution time against CellProfiler</th>
-                <td>All 30 faster on one CPU core. Twelve samples, four workers: median 12.7× faster processing, 11.1× including setup, against a serial CellProfiler estimate.</td>
-              </tr>
-              <tr>
-                <th scope="row">Nuclear detection by agents from a written brief, no labels or training (BBBC039 test split)</th>
-                <td>Caicedo F1 0.792–0.823; expert-configured CellProfiler pipelines 0.790 and 0.811; learned methods 0.840–0.898.</td>
-              </tr>
-              <tr>
-                <th scope="row">Neurite outgrowth, three agents blinded to treatment (20 wells, 180 fields)</th>
-                <td>Mean outgrowth per cell correlated with MetaXpress at Pearson r 0.963–0.996; increases found at every nonzero dose of both drugs.</td>
-              </tr>
-              <tr>
-                <th scope="row">Protein translocation controls (BBBC013, 96 wells)</th>
-                <td>Z′ 0.849 (LY294002) and 0.726 (Wortmannin); above 0.5 is the usual threshold for an excellent screening assay.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </section>
 
       <section class="section section-wide" id="mcp" aria-labelledby="mcp-title">

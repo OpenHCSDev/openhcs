@@ -779,7 +779,7 @@ def test_stylesheet_covers_catalog_markup_and_reduced_motion():
     reduced_motion = styles.split("@media (prefers-reduced-motion: reduce)", 1)[1]
     assert ".gallery-motion video { display: none; }" in reduced_motion
     assert ".gallery-motion-fallback { display: block;" in reduced_motion
-    assert "@media (prefers-color-scheme: dark)" in styles
+    assert "color-scheme: dark" in styles
 
 
 def test_public_policy_pages_are_staged_with_local_software_boundaries(

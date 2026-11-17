@@ -1,26 +1,30 @@
 /*
-  OpenHCS website: a plain project page.
-  White page, black text, blue links, thin grey rules. Colours are
-  tokens; dark mode redefines them and nothing else.
+  OpenHCS website: a plain project page, dark by default.
+  The four accent colours are the four process roles of the architecture
+  diagram: purple for editing and agents, blue for compile and execution,
+  orange for workers and compute, teal for viewers and storage.
 */
 :root {
-  color-scheme: light;
-  --page-bg: #ffffff;
-  --soft-bg: #f4f4f4;
-  --ink: #111111;
-  --ink-soft: #555555;
-  --rule: #d0d0d0;
-  --rule-strong: #999999;
-  --link: #1a4fb4;
-  --link-visited: #5b3a99;
-  --mark: #a3271f;
-  --band: #15171d;
+  color-scheme: dark;
+  --page-bg: #15161a;
+  --soft-bg: #202126;
+  --ink: #e9e9ea;
+  --ink-soft: #a6a7ad;
+  --rule: #33353b;
+  --rule-strong: #565860;
+  --role-ui: #b892f5;
+  --role-exec: #6aaef5;
+  --role-work: #f2a05a;
+  --role-view: #43c7b2;
+  --link: #8cc0ff;
+  --link-visited: #c9a8f7;
+  --band: #0c0d10;
   --band-ink: #f1efe8;
   --band-soft: #a9a597;
-  --plate: #0d0f14;
-  --glyph-filter: none;
-  --diagram-filter: none;
-  --diagram-blend: normal;
+  --plate: #0b0c0f;
+  --glyph-filter: invert(1);
+  --diagram-filter: invert(1) hue-rotate(180deg);
+  --diagram-blend: lighten;
   --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --mono: "IBM Plex Mono", Menlo, Consolas, monospace;
   --measure: 48rem;
@@ -28,40 +32,11 @@
   --gutter: 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --page-bg: #17181b;
-    --soft-bg: #212226;
-    --ink: #e8e8e8;
-    --ink-soft: #a8a8a8;
-    --rule: #3a3b40;
-    --rule-strong: #5c5d63;
-    --link: #8fb0ff;
-    --link-visited: #c4a6f0;
-    --mark: #ff8a7a;
-    --band: #0e0f12;
-    --glyph-filter: invert(1);
-    --diagram-filter: invert(1) hue-rotate(180deg);
-    --diagram-blend: lighten;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --page-bg: #17181b;
-  --soft-bg: #212226;
-  --ink: #e8e8e8;
-  --ink-soft: #a8a8a8;
-  --rule: #3a3b40;
-  --rule-strong: #5c5d63;
-  --link: #8fb0ff;
-  --link-visited: #c4a6f0;
-  --mark: #ff8a7a;
-  --band: #0e0f12;
-  --glyph-filter: invert(1);
-  --diagram-filter: invert(1) hue-rotate(180deg);
-  --diagram-blend: lighten;
-}
+/* Each section carries the role colour it is about. */
+#principles, #mcp { --accent: var(--role-ui); }
+#engine, #install { --accent: var(--role-exec); }
+#platform { --accent: var(--role-work); }
+#gallery { --accent: var(--role-view); }
 
 body {
   overflow-x: clip;
@@ -143,6 +118,15 @@ h1, h2, h3 { font-family: var(--sans); line-height: 1.2; }
 .kicker { color: var(--ink-soft); font-size: 0.85rem; }
 h1 { margin-top: 0.4rem; font-size: clamp(1.9rem, 5vw, 2.6rem); font-weight: 700; letter-spacing: -0.015em; }
 h2 { font-size: 1.5rem; font-weight: 700; }
+.section > h2::before {
+  content: "";
+  display: inline-block;
+  width: 0.3rem;
+  height: 1.05em;
+  margin-right: 0.6rem;
+  vertical-align: -0.12em;
+  background: var(--accent, var(--role-exec));
+}
 h3 { font-size: 1.05rem; font-weight: 700; }
 .lede { margin-top: 0.9rem; font-size: 1.08rem; }
 .section-lede { margin-top: 0.6rem; color: var(--ink-soft); }
@@ -163,13 +147,13 @@ h3 { font-size: 1.05rem; font-weight: 700; }
   text-decoration: none;
 }
 .button:hover { background: var(--soft-bg); }
-.button-primary, .button-primary:visited { border-color: var(--ink); background: var(--ink); color: var(--page-bg); }
-.button-primary:hover { background: var(--ink-soft); }
+.button-primary, .button-primary:visited { border-color: var(--role-exec); background: var(--role-exec); color: #0b1424; font-weight: 600; }
+.button-primary:hover { filter: brightness(1.1); }
 
 /* ---------- Principles ---------- */
 .principles { margin-top: 0.9rem; padding-left: 1.4rem; }
 .principles li { padding: 0.35rem 0; }
-.principles li::marker { color: var(--ink-soft); font-weight: 700; }
+.principles li::marker { color: var(--role-ui); font-weight: 700; }
 .principles h3 { display: inline; font-size: 1rem; }
 .principles h3::after { content: " "; }
 .principles p { display: inline; color: var(--ink); }
@@ -178,7 +162,10 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 .engine { margin-top: 1rem; }
 .engine div { padding: 0.6rem 0; border-top: 1px solid var(--rule); }
 .engine div:first-child { border-top: 0; }
-.engine dt { font-weight: 700; }
+.engine dt { color: var(--role, var(--ink)); font-weight: 700; }
+.engine .role-exec { --role: var(--role-exec); }
+.engine .role-work { --role: var(--role-work); }
+.engine .role-view { --role: var(--role-view); }
 .engine dd { margin-top: 0.15rem; }
 
 .diagram { max-width: 58rem; margin: 0 0 2.5rem; }
@@ -192,7 +179,7 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 .ledger thead th { background: var(--soft-bg); font-size: 0.88rem; }
 .ledger tbody th { width: 30%; font-weight: 600; }
 .ledger td:last-child code { white-space: nowrap; }
-.checklist td.check { width: 2.5rem; color: #1f7a33; font-size: 1.1rem; font-weight: 700; text-align: center; }
+.checklist td.check { width: 2.5rem; color: var(--role-view); font-size: 1.1rem; font-weight: 700; text-align: center; }
 .checklist tbody th { width: auto; font-weight: 400; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .glyph { filter: var(--glyph-filter); }
@@ -236,7 +223,7 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 }
 .gallery-card figcaption { padding-top: 0.5rem; font-size: 0.9rem; }
 .gallery-card figcaption::before { content: "Fig. " counter(figure) " · "; color: var(--ink-soft); }
-.gallery-label { color: var(--ink-soft); }
+.gallery-label { color: var(--role-view); }
 .gallery-card-motion .gallery-label::after { content: " (clip)"; }
 .gallery-card figcaption h3 { margin-top: 0.15rem; font-size: 1rem; }
 .gallery-card figcaption p { margin-top: 0.15rem; color: var(--ink-soft); }
