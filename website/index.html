@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="OpenHCS is open-source software for high-content microscopy. It checks the whole pipeline against your plate before it runs, and the same pipeline opens in the desktop GUI, as Python, from CellProfiler, or through a local agent."
+      content="OpenHCS is open-source analysis software for high-content microscopy. Pipelines are validated before they run and can be edited in the desktop GUI, as Python, from CellProfiler, or through a local agent."
     >
     <meta name="theme-color" content="#15171d">
     <meta property="og:title" content="OpenHCS | Open High-Content Screening">
     <meta
       property="og:description"
-      content="Check the whole plate before you run it. One pipeline across the desktop GUI, Python, CellProfiler, and local agents."
+      content="Open-source analysis software for high-content microscopy. One pipeline across the desktop GUI, Python, CellProfiler, and local agents."
     >
     <meta property="og:type" content="website">
     <meta
@@ -34,52 +34,47 @@
 
     <main id="content">
       <section class="title-block" id="top">
-        <p class="kicker">For imaging scientists and research software teams</p>
-        <h1>Check the whole plate before you run it.</h1>
+        <h1>OpenHCS</h1>
         <p class="lede">
-          Open-source analysis for high-content microscopy: many wells, sites,
-          channels, Z planes, or time points, all analysed the same way.
-          OpenHCS checks your pipeline against the plate before it runs, so a
-          bad setting fails in a second, not after a night of processing. Edit
-          the same pipeline in the desktop app, as Python, from a CellProfiler
-          <code>.cppipe</code>, or through a local agent.
+          Open-source analysis software for high-content microscopy: plates with
+          many wells, sites, channels, Z planes, or time points. Pipelines are
+          compiled and checked against the selected data before they run. The
+          same pipeline can be edited in the desktop app, as Python, imported
+          from a CellProfiler <code>.cppipe</code>, or built by a local agent
+          over MCP.
         </p>
         <div class="actions">
           <a class="button button-primary" href="#install">Install OpenHCS {{ OPENHCS_VERSION }}</a>
-          <a
-            class="button"
-            href="https://openhcs.readthedocs.io/en/latest/guide_for_biologists/domain_expert_onboarding.html"
-            aria-label="Check whether OpenHCS fits your microscopy workflow"
-          >Is OpenHCS for my data? <span aria-hidden="true">→</span></a>
+          <a class="button" href="https://openhcs.readthedocs.io/en/latest/">Documentation</a>
         </div>
       </section>
 
       <section class="section" id="principles" aria-labelledby="principles-title">
-        <h2 id="principles-title">How it is built</h2>
+        <h2 id="principles-title">Design</h2>
         <ol class="principles">
           <li>
-            <h3>Check first, then run.</h3>
+            <h3>Validated before execution.</h3>
             <p>The pipeline is compiled against your selected wells, sites, channels, and planes before any work starts.</p>
           </li>
           <li>
-            <h3>One pipeline, several ways in.</h3>
-            <p>GUI, Python, and agent all edit the same typed object. Nothing is translated, so nothing is lost.</p>
+            <h3>One pipeline representation.</h3>
+            <p>The GUI, generated Python, and the MCP server edit the same typed object; there is no conversion between formats.</p>
           </li>
           <li>
-            <h3>Say each thing once.</h3>
+            <h3>One declaration per fact.</h3>
             <p>Each fact lives on the declaration that owns it; every list is derived from those. <a href="https://openhcs.readthedocs.io/en/latest/architecture/nominal_ownership.html">How</a>.</p>
           </li>
           <li>
-            <h3>Fail loudly.</h3>
-            <p>No silent fallbacks. If OpenHCS can't do what you asked, it says so and says where.</p>
+            <h3>Errors, not fallbacks.</h3>
+            <p>Unsupported input stops with an error naming the cause; nothing is silently substituted.</p>
           </li>
           <li>
-            <h3>Show the receipts.</h3>
-            <p>Every figure has a checksum record; the agent run ships uncut with its logs.</p>
+            <h3>Published evidence.</h3>
+            <p>Figures have checksum records; the agent run below is published uncut with its logs.</p>
           </li>
           <li>
-            <h3>Open all the way down.</h3>
-            <p>MIT licensed, built on <a href="https://github.com/OpenHCSDev/OpenHCS#-the-openhcs-ecosystem">libraries you can use on their own</a>.</p>
+            <h3>MIT licensed.</h3>
+            <p>The general parts are <a href="https://github.com/OpenHCSDev/OpenHCS#-the-openhcs-ecosystem">separate libraries</a>.</p>
           </li>
         </ol>
       </section>
@@ -97,90 +92,74 @@
       </section>
 
       <section class="section" id="platform" aria-labelledby="platform-title">
-        <h2 id="platform-title">What is in the box</h2>
-        <div class="ledger" role="region" aria-label="OpenHCS capabilities" tabindex="0">
-          <table>
+        <h2 id="platform-title">Features</h2>
+        <div class="ledger" role="region" aria-label="OpenHCS features" tabindex="0">
+          <table class="checklist">
             <thead>
               <tr>
-                <th scope="col">Part</th>
-                <th scope="col">What it does</th>
+                <th scope="col">Feature</th>
+                <th scope="col"><span class="visually-hidden">Supported</span></th>
                 <th scope="col">Install</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <th scope="row">GUI and Python</th>
-                <td>Build visually, export Python, edit, re-open.</td>
-                <td><code>openhcs[gui]</code></td>
-              </tr>
+              <tr><th scope="row">Pipeline compiled and validated before execution</th><td class="check">✓</td><td>included</td></tr>
+              <tr><th scope="row">Edit in the GUI, export to Python, re-import</th><td class="check">✓</td><td><code>openhcs[gui]</code></td></tr>
               <tr>
                 <th scope="row">
                   <a class="mark" href="https://cellprofiler.org/" aria-label="CellProfiler website"><img src="assets/logos/cellprofiler.png" width="120" height="120" alt=""></a>
-                  CellProfiler <code>.cppipe</code>
+                  CellProfiler <code>.cppipe</code> import (supported modules; others stop with an error)
                 </th>
-                <td>Supported modules import as ordinary steps; unsupported ones fail by name. <a href="https://openhcs.readthedocs.io/en/latest/api/">API</a>.</td>
-                <td><code>openhcs[cellprofiler-compat]</code></td>
+                <td class="check">✓</td><td><code>openhcs[cellprofiler-compat]</code></td>
               </tr>
               <tr>
-                <th scope="row">2D and 3D</th>
-                <td>
-                  Dimensionality is function-defined, not a global 2D/3D switch;
+                <th scope="row">
+                  2D and 3D. Dimensionality is function-defined, not a global 2D/3D switch;
                   plane-local labels are not silently stitched across Z.
-                  <a href="https://openhcs.readthedocs.io/en/latest/reference/dimensionality_and_measurements.html">Reference</a>.
-                </td>
-                <td>included</td>
+                  <a href="https://openhcs.readthedocs.io/en/latest/reference/dimensionality_and_measurements.html">Reference</a>
+                </th>
+                <td class="check">✓</td><td>included</td>
               </tr>
               <tr>
                 <th scope="row">
                   <a class="mark" href="https://napari.org/" aria-label="napari website"><img src="assets/logos/napari.svg" width="824" height="824" alt=""></a>
                   <a class="mark" href="https://imagej.net/software/fiji/" aria-label="Fiji website"><img src="assets/logos/fiji.svg" width="90" height="90" alt=""></a>
-                  Napari and Fiji
+                  Live streaming to Napari and Fiji
                 </th>
-                <td>Stream images, ROIs, and measurements while the pipeline runs.</td>
-                <td><code>openhcs[gui,viz]</code></td>
+                <td class="check">✓</td><td><code>openhcs[gui,viz]</code></td>
               </tr>
               <tr>
-                <th scope="row">GPU libraries and custom functions</th>
-                <td>
-                  Decorate any Python function for
+                <th scope="row">
+                  GPU libraries and custom functions:
                   <a href="https://cupy.dev/">CuPy</a>, <a href="https://pytorch.org/">PyTorch</a>,
-                  <a href="https://docs.jax.dev/">JAX</a>, <a href="https://www.tensorflow.org/">TensorFlow</a>, or
-                  <a href="https://clesperanto.github.io/pyclesperanto/">pyclesperanto</a>.
-                  <span class="compute-marks" aria-hidden="true">
-                    <img src="assets/logos/cupy.svg" width="75" height="76" alt="">
-                    <img src="assets/logos/pytorch.svg" width="90" height="109" alt="">
-                    <img src="assets/logos/jax.png" width="64" height="64" alt="">
-                    <img src="assets/logos/tensorflow.svg" width="267" height="244" alt="">
-                    <img src="assets/logos/pyclesperanto.png" width="200" height="200" alt="">
-                  </span>
-                </td>
-                <td><code>openhcs[gpu]</code></td>
+                  <a href="https://docs.jax.dev/">JAX</a>, <a href="https://www.tensorflow.org/">TensorFlow</a>,
+                  <a href="https://clesperanto.github.io/pyclesperanto/">pyclesperanto</a>
+                </th>
+                <td class="check">✓</td><td><code>openhcs[gpu]</code></td>
               </tr>
+              <tr><th scope="row">Multi-process execution with per-device GPU assignment</th><td class="check">✓</td><td>included</td></tr>
               <tr>
                 <th scope="row">
                   <a class="mark" href="https://www.openmicroscopy.org/bio-formats/" aria-label="Bio-Formats website"><img src="assets/logos/bioformats.svg" width="705" height="886" alt=""></a>
                   Bio-Formats image I/O
                 </th>
-                <td>Read microscopy formats and their metadata.</td>
-                <td><code>openhcs[bioformats]</code></td>
+                <td class="check">✓</td><td><code>openhcs[bioformats]</code></td>
               </tr>
-              <tr>
-                <th scope="row">Local MCP</th>
-                <td>Let an agent on your machine build and run pipelines.</td>
-                <td><code>openhcs[mcp]</code></td>
-              </tr>
+              <tr><th scope="row">OMERO data source</th><td class="check">✓</td><td><code>openhcs[omero]</code></td></tr>
+              <tr><th scope="row">Local MCP server for agents</th><td class="check">✓</td><td><code>openhcs[mcp]</code></td></tr>
+              <tr><th scope="row">Windows, macOS, Linux; MIT license</th><td class="check">✓</td><td>—</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
       <section class="section section-wide" id="mcp" aria-labelledby="mcp-title">
-        <h2 id="mcp-title">An agent can drive it. Here is the whole run.</h2>
+        <h2 id="mcp-title">Agents (MCP)</h2>
         <div class="mcp-intro">
           <div>
             <p class="section-lede">
-              The local MCP gives an agent the same pipeline the GUI uses. What
-              it builds stays editable, so you can check its work.
+              The local MCP server exposes the same pipeline model the GUI uses.
+              Pipelines an agent builds remain editable in the GUI and as Python.
             </p>
             <div class="actions">
               <a class="button button-primary" href="#install">Install local MCP</a>
@@ -198,15 +177,15 @@
 
         <div class="agent-evidence" aria-labelledby="agent-evidence-title">
           <div class="agent-evidence-copy">
-            <h3 id="agent-evidence-title">One prompt, one unattended run</h3>
+            <h3 id="agent-evidence-title">Recorded unattended run</h3>
             <p>
-              Codex got one prompt and two loose TIFF planes from a public
+              Input: one prompt and two TIFF planes from a public
               <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5089663/">NeuronCyto II</a>
-              field. It built, compiled, and ran a two-step neuron morphology
-              pipeline: 9 neurons and 25 spatial-graph paths.
+              field. Codex built, compiled, and ran a two-step neuron morphology
+              pipeline. Result: 9 neurons and 25 spatial-graph paths.
             </p>
             <p>
-              A human then caught a crossing-neurite bug, fixed in
+              Later review found a crossing-neurite tracing bug, fixed in
               <code>0eb5f77c0</code>; a rerun gives 9 neurons and 24
               spatial-graph paths. An SWC gap was fixed in <code>973c51fd0</code>.
             </p>
@@ -267,14 +246,14 @@
               class="download"
               href="https://github.com/OpenHCSDev/OpenHCS/releases/latest/download/OpenHCS-Windows-Installer.exe"
             >
-              <img src="assets/logos/platform-windows.svg" width="24" height="24" alt="">
+              <img class="glyph" src="assets/logos/platform-windows.svg" width="24" height="24" alt="">
               <span><strong>Download for Windows</strong><small>Download and run — no ZIP to extract</small></span>
             </a>
             <a
               class="download"
               href="https://github.com/OpenHCSDev/OpenHCS/releases/latest/download/OpenHCS-macOS-Installer.dmg"
             >
-              <img src="assets/logos/platform-macos.svg" width="24" height="24" alt="">
+              <img class="glyph" src="assets/logos/platform-macos.svg" width="24" height="24" alt="">
               <span><strong>Download for macOS</strong><small>Open the DMG, then open OpenHCS Installer</small></span>
             </a>
             <p class="note">
@@ -287,7 +266,7 @@
 
           <div class="install-box">
             <h3>
-              <img src="assets/logos/python.svg" width="24" height="24" alt="">
+              <img class="glyph" src="assets/logos/python.svg" width="24" height="24" alt="">
               From PyPI <small>Headless, GPU, or your own environment</small>
             </h3>
             <pre><code><span class="prompt">$</span> python -m pip install "openhcs[gui,viz,bioformats,mcp,cellprofiler-compat]"

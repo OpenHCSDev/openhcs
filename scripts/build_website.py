@@ -30,15 +30,6 @@ HTML_SOURCE_FILES = (
 SOURCE_FILES = HTML_SOURCE_FILES + (
     "styles.css",
     "globals.css",
-    "assets/logos/bioformats.svg",
-    "assets/logos/cellprofiler.png",
-    "assets/logos/cupy.svg",
-    "assets/logos/fiji.svg",
-    "assets/logos/jax.png",
-    "assets/logos/napari.svg",
-    "assets/logos/pyclesperanto.png",
-    "assets/logos/pytorch.svg",
-    "assets/logos/tensorflow.svg",
 )
 ASSET_SOURCES = {
     "assets/logos/openhcs-favicon.svg": (

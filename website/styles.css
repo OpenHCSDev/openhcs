@@ -163,9 +163,12 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 .ledger thead th { background: var(--soft-bg); font-size: 0.88rem; }
 .ledger tbody th { width: 30%; font-weight: 600; }
 .ledger td:last-child code { white-space: nowrap; }
+.checklist td.check { width: 2.5rem; color: #1f7a33; font-size: 1.1rem; font-weight: 700; text-align: center; }
+.checklist tbody th { width: auto; font-weight: 400; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.glyph { filter: var(--glyph-filter); }
 .mark { display: inline-block; margin-right: 0.25rem; vertical-align: -0.2em; }
-.mark img, .compute-marks img { width: auto; height: 1.05rem; }
-.compute-marks { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.45rem; }
+.mark img { width: auto; height: 1.05rem; }
 
 /* ---------- Figures: the gallery catalog renders the markup ---------- */
 .gallery-grid {

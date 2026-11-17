@@ -242,21 +242,17 @@ def test_build_site_stages_authoritative_media_and_valid_references(
     for source in agent_sources:
         relative_name = source.relative_to(REPO_ROOT / "website")
         assert (site_dir / relative_name).read_bytes() == source.read_bytes()
-    for logo_name in (
-        "bioformats.svg",
-        "cellprofiler.png",
-        "cupy.svg",
-        "fiji.svg",
-        "jax.png",
-        "napari.svg",
-        "pyclesperanto.png",
-        "pytorch.svg",
-        "tensorflow.svg",
-    ):
-        authority = REPO_ROOT / "website/assets/logos" / logo_name
-        assert (site_dir / "assets/logos" / logo_name).read_bytes() == (
-            authority.read_bytes()
-        )
+    asset_outputs = set(ASSET_SOURCES)
+    staged_logos = tuple(
+        path.relative_to(site_dir).as_posix()
+        for path in sorted((site_dir / "assets/logos").iterdir())
+    )
+    for staged_logo in staged_logos:
+        if staged_logo in asset_outputs:
+            continue
+        assert (site_dir / staged_logo).read_bytes() == (
+            REPO_ROOT / "website" / staged_logo
+        ).read_bytes()
     mcp_clients = read_mcp_client_targets(REPO_ROOT)
     for client in mcp_clients:
         authority = REPO_ROOT / "website" / client.logo_path
@@ -265,46 +261,30 @@ def test_build_site_stages_authoritative_media_and_valid_references(
         assert (site_dir / output_name).read_bytes() == (
             REPO_ROOT / source_name
         ).read_bytes()
-    expected_non_gallery_targets = tuple(
-        sorted(
-            {
-                "assets/logos/bioformats.svg",
-                "assets/logos/cellprofiler.png",
-                "assets/logos/cupy.svg",
-                "assets/logos/fiji.svg",
-                "assets/logos/jax.png",
-                "assets/logos/napari.svg",
-                "assets/logos/openhcs-favicon.svg",
-                "assets/logos/openhcs-horizontal.svg",
-                "assets/logos/openhcs-stacked.svg",
-                "assets/logos/platform-macos.svg",
-                "assets/logos/platform-windows.svg",
-                "assets/logos/pyclesperanto.png",
-                "assets/logos/python.svg",
-                "assets/logos/pytorch.svg",
-                "assets/logos/tensorflow.svg",
-                "globals.css",
-                "index.html",
-                "privacy.html",
-                "styles.css",
-                "support.html",
-                "terms.html",
-                *(
-                    str(source.relative_to(REPO_ROOT / "website"))
-                    for source in agent_sources
-                ),
-                *(client.logo_path for client in mcp_clients),
-            }
-        )
-    )
-    assert (
-        tuple(
-            target
-            for target in local_targets
-            if not target.startswith("assets/gallery/")
-        )
-        == expected_non_gallery_targets
-    )
+    non_gallery_targets = {
+        target for target in local_targets if not target.startswith("assets/gallery/")
+    }
+    # Every page, stylesheet, agent record and client mark is referenced, and
+    # nothing outside the gallery ships unless a page references it.
+    assert {
+        "index.html",
+        "privacy.html",
+        "support.html",
+        "terms.html",
+        "styles.css",
+        "globals.css",
+        *asset_outputs,
+        *(str(source.relative_to(REPO_ROOT / "website")) for source in agent_sources),
+        *(client.logo_path for client in mcp_clients),
+    } <= non_gallery_targets
+    staged_non_gallery = {
+        path.relative_to(site_dir).as_posix()
+        for path in site_dir.rglob("*")
+        if path.is_file()
+        and path.name != ".nojekyll"
+        and not path.relative_to(site_dir).as_posix().startswith("assets/gallery/")
+    }
+    assert staged_non_gallery == non_gallery_targets
     collector = _GalleryMarkupCollector()
     collector.feed((site_dir / "index.html").read_text(encoding="utf-8"))
     gallery_references = {
@@ -363,20 +343,24 @@ def test_shipping_copy_projects_current_release_and_keeps_boundaries_explicit(
     ):
         assert boundary in normalized_html
 
-    # Every named integration links to its own project and shows its own mark.
+    # Every named integration links to its own project; the integrations with
+    # their own table row also show their mark.
     for href, logo in (
         ("https://cellprofiler.org/", "cellprofiler.png"),
         ("https://napari.org/", "napari.svg"),
         ("https://imagej.net/software/fiji/", "fiji.svg"),
         ("https://www.openmicroscopy.org/bio-formats/", "bioformats.svg"),
-        ("https://cupy.dev/", "cupy.svg"),
-        ("https://pytorch.org/", "pytorch.svg"),
-        ("https://docs.jax.dev/", "jax.png"),
-        ("https://www.tensorflow.org/", "tensorflow.svg"),
-        ("https://clesperanto.github.io/pyclesperanto/", "pyclesperanto.png"),
     ):
         assert f'href="{href}"' in html
         assert f'src="assets/logos/{logo}"' in html
+    for href in (
+        "https://cupy.dev/",
+        "https://pytorch.org/",
+        "https://docs.jax.dev/",
+        "https://www.tensorflow.org/",
+        "https://clesperanto.github.io/pyclesperanto/",
+    ):
+        assert f'href="{href}"' in html
     for logo in ("platform-windows.svg", "platform-macos.svg", "python.svg"):
         assert f'src="assets/logos/{logo}"' in html
 
