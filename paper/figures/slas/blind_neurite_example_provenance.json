@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "b7027fe9ceb6e87870e890831f887c558bd9c78e7be6bc79afb27f29d202244d",
+  "generator_sha256": "8b59a11166070db42abf062c631cc6b9760d666ed7bb45f5db7180ec0545e39c",
   "source_sha256": {
     "paper/figures/slas/blind_neurite_sources/source-receipt.json": "0ef0e23a541094da1a3be7f272fdcdd13edbc39d055571a3e6b68f796429e82b",
     "paper/figures/slas/blind_neurite_sources/final-freeze.json": "8ed17b17b182b86a32714c28d2d2488dc002888906f66525fcb46035ab641b28",
@@ -10,7 +10,7 @@
     "paper/figures/slas/blind_neurite_sources/A02_site-2_z_index-1_timepoint-1_cell_bodies_step0.labels.tif": "c2ae3e215f2354747e34449cdddf4817fe97941228e8e4ec3c78d922d475b2dd",
     "paper/figures/slas/blind_neurite_sources/A02_s002_w2_z001_t001_neurite_morphology_step0.graph.roi.zip": "190c29fde4233a5e28eb34751912f39a0d7d92f864c699649292ad32053a1ab5"
   },
-  "input_root": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/frozen-root",
+  "input_root": "/",
   "ui_crops": [],
   "display_transforms": [
     {
@@ -54,9 +54,9 @@
     }
   ],
   "output_sha256": {
-    "blind_neurite_example.png": "3d7d4fc938e85f353962108928e23ba79b930e3beacbe289b2f9ecff21f1f866",
-    "blind_neurite_example.pdf": "a1594ecb82663ecb29691a16cf94bb9b77ac080c21bbcfe175282afc66570039",
-    "blind_neurite_example.svg": "254c98c4ea1ae821dced1bc95b84c9e5f640bfdd0f0c3c99346e9807be00904b"
+    "blind_neurite_example.png": "865a4ac1c16155a58df6edea1096f931665e7fbd82fc6bf40ffcf24aecd353d9",
+    "blind_neurite_example.pdf": "9a78282c1db0c07729c347592eb726a3eb8526203878e6e738162f84d8b13c14",
+    "blind_neurite_example.svg": "49f9658b672ca1c663235eb4c4ce6464f71deae0f141f81a08f59453498ae881"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
