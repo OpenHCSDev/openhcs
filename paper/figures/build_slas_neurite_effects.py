@@ -109,31 +109,50 @@ class NeuriteEffectFigure(FigureSheet):
         return datasets
 
     @staticmethod
-    def draw_correlations(sheet, tables, *, bounds=(0.43, 0.16, 0.42, 0.68)):
-        """Show absolute well-level correlation without implying equal magnitudes."""
+    def condition_title(condition):
+        return "Y27632" if condition == "Y27" else condition
+
+    @staticmethod
+    def draw_correlations(sheet, tables, *, bounds=(0.40, 0.17, 0.48, 0.60)):
+        """Compare every run and endpoint within each treatment, never pooled."""
         declarations = endpoint_declarations()
         metrics = tuple(declarations)
         datasets = NeuriteEffectFigure.read_datasets(sheet, tables, metrics)
-        values = [
-            [correlation([float(row[metric]) for row in wells],
-                         [float(row["openhcs_" + metric]) for row in wells])
-             for _, wells, _, _ in datasets]
-            for metric in metrics
-        ]
-        axis = sheet.plot_axes(bounds)
-        image = axis.imshow(values, vmin=-1, vmax=1, cmap="RdBu", aspect="auto")
-        axis.set_xticks(range(len(datasets)), [label for label, _, _, _ in datasets])
-        axis.set_yticks(range(len(metrics)), [declarations[metric].absolute_label for metric in metrics])
-        axis.xaxis.tick_top()
-        axis.tick_params(length=0, pad=9)
-        for row, results in enumerate(values):
-            for column, value in enumerate(results):
-                axis.text(column, row, f"{value:.3f}", ha="center", va="center",
-                          fontsize=sheet.plot_font_size, color="white" if abs(value) > .6 else "black")
-        bar = sheet.figure.colorbar(image, ax=axis, fraction=.06, pad=.06)
-        bar.set_label("Pearson r", fontsize=sheet.plot_font_size)
-        bar.ax.tick_params(labelsize=sheet.plot_font_size)
-        return {len(wells) for _, wells, _, _ in datasets}
+        conditions = tuple(sorted({row["condition"] for row in datasets[0][1]}))
+        x, y, width, height = bounds
+        gap = .04
+        panel_width = (width - gap * (len(conditions) - 1)) / len(conditions)
+        counts = set()
+        for column, condition in enumerate(conditions):
+            selected = [(label, [row for row in wells if row["condition"] == condition])
+                        for label, wells, _, _ in datasets]
+            counts.update(len(wells) for _, wells in selected)
+            values = [
+                [correlation([float(row[metric]) for row in wells],
+                             [float(row["openhcs_" + metric]) for row in wells])
+                 for _, wells in selected]
+                for metric in metrics
+            ]
+            left = x + column * (panel_width + gap)
+            axis = sheet.plot_axes((left, y, panel_width, height))
+            image = axis.imshow(values, vmin=-1, vmax=1, cmap="RdBu", aspect="auto")
+            axis.set_xticks(range(len(selected)), [label for label, _ in selected],
+                            rotation=45, ha="left", rotation_mode="anchor", fontsize=10)
+            axis.set_yticks(range(len(metrics)), [declarations[metric].absolute_label for metric in metrics])
+            axis.xaxis.tick_top()
+            axis.tick_params(length=0, pad=7, labelleft=column == 0)
+            sheet.text((left + panel_width / 2) * 100, 92,
+                       NeuriteEffectFigure.condition_title(condition),
+                       ha="center", size=14, weight="bold")
+            for row, results in enumerate(values):
+                for run, value in enumerate(results):
+                    axis.text(run, row, f"{value:.3f}", ha="center", va="center",
+                              fontsize=11, color="white" if abs(value) > .6 else "black")
+        bar_axis = sheet.figure.add_axes((.915, y, .015, height))
+        bar = sheet.figure.colorbar(image, cax=bar_axis)
+        bar.ax.set_title("r", fontsize=11, pad=8)
+        bar.ax.tick_params(labelsize=10)
+        return counts
 
     @staticmethod
     def draw_panels(
@@ -195,7 +214,7 @@ class NeuriteEffectFigure(FigureSheet):
                 if row == 0:
                     sheet.panel(
                         letter,
-                        "Y27632" if condition == "Y27" else condition,
+                        NeuriteEffectFigure.condition_title(condition),
                         left * 100,
                         (bottom + height + extent * 0.02) * 100,
                     )

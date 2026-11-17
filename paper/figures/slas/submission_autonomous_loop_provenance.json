@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "a23e96433d663bb742daa57e6b45029410274b7943051a175ae398cb8bde9a90",
+  "generator_sha256": "ecbea0e9858b39b994c0b1044af4c1d443e17b447fc80b059559dfd3bf36b331",
   "source_sha256": {
     "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md": "cb14d533fb87b91f80d6f8c647bb833b0444f2239357af6732b93485eae8cfd9",
     "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md": "6aff1f00a2cfb11a658850831c511298010339acba99c080cabed437c544e28b",
@@ -22,15 +22,15 @@
     {
       "operation": "Vertical canvas crop; axis sizes and type unchanged",
       "bottom_top_fractions": [
-        0.39,
-        0.835
+        0.485,
+        0.795
       ]
     }
   ],
   "output_sha256": {
-    "submission_autonomous_loop.png": "202cc28b8eba9aa404927fd71f0344a87c6a832478f5e44a5e0a4600f4de0b2e",
-    "submission_autonomous_loop.pdf": "01df54da120529e4b9a514294d8d9d400cb2469ed81c702938487bf9650207c2",
-    "submission_autonomous_loop.svg": "8a7abf4d6903c782257810d8febf1d00ba3a4c06757f147d31644c1ab8378f95"
+    "submission_autonomous_loop.png": "83ea32e9cd1a4a04185e76d278a0d95fa6ea81f0f79987b973b57dbff4957d3b",
+    "submission_autonomous_loop.pdf": "77ef31ae2a569d11ad943022d1e5156bfb2e7b99bb2854d323e078249926cf1f",
+    "submission_autonomous_loop.svg": "b116947d3013f80a01e5179c510ca27b8b70a356fa20ade6871ce2c2ab7dcb52"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
