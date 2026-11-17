@@ -179,13 +179,14 @@ class NeuriteEffectFigure(FigureSheet):
                          for index in range(len(groups))]
             bars = axis.bar(positions, [values[run] for _, _, values in groups],
                             width=bar_width * .9, color=colour, label=label, zorder=3)
-            axis.bar_label(bars, fmt="%.3f", padding=3, fontsize=10.5)
+            axis.bar_label(bars, fmt="%.3f", label_type="center", rotation=90,
+                           fontsize=12, fontweight="bold", color="white")
         axis.set(ylim=(min(0, *(value for _, _, values in groups for value in values)), 1.20),
                  yticks=(0, .5, 1), xticks=range(len(groups)),
                  xticklabels=[f"{cls.condition_title(condition)}\n"
                               f"{fill(declarations[metric].absolute_label, 24)}"
                               for condition, metric, _ in groups])
-        axis.tick_params(labelsize=11)
+        axis.tick_params(labelsize=11.5)
         axis.set_title(f"{start_letter}  Pearson r against MetaXpress", loc="left",
                        fontsize=sheet.plot_font_size, fontweight="bold", color=BLUE)
         axis.spines[["top", "right"]].set_visible(False)

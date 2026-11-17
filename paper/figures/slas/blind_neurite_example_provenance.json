@@ -55,8 +55,8 @@
   ],
   "output_sha256": {
     "blind_neurite_example.png": "865a4ac1c16155a58df6edea1096f931665e7fbd82fc6bf40ffcf24aecd353d9",
-    "blind_neurite_example.pdf": "9a78282c1db0c07729c347592eb726a3eb8526203878e6e738162f84d8b13c14",
-    "blind_neurite_example.svg": "49f9658b672ca1c663235eb4c4ce6464f71deae0f141f81a08f59453498ae881"
+    "blind_neurite_example.pdf": "422259f8efe7bac2962d7525783dff5ee0fe8f3540c52d5b54a80cacf15059bb",
+    "blind_neurite_example.svg": "a0553e29134c3d83d945633152f190c58433408c9598ea55dddbd2a9f4685576"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
