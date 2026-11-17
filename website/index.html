@@ -367,8 +367,7 @@
           const cx = start.cx + (innerWidth / 2 - start.cx) * e;
           const cy = (start.cy - scrollY) * (1 - e) + (innerHeight / 2) * e;
           mark.style.transform = `translate(${cx - start.w / 2}px, ${cy - start.h / 2}px) scale(${scale})`;
-          mark.style.setProperty("--mark-alpha", String(0.07 - 0.045 * e));
-          mark.classList.toggle("is-settled", e > 0.5);
+          mark.style.opacity = String(0.07 - 0.045 * e);
         };
         const measure = () => {
           mark.classList.remove("is-floating");

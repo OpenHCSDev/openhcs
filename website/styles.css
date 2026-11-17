@@ -120,19 +120,21 @@ main { width: min(calc(100% - 2 * var(--gutter)), var(--page)); margin: 0 auto; 
   grid-row: 1;
   width: 100%;
   height: auto;
-  color: color-mix(in srgb, var(--ink) calc(var(--mark-alpha, 0.07) * 100%), transparent);
+  color: var(--ink);
+  opacity: 0.07;
   pointer-events: none;
   user-select: none;
 }
-/* Every few seconds the processing chevron nudges forward in the execution blue. */
+/* Every few seconds the processing chevron nudges forward in the execution blue,
+   beside the intro and behind the page alike. The whole mark is faded as one
+   layer, so overlapping strokes do not darken. */
 .title-mark #processing-chevron {
   transform-box: fill-box;
   animation: chevron-pulse 3.6s ease-in-out infinite;
 }
-.title-mark.is-settled #processing-chevron { animation: none; }
 @keyframes chevron-pulse {
   0%, 70%, 100% { fill: currentColor; transform: none; }
-  82% { fill: color-mix(in srgb, var(--role-exec) 35%, transparent); transform: translateX(6%); }
+  82% { fill: var(--role-exec); transform: translateX(6%); }
 }
 .section { max-width: var(--measure); padding: 1.75rem 0 2rem; border-top: 1px solid var(--rule); }
 .section-wide { max-width: none; }
