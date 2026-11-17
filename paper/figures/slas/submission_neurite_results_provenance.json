@@ -1,16 +1,8 @@
 {
-  "generator_sha256": "1d100ff8e5632538c62ea72f6f4316c018e1da12f2322f4552ad93b83ceff04d",
+  "generator_sha256": "17da5750fd1f2a54cbd00e5fd0e9806db2df5ca597e8e106140b120e2542960e",
   "source_sha256": {
-    "paper/figures/slas/blind_neurite_sources/source-receipt.json": "0ef0e23a541094da1a3be7f272fdcdd13edbc39d055571a3e6b68f796429e82b",
-    "paper/figures/slas/blind_neurite_sources/final-freeze.json": "8ed17b17b182b86a32714c28d2d2488dc002888906f66525fcb46035ab641b28",
-    "paper/figures/slas/frozen_neurite_views.json": "e693f28b56f50899db5843883b4549a982fe0585e5fd6ca96aca838b2f7da82f",
-    "paper/supplementary/personal_neurite_autonomous/ACQUISITION.json": "43d0fb9d7cf3de362bac3ddd23d354e57b30c9c1484d8201338eca45897f22c2",
-    "paper/figures/build_slas_neurite_views.py": "9c25127cdfcd382c95caf2c31aaafbedb69349f68c2c78792eba31ba0c626984",
-    "paper/figures/slas/blind_neurite_sources/A02_s002_w2_z001_t001.tif": "4018eb5cbccb8565c4e09fc732626fb4a332bf8d1d00e9f05f7b38cd79a9bd45",
-    "paper/figures/slas/blind_neurite_sources/A02_site-2_z_index-1_timepoint-1_cell_bodies_step0.labels.tif": "c2ae3e215f2354747e34449cdddf4817fe97941228e8e4ec3c78d922d475b2dd",
-    "paper/figures/slas/blind_neurite_sources/A02_s002_w2_z001_t001_neurite_morphology_step0.graph.roi.zip": "190c29fde4233a5e28eb34751912f39a0d7d92f864c699649292ad32053a1ab5",
     "paper/supplementary/personal_neurite_reanalysis_20261116/cohort.json": "ba00f4319d759f228fc9dcebefb60aac2167f2fbc0ca5b2da44d964a206d7227",
-    "paper/figures/build_slas_neurite_effects.py": "174d47fea292e5c51791c479594f9678d7cbec5faa6cd8c3d105dada11f6bf80",
+    "paper/figures/build_slas_neurite_effects.py": "32c1d5585c08e73f71f69f7135bce6f65e62c670f9e63af0c7d48930d6afb78c",
     "paper/figures/compare_personal_neurite.py": "a53ecc4f5ae2df00c38b81b6ead6c0454d18b9a81ccdd4ee491ae28c19a0ec6f",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author114/joined_wells.csv": "a31c1a3a6f503de056672bcb911d560698c651db30eb65d44306dba9982c8e7c",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author114/treatment_effects.csv": "6137f2a734372fbcced9827fdf330b5186bbe1f73528c73ff11cb0072cb061e5",
@@ -22,53 +14,13 @@
     "paper/supplementary/personal_neurite_reanalysis_20261116/author116/treatment_effects.csv": "3e77b1dfb6fdcc441b966b5949800c59a7e97e64d8c310b2af1ce74f7c1fd8b4",
     "paper/supplementary/personal_neurite_reanalysis_20261116/author116/source_evidence.json": "2dd47495fe0846c5c461f2c24b346764f4bbffa8226f0c34cbc5541214f6b612"
   },
-  "input_root": "/",
+  "input_root": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/frozen-root",
   "ui_crops": [],
-  "display_transforms": [
-    {
-      "author_run": "P001_GRAPHICAL_114",
-      "attempt": "frozen candidate03; validation A02, site 2",
-      "operation": "Frozen arrays and saved detections in native coordinates",
-      "viewport": {
-        "raw_window": [
-          72.0,
-          2140.0
-        ]
-      },
-      "source_shape_yx": [
-        1024,
-        1024
-      ],
-      "raw_window": [
-        72.0,
-        2140.0
-      ],
-      "region_yyxx": [
-        0,
-        1024,
-        0,
-        1024
-      ],
-      "raw_cmap": "gray_r",
-      "overlay_opacity": 0.75,
-      "units_per_pixel": 1.3556,
-      "scale_unit": "\u00b5m",
-      "pixel_aspect": 1.0,
-      "gamma": 1,
-      "analysis_rerun": false
-    },
-    {
-      "author_run": "P001_GRAPHICAL_114",
-      "attempt": "frozen candidate03; validation A02, site 2",
-      "operation": "Vector strokes from frozen neurite graph paths",
-      "path_stroke_points": 0.55,
-      "analysis_rerun": false
-    }
-  ],
+  "display_transforms": [],
   "output_sha256": {
-    "submission_neurite_results.png": "699910eb5d3a04f859daeb8821ccfadb0d065defd7e9db37038642f6a82774c1",
-    "submission_neurite_results.pdf": "7050f014c485104d1791ed619d6fbcc55e34a863e47cb4e02683127c6783192c",
-    "submission_neurite_results.svg": "f9bb5da683ac6dbf0885c497f82e0466499bc7ebc5cb35609ec5a666609e91fa"
+    "submission_neurite_results.png": "044f2d9ae05671abe98d5adae0f31d8b46d41c27f85d6829ec89b9785df1ae29",
+    "submission_neurite_results.pdf": "c579ca31e3c45111cba01d249a0a9ade153089f454812eab9e61762d764cec8f",
+    "submission_neurite_results.svg": "b884a1a06a12307d25a60ce2b01f0ca52212439b41b9adf43b4259ba180a7f53"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

@@ -1,0 +1,62 @@
+{
+  "generator_sha256": "17da5750fd1f2a54cbd00e5fd0e9806db2df5ca597e8e106140b120e2542960e",
+  "source_sha256": {
+    "paper/figures/slas/blind_neurite_sources/source-receipt.json": "0ef0e23a541094da1a3be7f272fdcdd13edbc39d055571a3e6b68f796429e82b",
+    "paper/figures/slas/blind_neurite_sources/final-freeze.json": "8ed17b17b182b86a32714c28d2d2488dc002888906f66525fcb46035ab641b28",
+    "paper/figures/slas/frozen_neurite_views.json": "e693f28b56f50899db5843883b4549a982fe0585e5fd6ca96aca838b2f7da82f",
+    "paper/supplementary/personal_neurite_autonomous/ACQUISITION.json": "43d0fb9d7cf3de362bac3ddd23d354e57b30c9c1484d8201338eca45897f22c2",
+    "paper/figures/build_slas_neurite_views.py": "9c25127cdfcd382c95caf2c31aaafbedb69349f68c2c78792eba31ba0c626984",
+    "paper/figures/slas/blind_neurite_sources/A02_s002_w2_z001_t001.tif": "4018eb5cbccb8565c4e09fc732626fb4a332bf8d1d00e9f05f7b38cd79a9bd45",
+    "paper/figures/slas/blind_neurite_sources/A02_site-2_z_index-1_timepoint-1_cell_bodies_step0.labels.tif": "c2ae3e215f2354747e34449cdddf4817fe97941228e8e4ec3c78d922d475b2dd",
+    "paper/figures/slas/blind_neurite_sources/A02_s002_w2_z001_t001_neurite_morphology_step0.graph.roi.zip": "190c29fde4233a5e28eb34751912f39a0d7d92f864c699649292ad32053a1ab5"
+  },
+  "input_root": "/home/ts/wt/openhcs-paper--607c254f684d4e96bcbf1bc21edd24a5--openhcs/frozen-root",
+  "ui_crops": [],
+  "display_transforms": [
+    {
+      "author_run": "P001_GRAPHICAL_114",
+      "attempt": "frozen candidate03; validation A02, site 2",
+      "operation": "Frozen arrays and saved detections in native coordinates",
+      "viewport": {
+        "raw_window": [
+          72.0,
+          2140.0
+        ]
+      },
+      "source_shape_yx": [
+        1024,
+        1024
+      ],
+      "raw_window": [
+        72.0,
+        2140.0
+      ],
+      "region_yyxx": [
+        0,
+        1024,
+        0,
+        1024
+      ],
+      "raw_cmap": "gray_r",
+      "overlay_opacity": 0.75,
+      "units_per_pixel": 1.3556,
+      "scale_unit": "\u00b5m",
+      "pixel_aspect": 1.0,
+      "gamma": 1,
+      "analysis_rerun": false
+    },
+    {
+      "author_run": "P001_GRAPHICAL_114",
+      "attempt": "frozen candidate03; validation A02, site 2",
+      "operation": "Vector strokes from frozen neurite graph paths",
+      "path_stroke_points": 0.55,
+      "analysis_rerun": false
+    }
+  ],
+  "output_sha256": {
+    "blind_neurite_example.png": "3d7d4fc938e85f353962108928e23ba79b930e3beacbe289b2f9ecff21f1f866",
+    "blind_neurite_example.pdf": "0b7d07641f352eab9a3e1dda095808ec783485ef234772b8fe2cf8b4bdbc7e50",
+    "blind_neurite_example.svg": "18924e30a5bec3cac70bc53f06bf83cc93cc168c50e689f4d4b2c23dbda29f7f"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

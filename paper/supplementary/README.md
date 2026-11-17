@@ -23,7 +23,7 @@ Pipeline preparation connects image groups and named detections to the functions
 ![Additional endpoint responses from all three independent blind agents.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-The three independently developed blind analyses were re-evaluated with the corrected neurite engine for fusicoccin-A (FC-A) and Y27632 on their original 180 fields in 20 wells. For all panels, including continuations, each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD after normalization, excluding uncertainty in the control mean. Doses are equally spaced for display; no concentration–response model was fitted. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Branches per cell. **(G–H)** Mean cell process length. Drug panels share vertical limits. Main Figure 6A–B shows mean outgrowth per cell and Figure 6C–D shows branches per cell.
+The three independently developed blind analyses were re-evaluated with the corrected neurite engine for fusicoccin-A (FC-A) and Y27632 on their original 180 fields in 20 wells. For all panels, including continuations, each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD after normalization, excluding uncertainty in the control mean. Doses are equally spaced for display; no concentration–response model was fitted. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Mean cell process length. Drug panels share vertical limits. Main Figure 6A–B shows mean outgrowth per cell and Figure 6C–D shows branches per cell.
 :::
 
 ## Supp. Figure 2, continued. Process length and branching {#supplementary-figure-2-continued.-process-length-and-branching}
@@ -31,7 +31,7 @@ The three independently developed blind analyses were re-evaluated with the corr
 ![Median process length, branch and primary-process responses from all three blind agents.](../figures/slas/supp_neurite_autonomous_endpoints_continued.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from the fixed-code re-evaluation of three frozen analyses are compared with MetaXpress. **(I–J)** Mean cell median process length. **(K–L)** Total branches. **(M–N)** Total primary processes. **(O–P)** Branches per primary process. OpenHCS totals and ratios are means across fields. MetaXpress branches per process divide exported well totals; its per-cell values are MetaXpress's exported well values. The endpoints depend on the tracing and branching definitions of each analysis.
+Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from the fixed-code re-evaluation of three frozen analyses are compared with MetaXpress. **(G–H)** Mean cell median process length. **(I–J)** Total branches. **(K–L)** Total primary processes. **(M–N)** Branches per primary process. OpenHCS totals and ratios are means across fields. MetaXpress branches per process divide exported well totals; its per-cell values are MetaXpress's exported well values. The endpoints depend on the tracing and branching definitions of each analysis.
 :::
 
 ## Supp. Figure 2, continued. Correlations with MetaXpress
@@ -42,23 +42,7 @@ Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from th
 Separate FC-A and Y27632 panels show Pearson r between each of the three analyses and MetaXpress for every endpoint. Each coefficient uses the ten matched wells within that treatment, across all doses; the two drug series are not pooled. Correlations use absolute well measurements, not normalized fold changes. OpenHCS well values average nine fields. High correlation does not establish agreement in measurement magnitude; the dose-response curves show those differences separately.
 :::
 
-## Supp. Figure 2, continued. Scientist-assisted neurite analysis {#supplementary-figure-2-continued.-scientist-assisted-neurite-analysis}
-
-![Additional well-level morphology responses after scientist-assisted repair.](../figures/slas/supp_neurite_treatment_endpoints.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-Scientist-assisted neurite measurements were compared with MetaXpress in 20 matched wells. **(Q–R)** Detected cells. **(S–T)** Total outgrowth. **(U–V)** Branches per cell. **(W–X)** Mean cell process length. **(Y–Z)** Mean cell median process length.
-:::
-
-For the scientist-assisted neurite analysis, both the [post-repair measurements](personal_neurite_repaired_morphometry/treatment_effects.csv) and [initial measurements](personal_neurite_baseline_morphometry/treatment_effects.csv) include mean outgrowth per cell.
-
-At 40 µM, cell-count fold changes from the three blind analyses were 0.94–0.99 for FC-A and 0.92–0.94 for Y27632, against 0.95 and 0.91 for MetaXpress. The scientist-assisted mean-outgrowth responses were 1.77- and 1.76-fold, respectively; two agents were close to those values and the third estimated smaller effects.
-
-At 40 µM, the re-evaluated analyses gave fold changes in branches per cell of 1.26–1.64 for FC-A and 1.51–1.74 for Y27632, against 3.00 and 3.26 for MetaXpress. Their control wells started at 2.1–5.5 branches per cell, against 1.3–1.5 for MetaXpress. From zero dose to 40 µM, the analyses added 1.41–2.40 branches per cell with FC-A and 1.53–2.60 with Y27632, compared with MetaXpress's 2.94 and 2.90. Analysis 3 came closest, and its higher baseline compressed its fold changes; analyses 1 and 2 also detected smaller absolute increases. The cause of the baseline differences was not established.
-
-Smaller branching responses than MetaXpress persisted in total branches and branches per primary process, so cell-count denominators alone do not explain the differences. Spatial ground truth would be needed to separate errors in tracing and path assignment from differences in measurement definitions. The three blind agents' [task](personal_neurite_autonomous/TASK.rst), [acquisition information](personal_neurite_autonomous/ACQUISITION.json), [cohort](personal_neurite_autonomous/cohort.json) and reports for [analysis 1](personal_neurite_autonomous/author114/author-report.txt), [analysis 2](personal_neurite_autonomous/author115/author-report.txt) and [analysis 3](personal_neurite_autonomous/author116/author-report.txt) provide their methods and individual outputs.
-
-The retained Python pipelines and helper functions reproduce the source bytes captured at each analysis freeze. Their import paths belong to the software revision recorded in the cohort, rather than the current package layout.
+Detailed baseline and effect-size checks and the separate scientist-assisted comparison are retained in [Supp. Data 5](neurite_comparison_details.md). High correlations coexist with smaller absolute branching responses; neither method supplies tracing ground truth.
 
 ## Supp. Figure 3. Processing speed with additional workers {#supplementary-figure-3.-processing-speed-with-additional-workers}
 
@@ -96,18 +80,14 @@ In analysis 2, only nuclei with measurable cytoplasm contributed a green fluores
 Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from an independent volume analysis (H002_FRESH10_89), shown in the XY, XZ and YZ planes. **(D–F)** Retinal repair: raw image and first and final outlines from a run continued after an interruption (R0010_FRESH16_88); a possible split remains. **(G–I)** Nuclear-separation repair (H003_POSTPAUSE_88): raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** Paired DNA/actin inspection (H003_FRESH19_96): a nuclear seed lacks actin-supported cell-body growth. This run is separate from the paired-channel analysis in Supp. Table 5 (Fresh26). Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. The source images and reports are available in Supp. Data 5.
 :::
 
-## Supp. Figure 6, continued. Final nuclear localization views {#supplementary-figure-6-continued.-final-nuclear-localization-views}
+## Supp. Figure 6, continued. Localization diagnostic {#supplementary-figure-6-continued.-final-nuclear-localization-views}
 
-![Final nuclear localization analysis 1 in XY, XZ and YZ, separate from the sampled body-separation repair.](../figures/slas/supp_nuclear_localisation.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-**(M–O)** Final 3D nuclear localization analysis 1 (H002_FRESH15_89), shown in XY, XZ and YZ. Label colours distinguish detected nuclei; yellow outlines and magenta in-plane centres locate detections in the orthogonal views. The panels show the final detections rather than successive repair steps. All 15 manually annotated centres have a prediction within the predeclared 30-voxel radius (panel P). Eleven predictions have no matching annotation; partial coverage prevents classifying them as false detections. Distances and scale bars are in voxel-index units, not calibrated physical lengths. Main Figure 4D shows a separate body-separation repair (H002_FRESH22_89).
-:::
+Main Figure 5D shows the final XY, XZ and YZ views of nuclear localization analysis 1 (H002_FRESH15_89). The [full-resolution views](../figures/slas/supp_nuclear_localisation.png) remain available in Supp. Data 5 rather than being printed twice. The diagnostic below evaluates its fixed predictions; the body-separation repair in main Figure 4D is a separate analysis.
 
 ![Mean matched-centre error across matching distances for the 15-point partial reference.](../figures/slas/supp_localisation_diagnostic.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**(P)** Nuclear localization analysis 1: mean centre-to-centre distance among matched predictions at each matching radius. Labels give the number of matches among the 15 manual centres; the dashed line is the predeclared 30-voxel radius. These partial annotations cannot establish a false-detection rate. This is a diagnostic of the fixed predictions, not a threshold-tuning experiment or the separate body-separation repair.
+**(M)** Nuclear localization analysis 1: mean centre-to-centre distance among matched predictions at each matching radius. Labels give the number of matches among the 15 manual centres; the dashed line is the predeclared 30-voxel radius. These partial annotations cannot establish a false-detection rate. This is a diagnostic of the fixed predictions, not a threshold-tuning experiment or the separate body-separation repair.
 :::
 
 ## Supp. methods: analysis scoring {#supplementary-methods-analysis-scoring}
@@ -134,13 +114,13 @@ Bright-object detection analysis 1 matched first and final detections one-to-one
 
 Fusicoccin-A (FC-A) or Y27632 was added when the initial Dulbecco's modified Eagle medium containing fetal bovine serum was replaced with supplemented Neurobasal medium. Images were acquired on an ImageXpress Micro Confocal using a 10× Plan Apo Lambda objective (0.45 NA) and 2 × 2 camera binning, giving a pixel size of 1.3556 µm. The nuclear stain was 4′,6-diamidino-2-phenylindole (DAPI). Each channel was recorded as a 1024-by-1024-pixel image at one Z position and one timepoint; calcein-labelled neurons were recorded in the FITC channel.
 
-For Figures 6A–B and Supplementary Figure 2A–P, we re-evaluated the three frozen function chains on all original images after the neurite-engine corrections. The recorded engine revision includes crossing/branch ownership and centreline-geometry changes; this is a fixed-code re-evaluation, not an isolated single-function patch or three new blind-development runs. Preprocessing, author-selected parameters and acquisition calibration were retained. Analysis 3's custom-function contract annotations were translated to the current nominal API in separately hashed execution copies; function signatures and numerical-body ASTs were unchanged. [Measured records, source hashes and comparison tables](personal_neurite_reanalysis_20261116/README.md) distinguish these results from the preserved original evaluations and scientist-assisted comparison. Figure 6C–E retains the original frozen image-analysis record.
+For Figure 6 and Supplementary Figure 2, we re-evaluated the three frozen function chains on all original images after the neurite-engine corrections. The recorded engine revision includes crossing/branch ownership and centreline-geometry changes; this is a fixed-code re-evaluation, not an isolated single-function patch or three new blind-development runs. Preprocessing, author-selected parameters and acquisition calibration were retained. Analysis 3's custom-function contract annotations were translated to the current nominal API in separately hashed execution copies; function signatures and numerical-body ASTs were unchanged. [Measured records, source hashes and comparison tables](personal_neurite_reanalysis_20261116/README.md) distinguish these results from the preserved original evaluations and scientist-assisted comparison. The matched microscopy in Supp. Data 5 retains the original frozen image-analysis record.
 
 To compare treatment responses across wells, we calculated each well's measurement as the unweighted mean of its nine fields. For process length, each field first averaged per-cell means or medians, including zero for cells without processes; missing measurements were not replaced with zero. Overlapping fields were not deduplicated. Total outgrowth and cell counts therefore describe mean field totals rather than a unique whole-well census.
 
 OpenHCS process lengths include connected daughter branches assigned to a soma-adjacent root. Branch counts require at least three same-neuron paths with distinct image-supported arms; resolved crossings do not automatically count as branches. The [MetaXpress guide](https://www.moleculardevices.com/sites/default/files/en/assets/training-material/dd/img/metaxpress-6-software-application-modules-neurite-outgrowth.pdf) defines primary processes as outgrowths attached to cell bodies and branches as junctions, without specifying crossing resolution. These differences in segmentation and measurement definitions limit comparisons of absolute values; neither method supplies manual tracing ground truth.
 
-The scientist-assisted analysis used DAPI and calcein images, with neurite response 30 and candidate threshold 0.03. Image review prompted corrections to soma-edge branches and missing paths; MetaXpress fold changes were not a tuning target. Cell counts were unchanged in all 180 fields. [Settings and source measurements](personal_neurite_repaired_morphometry/source_evidence.json), [matched wells](personal_neurite_repaired_morphometry/joined_wells.csv) and [branch diagnostics](personal_neurite_branch_diagnostics/treatment_effects.csv) document the corrections.
+The separate scientist-assisted settings, repair history and comparison are retained with their [source measurements and diagnostics in Supp. Data 5](neurite_comparison_details.md).
 
 ## Supp. methods: execution-time estimates {#supplementary-methods-execution-time-estimates}
 
@@ -193,52 +173,11 @@ Table: Main Methods: Performance measurement defines repetitions, exclusions and
 
 ## Supp. Table 4. User tasks covered by automated software checks {#supplementary-table-4.-user-tasks-covered-by-automated-software-checks}
 
-The automated checks connect software changes to expected user outcomes. The table distinguishes complete analysis or service runs from focused component checks and lists their configured environments. We provide completed output comparisons in [Supp. Data 2](analysis_records.md#supplementary-data-2-cellprofiler-workflow-comparison) and a passed, revision-pinned component-test run in [Data 8](analysis_records.md#supplementary-data-8-workflow-regression-tests). The [test-workflow definition](https://github.com/OpenHCSDev/openhcs/blob/3fea2bb30142aa76ef25fb60120579b2db58d65e/.github/workflows/integration-tests.yml) specifies the configured coverage below, rather than a result for every environment.
-
-| User task | Expected outcome checked | Check and configured environment |
-|:--------------------|:----------------------------------|:-------------------------------------------|
-| [Reuse a CellProfiler pipeline](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_cellprofiler_official30_zmq.py#L525-L535) | Execute 30 imported pipelines and compare their outputs with retained native image and measurement references. | Configured: complete pipeline runs on Linux, Windows and macOS, each with Python 3.12 and 3.14. Recorded output comparisons: [30-workflow results and tested environments](analysis_records.md#supplementary-data-2-cellprofiler-workflow-comparison). |
-| [Inspect processing results in Fiji and napari](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_cellprofiler_official30_zmq.py#L720-L815) | Check that a fresh Fiji process contains images and that napari reports the expected live state after processing. | Real viewer processes: one colocalization workflow with Fiji alone and with Fiji plus napari; Linux, Python 3.12. |
-| [Process images from files or Zarr](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/test_main.py#L822-L901) | Read generated microscope inputs, execute processing and check output directories and structured metadata. | Synthetic-image integration: disk and Zarr with ImageXpress and Opera Phenix layouts; Linux, Windows and macOS, Python 3.12. |
-| [Process images held in OMERO](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/integration/helpers/fixture_utils.py#L363-L431) | Upload generated images to an OMERO service and execute the analysis on its plate. | Real service integration: Linux, Python 3.11 and 3.12. This checks server-backed execution, not filesystem-export equivalence. |
-| [Save and reload analysis settings as Python](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_pycodify_formatters.py) | Reconstruct selected settings from generated Python and compare their values, including defaults and local changes. | Configured: component round-trip checks with substituted definition metadata; Linux, Python 3.12. Recorded separately: [passed Python-generation tests at revision 7a7d21f](analysis_records.md#supplementary-data-8-workflow-regression-tests). |
-| [Connect compatible processing steps](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_funcstep_contract_validator.py#L432-L472) | Reject incompatible image-stack inputs before execution. | Configured: component validation checks; Linux, Python 3.12. Recorded separately: [passed function-validation tests at revision 7a7d21f](analysis_records.md#supplementary-data-8-workflow-regression-tests). |
-| [Select processing functions from current descriptions](https://github.com/OpenHCSDev/openhcs/blob/0d4954e57268ebbe4c84c028de94b5725fd95990/tests/unit/test_function_catalog_zmq.py#L720-L740) | Reject a request based on an outdated function catalogue. | Configured: component request-routing check with a substituted catalogue service; Linux, Python 3.12. Recorded separately: [passed catalogue-revision tests at revision 7a7d21f](analysis_records.md#supplementary-data-8-workflow-regression-tests). |
+The complete table, including every row and its source links, is provided as [Supplementary Data 8: downloadable table](software_check_coverage.md).
 
 ## Supp. Table 5. Tasks, models and evaluation protocols {#supplementary-table-5.-tasks-models-and-evaluation-protocols}
 
-Table: Development images could inform method selection; references were used only after finalization. “Prospectively withheld” means evaluation images were unavailable during development, whereas “retrospective” describes a subset identified from viewing records afterwards. Earlier gpt-5.6 model identities come from the [independent-agent validation report](independent_agent_validation.md) and the [earlier supplement's NeuronCyto demonstration](README_before_readability_20261015.md#supplementary-data-4.-method-directed-neuroncyto-demonstration); their original guide versions were not retained. Missing model cells are not inferred from neighbouring runs.
-
-| Analysis and task/source | Model | Development and evaluation protocol |
-|:---------------------------|:----------------|:------------------------------------------------------|
-| Nuclear detection 1, BBBC039 | gpt-5.6-sol | Four development fields; 50 prospectively withheld fields, manual masks. |
-| Cell-boundary analysis 1, BBBC007 | gpt-5.6-sol | Four development fields; 12 prospectively withheld fields, manual outlines. |
-| Protein translocation 1, BBBC013 | gpt-5.6-sol | Four development wells; 92 prospectively withheld wells, mean cell-level GFP ratio. |
-| Protein translocation 2, BBBC013 | gpt-6.1-sol | Independent development from the task brief alone on all 96 wells, including four development wells; median cell-level log2 GFP nuclear/cytoplasmic ratio for cells with measurable cytoplasm. Control comparison after the pipeline was frozen, not manual segmentation accuracy. |
-| Nuclear detection 2, BBBC039 | gpt-6.1-sol | Independent development; 200 fields and retrospective 175-field subset. One official-test field viewed before freeze. |
-| Nuclear detection 3–4, BBBC039 | gpt-6.1-sol | Independent development by each agent; same populations; no official-test image viewed before freeze. Distinct guide revisions. |
-| Nuclear detection 2, repair | gpt-6.1-sol | Same three inspected fields; illustrative repair, not another agent or a full-collection validation. |
-| Cell-boundary analysis 2, BBBC007 | gpt-6.1-sol | Twelve development and four fields held out by the agent; reported support includes all 16. |
-| Cell-boundary analysis 3, BBBC007 | gpt-6.1-sol | All 16 fields supplied for development; manual-outline comparison after freeze. |
-| Paired nuclear/cell detection, H003 | gpt-6.1-sol | Independent DNA/actin development (Fresh26); image review and label/table consistency checks, not a validated cell census. |
-| Bright-object detection 1, H001 | gpt-6.1-sol | Same-image self-directed repair; computational-reference scoring after freeze. |
-| Bright-object detection 2, H001 | gpt-6.1-sol | Independent same-image development; matched image review, no reference score. |
-| 3D nuclear localization 1–2, H002 | gpt-6.1-sol | Separate independent analyses of one development volume; partial manual-centre reference after freeze. |
-| 3D body-separation repair (H002_FRESH22_89) | gpt-6.1-sol | Independent development on the supplied volume; the agent revised a split object after image review (candidate01 → candidate02_retry), before reference evaluation. The volume was available during development. |
-| 3D final-view analysis (H002_FRESH10_89) | gpt-6.1-sol | Independent development on the supplied volume; final detections are shown in XY, XZ and YZ. The 22 centres are algorithmic detections, not a verified biological count; no withheld-volume score was measured. |
-| Retinal cell detection 1–2, R0010 | gpt-6.1-sol | Separate fresh development analyses; matched image review, no manual-reference accuracy. |
-| Retinal repair (R0010_FRESH16_88) | Not recorded | Continuation of an interrupted run; the agent revised its first result after image review (FIRST → REPAIR01-technical02), without reference masks, manual counts or parameter guidance. Not a fresh repeat. |
-| Nuclear-separation repair (H003_POSTPAUSE_88) | Not recorded | The same DNA-stained field was reviewed and its nuclear labels revised; this is a separate run from the paired DNA/actin analysis above (Fresh26). |
-| Paired nuclear/cell inspection (H003_FRESH19_96) | Not recorded | Separate DNA/actin development followed by matched image review; no manual-reference accuracy was measured. Two cell-body masks show no actin-supported growth beyond their nuclear seeds; 55 labels do not establish 55 complete cells. |
-| Public NeuronCyto demonstration, original | gpt-5.6-sol | Method-directed normalization, segmentation and assignment; authoring demonstration, not autonomous method selection. |
-| Public-image neurite tracing, H004 | gpt-6.1-sol | Fresh development; displayed initial prediction. Main-shaft target clarified only after the run. |
-| Laboratory-image neurite tracing, P001 | gpt-6.1-sol | Fresh nine-field development and image review; not the drug-response cohort. |
-| Assisted nine-field neurite mosaic | gpt-6.1-sol | Scientist-assisted development followed by a continuation using all channels; not an independent autonomous repeat. |
-| Neurite drug-response analysis 1 | gpt-6.1-sol | Six development fields; all 180 fields analysed before treatment/reference evaluation. |
-| Neurite drug-response analysis 2 | gpt-6.1-sol | Four development fields; same 180-field cohort and evaluation design. |
-| Neurite drug-response analysis 3 | gpt-6.1-sol | Eight development fields; same cohort. Measurements are exploratory: review found short extra branches, soma-boundary errors and a possible missed connection (Data 5). |
-| Scientist-assisted neurite drug-response comparison | Not recorded | Scientist-prompted morphological corrections on the same 180 fields; not another blind agent. |
-
+The complete table, including every row and its source links, is provided as [Supplementary Data 5: downloadable table](analysis_protocols.md).
 
 ## Supp. Data {#supplementary-data}
 

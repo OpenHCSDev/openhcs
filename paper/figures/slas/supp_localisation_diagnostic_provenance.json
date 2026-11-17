@@ -1,16 +1,16 @@
 {
-  "generator_sha256": "e3b2c5b69cbf5c2a640d58d597d832a0997eacdbd05e677fa4d5037d7e60b6ce",
+  "generator_sha256": "17da5750fd1f2a54cbd00e5fd0e9806db2df5ca597e8e106140b120e2542960e",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "8c707384a09f981a07c67daad7f830f1e4bcf5b6c7fc1e0da35f711b9ed391e1",
+    "paper/figures/build_slas_supplement.py": "7f157d70bbf7849e847fb4566a2092a2341aba7777008a7e1f63c1b9bc40c985",
     "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json": "ca34ddcfaea7dcdc16c4813f8665e3295bab08c3167571fdff4cc6d06984027d"
   },
   "input_root": "/",
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "supp_localisation_diagnostic.png": "069e6826d531092067e405251fcb3d5138752f817c1a1a2247752ca25764e81a",
-    "supp_localisation_diagnostic.pdf": "838d2e65db929c3685653c2a1e4d803f045b7fd1b1c0682ea6d65fa9ebf8cf0c",
-    "supp_localisation_diagnostic.svg": "c6a2d0da151d1d27e22f288f19674d9d2e430f9e68f7045bfda2bf1404f55a0e"
+    "supp_localisation_diagnostic.png": "c18317331eb82a92d741addb0e7ca0acbec5e16df9d5075b756cfeece8194c9f",
+    "supp_localisation_diagnostic.pdf": "5200121bfde9ddca6dd88dc17d3243c2937053e40a047180c43e6f0c6f8ebfe1",
+    "supp_localisation_diagnostic.svg": "23296655695a93ee8b91dc05653dd61103bc17bd62010017c8ecd9dfd37681ab"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

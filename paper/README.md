@@ -24,7 +24,7 @@ The remaining author questions are factual, not unfinished prose:
   labels describe the acquisition correctly. Methods now reports the recorded
   Axio Observer.Z1 / 7 stand, LSM 800 system and Plan-Apochromat 20×/0.8 M27 air
   objective. One detector is labelled LSM 900; the immutable acquisition record
-  in Supp. Data 8 preserves both fields. Mouse species is not inferred.
+  in Supp. Data 5 preserves both fields. Mouse species is not inferred.
 - Supply the authorized Zenodo account/deposit route and confirm creators and
   rights for the selected archive. The existing procedure is in
   `supplementary/archive_publication.rst`; no issued OpenHCS DOI is yet verified.
@@ -92,9 +92,16 @@ with a fixed serial estimate compared with measured workers (Figure 3); the
 agent analysis procedure beside bright-object, nuclear, retinal and
 three-dimensional body repairs (Figure 4); quantitative endpoints and final
 three-dimensional nuclear localization (Figure 5); and treatment responses from
-three independent blind agents with matched microscopy views (Figure 6).
-Table 1 distinguishes development access, comparison populations, references and metrics for the main agent results. Supp. Table 5 retains the timing boundaries moved out of the main text. Supp. Table 4 retains the complete 27-row task/model/protocol mapping; principal assay findings remain in their Results subsections and figures.
-Full trial results and reference types are retained in Supplementary Data 8, including all three original final BBBC039 pipelines. Analysis 4's byte-identical source recovery is bound to its native readback and closing SHA256 record; it is not a new experiment. Figure 4C places the matched retinal triptych in one full-width row, with the separate body comparison beneath it.
+three independent blind agents with compact treatment-specific correlation bars
+(Figure 6). Matched microscopy and the detailed scientist-assisted neurite
+comparison remain linked data rather than repeated reading-copy panels.
+Table 1 distinguishes development access, comparison populations, references and
+metrics for the main agent results. Supp. Table 3 defines timing boundaries.
+The complete [27-row task/model/protocol mapping](supplementary/analysis_protocols.md)
+and [seven-row software-check table](supplementary/software_check_coverage.md)
+are downloadable data linked from the supplement; every row and source link is
+retained. Principal assay findings remain in their Results subsections and figures.
+Full trial results and reference types are retained in Supplementary Data 5, including all three original final BBBC039 pipelines. Analysis 4's byte-identical source recovery is bound to its native readback and closing SHA256 record; it is not a new experiment. Figure 4C places the matched retinal triptych in one full-width row, with the separate body comparison beneath it.
 Six supplementary figures group wider views by assay and retain
 runtime explanations, measured worker scaling and prospective held-out results.
 Measurement definitions precede the neurite plots; nuclear-error observations
@@ -135,7 +142,7 @@ Generators, editable artwork, native captures and provenance receipts are in
 `figures/`. Scientific examples in this revision use public CellProfiler workflows
 and the retained public NeuronCyto II demonstration. Figure receipts distinguish
 historical analysis from later authoring and viewer checks. The initial public
-NeuronCyto comparison is retained in [Supplementary Data 4](supplementary/analysis_records.md#supplementary-data-4-public-neuroncyto-demonstration-and-references),
+NeuronCyto comparison is retained in [Supplementary Data 7](supplementary/analysis_records.md#supplementary-data-7-public-neuroncyto-demonstration-and-references),
 not in the main drug-response figure. Regenerate only those two relocated
 composites with `submission_neurite_results` and `public_neurite_initial_comparison`
 in `build_slas_visual_story.py`, using the same hash-verified archived input root.
@@ -206,7 +213,7 @@ through `RepeatedSourceNativeBatchReport.projected_fresh_batch`; the painter
 contains no timing model. Its CSV distinguishes estimated serial CellProfiler
 seconds, measured OpenHCS seconds and their ratio. The CellProfiler estimate
 stays identical across worker counts; workers are not matched core allocations.
-Supplementary Figure 6 separately shows measured OpenHCS-only worker scaling.
+Supplementary Figure 3 separately shows measured OpenHCS-only worker scaling.
 
 The per-module CSV names the credited behavior and test. Shared-path coverage
 does not claim validation of all module-specific algorithms or settings.
@@ -255,15 +262,16 @@ retinal/volume panels reuse their hash-checked retained artwork through
 `SupplementFigure.artwork`, cropping headings/white margins without changing
 raw windows, image regions or scientific pixels. Volume bars use voxel
 indices because physical spacing is unverified; retinal bars use the original
-CZI calibration. Laboratory neurite bars retain their 200-pixel geometry and
-show 271 µm, derived from the hash-checked acquisition declaration; the public
+CZI calibration. Nine-field laboratory neurite bars retain their 200-pixel geometry and
+show 271 µm, derived from the hash-checked acquisition declaration; the separate
+blind-cohort view uses the same calibration owner for its 200 µm bar; the public
 NeuronCyto view retains pixel units because its physical calibration is unverified.
-`RepairResultsFigure` in `build_slas_task_only.py` draws Figure 4: a compact
-procedure strip and the four matched repair examples, inheriting retinal/body
+`RepairResultsFigure` in `build_slas_task_only.py` draws Figure 4: the six-stage
+procedure and the four matched repair examples, inheriting retinal/body
 drawing from `VolumeResultsFigure`. `AnalysisResultsFigure` draws Figure 5:
 quantitative endpoints A–C and the final localization views in D. Those views
-reuse the retained `MeasurementFirstVolumeFigure` artwork, also preserved in
-Supp. Figure 6M–O, and are separate from the body-separation repair. FigureSheet's
+reuse the retained `MeasurementFirstVolumeFigure` artwork, also preserved as
+full-resolution linked data in Supp. Data 5, and are separate from the body-separation repair. FigureSheet's
 vertical canvas crop removes unused space without shrinking the retained axes
 or type. Editorial colours and marker styles do not change detections.
 
@@ -321,7 +329,7 @@ PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
 This historical command reads saved measurements. That checkpoint uses
 the logarithmic thirty-workflow view. Its linear counterpart, individual runtime
 panels, sample-count trends and selected worker comparisons remain historical
-outputs; current Supplementary Figure 6 uses the new complete sweep. Worker comparisons retain their own cohorts and revisions; repeated
+outputs; current Supplementary Figure 3 uses the new complete sweep. Worker comparisons retain their own cohorts and revisions; repeated
 source assignments are not independent biological wells.
 
 The generic measured-median input mode below supports earlier records with that

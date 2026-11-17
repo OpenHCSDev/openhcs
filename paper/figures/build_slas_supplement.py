@@ -145,7 +145,7 @@ def localisation_diagnostic():
     scores = evaluation["scores"]
     thresholds = sorted(map(int, scores))
     errors = [scores[str(threshold)]["mean_localisation_error_voxels"] for threshold in thresholds]
-    sheet.heading("P  Nuclear localization: a partial-reference diagnostic", 98)
+    sheet.heading("M  Nuclear localization: a partial-reference diagnostic", 98)
     axis = sheet.plot_axes((0.17, 0.23, 0.73, 0.55))
     axis.plot(thresholds, errors, "o-", color=TEAL)
     for threshold, error in zip(thresholds, errors, strict=True):
@@ -166,11 +166,11 @@ def autonomous_treatment_endpoints():
 
     for stem, first_letter, metrics in (
         ("supp_neurite_autonomous_endpoints", "A", ("cell_count", "total_outgrowth",
-                                             "branches_per_cell", "mean_process_length")),
-        ("supp_neurite_autonomous_endpoints_continued", "I", ("median_process_length", "total_branches",
+                                             "mean_process_length")),
+        ("supp_neurite_autonomous_endpoints_continued", "G", ("median_process_length", "total_branches",
                                                        "total_processes", "branches_per_process")),
     ):
-        autonomous = SupplementFigure(stem, 10.4)
+        autonomous = SupplementFigure(stem, 2.0 * len(metrics) + 2.4)
         autonomous.heading("Fixed-code re-evaluation of three frozen analyses", 99)
         NeuriteEffectFigure.draw_panels(
             autonomous, NeuriteEffectFigure.cohort_tables(autonomous),

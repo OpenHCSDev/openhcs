@@ -779,26 +779,36 @@ def personal_stitched_development():
 
 
 def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_root):
-    """Pair drug-response curves with a frozen field from the same blind cohort."""
+    """Summarize primary drug responses and their method correlations."""
     from build_slas_neurite_effects import NeuriteEffectFigure
+
+    sheet = FigureSheet("submission_neurite_results", "", 6.8, input_root=input_root)
+    tables = NeuriteEffectFigure.cohort_tables(sheet)
+    NeuriteEffectFigure.draw_panels(
+        sheet, tables, metrics=NeuriteEffectFigure.primary_metrics,
+        bounds=(3, 29, 94, 70), start_letter="A",
+    )
+    NeuriteEffectFigure.draw_correlation_bars(
+        sheet, tables, metrics=NeuriteEffectFigure.primary_metrics,
+    )
+    sheet.save(dpi=600)
+    blind_neurite_example(input_root=input_root)
+
+
+def blind_neurite_example(*, input_root: Path = FigureSheet.default_input_root):
+    """Keep the original field available as linked data without another main panel."""
     from build_slas_neurite_views import AcquisitionNeuriteView
 
-    sheet = FigureSheet("submission_neurite_results", "", 9.5, input_root=input_root)
+    sheet = FigureSheet("blind_neurite_example", "", 3.2, input_root=input_root)
     sheet.source(OUTPUT / "blind_neurite_sources/source-receipt.json")
     sheet.source(OUTPUT / "blind_neurite_sources/final-freeze.json")
     views_path = OUTPUT / "frozen_neurite_views.json"
     sheet.source(views_path)
     laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())["blind_cohort"])
-    NeuriteEffectFigure.draw_panels(
-        sheet, NeuriteEffectFigure.cohort_tables(sheet),
-        metrics=("mean_outgrowth", "branches_per_cell"),
-        bounds=(3, 36, 94, 62), start_letter="A",
-    )
-    sheet.text(3, 33.5, "Original analysis 1 · A02, site 2", size=11, weight="bold")
-    laboratory_view.draw_columns((3, 1, 94, 27), 30, (
-        ("E  Raw", laboratory_view.draw_raw),
-        ("F  Labels and paths", laboratory_view.draw_result),
-        ("G  Overlay", laboratory_view.draw_overlay),
+    laboratory_view.draw_columns((3, 1, 94, 85), 94, (
+        ("A  Raw", laboratory_view.draw_raw),
+        ("B  Labels and paths", laboratory_view.draw_result),
+        ("C  Overlay", laboratory_view.draw_overlay),
     ))
     # Preserve the 1024-pixel field in the manuscript's raster embedding too.
     sheet.save(dpi=600)
@@ -833,7 +843,7 @@ def public_neurite_initial_comparison(*, input_root: Path = FigureSheet.default_
 
 
 def submission_autonomous_loop():
-    """Explain the guide's procedure; observed repairs belong to Figure 6."""
+    """Give each stage enough height; the main caption explains the shared loop."""
     sheet = FigureSheet("submission_autonomous_loop", "", 9.6)
     sheet.figure.set_size_inches(sheet.figure.get_size_inches() * .8)
     sheet.source(ROOT / "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md")
@@ -844,57 +854,53 @@ def submission_autonomous_loop():
     icons = ROOT / "paper/figures/assets/lucide"
     sheet.source(icons / "SOURCE.txt")
     sheet.source(icons / "LICENSE")
-    sheet.text(3, 76.5, "The agent guide’s procedure: from biological brief to editable analysis",
-               size=12, weight="bold")
     stages = (
-        (3, 64, "1  Biological brief", "clipboard-list",
+        (2, 64, "1  Biological brief", "clipboard-list",
          "Question\nMeasurements\nImage acquisition", BLUE),
-        (36, 64, "2  Inspect inputs", "microscope",
+        (35, 64, "2  Inspect inputs", "microscope",
          "Channels and scale\nBright/dim regions\nCentres / borders", BLUE),
-        (69, 64, "3  Build and run", "workflow",
+        (68, 64, "3  Build and run", "workflow",
          "Choose methods\nSet parameters\nRun the analysis", BLUE),
-        (69, 53, "4  Check the result", "scan-eye",
+        (68, 47, "4  Check the result", "scan-eye",
          "Raw and overlay\nMatched regions\nObjects and values", TEAL),
-        (36, 53, "5  Repair and recheck", "wrench",
+        (35, 47, "5  Repair and recheck", "wrench",
          "Find faulty step\nRevise and rerun\nInspect regions", ORANGE),
-        (3, 53, "6  Finalize and deliver", "files",
+        (2, 47, "6  Finalize and deliver", "files",
          "Analysis settings\nImages and tables\nChecks and limits", TEAL),
     )
     for x, y, title, icon, detail, color in stages:
         sheet.axis.add_patch(FancyBboxPatch(
-            (x, y), 28, 9, boxstyle="round,pad=0.2,rounding_size=0.65",
+            (x, y), 29, 13, boxstyle="round,pad=0.2,rounding_size=0.65",
             facecolor=PALE, edgecolor=color, linewidth=1.2, zorder=2,
         ))
-        sheet.text(x + 14, y + 7.3, title, size=11, weight="bold",
+        sheet.text(x + 14.5, y + 10.8, title, size=11, weight="bold",
                    color=color, ha="center", va="center")
         if icon == "clipboard-list":
-            sheet.asset(icons / "user-round.svg", (x+1, y+0.3, 6, 6.3))
-            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+4, 3, 2.5))
-            sheet.asset(icons / "clipboard-list.svg", (x+7, y+0.2, 3, 3.5))
+            sheet.asset(icons / "user-round.svg", (x+1, y+1, 6, 8))
+            sheet.asset(icons / "circle-question-mark.svg", (x+7, y+6, 2.5, 3))
+            sheet.asset(icons / "clipboard-list.svg", (x+7, y+0.5, 2.5, 4.5))
         elif icon == "microscope":
             sheet.source(ROOT / "website/assets/logos/README.md")
-            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+3.4, 8, 3.1))
-            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+0.3, 8, 3.1))
+            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+4.8, 8, 4.6))
+            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+0.4, 8, 4.6))
         elif icon == "workflow":
-            sheet.asset(icons / "list-tree.svg", (x+1.8, y+0.3, 8, 6.3))
+            sheet.asset(icons / "list-tree.svg", (x+1.3, y+0.5, 8, 9))
         elif icon == "scan-eye":
-            sheet.asset(icons / "clipboard-check.svg", (x+1.8, y+0.3, 8, 6.3))
+            sheet.asset(icons / "clipboard-check.svg", (x+1.3, y+0.5, 8, 9))
         elif icon == "files":
-            sheet.asset(icons / "circle-check-big.svg", (x+1.8, y+0.3, 8, 6.3))
+            sheet.asset(icons / "circle-check-big.svg", (x+1.3, y+0.5, 8, 9))
         else:
-            sheet.asset(icons / f"{icon}.svg", (x + 1.8, y + 0.3, 8, 6.3))
-        sheet.text(x + 10, y + 3.0, detail, size=9, va="center",
-                   linespacing=1.1, zorder=4)
-    for start, end in (((31,68.5),(36,68.5)), ((64,68.5),(69,68.5)),
-                       ((83,64),(83,62)), ((69,57.5),(64,57.5)),
-                       ((36,57.5),(31,57.5))):
+            sheet.asset(icons / f"{icon}.svg", (x + 1.3, y + 0.5, 8, 9))
+        sheet.text(x + 10.2, y + 4.7, detail, size=9.4, va="center",
+                   linespacing=1.4, zorder=4)
+    for start, end in (((31,70.5),(35,70.5)), ((64,70.5),(68,70.5)),
+                       ((82.5,64),(82.5,60)), ((68,53.5),(64,53.5)),
+                       ((35,53.5),(31,53.5))):
         sheet.arrow(start, end)
-    sheet.route(((50,62),(50,62.1),(67,62.1),(67,75),(83,75),(83,73)), color=ORANGE, dashed=True)
-    sheet.text(50, 62.4, "Return to 3: build and run", size=8, ha="center", color=ORANGE,
+    sheet.route(((49.5,60),(49.5,61),(66,61),(66,80),(82.5,80),(82.5,77)), color=ORANGE, dashed=True)
+    sheet.text(49.5, 61.5, "Return to 3: build and run", size=9, ha="center", color=ORANGE,
                bbox={"facecolor": "white", "edgecolor": "none", "pad": 0})
-    sheet.text(50, 50.2, "The scientist checks images and measurements, and can edit the analysis",
-               size=10.5, ha="center", weight="bold", color=TEAL)
-    sheet.crop_vertical(.485, .795)
+    sheet.crop_vertical(.45, .815)
     sheet.save()
 
 
