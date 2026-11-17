@@ -165,31 +165,33 @@ class NeuriteEffectFigure(FigureSheet):
 
     @classmethod
     def draw_correlation_bars(cls, sheet, tables, *, metrics,
-                              bounds=(.16, .045, .80, .19), start_letter="E"):
-        """Compact primary-endpoint correlations; the heatmap retains all nine."""
+                              bounds=(.14, .345, .80, .13), start_letter="E"):
+        """Group treatments and primary endpoints on one correlation axis."""
         labels, panels, counts = cls.read_correlations(sheet, tables, metrics)
         declarations = endpoint_declarations()
-        x, y, width, height = bounds
-        gap = .14
-        panel_width = (width - gap * (len(panels) - 1)) / len(panels)
-        for column, (condition, values) in enumerate(panels.items()):
-            axis = sheet.plot_axes((x + column * (panel_width + gap), y, panel_width, height))
-            for run, (label, colour) in enumerate(zip(labels, cls.analysis_colours, strict=True)):
-                positions = [index * (len(labels) + 1) + run for index in range(len(metrics))]
-                bars = axis.barh(positions, [row[run] for row in values], height=.8,
-                                 color=colour, label=label, zorder=3)
-                axis.bar_label(bars, fmt="%.3f", padding=3, fontsize=10.5)
-            axis.set(xlim=(0, 1.20), xticks=(0, .5, 1),
-                     ylim=(len(metrics) * (len(labels) + 1) - 1.4, -.6),
-                     yticks=[index * (len(labels) + 1) + (len(labels) - 1) / 2
-                             for index in range(len(metrics))],
-                     yticklabels=[fill(declarations[metric].absolute_label, 14) for metric in metrics])
-            axis.tick_params(labelsize=11)
-            axis.set_title(f"{chr(ord(start_letter) + column)}  {cls.condition_title(condition)} · Pearson r",
-                           loc="left", fontsize=sheet.plot_font_size, fontweight="bold", color=BLUE)
-            axis.spines[["top", "right"]].set_visible(False)
-            axis.grid(axis="x", color="#e7ebef", linewidth=.6)
-            axis.set_axisbelow(True)
+        groups = [(condition, metric, values)
+                  for condition, rows in panels.items()
+                  for metric, values in zip(metrics, rows, strict=True)]
+        axis = sheet.plot_axes(bounds)
+        bar_width = .8 / len(labels)
+        for run, (label, colour) in enumerate(zip(labels, cls.analysis_colours, strict=True)):
+            positions = [index + (run - (len(labels) - 1) / 2) * bar_width
+                         for index in range(len(groups))]
+            bars = axis.bar(positions, [values[run] for _, _, values in groups],
+                            width=bar_width * .9, color=colour, label=label, zorder=3)
+            axis.bar_label(bars, fmt="%.3f", label_type="center", rotation=90,
+                           fontsize=12, fontweight="bold", color="white")
+        axis.set(ylim=(min(0, *(value for _, _, values in groups for value in values)), 1.20),
+                 yticks=(0, .5, 1), xticks=range(len(groups)),
+                 xticklabels=[f"{cls.condition_title(condition)}\n"
+                              f"{fill(declarations[metric].absolute_label, 16)}"
+                              for condition, metric, _ in groups])
+        axis.tick_params(labelsize=11.5)
+        axis.set_title(f"{start_letter}  Pearson r against MetaXpress", loc="left",
+                       fontsize=sheet.plot_font_size, fontweight="bold", color=BLUE)
+        axis.spines[["top", "right"]].set_visible(False)
+        axis.grid(axis="y", color="#e7ebef", linewidth=.6)
+        axis.set_axisbelow(True)
         return counts
 
     @staticmethod

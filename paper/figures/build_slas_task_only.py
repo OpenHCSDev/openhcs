@@ -363,7 +363,7 @@ class AnalysisResultsFigure(SupplementFigure):
         for path in sources:
             sheet.source(ROOT / path)
         axes = [sheet.plot_axes(bounds) for bounds in (
-            (0.33, 0.77, 0.30, 0.195), (0.79, 0.77, 0.18, 0.16),
+            (0.33, 0.77, 0.24, 0.195), (0.75, 0.77, 0.22, 0.16),
         )]
         sheet.text(3, 99, "A  Nuclear segmentation · official test", size=sheet.plot_font_size, weight="bold", va="top")
         sheet.text(69, 99, "B  Cell boundaries", size=sheet.plot_font_size, weight="bold", va="top")
@@ -384,8 +384,12 @@ class AnalysisResultsFigure(SupplementFigure):
             axes[0].annotate(f"{score:.3f}", (score, index), xytext=(5, 0),
                              textcoords="offset points", va="center", fontsize=sheet.plot_font_size)
         axes[0].set(yticks=range(len(points)), yticklabels=[point[0] for point in points],
-                    ylim=(len(points) - 0.5, -0.5), xlim=(0, 1), xticks=(0, 0.5, 1),
-                    xlabel="Caicedo F1")
+                    ylim=(len(points) - 0.5, -0.5), xlim=(0.77, 0.94), xticks=(0.8, 0.85, 0.9),
+                    xlabel="Caicedo F1 · truncated axis")
+        for left in (0, 0.035):
+            axes[0].plot((left - 0.012, left + 0.012), (-0.014, 0.014),
+                         transform=axes[0].transAxes, color="black", linewidth=1,
+                         clip_on=False, zorder=4)
         axes[0].grid(axis="x", color="#e7ebef", linewidth=0.6)
         axes[1].grid(axis="y", color="#e7ebef", linewidth=0.6)
         # Decode the two existing publication tables; their units and populations differ
@@ -417,11 +421,12 @@ class AnalysisResultsFigure(SupplementFigure):
             deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
             axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
                           color=color, capsize=2)
-            axis.set_title(f"{assay.compound} · Z′ = {assay.control_zprime:.3f}",
+            axis.set_title(f"{assay.compound} ({assay.unit.replace('uM', 'µM')}) · Z′ = {assay.control_zprime:.3f}",
                            loc="left", fontsize=sheet.plot_font_size, color=color)
-            axis.set(xticks=range(9), xticklabels=[f"{dose.concentration:g}" for dose in assay.doses],
-                     xlabel=f"Concentration ({assay.unit.replace('uM', 'µM')})", ylim=(-0.5, 2.7))
-            axis.tick_params(axis="x", labelrotation=45)
+            tick_doses = assay.doses[::2]
+            axis.set(xticks=range(0, len(assay.doses), 2),
+                     xticklabels=[f"{dose.concentration:g}" for dose in tick_doses],
+                     ylim=(-0.5, 2.7))
             axis.spines[["top", "right"]].set_visible(False)
             axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
             axis.set_axisbelow(True)
@@ -431,8 +436,8 @@ class AnalysisResultsFigure(SupplementFigure):
     def draw_localization(self):
         evaluation_path = ROOT / SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json"
         self.source(evaluation_path)
-        self.text(3, 41.5, "D  3D nuclear localization", size=14, weight="bold")
-        self.artwork("h002_measurement_first", (3, 0.8, 94, 39), crop=(1, 7.5, 99, 58))
+        self.text(3, 48, "D  3D nuclear localization", size=14, weight="bold")
+        self.artwork("h002_measurement_first", (3, 0.8, 94, 45.5), crop=(1, 7.5, 99, 58))
 
 
 class RepairResultsFigure(VolumeResultsFigure):

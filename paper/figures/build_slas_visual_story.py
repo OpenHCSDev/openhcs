@@ -779,24 +779,26 @@ def personal_stitched_development():
 
 
 def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_root):
-    """Summarize primary drug responses and their method correlations."""
+    """Pair primary responses and grouped correlations with retained microscopy."""
     from build_slas_neurite_effects import NeuriteEffectFigure
 
-    sheet = FigureSheet("submission_neurite_results", "", 6.8, input_root=input_root)
+    blind_neurite_example(input_root=input_root)
+    sheet = FigureSheet("submission_neurite_results", "", 10.3, input_root=input_root)
     tables = NeuriteEffectFigure.cohort_tables(sheet)
     NeuriteEffectFigure.draw_panels(
         sheet, tables, metrics=NeuriteEffectFigure.primary_metrics,
-        bounds=(3, 29, 94, 70), start_letter="A",
+        bounds=(3, 50, 94, 49), start_letter="A",
     )
     NeuriteEffectFigure.draw_correlation_bars(
         sheet, tables, metrics=NeuriteEffectFigure.primary_metrics,
     )
+    sheet.source(OUTPUT / "blind_neurite_example_provenance.json")
+    sheet.source_image(OUTPUT / "blind_neurite_example.png", (3, 1, 94, 26.5))
     sheet.save(dpi=600)
-    blind_neurite_example(input_root=input_root)
 
 
 def blind_neurite_example(*, input_root: Path = FigureSheet.default_input_root):
-    """Keep the original field available as linked data without another main panel."""
+    """Render the original field once for main Figure 6 and full-resolution data."""
     from build_slas_neurite_views import AcquisitionNeuriteView
 
     sheet = FigureSheet("blind_neurite_example", "", 3.2, input_root=input_root)
@@ -806,9 +808,9 @@ def blind_neurite_example(*, input_root: Path = FigureSheet.default_input_root):
     sheet.source(views_path)
     laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())["blind_cohort"])
     laboratory_view.draw_columns((3, 1, 94, 85), 94, (
-        ("A  Raw", laboratory_view.draw_raw),
-        ("B  Labels and paths", laboratory_view.draw_result),
-        ("C  Overlay", laboratory_view.draw_overlay),
+        ("F  Raw", laboratory_view.draw_raw),
+        ("G  Labels and paths", laboratory_view.draw_result),
+        ("H  Overlay", laboratory_view.draw_overlay),
     ))
     # Preserve the 1024-pixel field in the manuscript's raster embedding too.
     sheet.save(dpi=600)
@@ -897,8 +899,8 @@ def submission_autonomous_loop():
                        ((82.5,64),(82.5,60)), ((68,53.5),(64,53.5)),
                        ((35,53.5),(31,53.5))):
         sheet.arrow(start, end)
-    sheet.route(((49.5,60),(49.5,61),(66,61),(66,80),(82.5,80),(82.5,77)), color=ORANGE, dashed=True)
-    sheet.text(49.5, 61.5, "Return to 3: build and run", size=9, ha="center", color=ORANGE,
+    sheet.route(((49.5,60),(49.5,62),(70,62),(70,64)), color=ORANGE, dashed=True)
+    sheet.text(48, 61.0, "Return to 3: build and run", size=9, ha="right", color=ORANGE,
                bbox={"facecolor": "white", "edgecolor": "none", "pad": 0})
     sheet.crop_vertical(.45, .815)
     sheet.save()
