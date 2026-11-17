@@ -98,13 +98,19 @@ code, pre, kbd { font-family: var(--mono); font-size: 0.88em; }
 
 /* ---------- Page ---------- */
 main { width: min(calc(100% - 2 * var(--gutter)), var(--page)); margin: 0 auto; }
-.title-block { position: relative; max-width: var(--measure); padding: 2.5rem 0 2rem; }
+.title-block {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, var(--measure)) minmax(8rem, 20rem);
+  align-items: center;
+  gap: 3rem;
+  padding: 2.5rem 0 2rem;
+}
+.title-text { grid-column: 1; grid-row: 1; }
 .title-mark {
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 3rem);
-  transform: translateY(-50%);
-  width: 20rem;
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
   height: auto;
   opacity: 0.07;
   filter: var(--glyph-filter);
@@ -310,10 +316,6 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 .boundary-table thead th { background: var(--soft-bg); }
 
 /* ---------- Narrow screens ---------- */
-/* The mark needs the text column + 3rem + its own 20rem beside it. */
-@media (max-width: 1199px) {
-  .title-mark { display: none; }
-}
 @media (max-width: 900px) {
   .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .gallery-card, .gallery-card-wide, .gallery-card-compact { grid-column: span 1; }
@@ -321,6 +323,9 @@ h3 { font-size: 1.05rem; font-weight: 700; }
   .mcp-intro, .agent-evidence { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 600px) {
+  /* On phones the mark becomes a faint watermark behind the headline. */
+  .title-block { display: block; }
+  .title-mark { position: absolute; top: 1.5rem; right: 0; width: 8rem; z-index: -1; }
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-card, .gallery-card-wide, .gallery-card-compact, .gallery-card-feature { grid-column: 1 / -1; }
   .dateline { justify-content: flex-start; gap: 0.1rem 1rem; }
