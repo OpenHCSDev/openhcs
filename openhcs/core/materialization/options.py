@@ -18,6 +18,7 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeature
 from openhcs.core.materialization.path_scopes import SharedMaterializationRelativePathScope
+from openhcs.core.materialization.path_scopes import MaterializationRelativePathScope
 
 
 class MaterializedFilenameIdentity(ABC, metaclass=AutoRegisterMeta):

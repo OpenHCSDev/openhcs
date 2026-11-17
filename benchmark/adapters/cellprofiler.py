@@ -48,7 +48,7 @@ from openhcs.core.source.source_binding_workspace import (
     materialize_source_binding_workspace,
 )
 from openhcs.core.source.source_bindings import ImportedMetadataTable
-from openhcs.core.config.pipeline_config.partition_filter import PartitionFilterProcessor
+from openhcs.core.config.partition_filter import PartitionFilterProcessor
 from benchmark.equivalence.runtime import RuntimeOutputSnapshot
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.pipeline_import import (

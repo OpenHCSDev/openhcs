@@ -27,6 +27,7 @@ from zmqruntime.viewer_protocol import ViewerWireField
 from openhcs.core.source.source_path_identity import source_path_identity_key
 from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis, PartitionAxis, StackAxis
 from openhcs.core.source.common_runtime_value import CommonRuntimeValue
+from openhcs.core.axes.axis_declarations import Axis
 
 SourceBindingValue = TypeVar("SourceBindingValue")
 
@@ -73,7 +74,8 @@ class SourceFilterMatchType(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
     """Spelling in forms and on the wire."""
 
-    def normalize_clause_value(self, clause: SourceFilterClause) -> None:
+    @classmethod
+    def normalize_clause_value(cls, clause: SourceFilterClause) -> None:
         object.__setattr__(clause, "value", None)
     """The clause carries a comparison operand."""
 

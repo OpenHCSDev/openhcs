@@ -43,6 +43,8 @@ from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis, Partitio
 from openhcs.core.dataset_sources.plane_stores import SourceMetadataEnricher
 from openhcs.core.dataset_sources.source import DeclaredFileSource
 from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
+from openhcs.core.source.source_bindings import ImportedMetadataTable
+from openhcs.core.source.source_metadata import SourceMetadataMapping, SourceMetadataScalar
 
 
 @dataclass(frozen=True)

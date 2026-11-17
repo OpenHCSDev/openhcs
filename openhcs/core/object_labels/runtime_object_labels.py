@@ -65,6 +65,8 @@ from openhcs.core.source.source_spatial_domain import (
 
 from openhcs.core.memory import MemoryType, runtime_slice_stack_geometry, stack_runtime_slices
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
+from openhcs.core.artifacts.payloads import PayloadShape
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 
 _PRESERVE_PLANE_AXIS = object()
 

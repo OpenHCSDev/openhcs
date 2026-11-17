@@ -1,7 +1,9 @@
 """Runtime output snapshot construction for equivalence checks."""
 
 from __future__ import annotations
-from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.measurements.runtime_measurements import (
+    MeasurementRowAxisField,
+)
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace

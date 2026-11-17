@@ -113,7 +113,7 @@ class ThresholdMethod(Enum):
     MANUAL = "manual"
 
 
-@dataclass
+@dataclass(frozen=True)
 class CellCountMeasurementFields:
     """Shared measurement fields for cell counting results and serializable rows."""
 
@@ -127,7 +127,7 @@ class CellCountMeasurementFields:
     parameters_used: dict[str, Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class CellCountResult(CellCountMeasurementFields):
     """Results for single-channel cell counting."""
 

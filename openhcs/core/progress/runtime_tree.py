@@ -20,6 +20,8 @@ from openhcs.core.progress.types import (
     PipelineProgressStream,
     StepProgressStream,
 )
+from openhcs.core.progress.projection import ExecutionRuntimeProjection, SubjectRuntimeState
+from openhcs.core.progress.types import ProgressEvent
 
 
 @dataclass(frozen=True)

@@ -150,7 +150,7 @@ class SmoothingBackendSelectionRequest:
 
 
 class SmoothingBackendProviderPolicy(
-    EnumKeyedStrategyMixin[SmoothingMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[SmoothingMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal SSOT for CellProfiler Smooth default backend semantics."""
 

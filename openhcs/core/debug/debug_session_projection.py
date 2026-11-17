@@ -9,6 +9,8 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.execution.execution_state import ExecutionCancelled, ExecutionCompleted, ExecutionFailed, parse_terminal_status
+from openhcs.core.debug.debug_runtime import DebugSession, DebugSnapshot, DebugTerminalSummary
+from openhcs.core.execution.execution_state import ManagerExecutionState
 
 
 @dataclass(frozen=True)

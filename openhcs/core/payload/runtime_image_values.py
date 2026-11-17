@@ -51,6 +51,8 @@ from openhcs.core.source.source_spatial_domain import (
 )
 from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
 from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from typing import ClassVar
 
 
 
@@ -1903,6 +1905,8 @@ class BareArraySourceSpatialDomainAdapter(
 ):
     """Source-domain adapter for bare pixels, which declare no placement."""
 
+    adapts_bare_arrays = True
+
     @classmethod
     def for_array(
         cls,
@@ -1975,7 +1979,7 @@ def as_runtime_value(value: Any) -> RuntimeSliceProjectableValue:
     return UnownedRuntimeValue(value)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Pixels that carry no metadata and no mask."""
 
@@ -2024,7 +2028,7 @@ class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
         return self
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ImageMetadataPayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Image data plus metadata, without requiring a validity mask."""
 
@@ -2059,7 +2063,7 @@ class ImageMetadataPayload(DataBackedRuntimeArrayPayload, ImagePayload):
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class MaskedImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Image data plus an authoritative per-pixel validity mask."""
 

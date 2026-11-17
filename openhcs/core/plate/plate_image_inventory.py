@@ -29,6 +29,7 @@ from python_introspect import JsonValue, to_jsonable
 
 import openhcs.core.util.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 from openhcs.core.source.workspace_path_lookup import VirtualWorkspacePathLookup
+from openhcs.core.source.source_projection import SourceProjection
 
 JsonLike = str | int | float | bool | None
 

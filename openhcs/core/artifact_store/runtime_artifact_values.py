@@ -8,6 +8,7 @@ from typing import Any
 
 from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
 
 
 @dataclass(frozen=True)

@@ -38,6 +38,8 @@ import numpy as np
 from openhcs.core.object_labels.runtime_object_labels import object_label_dense_array, object_label_storage_is_sparse_ijv, object_label_sparse_ijv_rows
 from openhcs.core.measurements.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.source.source_image_provenance import SourceImageProvenance
+from openhcs.core.artifacts.plans import ArtifactSpecRef
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelMeasurementSource
 
 
 class DirectParentReferenceFeatureMarker(ObjectReferenceFeatureMarker):

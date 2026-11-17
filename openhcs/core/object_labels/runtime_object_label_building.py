@@ -15,6 +15,10 @@ from openhcs.core.object_labels.runtime_object_labels import ObjectLabelPayload,
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.payload.runtime_array_values import array_geometry
 from openhcs.core.object_labels.label_declarations import ObjectLabelRepresentation
+from openhcs.core.object_labels.runtime_object_label_domains import ObjectLabelDomainScope
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelVariants
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.source.source_metadata import SourceVoxelSpacing
 
 
 @dataclass(frozen=True)

@@ -21,6 +21,8 @@ from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomainAdapter
 
 from openhcs.core.payload.runtime_image_values import ImagePayload, owned_runtime_value
+from openhcs.core.object_labels.runtime_object_labels import ObjectLabelMeasurementSource
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisProjector
 
 logger = logging.getLogger(__name__)
 

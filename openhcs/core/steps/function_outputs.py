@@ -55,6 +55,8 @@ from openhcs.core.steps.stream_component_semantics import (
 )
 from openhcs.core.io.virtual_workspace_metadata import METADATA_CONFIG, AtomicMetadataWriter, VirtualWorkspaceSourceProjectionEntries
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
+from openhcs.core.payload.runtime_slice_projection import RuntimeProjectedPayloadItem
+from openhcs.core.steps.function_artifact_materialization import MaterializedRuntimeArtifact
 
 
 logger = logging.getLogger(__name__)

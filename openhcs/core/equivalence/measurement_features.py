@@ -45,6 +45,7 @@ from openhcs.core.measurements.measurement_declarations import (
     ObjectIntensityFeatureMarker,
     ObjectLocationFeatureMarker,
 )
+from openhcs.core.measurements.runtime_measurements import RuntimeMeasurementFeature
 
 RuntimeMeasurementFactCounterMapping = Mapping[
     RuntimeMeasurementFeatureKey,

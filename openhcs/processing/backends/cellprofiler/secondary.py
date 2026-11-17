@@ -419,8 +419,8 @@ class SecondarySegmentationRequest:
 
 
 class SecondarySegmentationStrategy(
-    EnumKeyedStrategyMixin[SecondaryMethod],
-    MethodKeyedStrategy, ABC,
+    MethodKeyedStrategy,
+    EnumKeyedStrategyMixin[SecondaryMethod], ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Segmentation strategy for one closed secondary-object method."""
@@ -672,8 +672,12 @@ class SecondaryPropagationBackendStrategy(
         )
 
 
-class NumbaSecondaryPropagationBackendStrategy(NumbaNumpyDefaultBackend, SecondaryPropagationBackendStrategy):
-    """Numba implementation of regularized secondary-label propagation."""
+class NumpySecondaryPropagation(SecondaryPropagationBackendStrategy):
+    """Regularized secondary-label propagation shared by every NumPy provider.
+
+    Declares no memory type, so it is not registered itself; each provider
+    subclass adds its own provider mixin and default flag.
+    """
     def prepare_backend(self) -> None:
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
         labels = np.array([[1, 0, 0], [0, 0, 2], [0, 0, 0]], dtype=np.int32)
@@ -747,10 +751,12 @@ class NumbaSecondaryPropagationBackendStrategy(NumbaNumpyDefaultBackend, Seconda
         return LabelPropagationResult(labels=propagated, distances=distances)
 
 
-class NativeSecondaryPropagationBackendStrategy(
-    NativeNumpyBackend, NumbaSecondaryPropagationBackendStrategy
-):
-    """Native compatibility key backed by absorbed propagation semantics."""
+class NumbaSecondaryPropagationBackendStrategy(NumbaNumpyDefaultBackend, NumpySecondaryPropagation):
+    """Numba implementation of regularized secondary-label propagation."""
+
+
+class NativeSecondaryPropagationBackendStrategy(NativeNumpyBackend, NumpySecondaryPropagation):
+    """Native provider backed by the same absorbed propagation semantics."""
 
 def secondary_propagation_backend(
     *, backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION
@@ -811,8 +817,8 @@ class SecondaryObjectLabels:
 
 
 class ThresholdCalculator(
-    EnumKeyedStrategyMixin[ThresholdMethod],
-    MethodKeyedStrategy, ABC,
+    MethodKeyedStrategy,
+    EnumKeyedStrategyMixin[ThresholdMethod], ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Threshold strategy for one closed CellProfiler threshold method."""

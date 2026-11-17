@@ -39,6 +39,9 @@ from openhcs.core.progress.types import (
     StartedProgressStatus,
     SuccessProgressStatus,
 )
+from openhcs.core.debug.debug_view_models import DebugViewModel
+from openhcs.core.payload.vfs_protocol import FileManagerLike
+from openhcs.core.progress.types import ProgressExecutionContext
 
 
 @runtime_checkable

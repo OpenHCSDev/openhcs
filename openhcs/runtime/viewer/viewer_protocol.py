@@ -37,6 +37,7 @@ from openhcs.runtime.viewer.viewer_contract_types import (
     ViewerSettlePhase,
     ViewerSettleProgress,
 )
+import zmq
 from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
 from zmqruntime.config import NonBlankString, TransportMode, ZMQConfig

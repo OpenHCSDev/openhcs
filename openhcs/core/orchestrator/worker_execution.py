@@ -46,6 +46,11 @@ from openhcs.core.progress.types import (
     StepStartedProgressPhase,
     SuccessProgressStatus,
 )
+from openhcs.core.execution.compiled_execution import CompiledExecutionBundle
+from openhcs.core.orchestrator.cancellation import ExecutionCancellationSignal
+from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
+from openhcs.core.progress.types import ProgressEvent
 
 logger = logging.getLogger(__name__)
 PIPELINE_PROGRESS_STEP_NAME = "pipeline"

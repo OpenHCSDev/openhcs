@@ -502,28 +502,6 @@ class PipelineOrchestrator:
         execution_bundle: CompiledExecutionBundle,
     ) -> PipelineOrchestrator:
         """Bind an admitted compiled source domain to this fresh runtime owner."""
-
-    def _validate_context_matches_source(
-        self,
-        context: ExecutingContext,
-        source: ExecutingContext,
-        source_registry: Mapping,
-    ) -> None:
-        if (
-            context.dataset_root != self.dataset_root
-            or context.input_dir != source.input_dir
-            or context.workspace_path != source.workspace_path
-            or context.microscope_handler is not source.microscope_handler
-            or context.filemanager is None
-            or context.filemanager.registry.keys() != source_registry.keys()
-            or any(
-                backend is not source_registry[name]
-                for name, backend in context.filemanager.registry.items()
-            )
-        ):
-            raise ValueError(
-                "Compiled execution source domain does not match this runtime."
-            )
         if self._initialized or self.state is not OrchestratorCreated:
             raise RuntimeError(
                 "Compiled execution can only be adopted before initialization."
@@ -563,6 +541,28 @@ class PipelineOrchestrator:
         self._initialized = True
         self._state = OrchestratorReady
         return self
+
+    def _validate_context_matches_source(
+        self,
+        context: ExecutingContext,
+        source: ExecutingContext,
+        source_registry: Mapping,
+    ) -> None:
+        if (
+            context.dataset_root != self.dataset_root
+            or context.input_dir != source.input_dir
+            or context.workspace_path != source.workspace_path
+            or context.microscope_handler is not source.microscope_handler
+            or context.filemanager is None
+            or context.filemanager.registry.keys() != source_registry.keys()
+            or any(
+                backend is not source_registry[name]
+                for name, backend in context.filemanager.registry.items()
+            )
+        ):
+            raise ValueError(
+                "Compiled execution source domain does not match this runtime."
+            )
 
     def is_initialized(self) -> bool:
         return self._initialized

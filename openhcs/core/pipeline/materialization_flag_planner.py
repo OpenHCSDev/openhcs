@@ -14,6 +14,9 @@ from typing import Sequence
 
 from openhcs.constants.constants import Backend
 from openhcs.core.config.partition_filter import PartitionFilterProcessor
+from openhcs.core.config.pipeline_config import GlobalPipelineConfig
+from openhcs.core.dataset_sources.source import DatasetSource
+from openhcs.core.payload.vfs_protocol import FileManagerLike
 
 
 logger = logging.getLogger(__name__)

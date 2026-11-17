@@ -20,6 +20,8 @@ from openhcs.core.payload.runtime_image_values import (
 from openhcs.core.source.source_image_provenance import SourceImageProvenancePlanes, SourcePlaneIndexedMetadata
 from openhcs.core.source.source_metadata import SourceVoxelSpacing
 from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload.vfs_protocol import FileManagerLike
+from openhcs.core.source.source_image_provenance import SourceImageIdentity
 
 
 @dataclass(frozen=True)
