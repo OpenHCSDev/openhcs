@@ -1903,6 +1903,8 @@ class BareArraySourceSpatialDomainAdapter(
 ):
     """Source-domain adapter for bare pixels, which declare no placement."""
 
+    adapts_bare_arrays = True
+
     @classmethod
     def for_array(
         cls,
