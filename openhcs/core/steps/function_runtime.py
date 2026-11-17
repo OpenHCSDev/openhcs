@@ -717,7 +717,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             )
             if not producer_records:
                 metadata = main_data_stack.metadata
-                domain = request.source_binding_plan.source_spatial_domain.with_source_cohort(
+                domain = self.source_binding_plan.source_spatial_domain.with_source_cohort(
                     metadata.source_spatial_domain,
                     depth=len(matching_files),
                 )
