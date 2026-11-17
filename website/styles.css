@@ -156,6 +156,13 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 .principles h3::after { content: " "; }
 .principles p { display: inline; color: var(--ink); }
 
+/* ---------- Engine ---------- */
+.engine { margin-top: 1rem; }
+.engine div { padding: 0.6rem 0; border-top: 1px solid var(--rule); }
+.engine div:first-child { border-top: 0; }
+.engine dt { font-weight: 700; }
+.engine dd { margin-top: 0.15rem; }
+
 /* ---------- Tables ---------- */
 .ledger { margin-top: 1rem; overflow-x: auto; }
 .ledger table { width: 100%; border: 1px solid var(--rule); font-size: 0.94rem; }

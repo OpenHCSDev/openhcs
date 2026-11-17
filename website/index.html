@@ -39,8 +39,9 @@
           Open-source analysis for high-content microscopy: plates with many
           wells, sites, channels, Z planes, or time points. Graphical controls,
           Python and agents over MCP edit the same pipeline, and CellProfiler
-          <code>.cppipe</code> pipelines import into it. Pipelines are compiled
-          and checked against the selected data before they run.
+          <code>.cppipe</code> pipelines import into it. Pipelines run on
+          OpenHCS's own engine: compiled and checked against the selected data,
+          then executed across worker processes on CPUs and GPUs.
         </p>
         <div class="actions">
           <a class="button button-primary" href="#install">Install OpenHCS {{ OPENHCS_VERSION }}</a>
@@ -150,6 +151,61 @@
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section class="section" id="engine" aria-labelledby="engine-title">
+        <h2 id="engine-title">Processing engine</h2>
+        <p class="section-lede">
+          OpenHCS executes pipelines itself; it does not drive another
+          application. Built from separately published libraries.
+        </p>
+        <dl class="engine">
+          <div>
+            <dt>Compile, then execute</dt>
+            <dd>
+              Before any image is processed, the compiler connects declared
+              inputs and outputs, checks each function's requirements, and plans
+              array conversions and worker assignments. Incompatible settings
+              fail at compile time; workers reuse the plan instead of rebuilding it.
+            </dd>
+          </div>
+          <div>
+            <dt>Worker processes</dt>
+            <dd>
+              Samples are distributed across worker processes (threads optional).
+              Each worker loads its libraries and GPU context once and reuses them
+              for every sample it is assigned. Adding workers shortened every one
+              of the 30 imported CellProfiler pipelines.
+            </dd>
+          </div>
+          <div>
+            <dt>Mixed array libraries, CPU and GPU</dt>
+            <dd>
+              <a href="https://github.com/OpenHCSDev/ArrayBridge">ArrayBridge</a>
+              converts between NumPy, CuPy, PyTorch, JAX, TensorFlow and
+              pyclesperanto, including CPU–GPU transfers, so steps written for
+              different libraries run in one pipeline without conversion code.
+            </dd>
+          </div>
+          <div>
+            <dt>One storage layer</dt>
+            <dd>
+              <a href="https://github.com/OpenHCSDev/PolyStore">PolyStore</a>
+              reads and writes memory, files, OME-Zarr and OMERO through one
+              interface, and streams results to Napari or Fiji while they are
+              saved. Results keep their source coordinates and producing step.
+            </dd>
+          </div>
+          <div>
+            <dt>Separate processes</dt>
+            <dd>
+              <a href="https://github.com/OpenHCSDev/ZMQRuntime">ZMQRuntime</a>
+              runs the editor, execution server, workers and viewers as separate
+              processes, so editing and inspection stay available while a plate
+              is processing.
+            </dd>
+          </div>
+        </dl>
       </section>
 
       <section class="section" id="results" aria-labelledby="results-title">
