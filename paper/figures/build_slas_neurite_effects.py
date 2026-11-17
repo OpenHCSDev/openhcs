@@ -28,6 +28,9 @@ class NeuriteEffectFigure(FigureSheet):
     """Retained well tables supply every plotted method and author."""
 
     publication_cohort = ROOT / "paper/supplementary/personal_neurite_reanalysis_20261116"
+    primary_metrics = ("mean_outgrowth", "branches_per_cell")
+    analysis_colours = (TEAL, ORANGE, PURPLE)
+    analysis_markers = ("s", "^", "D")
 
     @classmethod
     def cohort_tables(cls, sheet: FigureSheet):
@@ -112,31 +115,37 @@ class NeuriteEffectFigure(FigureSheet):
     def condition_title(condition):
         return "Y27632" if condition == "Y27" else condition
 
-    @staticmethod
-    def draw_correlations(sheet, tables, *, bounds=(0.40, 0.17, 0.48, 0.60)):
+    @classmethod
+    def read_correlations(cls, sheet, tables, metrics):
+        """One calculation supplies both the summary bars and complete heatmap."""
+        datasets = cls.read_datasets(sheet, tables, metrics)
+        values, counts = {}, set()
+        for condition in sorted({row["condition"] for row in datasets[0][1]}):
+            selected = [[row for row in wells if row["condition"] == condition]
+                        for _, wells, _, _ in datasets]
+            counts.update(len(wells) for wells in selected)
+            values[condition] = [
+                [correlation([float(row[metric]) for row in wells],
+                             [float(row["openhcs_" + metric]) for row in wells])
+                 for wells in selected]
+                for metric in metrics
+            ]
+        return tuple(label for label, _, _, _ in datasets), values, counts
+
+    @classmethod
+    def draw_correlations(cls, sheet, tables, *, bounds=(0.40, 0.17, 0.48, 0.60)):
         """Compare every run and endpoint within each treatment, never pooled."""
         declarations = endpoint_declarations()
         metrics = tuple(declarations)
-        datasets = NeuriteEffectFigure.read_datasets(sheet, tables, metrics)
-        conditions = tuple(sorted({row["condition"] for row in datasets[0][1]}))
+        labels, panels, counts = cls.read_correlations(sheet, tables, metrics)
         x, y, width, height = bounds
         gap = .04
-        panel_width = (width - gap * (len(conditions) - 1)) / len(conditions)
-        counts = set()
-        for column, condition in enumerate(conditions):
-            selected = [(label, [row for row in wells if row["condition"] == condition])
-                        for label, wells, _, _ in datasets]
-            counts.update(len(wells) for _, wells in selected)
-            values = [
-                [correlation([float(row[metric]) for row in wells],
-                             [float(row["openhcs_" + metric]) for row in wells])
-                 for _, wells in selected]
-                for metric in metrics
-            ]
+        panel_width = (width - gap * (len(panels) - 1)) / len(panels)
+        for column, (condition, values) in enumerate(panels.items()):
             left = x + column * (panel_width + gap)
             axis = sheet.plot_axes((left, y, panel_width, height))
             image = axis.imshow(values, vmin=-1, vmax=1, cmap="RdBu", aspect="auto")
-            axis.set_xticks(range(len(selected)), [label for label, _ in selected],
+            axis.set_xticks(range(len(labels)), labels,
                             rotation=45, ha="left", rotation_mode="anchor", fontsize=10)
             axis.set_yticks(range(len(metrics)), [declarations[metric].absolute_label for metric in metrics])
             axis.xaxis.tick_top()
@@ -154,6 +163,35 @@ class NeuriteEffectFigure(FigureSheet):
         bar.ax.tick_params(labelsize=10)
         return counts
 
+    @classmethod
+    def draw_correlation_bars(cls, sheet, tables, *, metrics,
+                              bounds=(.16, .045, .80, .19), start_letter="E"):
+        """Compact primary-endpoint correlations; the heatmap retains all nine."""
+        labels, panels, counts = cls.read_correlations(sheet, tables, metrics)
+        declarations = endpoint_declarations()
+        x, y, width, height = bounds
+        gap = .14
+        panel_width = (width - gap * (len(panels) - 1)) / len(panels)
+        for column, (condition, values) in enumerate(panels.items()):
+            axis = sheet.plot_axes((x + column * (panel_width + gap), y, panel_width, height))
+            for run, (label, colour) in enumerate(zip(labels, cls.analysis_colours, strict=True)):
+                positions = [index * (len(labels) + 1) + run for index in range(len(metrics))]
+                bars = axis.barh(positions, [row[run] for row in values], height=.8,
+                                 color=colour, label=label, zorder=3)
+                axis.bar_label(bars, fmt="%.3f", padding=3, fontsize=10.5)
+            axis.set(xlim=(0, 1.20), xticks=(0, .5, 1),
+                     ylim=(len(metrics) * (len(labels) + 1) - 1.4, -.6),
+                     yticks=[index * (len(labels) + 1) + (len(labels) - 1) / 2
+                             for index in range(len(metrics))],
+                     yticklabels=[fill(declarations[metric].absolute_label, 14) for metric in metrics])
+            axis.tick_params(labelsize=11)
+            axis.set_title(f"{chr(ord(start_letter) + column)}  {cls.condition_title(condition)} · Pearson r",
+                           loc="left", fontsize=sheet.plot_font_size, fontweight="bold", color=BLUE)
+            axis.spines[["top", "right"]].set_visible(False)
+            axis.grid(axis="x", color="#e7ebef", linewidth=.6)
+            axis.set_axisbelow(True)
+        return counts
+
     @staticmethod
     def draw_panels(
         sheet: FigureSheet,
@@ -167,8 +205,8 @@ class NeuriteEffectFigure(FigureSheet):
         datasets = NeuriteEffectFigure.read_datasets(sheet, tables, metrics)
         _, wells, effects, evidence = datasets[0]
         series = [("MetaXpress", wells, effects, "metaxpress", "", BLUE, "o")]
-        colours = (TEAL, ORANGE, PURPLE)
-        markers = ("s", "^", "D")
+        colours = NeuriteEffectFigure.analysis_colours
+        markers = NeuriteEffectFigure.analysis_markers
         for index, (label, author_wells, author_effects, _) in enumerate(datasets):
             series.append(
                 (

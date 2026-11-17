@@ -363,7 +363,7 @@ class AnalysisResultsFigure(SupplementFigure):
         for path in sources:
             sheet.source(ROOT / path)
         axes = [sheet.plot_axes(bounds) for bounds in (
-            (0.33, 0.80, 0.30, 0.17), (0.79, 0.80, 0.18, 0.145),
+            (0.33, 0.77, 0.30, 0.195), (0.79, 0.77, 0.18, 0.16),
         )]
         sheet.text(3, 99, "A  Nuclear segmentation · official test", size=sheet.plot_font_size, weight="bold", va="top")
         sheet.text(69, 99, "B  Cell boundaries", size=sheet.plot_font_size, weight="bold", va="top")
@@ -409,10 +409,10 @@ class AnalysisResultsFigure(SupplementFigure):
         axes[1].set(xticks=(0, 1), xticklabels=("2", "3"), xlabel="Analysis", ylim=(0.55, 0.90),
                     ylabel="Border support\n(2-pixel fraction)")
 
-        sheet.text(3, 75.5, "C  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
+        sheet.text(3, 68, "C  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
         series = AssaySeries.load(SOURCE)
         for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
-            axis = sheet.plot_axes((0.12 + column * 0.49, 0.625, 0.34, 0.08))
+            axis = sheet.plot_axes((0.12 + column * 0.49, 0.545, 0.34, 0.09))
             means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
             deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
             axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
@@ -431,43 +431,34 @@ class AnalysisResultsFigure(SupplementFigure):
     def draw_localization(self):
         evaluation_path = ROOT / SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json"
         self.source(evaluation_path)
-        evaluation = json.loads(evaluation_path.read_text())
-        threshold = evaluation["primary_threshold_voxels"]
-        result = evaluation["scores"][str(threshold)]
-        self.text(3, 52, "D  3D nuclear localization", size=14, weight="bold")
-        self.artwork("h002_measurement_first", (3, 8, 94, 39), crop=(1, 7.5, 99, 58))
-        self.text(50, 5,
-                  f"{result['true_positives']}/{result['reference_points']} reference centres matched within "
-                  f"{threshold} voxels; {result['false_positives']} unmatched predictions",
-                  size=12, ha="center", weight="bold", color=TEAL)
-        self.text(50, 1.5, "Partial reference annotations; physical voxel spacing unverified",
-                  size=11, ha="center")
+        self.text(3, 41.5, "D  3D nuclear localization", size=14, weight="bold")
+        self.artwork("h002_measurement_first", (3, 0.8, 94, 39), crop=(1, 7.5, 99, 58))
 
 
 class RepairResultsFigure(VolumeResultsFigure):
     """Four separate recorded repairs, retaining their original image regions."""
 
     def draw_panels(self):
-        self.artwork("submission_autonomous_loop", (2, 70, 96, 29))
+        self.artwork("submission_autonomous_loop", (2, 67, 96, 32))
         self.draw_repairs()
         super().draw_panels()
 
     def draw_repairs(self):
         self.source(Path(__file__))
         self.source(ROOT / H001_SOURCE)
-        self.text(2, 67.5, "A  Bright-object repair", size=14, weight="bold")
+        self.text(2, 65.2, "A  Bright-object repair", size=14, weight="bold")
         evaluation = load_bright_object_evaluation(ROOT)
         first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
-        self.text(48, 67.5, f"F1 {first_f1:.3f} → {final_f1:.3f}",
+        self.text(48, 65.2, f"F1 {first_f1:.3f} → {final_f1:.3f}",
                   size=10, color=TEAL, weight="bold", ha="right")
-        CroppedComparison.read(self, BRIGHT_OBJECT_SOURCE).draw_row((2, 51.3, 46, 10.2), 64)
-        self.text(52, 67.5, "B  Nuclear separation", size=14, weight="bold")
-        CroppedComparison.read(self, NUCLEAR_SOURCE).draw_row((52, 48, 46, 13.5), 64)
+        CroppedComparison.read(self, BRIGHT_OBJECT_SOURCE).draw_row((2, 51.3, 46, 10.2), 62.5)
+        self.text(52, 65.2, "B  Nuclear separation", size=14, weight="bold")
+        CroppedComparison.read(self, NUCLEAR_SOURCE).draw_row((52, 48, 46, 13.5), 62.5)
 
 
 def submission_summary() -> None:
     """Render Figure 5 without rerunning an analysis or changing its scores."""
-    sheet = AnalysisResultsFigure("submission_analysis_summary", 8.6)
+    sheet = AnalysisResultsFigure("submission_analysis_summary", 7.6)
     sheet.draw_panels()
     sheet.save(dpi=400)
 
@@ -475,7 +466,7 @@ def submission_summary() -> None:
 def submission_repairs(*, input_root: Path = FigureSheet.default_input_root) -> None:
     """Render Figure 4 from the same frozen first/final image regions."""
     submission_autonomous_loop()
-    sheet = RepairResultsFigure("submission_analysis_repairs", 9.8, input_root=input_root)
+    sheet = RepairResultsFigure("submission_analysis_repairs", 10.5, input_root=input_root)
     sheet.draw_panels()
     sheet.save(dpi=400)
 
