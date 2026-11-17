@@ -310,8 +310,11 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 .boundary-table thead th { background: var(--soft-bg); }
 
 /* ---------- Narrow screens ---------- */
-@media (max-width: 900px) {
+/* The mark needs the text column + 3rem + its own 20rem beside it. */
+@media (max-width: 1199px) {
   .title-mark { display: none; }
+}
+@media (max-width: 900px) {
   .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .gallery-card, .gallery-card-wide, .gallery-card-compact { grid-column: span 1; }
   .gallery-card-feature { grid-column: 1 / -1; }
