@@ -74,7 +74,9 @@ def test_mismatched_or_unqualified_inputs_do_not_become_claims(tmp_path, mutatio
 def fixture_document(tmp_path, content):
     include = tmp_path / BENCHMARK_INCLUDE
     include.parent.mkdir(parents=True)
-    shutil.copy2(ROOT / BENCHMARK_INCLUDE, include)
+    execution, total = sources()
+    include.write_text(json.dumps(execution.publication_values(
+        total, record_name=RECORD.name, frozen=False)))
     source = tmp_path / "manuscript.md"
     source.write_text(content)
     definition = DocumentDefinition(DocumentRole.MANUSCRIPT, (Path(source.name),), citeproc=False)
