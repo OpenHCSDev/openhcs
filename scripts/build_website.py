@@ -24,6 +24,7 @@ from scripts.website_gallery_projection import (
 HTML_SOURCE_FILES = (
     "index.html",
     "privacy.html",
+    "records.html",
     "support.html",
     "terms.html",
 )

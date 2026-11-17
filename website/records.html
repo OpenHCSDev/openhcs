@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Every record of the recorded unattended OpenHCS agent run: the uncut recording, transcript, tool-call log, checksums and generated Python."
+    >
+    <meta name="theme-color" content="#0c0d10">
+    <title>Agent run records — OpenHCS</title>
+    <link rel="icon" type="image/svg+xml" href="assets/logos/openhcs-favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+{{ OPENHCS_MASTHEAD }}
+
+    <main class="policy-page" id="content">
+      <header class="policy-hero">
+        <h1>Agent run records</h1>
+        <p>
+          Everything published from the recorded unattended run on the
+          <a href="index.html#mcp">home page</a>. The uncut recording is the
+          authority for what the agent did; the rest lets you check it.
+        </p>
+      </header>
+      <article class="policy-content">
+      <div class="ledger" role="region" aria-label="Agent workflow evidence files" tabindex="0">
+        <table>
+          <tbody>
+            <tr><th scope="row"><a href="assets/agent/cold-start-workflow-uncut.mp4">Uncut 10:47 run</a></th><td>The full recording.</td></tr>
+            <tr><th scope="row"><a href="assets/agent/cold-start-workflow-transcript.txt">Transcript</a></th><td>Everything the model said.</td></tr>
+            <tr><th scope="row"><a href="assets/agent/cold-start-workflow-final.md">Final report</a></th><td>Its closing summary.</td></tr>
+            <tr><th scope="row"><a href="assets/agent/cold-start-workflow-events.jsonl">MCP event record</a></th><td>Every tool call, failures included.</td></tr>
+            <tr><th scope="row"><a href="assets/agent/cold-start-workflow-record.json">Validation record</a></th><td>Checksums for all of the above.</td></tr>
+            <tr><th scope="row"><a href="assets/agent/neurite-outgrowth-workflow-record.json">Edit record</a></th><td>How the 2:38 cut was made.</td></tr>
+            <tr><th scope="row"><a href="assets/agent/cold-start-workflow-pipeline.py">Generated Python</a></th><td>The pipeline it wrote, as of 0.7.13.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      </article>
+    </main>
+
+{{ OPENHCS_COLOPHON }}
+  </body>
+</html>

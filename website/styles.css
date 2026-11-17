@@ -142,7 +142,7 @@ main { width: min(calc(100% - 2 * var(--gutter)), var(--page)); margin: 0 auto; 
 }
 @keyframes chevron-pulse {
   0%, 70%, 100% { fill: currentColor; transform: none; }
-  82% { fill: var(--role-exec); transform: translateX(6%); }
+  82% { fill: var(--role-exec); transform: translateX(14%); }
 }
 .section { max-width: var(--measure); padding: 1.75rem 0 2rem; border-top: 1px solid var(--rule); }
 .section-wide { max-width: none; }
@@ -283,7 +283,8 @@ h3 { font-size: 1.05rem; font-weight: 700; }
 .agent-recording figcaption { padding-top: 0.5rem; color: var(--ink-soft); font-size: 0.9rem; }
 .agent-recording figcaption::before { content: "Fig. " counter(figure) " · "; }
 .agent-recording figcaption strong { color: var(--ink); }
-.receipts { max-width: var(--measure); margin-top: 1.75rem; }
+.receipts-link { max-width: var(--measure); margin-top: 1.5rem; color: var(--ink-soft); }
+.receipts-link a { font-weight: 600; }
 
 /* ---------- Install ---------- */
 .install-routes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; margin-top: 1rem; }

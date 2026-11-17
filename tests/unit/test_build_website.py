@@ -466,7 +466,9 @@ def test_landing_page_claims_match_the_published_agent_record(
     assert "post-run MCP interaction replay" in normalized_html
     assert "not evidence of actions taken by the unattended agent" in normalized_html
 
-    # Every receipt the record names is linked from the page.
+    records_html = (site_dir / "records.html").read_text(encoding="utf-8")
+    assert 'href="records.html"' in html
+    # Every receipt the record names is linked from the records page.
     for linked_path in (
         evidence["media"]["uncut_video_path"],
         record["trace"]["transcript_path"],
@@ -475,11 +477,14 @@ def test_landing_page_claims_match_the_published_agent_record(
         evidence["pipeline_source_path"],
         "cold-start-workflow-record.json",
         "neurite-outgrowth-workflow-record.json",
+    ):
+        assert f"assets/agent/{linked_path}" in records_html
+    for showcase_path in (
         "neurite-outgrowth-workflow.webm",
         "neurite-outgrowth-workflow.mp4",
         "neurite-outgrowth-workflow-poster.webp",
     ):
-        assert f"assets/agent/{linked_path}" in html
+        assert f"assets/agent/{showcase_path}" in html
     for anchor in (
         'id="principles"',
         'id="gallery"',
@@ -843,7 +848,13 @@ def test_every_page_carries_the_shared_masthead_and_colophon(tmp_path: Path):
     site_dir = tmp_path / "site"
     build_site(REPO_ROOT, site_dir)
 
-    for page_name in ("index.html", "privacy.html", "support.html", "terms.html"):
+    for page_name in (
+        "index.html",
+        "privacy.html",
+        "records.html",
+        "support.html",
+        "terms.html",
+    ):
         source = (REPO_ROOT / "website" / page_name).read_text(encoding="utf-8")
         staged = (site_dir / page_name).read_text(encoding="utf-8")
         for fragment in SHARED_PAGE_FRAGMENTS:
