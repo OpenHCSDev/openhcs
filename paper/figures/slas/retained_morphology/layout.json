@@ -1,0 +1,145 @@
+{
+  "source_commit": "7c08bc5078712bc1434f21dcf130b25d4ce07478",
+  "source_artwork": "retained_morphology/supp_morphology_checks",
+  "source_pdf_sha256": "26fa6f2d6600dc2e430907934fdb314ca66c867d9989565f68979be98402b935",
+  "source_png_sha256": "903482a3afaf393cba7ce1cd53e818772cf6c90482af560c66e429ac8cefbcbb",
+  "source_size": [
+    2700,
+    2520
+  ],
+  "upper_band_percent": [
+    0,
+    0,
+    100,
+    48.5
+  ],
+  "lower_full_fields": [
+    {
+      "label": "Raw",
+      "crop_percent": [
+        8.925925925925926,
+        55.91269841269841,
+        25.851851851851855,
+        74.04761904761905
+      ],
+      "full_field_bbox_pdf_points": [
+        58.08000183105469,
+        338.6399841308594,
+        167.04000854492188,
+        447.5999755859375
+      ],
+      "crop_xyxy_pixels": [
+        241,
+        1409,
+        698,
+        1866
+      ]
+    },
+    {
+      "label": "Final labels",
+      "crop_percent": [
+        41.51851851851852,
+        55.91269841269841,
+        58.44444444444444,
+        74.04761904761905
+      ],
+      "full_field_bbox_pdf_points": [
+        269.5199890136719,
+        338.6399841308594,
+        378.47998046875,
+        447.5999755859375
+      ],
+      "crop_xyxy_pixels": [
+        1121,
+        1409,
+        1578,
+        1866
+      ]
+    },
+    {
+      "label": "Overlay",
+      "crop_percent": [
+        74.18518518518519,
+        55.952380952380956,
+        91.11111111111111,
+        74.0873015873016
+      ],
+      "full_field_bbox_pdf_points": [
+        481.0,
+        338.8399963378906,
+        589.9600219726562,
+        447.79998779296875
+      ],
+      "crop_xyxy_pixels": [
+        2003,
+        1410,
+        2460,
+        1867
+      ]
+    },
+    {
+      "label": "Raw",
+      "crop_percent": [
+        9.851851851851851,
+        82.93650793650794,
+        24.88888888888889,
+        99.04761904761905
+      ],
+      "full_field_bbox_pdf_points": [
+        64.08000183105469,
+        502.0799865722656,
+        160.8000030517578,
+        598.7999877929688
+      ],
+      "crop_xyxy_pixels": [
+        266,
+        2090,
+        672,
+        2496
+      ]
+    },
+    {
+      "label": "Labels",
+      "crop_percent": [
+        42.44444444444444,
+        82.93650793650794,
+        57.51851851851851,
+        99.04761904761905
+      ],
+      "full_field_bbox_pdf_points": [
+        275.5199890136719,
+        502.0799865722656,
+        372.47998046875,
+        598.7999877929688
+      ],
+      "crop_xyxy_pixels": [
+        1146,
+        2090,
+        1553,
+        2496
+      ]
+    },
+    {
+      "label": "Overlay",
+      "crop_percent": [
+        75.1111111111111,
+        82.93650793650794,
+        90.14814814814814,
+        99.04761904761905
+      ],
+      "full_field_bbox_pdf_points": [
+        487.0,
+        502.0799865722656,
+        583.719970703125,
+        598.7999877929688
+      ],
+      "crop_xyxy_pixels": [
+        2028,
+        2090,
+        2434,
+        2496
+      ]
+    }
+  ],
+  "scope": "Whole original rendered fields, including vector calibration marks and overlays. Crops remove page spacing, never microscopy regions. No new analysis or display-window selection."
+}

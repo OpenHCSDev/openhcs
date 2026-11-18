@@ -13,6 +13,7 @@ from PIL import Image
 from build_slas_visual_story import FigureSheet, OUTPUT, digest
 from build_slas_neurite_views import BodySeparationView, VOLUME_REPAIR_SOURCE
 from build_slas_neurite_effects import NeuriteEffectFigure
+from compare_personal_neurite import endpoint_declarations
 
 
 class SupplementFigure(FigureSheet):
@@ -91,37 +92,35 @@ def translocation():
 
 
 def nuclear_instances():
-    sheet = SupplementFigure("supp_nuclear_instances", 8.0)
+    sheet = SupplementFigure("supp_nuclear_instances", 9)
     sheet.heading("Nuclear detection 2 and 3: the same 200 fields", 99)
-    sheet.artwork("bbbc039_independent_repeat", (2, 50, 96, 46), crop=(0, 10, 100, 100))
-    sheet.heading("Nuclear detection 1 and cell-boundary analysis 1: held-out fields", 49)
-    sheet.text(13, 44, "C  Nuclear detections", size=12, weight="bold")
-    sheet.text(60, 44, "D  Cell boundaries", size=12, weight="bold")
-    sheet.artwork("independent_agent_validation", (2, 1, 96, 41), crop=(0, 7, 100, 52))
+    sheet.artwork("bbbc039_independent_repeat", (2, 59, 96, 36), crop=(0, 10, 100, 100))
+    sheet.heading("Nuclear detection 1 and cell-boundary analysis 1: held-out fields", 58)
+    sheet.text(13, 53, "C  Nuclear detections", size=12, weight="bold")
+    sheet.text(60, 53, "D  Cell boundaries", size=12, weight="bold")
+    sheet.artwork("independent_agent_validation", (2, 16, 96, 36), crop=(0, 7, 100, 52))
+    sheet.text(18, 14.5, "E  3D localization: partial-reference diagnostic",
+               size=13, weight="bold", va="top")
+    localisation_diagnostic(sheet, bounds=(.16, .06, .72, .065))
     sheet.save()
 
 
 def morphology_checks(*, input_root=FigureSheet.default_input_root):
-    """Independent checks and residual failures, not repeated main overviews."""
-    from build_slas_neurite_views import (
-        BioFormatsComparison, CroppedComparison, CroppedLabelView, NUCLEAR_SOURCE,
-        PAIRED_ACTIN_SOURCE, RETINAL_SOURCE, VOLUME_CENTRE_SOURCE, VolumeCentreView,
-    )
-
-    sheet = SupplementFigure("supp_morphology_checks", 8.4, input_root=input_root)
-    sheet.heading("A–C  Independent volume analysis: centres in XY, XZ and YZ", 99)
-    for column in range(3):
-        VolumeCentreView.read(sheet, VOLUME_CENTRE_SOURCE, view_index=column).draw_overlay(
-            (2 + column*32, 76, 31, 20))
-    sheet.heading("D–F  Retinal acquisition border: raw, first and final", 75)
-    BioFormatsComparison.read(sheet, RETINAL_SOURCE, view_index=1).draw_row(
-        (2, 52, 96, 16), 70)
-    sheet.heading("G–I  DNA: a faint pair remains merged", 51)
-    CroppedComparison.read(sheet, NUCLEAR_SOURCE, view_index=1).draw_final_row(
-        (2, 26, 96, 18), 46)
-    sheet.heading("J–L  Actin: a seed without supported body growth", 24)
-    CroppedLabelView.read(sheet, PAIRED_ACTIN_SOURCE, view_index=1).draw_row(
-        (2, 1, 96, 16), 20)
+    """Reflow the verified original fields without selecting or rendering new views."""
+    sheet = SupplementFigure("supp_morphology_checks", 6.4, input_root=input_root)
+    layout_path = OUTPUT / "retained_morphology/layout.json"
+    sheet.source(layout_path)
+    layout = json.loads(layout_path.read_text())
+    artwork = layout["source_artwork"]
+    sheet.artwork(artwork, (0, 33, 100, 67), crop=layout["upper_band_percent"])
+    sheet.text(2, 32, "G–I  DNA: a faint pair\nremains merged",
+               size=12, weight="bold", va="top")
+    sheet.text(52, 32, "J–L  Actin: a seed without\nsupported body growth",
+               size=12, weight="bold", va="top")
+    for column, field in enumerate(layout["lower_full_fields"]):
+        x = 2 + column * 16
+        sheet.text(x, 22.5, field["label"], size=12, weight="bold")
+        sheet.artwork(artwork, (x, .5, 14.5, 22), crop=field["crop_percent"])
     sheet.save()
 
 
@@ -134,68 +133,52 @@ def final_volume_views(*, input_root=FigureSheet.default_input_root):
     sheet.save()
 
 
-def localisation_diagnostic():
-    """Move the original partial-reference curve out of the main comparison."""
+def localisation_diagnostic(sheet, *, bounds=(0.17, 0.23, 0.73, 0.55)):
+    """Draw the retained partial-reference curve on its receiving figure."""
     from build_slas_visual_story import MUTED, TEAL
 
-    sheet = SupplementFigure("supp_localisation_diagnostic", 3.3)
     source = OUTPUT.parents[1] / "supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json"
     sheet.source(source)
     evaluation = json.loads(source.read_text())
     scores = evaluation["scores"]
     thresholds = sorted(map(int, scores))
     errors = [scores[str(threshold)]["mean_localisation_error_voxels"] for threshold in thresholds]
-    sheet.heading("M  Nuclear localization: a partial-reference diagnostic", 98)
-    axis = sheet.plot_axes((0.17, 0.23, 0.73, 0.55))
+    axis = sheet.plot_axes(bounds)
     axis.plot(thresholds, errors, "o-", color=TEAL)
     for threshold, error in zip(thresholds, errors, strict=True):
         axis.annotate(f"{scores[str(threshold)]['true_positives']} matches", (threshold, error),
-                      xytext=(0, 10), textcoords="offset points", ha="center",
+                      xytext=(10, -10), textcoords="offset points", ha="center", va="top",
                       fontsize=sheet.plot_font_size)
     axis.axvline(evaluation["primary_threshold_voxels"], color=MUTED, linestyle="--", linewidth=0.8)
-    axis.set(xlabel="Matching distance (voxels)", ylabel="Mean centre error (voxels)",
+    axis.set(xlabel="Matching distance (voxels)", ylabel="Mean centre\nerror\n(voxels)",
              ylim=(0, 6.1), xticks=thresholds)
     axis.spines[["top", "right"]].set_visible(False)
     axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
     axis.set_axisbelow(True)
-    sheet.save(dpi=400)
 
 
 def autonomous_treatment_endpoints():
-    """Render only the fixed-code cohort endpoint pages from validated tables."""
-
-    for stem, first_letter, metrics in (
-        ("supp_neurite_autonomous_endpoints", "A", ("cell_count", "total_outgrowth",
-                                             "mean_process_length")),
-        ("supp_neurite_autonomous_endpoints_continued", "G", ("median_process_length", "total_branches",
-                                                       "total_processes", "branches_per_process")),
-    ):
-        autonomous = SupplementFigure(stem, 2.0 * len(metrics) + 2.4)
-        autonomous.heading("Fixed-code re-evaluation of three frozen analyses", 99)
-        NeuriteEffectFigure.draw_panels(
-            autonomous, NeuriteEffectFigure.cohort_tables(autonomous),
-            metrics=metrics, start_letter=first_letter,
-        )
-        autonomous.text(3, 6, "Dots: two technical wells per analysis/method; whiskers: between-well SD.", size=10)
-        autonomous.text(3, 3, "Curve-specific DMSO normalization; algorithm comparison, not manual tracing truth.", size=10)
-        autonomous.save()
-    autonomous_correlations()
-
-
-def autonomous_correlations():
-    """Render each treatment's matched-well correlations separately."""
-    correlations = SupplementFigure("supp_neurite_autonomous_correlations", 7.2)
-    correlations.heading("Correlations with MetaXpress, by treatment", 99)
+    """Put every additional endpoint and both correlation maps on one canvas."""
+    autonomous = SupplementFigure("supp_neurite_autonomous_endpoints", 10)
+    autonomous.figure.set_size_inches(10, 10)
+    autonomous.plot_font_size = 12
+    autonomous.heading("Fixed-code re-evaluation of three frozen blind analyses", 99)
+    tables = NeuriteEffectFigure.cohort_tables(autonomous)
+    metrics = tuple(metric for metric in endpoint_declarations()
+                    if metric not in NeuriteEffectFigure.primary_metrics)
+    NeuriteEffectFigure.draw_panels(
+        autonomous, tables, metrics=metrics, bounds=(0, 28, 100, 72),
+        metric_columns=2, label_width=15,
+    )
+    autonomous.text(3, 28, "O–P  Correlations with MetaXpress", size=13, weight="bold")
     counts = NeuriteEffectFigure.draw_correlations(
-        correlations, NeuriteEffectFigure.cohort_tables(correlations),
+        autonomous, tables, bounds=(.36, .015, .54, .195),
+        heading_y=28, font_size=13, label_rotation=0, label_alignment="center",
+        column_label_width=8,
     )
     if len(counts) != 1:
         raise ValueError("Correlations require the same matched wells for all analyses")
-    correlations.text(50, 7, f"Pearson r across {next(iter(counts))} matched wells per treatment; all doses.",
-                      size=11, ha="center")
-    correlations.text(50, 2, "Absolute well measurements; correlation does not establish equal magnitudes.",
-                      size=11, ha="center")
-    correlations.save()
+    autonomous.save(dpi=400)
 
 
 def treatment_endpoints():
@@ -250,6 +233,9 @@ if __name__ == "__main__":
     nuclear_instances()
     morphology_checks()
     final_volume_views()
-    localisation_diagnostic()
+    diagnostic = SupplementFigure("supp_localisation_diagnostic", 3.3)
+    diagnostic.heading("M  Nuclear localization: a partial-reference diagnostic", 98)
+    localisation_diagnostic(diagnostic)
+    diagnostic.save(dpi=400)
     treatment_endpoints()
     scaling()

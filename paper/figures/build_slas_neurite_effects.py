@@ -133,7 +133,9 @@ class NeuriteEffectFigure(FigureSheet):
         return tuple(label for label, _, _, _ in datasets), values, counts
 
     @classmethod
-    def draw_correlations(cls, sheet, tables, *, bounds=(0.40, 0.17, 0.48, 0.60)):
+    def draw_correlations(cls, sheet, tables, *, bounds=(0.40, 0.17, 0.48, 0.60),
+                          heading_y=92, font_size=11, label_rotation=45,
+                          label_alignment="left", column_label_width=80):
         """Compare every run and endpoint within each treatment, never pooled."""
         declarations = endpoint_declarations()
         metrics = tuple(declarations)
@@ -145,22 +147,23 @@ class NeuriteEffectFigure(FigureSheet):
             left = x + column * (panel_width + gap)
             axis = sheet.plot_axes((left, y, panel_width, height))
             image = axis.imshow(values, vmin=-1, vmax=1, cmap="RdBu", aspect="auto")
-            axis.set_xticks(range(len(labels)), labels,
-                            rotation=45, ha="left", rotation_mode="anchor", fontsize=10)
+            axis.set_xticks(range(len(labels)), [fill(label, column_label_width) for label in labels],
+                            rotation=label_rotation, ha=label_alignment, rotation_mode="anchor", fontsize=font_size - 1)
             axis.set_yticks(range(len(metrics)), [declarations[metric].absolute_label for metric in metrics])
             axis.xaxis.tick_top()
             axis.tick_params(length=0, pad=7, labelleft=column == 0)
-            sheet.text((left + panel_width / 2) * 100, 92,
+            axis.tick_params(axis="y", labelsize=font_size + 2)
+            sheet.text((left + panel_width / 2) * 100, heading_y,
                        NeuriteEffectFigure.condition_title(condition),
-                       ha="center", size=14, weight="bold")
+                       ha="center", size=font_size + 3, weight="bold")
             for row, results in enumerate(values):
                 for run, value in enumerate(results):
                     axis.text(run, row, f"{value:.3f}", ha="center", va="center",
-                              fontsize=11, color="white" if abs(value) > .6 else "black")
-        bar_axis = sheet.figure.add_axes((.915, y, .015, height))
+                              fontsize=font_size, color="white" if abs(value) > .6 else "black")
+        bar_axis = sheet.figure.add_axes((x + width + .035, y, .015, height))
         bar = sheet.figure.colorbar(image, cax=bar_axis)
-        bar.ax.set_title("r", fontsize=11, pad=8)
-        bar.ax.tick_params(labelsize=10)
+        bar.ax.set_title("r", fontsize=font_size, pad=8)
+        bar.ax.tick_params(labelsize=font_size - 1)
         return counts
 
     @classmethod
@@ -202,6 +205,8 @@ class NeuriteEffectFigure(FigureSheet):
         metrics=DEFAULT_METRICS,
         bounds=(0, 0, 100, 100),
         start_letter="A",
+        metric_columns=1,
+        label_width=20,
     ):
         """Draw measured panels directly into a standalone or composite sheet."""
         datasets = NeuriteEffectFigure.read_datasets(sheet, tables, metrics)
@@ -240,18 +245,22 @@ class NeuriteEffectFigure(FigureSheet):
             padding = (upper - lower) * 0.08
             limits[metric] = (lower - padding, upper + padding)
         figure_width, figure_height = sheet.figure.get_size_inches() * 72
-        column_gap = 6.5 * sheet.plot_font_size / figure_width
-        plot_width = (width * 0.79 - column_gap * (len(conditions) - 1)) / len(conditions)
-        row_stride = extent * 0.75 / len(metrics)
-        height = min(extent * 0.55 / len(metrics),
+        column_gap = 6.5 * sheet.plot_font_size / figure_width / metric_columns
+        group_width = width / metric_columns
+        label_inset = .14 + .07 * (metric_columns - 1)
+        metric_rows = (len(metrics) + metric_columns - 1) // metric_columns
+        plot_width = (group_width * (.93 - label_inset) - column_gap * (len(conditions) - 1)) / len(conditions)
+        row_stride = extent * 0.75 / metric_rows
+        height = min(extent * 0.55 / metric_rows,
                      row_stride - 3.2 * sheet.plot_font_size / figure_height)
         for column, condition in enumerate(conditions):
             for row, metric in enumerate(metrics):
-                left = x + width * 0.14 + column * (plot_width + column_gap)
-                bottom = y + extent * 0.12 + (len(metrics) - 1 - row) * row_stride
+                metric_row, metric_column = divmod(row, metric_columns)
+                left = x + metric_column * group_width + group_width * label_inset + column * (plot_width + column_gap)
+                bottom = y + extent * 0.12 + (metric_rows - 1 - metric_row) * row_stride
                 axis = sheet.plot_axes((left, bottom, plot_width, height))
                 letter = chr(ord(start_letter) + row * len(conditions) + column)
-                if row == 0:
+                if metric_row == 0:
                     sheet.panel(
                         letter,
                         NeuriteEffectFigure.condition_title(condition),
@@ -355,7 +364,7 @@ class NeuriteEffectFigure(FigureSheet):
                 axis.set(
                     xlim=(-0.5, 4.5),
                     ylim=limits[metric],
-                    ylabel=fill(declarations[metric].label, width=20),
+                    ylabel=fill(declarations[metric].label, width=label_width) if column == 0 or metric_columns == 1 else "",
                     xlabel="Concentration (µM)",
                 )
                 axis.set_xticks(range(5), [item["dose_uM"] for item in selected])

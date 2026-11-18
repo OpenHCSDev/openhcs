@@ -1,11 +1,12 @@
 {
-  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
+  "generator_sha256": "06ad29e27b13053c612204b62f72d13392ba8bb653387cf9f2d60c40ba93c2f3",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "2c5c238d6088da4e3747c0a42e6d0d760c61e6aeae143ee85b7b1ffba2d27165",
+    "paper/figures/build_slas_supplement.py": "b86fa33b035b06d2237e6caea56d06e4c9a8b04ffb76829f55b7eaab790e0e6b",
     "paper/figures/slas/bbbc039_independent_repeat_provenance.json": "bdcbb2a92c0a0d9fbe26e0dd896c71abb3079d83eff8e566a6d0c4cc6277aa65",
     "paper/figures/slas/bbbc039_independent_repeat.png": "c2f5bb2a62a790310b2e93d2be04ee0f551f1d914da901fa76ca1b4877cd33f0",
     "paper/figures/slas/independent_agent_validation_provenance.json": "43c81915cc51f44af9de5fa4ca8bbf3af054f63ae45ea24318bdbd0e7911a1bf",
-    "paper/figures/slas/independent_agent_validation.png": "5a87dde5673bc8e3f052915242257347dfeb3dd6f44af08a09369ceb368516b1"
+    "paper/figures/slas/independent_agent_validation.png": "5a87dde5673bc8e3f052915242257347dfeb3dd6f44af08a09369ceb368516b1",
+    "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json": "ca34ddcfaea7dcdc16c4813f8665e3295bab08c3167571fdff4cc6d06984027d"
   },
   "input_root": "/",
   "ui_crops": [
@@ -38,9 +39,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "supp_nuclear_instances.png": "f68d6830f59c8de8725cea8be82d936863880ad8ba5984e6f901133f4386d72e",
-    "supp_nuclear_instances.pdf": "113a30f4c38482ade8f66e6f48dead032f09d1b270ac0ae8ebfcbee32c3d0e62",
-    "supp_nuclear_instances.svg": "b70123f46f68ceace53dbe15c19bd79002b34c1f3cb71f6315968a17d3f56bca"
+    "supp_nuclear_instances.png": "c061b04b08051acc0b9aebd36fa40eaf9781940834978fecd6a8d59de0ba618e",
+    "supp_nuclear_instances.pdf": "044d03651cb58237c56cbb4bb6bdce6d0e5b363eea67860b5047149e7bd1f30a",
+    "supp_nuclear_instances.svg": "1fb375c4df7ed9086a9ff37980b05de6349854d2f9677425267d0e56a52dd168"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

@@ -20,26 +20,10 @@ Pipeline preparation connects image groups and named detections to the functions
 
 ## Supp. Figure 2. Neurite measurements from three blind analyses {#supplementary-figure-2.-neurite-measurements-from-three-blind-analyses}
 
-![Additional endpoint responses from all three independent blind agents.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
+![All additional endpoint responses and treatment-specific correlations from the three blind analyses.](../figures/slas/supp_neurite_autonomous_endpoints.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-The three independently developed blind analyses were re-evaluated with the corrected neurite engine for fusicoccin-A (FC-A) and Y27632 on their original 180 fields in 20 wells. For all panels, including continuations, each curve is normalized to the mean of its drug's two zero-dose DMSO vehicle wells. Dots represent two technical wells per dose per method; whiskers show sample SD after normalization, excluding uncertainty in the control mean. Doses are equally spaced for display; no concentration–response model was fitted. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Mean cell process length. Drug panels share vertical limits. Main Figure 6A–B shows mean outgrowth per cell and Figure 6C–D shows branches per cell.
-:::
-
-## Supp. Figure 2, continued. Process length and branching {#supplementary-figure-2-continued.-process-length-and-branching}
-
-![Median process length, branch and primary-process responses from all three blind agents.](../figures/slas/supp_neurite_autonomous_endpoints_continued.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-Process-length and branching responses to fusicoccin-A (FC-A) and Y27632 from the fixed-code re-evaluation of three frozen analyses are compared with MetaXpress. **(G–H)** Mean cell median process length. **(I–J)** Total branches. **(K–L)** Total primary processes. **(M–N)** Branches per primary process. OpenHCS totals and ratios are means across fields. MetaXpress branches per process divide exported well totals; its per-cell values are MetaXpress's exported well values. The endpoints depend on the tracing and branching definitions of each analysis.
-:::
-
-## Supp. Figure 2, continued. Correlations with MetaXpress
-
-![Treatment-specific correlations for all nine endpoints and three corrected analyses.](../figures/slas/supp_neurite_autonomous_correlations.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-Separate FC-A and Y27632 panels show Pearson r between each of the three analyses and MetaXpress for every endpoint. Each coefficient uses the ten matched wells within that treatment, across all doses; the two drug series are not pooled. Correlations use absolute well measurements, not normalized fold changes. OpenHCS well values average nine fields. High correlation does not establish agreement in measurement magnitude; the dose-response curves show those differences separately.
+Three frozen blind analyses were re-evaluated with the corrected neurite engine on their original 180 fields in 20 wells. Curves compare each analysis with MetaXpress for fusicoccin-A (FC-A) and Y27632, sharing limits within each endpoint. **(A–B)** Detected cells. **(C–D)** Total outgrowth. **(E–F)** Mean cell process length. **(G–H)** Mean cell median process length. **(I–J)** Total branches. **(K–L)** Total primary processes. **(M–N)** Branches per primary process. Each curve uses its own drug's two zero-dose DMSO wells as baseline. Dots: two technical wells per dose/method; whiskers: sample SD after normalization, excluding control-mean uncertainty. Doses are equally spaced; no concentration–response model was fitted. OpenHCS values average nine fields. MetaXpress branches/process divide exported well totals; per-cell quantities use exported well values. **(O–P)** Pearson r for all nine endpoints, with columns for analyses 1–3. Each coefficient uses ten matched absolute well measurements within one treatment; drugs are not pooled and normalized fold changes are not correlated. Correlation does not establish magnitude agreement or tracing accuracy. Main Figure 6 shows the two primary endpoints; tracing definitions and detailed comparisons remain in Supp. Data 5.
 :::
 
 Detailed baseline and effect-size checks and the separate scientist-assisted comparison are retained in [Supp. Data 5](neurite_comparison_details.md). High correlations coexist with smaller absolute branching responses; neither method supplies tracing ground truth.
@@ -52,12 +36,12 @@ Detailed baseline and effect-size checks and the separate scientist-assisted com
 Execution times for twelve copies of one source sample processed by 1, 2, 3 or 4 OpenHCS workers. Each dot represents one of 30 workflows: its one-worker time divided by its time at the indicated worker count. Timing protocol as in Methods: Performance measurement. Black lines indicate medians; the dashed line indicates equal runtime. Each distribution is labelled with its minimum, median and maximum speedup.
 :::
 
-## Supp. Figure 4. Nuclear-detection and cell-boundary measurements {#supplementary-figure-4.-nuclear-detection-and-cell-boundary-measurements}
+## Supp. Figure 4. Nuclear and cell-boundary measurements {#supplementary-figure-4.-nuclear-detection-and-cell-boundary-measurements}
 
 ![Independent nuclear analyses and prospective held-out assays.](../figures/slas/supp_nuclear_instances.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary analyses. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 fields and cell-boundary analysis 1 on 12 fields. Both evaluation sets were withheld before development; each analysis used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels between touching cells within two pixels of a manual outline and does not measure recovery of every manual border. We provide the per-field scores and counts in Supp. Data 5–6.
+Reference annotations were used to evaluate independently developed nuclear-detection and cell-boundary analyses. **(A–B)** Nuclear detection analyses 3 and 2 on 200 BBBC039 fields, with pooled F1 of 0.898 and 0.906, respectively. Matching required intersection over union ≥ 0.5. **(C–D)** Nuclear detection analysis 1 on 50 fields and cell-boundary analysis 1 on 12 fields. Both evaluation sets were withheld before development; each analysis used four development fields. F1 combines precision and recall; Dice measures area overlap. Boundary support is the fraction of predicted border pixels between touching cells within two pixels of a manual outline and does not measure recovery of every manual border. We provide the per-field scores and counts in Supp. Data 5–6. **(E)** Independent 3D nuclear localization analysis 1 (H002_FRESH15_89): mean centre-to-centre error among matched predictions at each matching radius. Labels give matches among 15 manual centres; the dashed line is the predeclared 30-voxel radius. This fixed-prediction diagnostic is not threshold tuning, and the partial annotations cannot establish a false-detection rate. Main Figure 5D shows its final orthogonal views; [full-resolution views](../figures/slas/supp_nuclear_localisation.png) remain in Supp. Data 5. The body-separation repair in main Figure 4D is a separate analysis.
 :::
 
 ### Nuclear-detection errors
@@ -78,16 +62,6 @@ In analysis 2, only nuclei with measurable cytoplasm contributed a green fluores
 
 ::: {custom-style="ImageCaption"}
 Image review checks whether detections follow visible structures across image planes and channels. **(A–C)** Nuclear centres from an independent volume analysis (H002_FRESH10_89), shown in the XY, XZ and YZ planes. **(D–F)** Retinal repair: raw image and first and final outlines from a run continued after an interruption (R0010_FRESH16_88); a possible split remains. **(G–I)** Nuclear-separation repair in BBBC007 DNA/actin fields (H003_POSTPAUSE_88): raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** Paired DNA/actin inspection (H003_FRESH19_96): a nuclear seed lacks actin-supported cell-body growth. This run is separate from the paired-channel analysis in Supp. Table 5 (Fresh26). Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. The source images and reports are available in Supp. Data 5.
-:::
-
-## Supp. Figure 6, continued. Localization diagnostic {#supplementary-figure-6-continued.-final-nuclear-localization-views}
-
-Main Figure 5D shows the final XY, XZ and YZ views of nuclear localization analysis 1 (H002_FRESH15_89). The [full-resolution views](../figures/slas/supp_nuclear_localisation.png) remain available in Supp. Data 5 rather than being printed twice. The diagnostic below evaluates its fixed predictions; the body-separation repair in main Figure 4D is a separate analysis.
-
-![Mean matched-centre error across matching distances for the 15-point partial reference.](../figures/slas/supp_localisation_diagnostic.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-**(M)** Nuclear localization analysis 1: mean centre-to-centre distance among matched predictions at each matching radius. Labels give the number of matches among the 15 manual centres; the dashed line is the predeclared 30-voxel radius. These partial annotations cannot establish a false-detection rate. This is a diagnostic of the fixed predictions, not a threshold-tuning experiment or the separate body-separation repair.
 :::
 
 ## Supp. methods: analysis scoring {#supplementary-methods-analysis-scoring}
