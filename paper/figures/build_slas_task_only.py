@@ -353,91 +353,72 @@ class AnalysisResultsFigure(SupplementFigure):
 
     def draw_quantitative(self):
         sheet = self
-        agents_path = SOURCE_DIRECTORY / "bbbc039-caicedo-retained-results.json"
-        comparators_path = SOURCE_DIRECTORY / "bbbc039-caicedo-published-test50.csv"
-        boundary_paths = (SOURCE_DIRECTORY / "bbbc007-fresh19-qualified-completion.rst",
-                          SOURCE_DIRECTORY / "bbbc007-fresh26-final-candidate.rst")
+        agents_path = SOURCE_DIRECTORY / 'bbbc039-caicedo-retained-results.json'
+        comparators_path = SOURCE_DIRECTORY / 'bbbc039-caicedo-published-test50.csv'
+        boundary_paths = (SOURCE_DIRECTORY / 'bbbc007-fresh19-qualified-completion.rst', SOURCE_DIRECTORY / 'bbbc007-fresh26-final-candidate.rst')
         sources = (agents_path, comparators_path, *boundary_paths, SOURCE.relative_to(ROOT))
         sheet.source(Path(__file__))
-        sheet.source(ROOT / "paper/figures/build_slas_bbbc013_fresh23.py")
+        sheet.source(ROOT / 'paper/figures/build_slas_bbbc013_fresh23.py')
         for path in sources:
             sheet.source(ROOT / path)
-        axes = [sheet.plot_axes(bounds) for bounds in (
-            (0.33, 0.77, 0.24, 0.195), (0.75, 0.77, 0.22, 0.16),
-        )]
-        sheet.text(3, 99, "A  Nuclear segmentation · official test", size=sheet.plot_font_size, weight="bold", va="top")
-        sheet.text(69, 99, "B  Cell boundaries", size=sheet.plot_font_size, weight="bold", va="top")
+        axes = [sheet.plot_axes(bounds) for bounds in ((0.33, 0.77, 0.24, 0.195), (0.75, 0.77, 0.22, 0.16))]
+        sheet.panel('A', 'Nuclear segmentation · official test', 3, 99, title_size=sheet.plot_font_size, va='top')
+        sheet.panel('B', 'Cell boundaries', 69, 99, title_size=sheet.plot_font_size, va='top')
         for axis in axes:
-            axis.spines[["top", "right"]].set_visible(False)
+            axis.spines[['top', 'right']].set_visible(False)
             axis.set_axisbelow(True)
-
-        agents = json.loads((ROOT / agents_path).read_text())["summaries"]
-        authors = ("fresh612", "fresh10", "fresh13")
-        if set(agents) != set(authors) or any(agents[author]["official_test_images"] != 50 for author in authors):
-            raise ValueError("Caicedo comparison requires the three retained official50 results")
-        points = [(f"Agent analysis {index}", agents[author]["mean_f1_across_images_and_nine_thresholds"], TEAL)
-                  for index, author in enumerate(authors, 2)]
-        with (ROOT / comparators_path).open(newline="") as stream:
-            points.extend((row["method"], float(row["mean_f1"]), BLUE) for row in csv.DictReader(stream))
+        agents = json.loads((ROOT / agents_path).read_text())['summaries']
+        authors = ('fresh612', 'fresh10', 'fresh13')
+        if set(agents) != set(authors) or any((agents[author]['official_test_images'] != 50 for author in authors)):
+            raise ValueError('Caicedo comparison requires the three retained official50 results')
+        points = [(f'Agent analysis {index}', agents[author]['mean_f1_across_images_and_nine_thresholds'], TEAL) for index, author in enumerate(authors, 2)]
+        with (ROOT / comparators_path).open(newline='') as stream:
+            points.extend(((row['method'], float(row['mean_f1']), BLUE) for row in csv.DictReader(stream)))
         for index, (label, score, color) in enumerate(points):
             axes[0].scatter(score, index, color=color, s=38, zorder=3)
-            axes[0].annotate(f"{score:.3f}", (score, index), xytext=(5, 0),
-                             textcoords="offset points", va="center", fontsize=sheet.plot_font_size)
-        axes[0].set(yticks=range(len(points)), yticklabels=[point[0] for point in points],
-                    ylim=(len(points) - 0.5, -0.5), xlim=(0.77, 0.94), xticks=(0.8, 0.85, 0.9),
-                    xlabel="Caicedo F1 · truncated axis")
+            axes[0].annotate(f'{score:.3f}', (score, index), xytext=(5, 0), textcoords='offset points', va='center', fontsize=sheet.plot_font_size)
+        axes[0].set(yticks=range(len(points)), yticklabels=[point[0] for point in points], ylim=(len(points) - 0.5, -0.5), xlim=(0.77, 0.94), xticks=(0.8, 0.85, 0.9), xlabel='Caicedo F1 · truncated axis')
         for left in (0, 0.035):
-            axes[0].plot((left - 0.012, left + 0.012), (-0.014, 0.014),
-                         transform=axes[0].transAxes, color="black", linewidth=1,
-                         clip_on=False, zorder=4)
-        axes[0].grid(axis="x", color="#e7ebef", linewidth=0.6)
-        axes[1].grid(axis="y", color="#e7ebef", linewidth=0.6)
-        # Decode the two existing publication tables; their units and populations differ
-        # from instance matching, so no common accuracy scale is introduced.
+            axes[0].plot((left - 0.012, left + 0.012), (-0.014, 0.014), transform=axes[0].transAxes, color='black', linewidth=1, clip_on=False, zorder=4)
+        axes[0].grid(axis='x', color='#e7ebef', linewidth=0.6)
+        axes[1].grid(axis='y', color='#e7ebef', linewidth=0.6)
         text = (ROOT / boundary_paths[0]).read_text()
-        block = text.split(".. list-table:: Frozen field-level outline comparison", 1)[1]
-        cells = re.findall(r"^\s+(?:\* )?- (.+)$", block, flags=re.MULTILINE)
+        block = text.split('.. list-table:: Frozen field-level outline comparison', 1)[1]
+        cells = re.findall('^\\s+(?:\\* )?- (.+)$', block, flags=re.MULTILINE)
         rows19 = [cells[i:i + 5] for i in range(5, len(cells), 5)]
         text26 = (ROOT / boundary_paths[1]).read_text()
-        block26 = text26.split(".. csv-table:: Final frozen candidate, all fields", 1)[1]
-        rows26 = list(csv.reader(line.strip() for line in block26.splitlines()
-                                 if re.match(r"\s+A\d\d_\d+,", line)))
+        block26 = text26.split('.. csv-table:: Final frozen candidate, all fields', 1)[1]
+        rows26 = list(csv.reader((line.strip() for line in block26.splitlines() if re.match('\\s+A\\d\\d_\\d+,', line))))
         for index, rows in enumerate((rows19, rows26)):
-            if len(rows) != 16 or any(len(row) != 5 for row in rows):
-                raise ValueError("Expected sixteen original BBBC007 rows")
+            if len(rows) != 16 or any((len(row) != 5 for row in rows)):
+                raise ValueError('Expected sixteen original BBBC007 rows')
             fractions = [int(row[4]) / int(row[3]) for row in rows]
-            pooled = sum(int(row[4]) for row in rows) / sum(int(row[3]) for row in rows)
+            pooled = sum((int(row[4]) for row in rows)) / sum((int(row[3]) for row in rows))
             axes[1].scatter(index + np.linspace(-0.13, 0.13, 16), fractions, color=BLUE, s=15, alpha=0.65)
             axes[1].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
-            axes[1].text(index, 0.86, f"{pooled:.3f}", ha="center", fontsize=sheet.plot_font_size)
-        axes[1].set(xticks=(0, 1), xticklabels=("2", "3"), xlabel="Analysis", ylim=(0.55, 0.90),
-                    ylabel="Border support\n(2-pixel fraction)")
-
-        sheet.text(3, 68, "C  Nuclear-to-cytoplasmic GFP", size=sheet.plot_font_size, weight="bold")
+            axes[1].text(index, 0.86, f'{pooled:.3f}', ha='center', fontsize=sheet.plot_font_size)
+        axes[1].set(xticks=(0, 1), xticklabels=('2', '3'), xlabel='Analysis', ylim=(0.55, 0.9), ylabel='Border support\n(2-pixel fraction)')
+        sheet.panel('C', 'Nuclear-to-cytoplasmic GFP', 3, 68, title_size=sheet.plot_font_size)
         series = AssaySeries.load(SOURCE)
         for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
             axis = sheet.plot_axes((0.12 + column * 0.49, 0.545, 0.34, 0.09))
             means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
             deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
-            axis.errorbar(range(9), means, yerr=deviations, marker="o", markersize=4,
-                          color=color, capsize=2)
-            axis.set_title(f"{assay.compound} ({assay.unit.replace('uM', 'µM')}) · Z′ = {assay.control_zprime:.3f}",
-                           loc="left", fontsize=sheet.plot_font_size, color=color)
+            axis.errorbar(range(9), means, yerr=deviations, marker='o', markersize=4, color=color, capsize=2)
+            axis.set_title(f'{assay.compound} ({assay.unit.replace('uM', 'µM')}) · Z′ = {assay.control_zprime:.3f}', loc='left', fontsize=sheet.plot_font_size, color=color)
             tick_doses = assay.doses[::2]
-            axis.set(xticks=range(0, len(assay.doses), 2),
-                     xticklabels=[f"{dose.concentration:g}" for dose in tick_doses],
-                     ylim=(-0.5, 2.7))
-            axis.spines[["top", "right"]].set_visible(False)
-            axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
+            axis.set(xticks=range(0, len(assay.doses), 2), xticklabels=[f'{dose.concentration:g}' for dose in tick_doses], ylim=(-0.5, 2.7))
+            axis.spines[['top', 'right']].set_visible(False)
+            axis.grid(axis='y', color='#e7ebef', linewidth=0.6)
             axis.set_axisbelow(True)
             if column == 0:
-                axis.set_ylabel("GFP N/C\n(log₂ ratio)")
+                axis.set_ylabel('GFP N/C\n(log₂ ratio)')
 
     def draw_localization(self):
-        evaluation_path = ROOT / SOURCE_DIRECTORY / "h002-fresh15-postfreeze-evaluation.json"
+        evaluation_path = ROOT / SOURCE_DIRECTORY / 'h002-fresh15-postfreeze-evaluation.json'
         self.source(evaluation_path)
-        self.text(3, 48, "D  3D nuclear localization", size=14, weight="bold")
-        self.artwork("h002_measurement_first", (3, 0.8, 94, 45.5), crop=(1, 7.5, 99, 58))
+        self.panel('D', '3D nuclear localization', 3, 48, title_size=14)
+        self.artwork('h002_measurement_first', (3, 0.8, 94, 45.5), crop=(1, 7.5, 99, 58))
 
 
 class RepairResultsFigure(VolumeResultsFigure):
@@ -451,13 +432,12 @@ class RepairResultsFigure(VolumeResultsFigure):
     def draw_repairs(self):
         self.source(Path(__file__))
         self.source(ROOT / H001_SOURCE)
-        self.text(2, 65.2, "A  Bright-object repair", size=14, weight="bold")
+        self.panel('A', 'Bright-object repair', 2, 65.2, title_size=14)
         evaluation = load_bright_object_evaluation(ROOT)
-        first_f1, final_f1 = (attempt["derived_f1"] for attempt in evaluation["attempts"])
-        self.text(48, 65.2, f"F1 {first_f1:.3f} → {final_f1:.3f}",
-                  size=10, color=TEAL, weight="bold", ha="right")
+        first_f1, final_f1 = (attempt['derived_f1'] for attempt in evaluation['attempts'])
+        self.text(48, 65.2, f'F1 {first_f1:.3f} → {final_f1:.3f}', size=10, color=TEAL, weight='bold', ha='right')
         CroppedComparison.read(self, BRIGHT_OBJECT_SOURCE).draw_row((2, 51.3, 46, 10.2), 62.5)
-        self.text(52, 65.2, "B  Nuclear separation", size=14, weight="bold")
+        self.panel('B', 'Nuclear separation', 52, 65.2, title_size=14)
         CroppedComparison.read(self, NUCLEAR_SOURCE).draw_row((52, 48, 46, 13.5), 62.5)
 
 

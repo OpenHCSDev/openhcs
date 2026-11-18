@@ -169,31 +169,21 @@ class NeuriteEffectFigure(FigureSheet):
     @classmethod
     def draw_correlation_bars(cls, sheet, tables, *, metrics,
                               bounds=(.14, .345, .80, .13), start_letter="E"):
-        """Group treatments and primary endpoints on one correlation axis."""
+        'Group treatments and primary endpoints on one correlation axis.'
         labels, panels, counts = cls.read_correlations(sheet, tables, metrics)
         declarations = endpoint_declarations()
-        groups = [(condition, metric, values)
-                  for condition, rows in panels.items()
-                  for metric, values in zip(metrics, rows, strict=True)]
+        groups = [(condition, metric, values) for condition, rows in panels.items() for metric, values in zip(metrics, rows, strict=True)]
         axis = sheet.plot_axes(bounds)
-        bar_width = .8 / len(labels)
+        bar_width = 0.8 / len(labels)
         for run, (label, colour) in enumerate(zip(labels, cls.analysis_colours, strict=True)):
-            positions = [index + (run - (len(labels) - 1) / 2) * bar_width
-                         for index in range(len(groups))]
-            bars = axis.bar(positions, [values[run] for _, _, values in groups],
-                            width=bar_width * .9, color=colour, label=label, zorder=3)
-            axis.bar_label(bars, fmt="%.3f", label_type="center", rotation=90,
-                           fontsize=12, fontweight="bold", color="white")
-        axis.set(ylim=(min(0, *(value for _, _, values in groups for value in values)), 1.20),
-                 yticks=(0, .5, 1), xticks=range(len(groups)),
-                 xticklabels=[f"{cls.condition_title(condition)}\n"
-                              f"{fill(declarations[metric].absolute_label, 16)}"
-                              for condition, metric, _ in groups])
+            positions = [index + (run - (len(labels) - 1) / 2) * bar_width for index in range(len(groups))]
+            bars = axis.bar(positions, [values[run] for _, _, values in groups], width=bar_width * 0.9, color=colour, label=label, zorder=3)
+            axis.bar_label(bars, fmt='%.3f', label_type='center', rotation=90, fontsize=12, fontweight='bold', color='white')
+        axis.set(ylim=(min(0, *(value for _, _, values in groups for value in values)), 1.2), yticks=(0, 0.5, 1), xticks=range(len(groups)), xticklabels=[f'{cls.condition_title(condition)}\n{fill(declarations[metric].absolute_label, 16)}' for condition, metric, _ in groups])
         axis.tick_params(labelsize=11.5)
-        axis.set_title(f"{start_letter}  Pearson r against MetaXpress", loc="left",
-                       fontsize=sheet.plot_font_size, fontweight="bold", color=BLUE)
-        axis.spines[["top", "right"]].set_visible(False)
-        axis.grid(axis="y", color="#e7ebef", linewidth=.6)
+        sheet.panel(start_letter, 'Pearson r against MetaXpress', bounds[0] * 100, (bounds[1] + bounds[3]) * 100 + 2, title_size=sheet.plot_font_size)
+        axis.spines[['top', 'right']].set_visible(False)
+        axis.grid(axis='y', color='#e7ebef', linewidth=0.6)
         axis.set_axisbelow(True)
         return counts
 
@@ -207,6 +197,8 @@ class NeuriteEffectFigure(FigureSheet):
         start_letter="A",
         metric_columns=1,
         label_width=20,
+        legend_offset=(0.0, 0.0),
+        legend_rows=1,
     ):
         """Draw measured panels directly into a standalone or composite sheet."""
         datasets = NeuriteEffectFigure.read_datasets(sheet, tables, metrics)
@@ -268,15 +260,11 @@ class NeuriteEffectFigure(FigureSheet):
                         (bottom + height + extent * 0.02) * 100,
                     )
                 else:
-                    axis.text(
-                        0.02,
-                        0.98,
+                    sheet.panel_letter(
                         letter,
-                        transform=axis.transAxes,
+                        (left + plot_width * 0.02) * 100,
+                        (bottom + height * 0.98) * 100,
                         va="top",
-                        fontsize=14,
-                        weight="bold",
-                        color=BLUE,
                     )
                 for series_index, (
                     label,
@@ -377,11 +365,11 @@ class NeuriteEffectFigure(FigureSheet):
             labels,
             fontsize=sheet.plot_font_size,
             frameon=False,
-            ncols=len(series),
+            ncols=(len(series) + legend_rows - 1) // legend_rows,
             loc="upper center",
             bbox_to_anchor=(
-                x + width / 2,
-                y + extent * (0.94 if len(metrics) > 1 else 0.85),
+                x + width * (0.5 + legend_offset[0]),
+                y + extent * ((0.94 if len(metrics) > 1 else 0.85) + legend_offset[1]),
             ),
         )
         return evidence["protocol_figure_label"]
