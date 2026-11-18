@@ -1,8 +1,8 @@
 {
-  "generator_sha256": "06ad29e27b13053c612204b62f72d13392ba8bb653387cf9f2d60c40ba93c2f3",
+  "generator_sha256": "5f33744865e31219444619b4159fca8b7960f3cc35928db9e42bcdade3e69a37",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "b86fa33b035b06d2237e6caea56d06e4c9a8b04ffb76829f55b7eaab790e0e6b",
-    "paper/figures/slas/retained_morphology/layout.json": "25a90cfbb7f050d36475bf4e810b189a8048fe8eca53c308125f508d4143e063",
+    "paper/figures/build_slas_supplement.py": "c32bd865e04b71bb6cb2540c33d2682def82d79443ae27fb4ae63c3bb302d732",
+    "paper/figures/slas/retained_morphology/layout.json": "50ba473a9373fccf7e382c465abbb01556fc283ab802cb8f7fe8720928054f57",
     "paper/figures/slas/retained_morphology/supp_morphology_checks_provenance.json": "e466ac765c178d4c01d9fd9afa5b6f15d1b4f96871679c18dcb41b9899ed99fe",
     "paper/figures/slas/retained_morphology/supp_morphology_checks.png": "903482a3afaf393cba7ce1cd53e818772cf6c90482af560c66e429ac8cefbcbb"
   },
@@ -11,10 +11,75 @@
     {
       "source": "paper/figures/slas/retained_morphology/supp_morphology_checks.png",
       "xyxy_pixels": [
-        0,
-        0,
+        220,
+        99,
+        727,
+        606
+      ],
+      "source_size": [
         2700,
-        1222
+        2520
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retained_morphology/supp_morphology_checks.png",
+      "xyxy_pixels": [
+        917,
+        253,
+        1757,
+        452
+      ],
+      "source_size": [
+        2700,
+        2520
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retained_morphology/supp_morphology_checks.png",
+      "xyxy_pixels": [
+        1780,
+        178,
+        2620,
+        527
+      ],
+      "source_size": [
+        2700,
+        2520
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retained_morphology/supp_morphology_checks.png",
+      "xyxy_pixels": [
+        53,
+        858,
+        885,
+        1158
+      ],
+      "source_size": [
+        2700,
+        2520
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retained_morphology/supp_morphology_checks.png",
+      "xyxy_pixels": [
+        932,
+        860,
+        1765,
+        1159
+      ],
+      "source_size": [
+        2700,
+        2520
+      ]
+    },
+    {
+      "source": "paper/figures/slas/retained_morphology/supp_morphology_checks.png",
+      "xyxy_pixels": [
+        1815,
+        860,
+        2647,
+        1159
       ],
       "source_size": [
         2700,
@@ -102,9 +167,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "supp_morphology_checks.png": "f5dda73599dda9b060d924a79b9220f62703aadbff2df3abc0359557cc8b12f3",
-    "supp_morphology_checks.pdf": "ff9dd6b65398f50c4c6e291f2233e95da944e0cec7b126b7e9f0fdb79d140e69",
-    "supp_morphology_checks.svg": "ca375975e65a033dc30eeafdd50ad3d228a1205607a4e2de3cda7a5e174b9e22"
+    "supp_morphology_checks.png": "5a7be9ea37fac791fdcb808b24085e1384a819b4b9f04d863ede4a83e81192b7",
+    "supp_morphology_checks.pdf": "c7d841399139a397761af74ce900dfefa4d08540ff244cffc4364bfccbe82713",
+    "supp_morphology_checks.svg": "3f66e54d11385d5519092242be2fc4692350615eae1e058e79063972007d7089"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

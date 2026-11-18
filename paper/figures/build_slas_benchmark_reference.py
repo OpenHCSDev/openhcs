@@ -156,139 +156,93 @@ def submission_benchmark_schedule() -> None:
 
 
 def submission_benchmark_summary() -> None:
-    """Dense main-paper view of the existing sweep and retained evidence grades."""
+    'Dense main-paper view of the existing sweep and retained evidence grades.'
     from benchmark.reports.cppipe_figures import SpeedupDistributionSeries, SpeedupSummaryStatistics
-
-    sheet = BenchmarkFigure("submission_benchmark_summary", 10.2)
+    sheet = BenchmarkFigure('submission_benchmark_summary', 10.2)
     publication = sheet.publication
     claims = sheet.qualified_claims()
     tables = {}
-    for schedule in ("may", "fixed12"):
-        for scope in ("execution", "total"):
-            path = sheet.retained(publication / schedule / scope / "first_use_workflow_metrics.csv")
-            with path.open(newline="") as stream:
+    for schedule in ('may', 'fixed12'):
+        for scope in ('execution', 'total'):
+            path = sheet.retained(publication / schedule / scope / 'first_use_workflow_metrics.csv')
+            with path.open(newline='') as stream:
                 rows = tuple(csv.DictReader(stream))
-            table = {(row["method"], row["pipeline_name"]): row for row in rows}
+            table = {(row['method'], row['pipeline_name']): row for row in rows}
             if len(table) != len(rows):
-                raise ValueError("Duplicate workflow rows in retained figure input")
+                raise ValueError('Duplicate workflow rows in retained figure input')
             tables[schedule, scope] = table
-    names = tuple(sorted({name for method, name in tables["may", "execution"]}))
-    if len(names) != int(claims["case_count"]):
-        raise ValueError("Expected the qualified workflow cohort")
-    modes = claims["mode_statistics"]
-
+    names = tuple(sorted({name for method, name in tables['may', 'execution']}))
+    if len(names) != int(claims['case_count']):
+        raise ValueError('Expected the qualified workflow cohort')
+    modes = claims['mode_statistics']
     def values(mode_name, scope, *, native=False):
         mode = modes[mode_name]
-        label = mode["scope_statistics"][scope]["label"]
+        label = mode['scope_statistics'][scope]['label']
         if native:
-            label = f"CP first batch ({label})"
-        schedule = "fixed12" if mode["assignment_count"] == 12 else "may"
-        return np.array([float(tables[schedule, scope][label, name]["raw_seconds"])
-                         for name in names])
-
+            label = f'CP first batch ({label})'
+        schedule = 'fixed12' if mode['assignment_count'] == 12 else 'may'
+        return np.array([float(tables[schedule, scope][label, name]['raw_seconds']) for name in names])
     def ratios(mode_name, scope):
         result = values(mode_name, scope, native=True) / values(mode_name, scope)
-        summary = SpeedupSummaryStatistics.from_series(
-            SpeedupDistributionSeries(mode_name, tuple(result)))
-        expected = modes[mode_name]["scope_statistics"][scope]
-        if not np.isclose(summary.median, expected["median"], rtol=1e-12):
-            raise ValueError("Plotted ratios differ from the canonical claim")
+        summary = SpeedupSummaryStatistics.from_series(SpeedupDistributionSeries(mode_name, tuple(result)))
+        expected = modes[mode_name]['scope_statistics'][scope]
+        if not np.isclose(summary.median, expected['median'], rtol=1e-12):
+            raise ValueError('Plotted ratios differ from the canonical claim')
         return result
-
-
-    sheet.text(2, 91, "A", size=14, weight="bold")
-    coverage = sheet.retained(publication / "reference-layout/reference_module_coverage.csv",
-                        "retained_coverage_provenance.json")
-    with coverage.open(newline="") as stream:
+    sheet.panel_letter('A', 2, 91)
+    coverage = sheet.retained(publication / 'reference-layout/reference_module_coverage.csv', 'retained_coverage_provenance.json')
+    with coverage.open(newline='') as stream:
         coverage_rows = tuple(csv.DictReader(stream))
-    tiers = ("30-workflow corpus", "Module-specific behavior tested", "Shared-path behavior tested",
-             "Declaration/import checks only", "No evidence")
-    counts = [sum(row["tier"] == tier for row in coverage_rows) for tier in tiers]
+    tiers = ('30-workflow corpus', 'Module-specific behavior tested', 'Shared-path behavior tested', 'Declaration/import checks only', 'No evidence')
+    counts = [sum((row['tier'] == tier for row in coverage_rows)) for tier in tiers]
     if sum(counts) != len(coverage_rows):
-        raise ValueError("Unknown retained coverage grade")
-    coverage_colors = ("#16877f", "#4682b4", "#e2a23b", "#969696", "#b2182b")
-    pie = sheet.plot_axes((.035, .72, .25, .19))
+        raise ValueError('Unknown retained coverage grade')
+    coverage_colors = ('#16877f', '#4682b4', '#e2a23b', '#969696', '#b2182b')
+    pie = sheet.plot_axes((0.035, 0.72, 0.25, 0.19))
     present = [i for i, count in enumerate(counts) if count]
-    pie.pie([counts[i] for i in present], colors=[coverage_colors[i] for i in present],
-            startangle=90, wedgeprops={"width": .34, "edgecolor": "white"})
-    pie.text(0, .09, str(len(coverage_rows)), ha="center", va="center", fontsize=23, weight="bold")
-    pie.text(0, -.22, "modules", ha="center", va="center", fontsize=sheet.plot_font_size)
-    coverage_labels = ("In 30 workflows", "Individual tests", "Shared code only",
-                       "Import checks only", "No tests")
+    pie.pie([counts[i] for i in present], colors=[coverage_colors[i] for i in present], startangle=90, wedgeprops={'width': 0.34, 'edgecolor': 'white'})
+    pie.text(0, 0.09, str(len(coverage_rows)), ha='center', va='center', fontsize=23, weight='bold')
+    pie.text(0, -0.22, 'modules', ha='center', va='center', fontsize=sheet.plot_font_size)
+    coverage_labels = ('In 30 workflows', 'Individual tests', 'Shared code only', 'Import checks only', 'No tests')
     for row, i in enumerate(present):
         y = 68.5 - row * 4.1
-        sheet.axis.plot(4, y, marker="s", color=coverage_colors[i], markersize=8)
-        sheet.text(6, y, f"{coverage_labels[i]}: {counts[i]}", size=sheet.plot_font_size, va="center")
-    sheet.text(35, 91, "B", size=14, weight="bold")
-    single = tuple(ratios("singlewell", scope) for scope in ("execution", "total"))
+        sheet.axis.plot(4, y, marker='s', color=coverage_colors[i], markersize=8)
+        sheet.text(6, y, f'{coverage_labels[i]}: {counts[i]}', size=sheet.plot_font_size, va='center')
+    sheet.panel_letter('B', 35, 91)
+    single = tuple((ratios('singlewell', scope) for scope in ('execution', 'total')))
     amortized = []
-    for scope in ("execution", "total"):
-        numbers = (values("8assignments-2workers", scope, native=True) / 8
-                   / (values("12assignments-1worker", scope) / 12))
+    for scope in ('execution', 'total'):
+        numbers = values('8assignments-2workers', scope, native=True) / 8 / (values('12assignments-1worker', scope) / 12)
         summary = SpeedupSummaryStatistics.from_series(SpeedupDistributionSeries(scope, tuple(numbers)))
-        if not np.isclose(summary.median, claims["amortized_statistics"][scope]["median"], rtol=1e-12):
-            raise ValueError("Per-well ratios differ from the canonical amortized claim")
+        if not np.isclose(summary.median, claims['amortized_statistics'][scope]['median'], rtol=1e-12):
+            raise ValueError('Per-well ratios differ from the canonical amortized claim')
         amortized.append(numbers)
-    axis = sheet.plot_axes((.44, .65, .53, .24))
-    sheet.distributions(axis, (single, amortized), ("1 sample each", "Batched samples\nCP: 8; OpenHCS: 12"))
-
-    sheet.text(2, 48.5, "C", size=14, weight="bold")
-    reference_key = "12assignments-1worker"
-    ordered = sorted((key for key, mode in modes.items()
-                      if mode["assignment_count"] == modes[reference_key]["assignment_count"]),
-                     key=lambda key: modes[key]["openhcs_worker_count"])
+    axis = sheet.plot_axes((0.44, 0.65, 0.53, 0.24))
+    sheet.distributions(axis, (single, amortized), ('1 sample each', 'Batched samples\nCP: 8; OpenHCS: 12'))
+    sheet.panel_letter('C', 2, 48.5)
+    reference_key = '12assignments-1worker'
+    ordered = sorted((key for key, mode in modes.items() if mode['assignment_count'] == modes[reference_key]['assignment_count']), key=lambda key: modes[key]['openhcs_worker_count'])
     groups = []
     projected_rows = []
     for key in ordered:
         mode = modes[key]
-        groups.append(tuple(ratios(key, scope) for scope in ("execution", "total")))
-        for j, scope in enumerate(("execution", "total")):
+        groups.append(tuple((ratios(key, scope) for scope in ('execution', 'total'))))
+        for j, scope in enumerate(('execution', 'total')):
             serial = values(reference_key, scope, native=True)
             if not np.array_equal(values(key, scope, native=True), serial):
-                raise ValueError("The serial CellProfiler baseline must stay fixed across worker counts")
+                raise ValueError('The serial CellProfiler baseline must stay fixed across worker counts')
             measured = values(key, scope)
             for i, name in enumerate(names):
-                projected_rows.append({"workflow": name, "scope": scope,
-                    "openhcs_workers": mode["openhcs_worker_count"],
-                    "samples": mode["assignment_count"],
-                    "cp_serial_estimated_seconds": serial[i],
-                    "openhcs_measured_seconds": measured[i],
-                    "speedup_over_serial_cp": groups[-1][j][i]})
-    labels = [f"{modes[key]['openhcs_worker_count']} worker{'s' if modes[key]['openhcs_worker_count'] != 1 else ''}"
-              for key in ordered]
-    axis = sheet.plot_axes((.16, .23, .81, .23))
+                projected_rows.append({'workflow': name, 'scope': scope, 'openhcs_workers': mode['openhcs_worker_count'], 'samples': mode['assignment_count'], 'cp_serial_estimated_seconds': serial[i], 'openhcs_measured_seconds': measured[i], 'speedup_over_serial_cp': groups[-1][j][i]})
+    labels = [f'{modes[key]['openhcs_worker_count']} worker{('s' if modes[key]['openhcs_worker_count'] != 1 else '')}' for key in ordered]
+    axis = sheet.plot_axes((0.16, 0.23, 0.81, 0.23))
     sheet.distributions(axis, groups, labels)
-    axis.set_xlabel("OpenHCS workers · twelve samples for both applications", labelpad=7)
-    sheet.figure.legend(handles=[
-        Line2D([], [], marker="o", ls="", color=sheet.scope_colors[0], label="Processing"),
-        Line2D([], [], marker="o", ls="", color=sheet.scope_colors[1], label="Setup + processing"),
-        *sheet.summary_handles,
-    ], loc="lower center", bbox_to_anchor=(.5, .94), ncol=4, frameon=False,
-       fontsize=sheet.plot_font_size, borderpad=0, labelspacing=.2,
-       title=f"{len(names)} workflows per distribution · OpenHCS medians of 3 runs",
-       title_fontsize=sheet.plot_font_size)
-    sheet.display_transforms.append({
-        "operation": "Paired workflow dots, median lines and minimum, median and maximum values below each distribution; summary row headers give × units; log axes",
-        "summary_statistic": "median",
-        "reference_lines": {"equal_speed": 1, "speedup_guides": [2, 4, 10]},
-        "workflow_count_per_distribution": len(names),
-        "single_worker_batch_policy": claims["amortized_policy"],
-        "native_policy": claims["native_policy"],
-        "serial_baseline_comparison": {
-            "inputs": "Hash-verified retained fixed12 first_use_workflow_metrics.csv rows, not a new timing model",
-            "reference_mode": reference_key,
-            "sample_count": modes[reference_key]["assignment_count"],
-            "openhcs_worker_counts": [modes[key]["openhcs_worker_count"] for key in ordered],
-            "comparison": "The same estimated serial CellProfiler time divided by each measured OpenHCS worker time",
-            "companion_figure": "submission_benchmark_schedule retains the measured OpenHCS-only scaling comparison",
-            "cpu_scope": "Workers are not matched core counts; retained affinity and numerical-thread policies apply",
-            "target_native_observation_count": 0,
-        },
-        "analysis_rerun": False,
-    })
-    table_path = OUTPUT / "submission_benchmark_summary_projection.csv"
-    with table_path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=tuple(projected_rows[0]), lineterminator="\n")
+    axis.set_xlabel('OpenHCS workers · twelve samples for both applications', labelpad=7)
+    sheet.figure.legend(handles=[Line2D([], [], marker='o', ls='', color=sheet.scope_colors[0], label='Processing'), Line2D([], [], marker='o', ls='', color=sheet.scope_colors[1], label='Setup + processing'), *sheet.summary_handles], loc='lower center', bbox_to_anchor=(0.5, 0.94), ncol=4, frameon=False, fontsize=sheet.plot_font_size, borderpad=0, labelspacing=0.2, title=f'{len(names)} workflows per distribution · OpenHCS medians of 3 runs', title_fontsize=sheet.plot_font_size)
+    sheet.display_transforms.append({'operation': 'Paired workflow dots, median lines and minimum, median and maximum values below each distribution; summary row headers give × units; log axes', 'summary_statistic': 'median', 'reference_lines': {'equal_speed': 1, 'speedup_guides': [2, 4, 10]}, 'workflow_count_per_distribution': len(names), 'single_worker_batch_policy': claims['amortized_policy'], 'native_policy': claims['native_policy'], 'serial_baseline_comparison': {'inputs': 'Hash-verified retained fixed12 first_use_workflow_metrics.csv rows, not a new timing model', 'reference_mode': reference_key, 'sample_count': modes[reference_key]['assignment_count'], 'openhcs_worker_counts': [modes[key]['openhcs_worker_count'] for key in ordered], 'comparison': 'The same estimated serial CellProfiler time divided by each measured OpenHCS worker time', 'companion_figure': 'submission_benchmark_schedule retains the measured OpenHCS-only scaling comparison', 'cpu_scope': 'Workers are not matched core counts; retained affinity and numerical-thread policies apply', 'target_native_observation_count': 0}, 'analysis_rerun': False})
+    table_path = OUTPUT / 'submission_benchmark_summary_projection.csv'
+    with table_path.open('w', newline='') as stream:
+        writer = csv.DictWriter(stream, fieldnames=tuple(projected_rows[0]), lineterminator='\n')
         writer.writeheader()
         writer.writerows(projected_rows)
     sheet.source(table_path)

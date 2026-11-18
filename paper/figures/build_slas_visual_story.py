@@ -39,6 +39,43 @@ class FigureSheet:
     plot_font_size = 13
     default_input_root = Path("/")
 
+    panel_letter_scale: float = 1.0
+
+    panel_title_scale: float = 1.0
+
+    @property
+    def panel_letter_size(self):
+        """Use 14-point identifiers on the nine-inch reference canvas."""
+        return 14 * max(self.figure.get_size_inches()) / 9
+
+    def fit_panel_letters_to(self, receiver, bounds, *, crop=(0, 0, 100, 100)):
+        """Keep publication letters the receiver's size when artwork is embedded."""
+        target_inches = receiver.figure.get_size_inches() * np.asarray(bounds[2:]) / 100
+        content_inches = self.figure.get_size_inches() * np.asarray((crop[2] - crop[0], crop[3] - crop[1])) / 100
+        scale = min(target_inches / content_inches)
+        self.panel_letter_scale = receiver.panel_letter_size * receiver.panel_letter_scale / (scale * self.panel_letter_size)
+        for letter in self.figure.texts:
+            letter.set_fontsize(self.panel_letter_size * self.panel_letter_scale)
+        return scale
+
+    interpretation = 'Original explanatory layout; retained captures are not new scientific evaluations'
+
+    def artwork(self, stem, bounds, *, crop=None):
+        path = OUTPUT / f'{stem}.png'
+        receipt_path = OUTPUT / f'{stem}_provenance.json'
+        if not receipt_path.exists():
+            receipt_path = path.parent / 'figure2_provenance.json'
+        receipt = json.loads(receipt_path.read_text())
+        expected = receipt['output_sha256'][path.name]
+        if digest(path) != expected:
+            raise ValueError(f'Retained artwork differs from its receipt: {path}')
+        self.source(receipt_path)
+        if crop is not None:
+            with Image.open(path) as image:
+                width, height = image.size
+            crop = tuple((round(value * length / 100) for value, length in zip(crop, (width, height, width, height))))
+        self.source_image(path, bounds, crop=crop)
+
     def __init__(self, stem: str, title: str, height: float = 7.7,
                  *, input_root: Path = default_input_root):
         self.stem = stem
@@ -64,16 +101,14 @@ class FigureSheet:
         return axis
 
     def panel_letter(self, letter, x, y, *, va="baseline"):
-        """Use the same typeface and colour for every subpanel identifier."""
-        return self.figure.text(x / 100, y / 100, letter, fontsize=14,
-                                weight="bold", color="black", family="DejaVu Sans",
-                                va=va)
+        'Use the same typeface and colour for every subpanel identifier.'
+        return self.figure.text(x / 100, y / 100, letter, fontsize=self.panel_letter_size * self.panel_letter_scale, weight='bold', color='black', family='DejaVu Sans', va=va)
 
-    def panel(self, letter, title, x, y):
-        label = self.panel_letter(letter, x, y)
-        label_width = label.get_window_extent(self.figure.canvas.get_renderer()).width
-        title_x = x + max(3.1, label_width / self.figure.bbox.width * 100 + 1.5)
-        self.text(title_x, y, title, size=12, weight="bold")
+    def panel(self, letter, title, x, y, *, title_size=12, va='baseline'):
+        label = self.panel_letter(letter, x, y, va=va)
+        label_width = label.get_window_extent(self.figure.canvas.get_renderer()).width / self.figure.bbox.width * 100
+        title_x = x + label_width + min(1.5, label_width)
+        self.text(title_x, y, title, size=title_size * self.panel_title_scale, weight='bold', va=va)
 
     def box(self, x, y, width, height, title, detail="", *, color=BLUE, size=11):
         self.axis.add_patch(
@@ -278,26 +313,16 @@ class FigureSheet:
     def save(self, *, dpi=300):
         OUTPUT.mkdir(parents=True, exist_ok=True)
         outputs = []
-        for extension in ("png", "pdf", "svg"):
-            path = OUTPUT / f"{self.stem}.{extension}"
+        for extension in ('png', 'pdf', 'svg'):
+            path = OUTPUT / f'{self.stem}.{extension}'
             self.figure.savefig(path, dpi=dpi)
-            if extension == "svg":
+            if extension == 'svg':
                 normalize_generated_svg(path)
             outputs.append(path)
         plt.close(self.figure)
-        receipt = {
-            "generator_sha256": digest(Path(__file__)),
-            "source_sha256": self.sources,
-            "input_root": str(self.input_root),
-            "ui_crops": self.crops,
-            "display_transforms": self.display_transforms,
-            "output_sha256": {p.name: digest(p) for p in outputs},
-            "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations",
-        }
-        (OUTPUT / f"{self.stem}_provenance.json").write_text(
-            json.dumps(receipt, indent=2) + "\n"
-        )
-        print(f"Rendered {self.stem}")
+        receipt = {'generator_sha256': digest(Path(__file__)), 'source_sha256': self.sources, 'input_root': str(self.input_root), 'ui_crops': self.crops, 'display_transforms': self.display_transforms, 'output_sha256': {p.name: digest(p) for p in outputs}, 'interpretation': self.interpretation}
+        (OUTPUT / f'{self.stem}_provenance.json').write_text(json.dumps(receipt, indent=2) + '\n')
+        print(f'Rendered {self.stem}')
 
 
 def h001_scored():
@@ -432,42 +457,35 @@ def h002_measurement_first(*, input_root: Path = FigureSheet.default_input_root)
 
 
 def h002_independent_centres(*, input_root: Path = FigureSheet.default_input_root):
-    """Original final-only XY/XZ/YZ raw voxels and unchanged saved point tables."""
+    'Original final-only XY/XZ/YZ raw voxels and unchanged saved point tables.'
     from build_slas_neurite_views import VOLUME_CENTRE_SOURCE, VolumeCentreView
-
-    sheet = FigureSheet("h002_fresh10_native", "", 7.6, input_root=input_root)
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h002-fresh10-native-source-proof.json")
-    sheet.text(3, 98, "Independent volume localisation: final-only witnesses",
-               size=16, weight="bold", va="top")
-    for index, plane in enumerate(("XY", "XZ", "YZ")):
+    sheet = FigureSheet('h002_fresh10_native', '', 7.6, input_root=input_root)
+    sheet.source(ROOT / 'paper/supplementary/task_only_analysis/h002-fresh10-native-source-proof.json')
+    sheet.text(3, 98, 'Independent volume localisation: final-only witnesses', size=16, weight='bold', va='top')
+    for index, plane in enumerate(('XY', 'XZ', 'YZ')):
         view = VolumeCentreView.read(sheet, VOLUME_CENTRE_SOURCE, view_index=index)
-        y = 68-index*28
-        sheet.text(3, y+25, plane, size=13, weight="bold")
-        view.draw_columns((3, y, 94, 20), y+22,
-                          (("Raw", view.draw_raw), ("Saved centres", view.draw_overlay)))
-    sheet.text(3, 7, "22 algorithmic centres; visibility is slice-local, not a complete census.", size=12)
-    sheet.text(3, 3, "Voxel-index geometry; physical calibration and multi-lobed identity remain unverified.", size=11)
+        y = 68 - index * 28
+        sheet.text(3, y + 25, plane, size=13, weight='bold')
+        view.draw_columns((3, y, 94, 20), y + 22, (view.Column('Raw', view.draw_raw), view.Column('Saved centres', view.draw_overlay)))
+    sheet.text(3, 7, '22 algorithmic centres; visibility is slice-local, not a complete census.', size=12)
+    sheet.text(3, 3, 'Voxel-index geometry; physical calibration and multi-lobed identity remain unverified.', size=11)
     sheet.save()
 
 
 def h002_fresh22_split_repair(*, input_root: Path = FigureSheet.default_input_root):
-    """Same native volume plane from frozen first/final integer labels."""
+    'Same native volume plane from frozen first/final integer labels.'
     from build_slas_neurite_views import VOLUME_REPAIR_SOURCE, VolumeComparison
-
-    sheet = FigureSheet("h002_fresh22_split_repair", "", 6.4, input_root=input_root)
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst")
+    sheet = FigureSheet('h002_fresh22_split_repair', '', 6.4, input_root=input_root)
+    sheet.source(ROOT / 'paper/supplementary/task_only_analysis/h002-fresh22-postfreeze-localisation.rst')
     view = VolumeComparison.read(sheet, VOLUME_REPAIR_SOURCE)
-    sheet.text(3, 97, "Autonomous repair of a continuous-body split", size=17,
-               weight="bold", va="top")
-    for index, (heading, draw) in enumerate(view.label_panels):
+    sheet.text(3, 97, 'Autonomous repair of a continuous-body split', size=17, weight='bold', va='top')
+    for index, column_view in enumerate(view.label_panels):
         row, column = divmod(index, 2)
-        x, y = 3+column*49, 53-row*40
-        sheet.text(x, y+35, f"{chr(65+index)}  {heading}", size=13, weight="bold")
-        draw((x, y, 45, 32))
-    sheet.text(3, 7, "Same XY viewport, Z index 36; categorical colours are not shared IDs.",
-               size=12, color=MUTED)
-    sheet.text(3, 2, "Local partition repair, not proof of complete volume segmentation.",
-               size=12, color=MUTED)
+        x, y = (3 + column * 49, 53 - row * 40)
+        sheet.panel(chr(65 + index), column_view.title, x, y + 35, title_size=13)
+        column_view.draw((x, y, 45, 32))
+    sheet.text(3, 7, 'Same XY viewport, Z index 36; categorical colours are not shared IDs.', size=12, color=MUTED)
+    sheet.text(3, 2, 'Local partition repair, not proof of complete volume segmentation.', size=12, color=MUTED)
     sheet.save()
 
 
@@ -581,74 +599,44 @@ def translocation_repeat():
         sheet.save()
 
 
-def bbbc039_repeat():
-    """Compare independent frozen authors using their existing score receipts."""
+def bbbc039_repeat(sheet, scatter, pooled):
+    'Compare independent frozen authors using their existing score receipts.'
     from build_slas_task_only import BBBC039_SOURCE
-
     earlier_path = ROOT / BBBC039_SOURCE
-    repeat_path = ROOT / "figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json"
+    repeat_path = ROOT / 'figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json'
     earlier = json.loads(earlier_path.read_text())
     repeat = json.loads(repeat_path.read_text())
-    if digest(earlier_path) != repeat["comparison612"]["report_sha256"]:
-        raise ValueError("Repeat comparison must use the exact earlier receipt")
-    key = lambda row: (row["source_set_id"], row["channel"], row["partition"])
-    previous = {key(row): row for row in earlier["instance_metrics"]}
-    current = {key(row): row for row in repeat["instance_metrics"]}
+    if digest(earlier_path) != repeat['comparison612']['report_sha256']:
+        raise ValueError('Repeat comparison must use the exact earlier receipt')
+    key = lambda row: (row['source_set_id'], row['channel'], row['partition'])
+    previous = {key(row): row for row in earlier['instance_metrics']}
+    current = {key(row): row for row in repeat['instance_metrics']}
     if len(previous) != 200 or previous.keys() != current.keys():
-        raise ValueError("Independent repeat requires the same 200 field identities")
-    if repeat["match_iou"] != earlier["match_iou"] or repeat["match_iou"] != .5:
-        raise ValueError("Independent repeat requires the same IoU matching rule")
+        raise ValueError('Independent repeat requires the same 200 field identities')
+    if repeat['match_iou'] != earlier['match_iou'] or repeat['match_iou'] != 0.5:
+        raise ValueError('Independent repeat requires the same IoU matching rule')
     for identity, row in current.items():
-        if row["reference_count"] != previous[identity]["reference_count"]:
-            raise ValueError("Reference population changed between authors")
-
-    with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
-                         "axes.spines.top": False, "axes.spines.right": False}):
-        sheet = FigureSheet("bbbc039_independent_repeat", "", 4.9)
-        sheet.source(earlier_path)
-        sheet.source(repeat_path)
-        sheet.text(3, 98, "Nuclear detection 2 and 3: the same 200 fields",
-                   size=18, weight="bold", va="top")
-        scatter = sheet.plot_axes((.09, .27, .35, .55))
-        pooled = sheet.plot_axes((.61, .27, .35, .55))
-        for empty, color, label in (
-            (False, BLUE, "Annotated fields"),
-            (True, ORANGE, "Annotation-empty fields (n=3)"),
-        ):
-            rows = [row for row in current.values()
-                    if (row["reference_count"] == 0) == empty]
-            scatter.scatter([previous[key(row)]["f1"] for row in rows],
-                            [row["f1"] for row in rows],
-                            s=24, alpha=.75, color=color, label=label, zorder=3)
-        scatter.plot((0, 1), (0, 1), "--", color=MUTED, linewidth=1)
-        scatter.set(title="A  Paired field scores", xlabel="Nuclear detection 2: F1",
-                    ylabel="Nuclear detection 3: F1", xlim=(-.03, 1.03), ylim=(-.03, 1.03))
-        scatter.set_aspect("equal", adjustable="box")
-        for offset, record, color, label in (
-            (-.18, earlier, BLUE, "Analysis 2"),
-            (.18, repeat, TEAL, "Analysis 3"),
-        ):
-            values = [record["summary"][name]
-                      for name in ("precision", "recall", "micro_f1")]
-            bars = pooled.bar([index + offset for index in range(3)], values,
-                              width=.34, color=color, label=label)
-            pooled.bar_label(bars, labels=[f"{value:.3f}" for value in values],
-                             label_type="center", fontsize=sheet.plot_font_size, rotation=90, color="white")
-        pooled.set(title="B  Pooled detection scores", ylabel="Score (1 is best)",
-                   xticks=(0, 1, 2), xticklabels=("Precision", "Recall", "F1"),
-                   ylim=(0, 1.12), yticks=(0, .2, .4, .6, .8, 1))
-        pooled.legend(frameon=False, fontsize=sheet.plot_font_size, loc="upper center",
-                      bbox_to_anchor=(.5, -.24), ncol=2)
-        for axis in (scatter, pooled):
-            axis.grid(color="#d9e0e5", linewidth=.6)
-            axis.set_axisbelow(True)
-        counts = repeat["distribution"]
-        sheet.text(50, 4,
-                   f"{counts['improved_vs612']} fields improved; "
-                   f"{counts['regressed_vs612']} lower; "
-                   f"{counts['unchanged_vs612']} unchanged",
-                   size=14, ha="center", color=MUTED)
-        sheet.save()
+        if row['reference_count'] != previous[identity]['reference_count']:
+            raise ValueError('Reference population changed between authors')
+    sheet.source(earlier_path)
+    sheet.source(repeat_path)
+    for empty, color, label in ((False, BLUE, 'Annotated fields'), (True, ORANGE, 'Annotation-empty fields (n=3)')):
+        rows = [row for row in current.values() if (row['reference_count'] == 0) == empty]
+        scatter.scatter([previous[key(row)]['f1'] for row in rows], [row['f1'] for row in rows], s=24, alpha=0.75, color=color, label=label, zorder=3)
+    scatter.plot((0, 1), (0, 1), '--', color=MUTED, linewidth=1)
+    scatter.set(xlabel='Nuclear detection 2: F1', ylabel='Nuclear detection 3: F1', xlim=(-0.03, 1.03), ylim=(-0.03, 1.03))
+    for offset, record, color, label in ((-0.18, earlier, BLUE, 'Analysis 2'), (0.18, repeat, TEAL, 'Analysis 3')):
+        values = [record['summary'][name] for name in ('precision', 'recall', 'micro_f1')]
+        bars = pooled.bar([index + offset for index in range(3)], values, width=0.34, color=color, label=label)
+        pooled.bar_label(bars, labels=[f'{value:.3f}' for value in values], label_type='center', fontsize=sheet.plot_font_size, rotation=90, color='white')
+    pooled.set(ylabel='Score (1 is best)', xticks=(0, 1, 2), xticklabels=('Precision', 'Recall', 'F1'), ylim=(0, 1.12), yticks=(0, 0.2, 0.4, 0.6, 0.8, 1))
+    pooled.legend(frameon=False, fontsize=sheet.plot_font_size, loc='upper center', bbox_to_anchor=(0.5, -0.24), ncol=2)
+    for axis in (scatter, pooled):
+        axis.grid(color='#d9e0e5', linewidth=0.6)
+        axis.set_axisbelow(True)
+        axis.spines[['top', 'right']].set_visible(False)
+    counts = repeat['distribution']
+    return counts
 
 
 def h004_junction():
@@ -787,67 +775,53 @@ def personal_stitched_development():
 
 
 def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_root):
-    """Pair primary responses and grouped correlations with retained microscopy."""
+    'Pair primary responses and grouped correlations with retained microscopy.'
     from build_slas_neurite_effects import NeuriteEffectFigure
-
-    blind_neurite_example(input_root=input_root)
-    sheet = FigureSheet("submission_neurite_results", "", 10.3, input_root=input_root)
+    sheet = FigureSheet('submission_neurite_results', '', 10.3, input_root=input_root)
+    field_bounds = (3, 1, 94, 26.5)
+    blind_neurite_example(sheet, field_bounds, input_root=input_root)
     tables = NeuriteEffectFigure.cohort_tables(sheet)
-    NeuriteEffectFigure.draw_panels(
-        sheet, tables, metrics=NeuriteEffectFigure.primary_metrics,
-        bounds=(3, 50, 94, 49), start_letter="A",
-    )
-    NeuriteEffectFigure.draw_correlation_bars(
-        sheet, tables, metrics=NeuriteEffectFigure.primary_metrics,
-    )
-    sheet.source(OUTPUT / "blind_neurite_example_provenance.json")
-    sheet.source_image(OUTPUT / "blind_neurite_example.png", (3, 1, 94, 26.5))
+    NeuriteEffectFigure.draw_panels(sheet, tables, metrics=NeuriteEffectFigure.primary_metrics, bounds=(3, 50, 94, 49), start_letter='A')
+    NeuriteEffectFigure.draw_correlation_bars(sheet, tables, metrics=NeuriteEffectFigure.primary_metrics)
+    sheet.source(OUTPUT / 'blind_neurite_example_provenance.json')
+    sheet.source_image(OUTPUT / 'blind_neurite_example.png', field_bounds)
     sheet.save(dpi=600)
 
 
-def blind_neurite_example(*, input_root: Path = FigureSheet.default_input_root):
-    """Render the original field once for main Figure 6 and full-resolution data."""
+def blind_neurite_example(receiver, bounds, *, input_root: Path = FigureSheet.default_input_root):
+    'Render the original field once for main Figure 6 and full-resolution data.'
     from build_slas_neurite_views import AcquisitionNeuriteView
-
-    sheet = FigureSheet("blind_neurite_example", "", 3.2, input_root=input_root)
-    sheet.source(OUTPUT / "blind_neurite_sources/source-receipt.json")
-    sheet.source(OUTPUT / "blind_neurite_sources/final-freeze.json")
-    views_path = OUTPUT / "frozen_neurite_views.json"
+    sheet = FigureSheet('blind_neurite_example', '', 3.2, input_root=input_root)
+    embedding_scale = sheet.fit_panel_letters_to(receiver, bounds)
+    sheet.panel_title_scale = receiver.panel_title_scale / embedding_scale
+    heading_y = 99 - sheet.panel_letter_size * sheet.panel_letter_scale / (sheet.figure.get_figheight() * 72) * 100
+    sheet.source(OUTPUT / 'blind_neurite_sources/source-receipt.json')
+    sheet.source(OUTPUT / 'blind_neurite_sources/final-freeze.json')
+    views_path = OUTPUT / 'frozen_neurite_views.json'
     sheet.source(views_path)
-    laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())["blind_cohort"])
-    laboratory_view.draw_columns((3, 1, 94, 85), 94, (
-        ("F  Raw", laboratory_view.draw_raw),
-        ("G  Labels and paths", laboratory_view.draw_result),
-        ("H  Overlay", laboratory_view.draw_overlay),
-    ))
-    # Preserve the 1024-pixel field in the manuscript's raster embedding too.
+    laboratory_view = AcquisitionNeuriteView(sheet, json.loads(views_path.read_text())['blind_cohort'])
+    laboratory_view.draw_columns((3, 1, 94, 85), heading_y, (laboratory_view.Column('Raw', laboratory_view.draw_raw, letter='F'), laboratory_view.Column('Labels and paths', laboratory_view.draw_result, letter='G'), laboratory_view.Column('Overlay', laboratory_view.draw_overlay, letter='H')))
     sheet.save(dpi=600)
 
 
 def public_neurite_initial_comparison(*, input_root: Path = FigureSheet.default_input_root):
-    """Retain the original public-field comparison in Supplementary Data 4."""
+    'Retain the original public-field comparison in Supplementary Data 4.'
     from functools import partial
     from build_slas_neurite_views import FrozenNeuriteView
-
-    sheet = FigureSheet("public_neurite_initial_comparison", "", 3.2, input_root=input_root)
-    sheet.source(OUTPUT / "h004_fresh20_sources/QA-INDEX.json")
-    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
-    views_path = OUTPUT / "frozen_neurite_views.json"
+    sheet = FigureSheet('public_neurite_initial_comparison', '', 3.2, input_root=input_root)
+    sheet.source(OUTPUT / 'h004_fresh20_sources/QA-INDEX.json')
+    sheet.source(ROOT / 'paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst')
+    views_path = OUTPUT / 'frozen_neurite_views.json'
     sheet.source(views_path)
-    public_view = FrozenNeuriteView(sheet, json.loads(views_path.read_text())["public"])
-    published = OUTPUT / "neuroncyto_published_reference"
-    reference_path = published / "source.json"
+    public_view = FrozenNeuriteView(sheet, json.loads(views_path.read_text())['public'])
+    published = OUTPUT / 'neuroncyto_published_reference'
+    reference_path = published / 'source.json'
     reference = json.loads(reference_path.read_text())
-    reference_image = published / reference["source_file"]
-    if digest(reference_image) != reference["sha256"]:
-        raise ValueError("Published NeuronCyto II figure source hash mismatch")
+    reference_image = published / reference['source_file']
+    if digest(reference_image) != reference['sha256']:
+        raise ValueError('Published NeuronCyto II figure source hash mismatch')
     sheet.source(reference_path)
-    public_view.draw_columns((3, 1, 94, 85), 94, (
-        ("A  Raw", public_view.draw_raw),
-        ("B  Initial tracing", public_view.draw_result),
-        ("C  NeuronCyto II", partial(sheet.source_image, reference_image,
-                                     crop=tuple(reference["crop_xyxy_pixels"]))),
-    ))
+    public_view.draw_columns((3, 1, 94, 85), 94, (public_view.Column('Raw', public_view.draw_raw, letter='A'), public_view.Column('Initial tracing', public_view.draw_result, letter='B'), public_view.Column('NeuronCyto II', partial(sheet.source_image, reference_image, crop=tuple(reference['crop_xyxy_pixels'])), letter='C')))
     sheet.save(dpi=600)
 
 
@@ -915,70 +889,44 @@ def submission_autonomous_loop():
 
 
 def submission_shared_workflow():
-    """Keep the full native desktop, expanded details and code in one figure."""
-    from build_slas_extension import extension
-
-    extension(main_panel=True)
-    folder = OUTPUT / "figure1_readable_native_20261103"
-    evidence_path = folder / "capture_evidence.json"
+    'Keep the full native desktop, expanded details and code in one figure.'
+    folder = OUTPUT / 'figure1_readable_native_20261103'
+    evidence_path = folder / 'capture_evidence.json'
     evidence = json.loads(evidence_path.read_text())
-    if evidence["expanded_rows"] != {"plate_manager": 2, "pipeline_editor": 9}:
-        raise ValueError("Figure1 requires the native dataset and step rows expanded")
-    if evidence["native_theme"] != "dark":
-        raise ValueError("Figure1 requires a genuine dark-theme native capture")
-    capture = folder / Path(evidence["selected_png"]).name
+    if evidence['expanded_rows'] != {'plate_manager': 2, 'pipeline_editor': 9}:
+        raise ValueError('Figure1 requires the native dataset and step rows expanded')
+    if evidence['native_theme'] != 'dark':
+        raise ValueError('Figure1 requires a genuine dark-theme native capture')
+    capture = folder / Path(evidence['selected_png']).name
     with Image.open(capture) as pixels:
         width_px, height_px = pixels.size
-    _, _, logical_width, logical_height = evidence["logical_window_xywh"]
-    sx, sy = width_px / logical_width, height_px / logical_height
-    sheet = FigureSheet("submission_shared_workflow", "", 8)
+    _, _, logical_width, logical_height = evidence['logical_window_xywh']
+    sx, sy = (width_px / logical_width, height_px / logical_height)
+    sheet = FigureSheet('submission_shared_workflow', '', 8)
     sheet.figure.set_size_inches(7, 8)
     sheet.source(evidence_path)
-    sheet.panel("A", "Desktop workspace", 2, 98)
-    sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
-                       (2, 67, 52, 28), response_path=(),
-                       provenance_path=folder / evidence["selected_capture"])
+    sheet.panel('A', 'Desktop workspace', 2, 98)
+    sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix('')), (2, 67, 52, 28), response_path=(), provenance_path=folder / evidence['selected_capture'])
     overview = sheet.figure.axes[-1]
     overview.apply_aspect()
-    details = (
-        ("analysis_cells", "B", "Expanded analysis steps", (58, 67, 40, 28),
-         (58, 98), BLUE, 1, 56),
-        ("dataset_cell", "C", "Complete dataset cell", (2, 53, 96, 10),
-         (2, 65), TEAL, 0, .5),
-    )
+    details = (('analysis_cells', 'B', 'Expanded analysis steps', (58, 67, 40, 28), (58, 98), BLUE, 1, 56), ('dataset_cell', 'C', 'Complete dataset cell', (2, 53, 96, 10), (2, 65), TEAL, 0, 0.5))
     for region, label, title, bounds, heading, color, edge_fraction, corridor in details:
-        x, y, width, height = evidence["row_boxes_xywh"][region]
-        if not (0 <= x < x + width <= logical_width and
-                0 <= y < y + height <= logical_height):
-            raise ValueError(f"Native complete-cell bounds leave the captured window: {region}")
-        crop = (round(x * sx), round(y * sy), round((x + width) * sx),
-                round((y + height) * sy))
-        overview.add_patch(Rectangle((crop[0], crop[1]), crop[2] - crop[0],
-                                     crop[3] - crop[1], fill=False,
-                                     edgecolor=color, linewidth=1.5))
+        x, y, width, height = evidence['row_boxes_xywh'][region]
+        if not (0 <= x < x + width <= logical_width and 0 <= y < y + height <= logical_height):
+            raise ValueError(f'Native complete-cell bounds leave the captured window: {region}')
+        crop = (round(x * sx), round(y * sy), round((x + width) * sx), round((y + height) * sy))
+        overview.add_patch(Rectangle((crop[0], crop[1]), crop[2] - crop[0], crop[3] - crop[1], fill=False, edgecolor=color, linewidth=1.5))
         sheet.panel(label, title, *heading)
-        sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix("")),
-                           bounds, response_path=(), crop=crop,
-                           provenance_path=folder / evidence["selected_capture"])
+        sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix('')), bounds, response_path=(), crop=crop, provenance_path=folder / evidence['selected_capture'])
         detail = sheet.figure.axes[-1]
         detail.apply_aspect()
-        detail.add_patch(Rectangle(
-            (0, 0), crop[2] - crop[0] - 1, crop[3] - crop[1] - 1,
-            fill=False, edgecolor=color, linewidth=1.5))
+        detail.add_patch(Rectangle((0, 0), crop[2] - crop[0] - 1, crop[3] - crop[1] - 1, fill=False, edgecolor=color, linewidth=1.5))
         source_edge = crop[0] + edge_fraction * (crop[2] - crop[0])
-        start = sheet.axis.transData.inverted().transform(overview.transData.transform(
-            (source_edge, (crop[1] + crop[3]) / 2)))
-        end = sheet.axis.transData.inverted().transform(detail.transData.transform(
-            (0, (crop[3] - crop[1]) / 2)))
+        start = sheet.axis.transData.inverted().transform(overview.transData.transform((source_edge, (crop[1] + crop[3]) / 2)))
+        end = sheet.axis.transData.inverted().transform(detail.transData.transform((0, (crop[3] - crop[1]) / 2)))
         sheet.route((start, (corridor, start[1]), (corridor, end[1]), end), color=color)
-    sheet.panel("D", "Add a function; edit the same settings in a form or Python", 2, 50.5)
-    function_panel = OUTPUT / "submission_custom_function.png"
-    with Image.open(function_panel) as pixels:
-        width, height = pixels.size
-    sheet.source(OUTPUT / "submission_custom_function_provenance.json")
-    sheet.source_image(function_panel, (0, 0, 100, 48),
-                       crop=(round(width * .02), round(height * .08),
-                             round(width * .98), round(height * .98)))
+    sheet.panel('D', 'Add a function; edit the same settings in a form or Python', 2, 50.5)
+    sheet.artwork('submission_custom_function', (0, 0, 100, 48), crop=(2, 8, 98, 98))
     sheet.save(dpi=600)
 
 

@@ -45,7 +45,9 @@ def load_score(path: Path, dataset: str) -> dict[str, object]:
     return score
 
 
-def plot_nuclear_instances(axis: plt.Axes, score: dict[str, object]) -> None:
+def plot_nuclear_instances(
+    axis: plt.Axes, score: dict[str, object], *, summary_position=(0.03, 0.05), font_size=9,
+) -> None:
     fields = score["fields"]
     if len(fields) != 50:
         raise ValueError("BBBC039 figure requires all 50 held-out fields")
@@ -64,24 +66,26 @@ def plot_nuclear_instances(axis: plt.Axes, score: dict[str, object]) -> None:
     )
     metrics = score["metrics"]
     axis.text(
-        0.03,
-        0.05,
+        *summary_position,
         f"Pooled object F1 {metrics['object_f1']:.3f}\n"
         f"Mean foreground Dice {metrics['mean_field_pixel_dice']:.3f}",
         transform=axis.transAxes,
-        fontsize=9,
+        fontsize=font_size,
         va="bottom",
     )
     axis.set(
         title="A  BBBC039 nuclear instances",
         xlabel="Held-out field rank by object F1",
+        xticks=np.arange(0, len(fields) + 1, 10),
         ylabel="Score",
         ylim=(0, 1.03),
     )
     axis.legend(frameon=False, fontsize=9, loc="lower right")
 
 
-def plot_cell_boundaries(axis: plt.Axes, score: dict[str, object]) -> None:
+def plot_cell_boundaries(
+    axis: plt.Axes, score: dict[str, object], *, summary_position=(0.03, 0.05), font_size=9,
+) -> None:
     fields = score["fields"]
     if len(fields) != 12:
         raise ValueError("BBBC007 figure requires all 12 held-out fields")
@@ -103,12 +107,11 @@ def plot_cell_boundaries(axis: plt.Axes, score: dict[str, object]) -> None:
         label="Pooled fraction",
     )
     axis.text(
-        0.03,
-        0.05,
+        *summary_position,
         f"Pooled within 2 px {metrics['pooled_adjacent_boundary_within_2px_fraction']:.3f}\n"
         f"Nuclei without a cell {metrics['nuclei_without_cell_overlap']}",
         transform=axis.transAxes,
-        fontsize=9,
+        fontsize=font_size,
         va="bottom",
     )
     axis.set(

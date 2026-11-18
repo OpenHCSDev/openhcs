@@ -1,33 +1,19 @@
 {
-  "generator_sha256": "0de3f6222c3e2de072d0aa461c7a920b7ebcfab695abc696447759b30ca3c4f3",
+  "generator_sha256": "5f33744865e31219444619b4159fca8b7960f3cc35928db9e42bcdade3e69a37",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "2c5c238d6088da4e3747c0a42e6d0d760c61e6aeae143ee85b7b1ffba2d27165",
+    "paper/figures/build_slas_supplement.py": "c32bd865e04b71bb6cb2540c33d2682def82d79443ae27fb4ae63c3bb302d732",
     "paper/figures/build_slas_bbbc013_fresh23.py": "1a85869824e524d07533179547bb07a69eb016f5cf6276d42147aea1dbb7e37a",
     "paper/supplementary/task_only_analysis/bbbc013-fresh23-plot-source.json": "834fd2de0c8d82c34bf152474f575371cfeaa59ea1e38a66e9cff70a270ec8d7",
-    "paper/figures/slas/independent_agent_validation_provenance.json": "43c81915cc51f44af9de5fa4ca8bbf3af054f63ae45ea24318bdbd0e7911a1bf",
-    "paper/figures/slas/independent_agent_validation.png": "5a87dde5673bc8e3f052915242257347dfeb3dd6f44af08a09369ceb368516b1"
+    "paper/supplementary/independent_validation/bbbc013_heldout_score.json": "d18ef5636ce3b55965e80771db815063f3d4f212507dddd3e47c22f49c976504",
+    "paper/figures/build_slas_independent_validation.py": "a1aec4eaee6b67dca1d673a7bc4dfec00626070052a5743eae3b5053490912c7"
   },
   "input_root": "/",
-  "ui_crops": [
-    {
-      "source": "paper/figures/slas/independent_agent_validation.png",
-      "xyxy_pixels": [
-        0,
-        1172,
-        2460,
-        2130
-      ],
-      "source_size": [
-        2460,
-        2130
-      ]
-    }
-  ],
+  "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "supp_translocation.png": "a99b911bde9ea811487b9d045c7012b5df372d8400a4c5b508973138cea2b26d",
-    "supp_translocation.pdf": "43b2ee40f7e64b21c8b533fd488030905cf2f363316c8e686d349bcf347d8664",
-    "supp_translocation.svg": "163f3e07b9d6fccfc21579bcf189e0dfc48c7eb6c99ee942ef20977e1cb4d79a"
+    "supp_translocation.png": "df0567d6fef178f22b092424a8ed28428a600654cb8aeb0380d4d7b8def9722c",
+    "supp_translocation.pdf": "982ae5bae9ee046dcf94dc681ad682c9568af96eb61ee818c1d8a2868d818b3f",
+    "supp_translocation.svg": "856e644ea1664c4228696e0e5174d26378a4a6d45934509f97e748af072601cf"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

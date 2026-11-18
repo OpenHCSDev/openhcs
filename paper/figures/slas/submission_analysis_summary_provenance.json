@@ -1,8 +1,8 @@
 {
-  "generator_sha256": "2beb9c136bb4ac8d297b3eda5ad4363f77a292df971f40b744463e3a7fc71ab8",
+  "generator_sha256": "5f33744865e31219444619b4159fca8b7960f3cc35928db9e42bcdade3e69a37",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "7f157d70bbf7849e847fb4566a2092a2341aba7777008a7e1f63c1b9bc40c985",
-    "paper/figures/build_slas_task_only.py": "1dc217cea9d003e1269ad713434794783917625ed644e6636e945cb29742e32c",
+    "paper/figures/build_slas_supplement.py": "c32bd865e04b71bb6cb2540c33d2682def82d79443ae27fb4ae63c3bb302d732",
+    "paper/figures/build_slas_task_only.py": "a0ff41273eeff9539342b35c85f219954d3b7b8ba724d5ab6d3919f919fb3db2",
     "paper/figures/build_slas_bbbc013_fresh23.py": "1a85869824e524d07533179547bb07a69eb016f5cf6276d42147aea1dbb7e37a",
     "paper/supplementary/task_only_analysis/bbbc039-caicedo-retained-results.json": "6556d68e6c65f7a2b97b4bb495635853e38e48d8add755b10e30aa2bea7d206c",
     "paper/supplementary/task_only_analysis/bbbc039-caicedo-published-test50.csv": "a8b8f7dda5dc99e3406332b125ea9a23ede4766c33abd8856d6fd3a3a9e69f3f",
@@ -31,9 +31,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_analysis_summary.png": "829d8b5b3febe9bd36d468637348335a96b9e5d90c57e495a7b92e3abd45e6ee",
-    "submission_analysis_summary.pdf": "842bd402551958cbc47d7ba1d43bba9a4f6f9d2761b3d9a105dccd4c56ec9abb",
-    "submission_analysis_summary.svg": "a300e53008a5741ce51adb137a03921a3029d5ffd4d73418c1d47195e4a0fab2"
+    "submission_analysis_summary.png": "a20db2ce2908a0bdf1229114d5ac0faab226a8a35b2fb60c38c51ca1089fddb9",
+    "submission_analysis_summary.pdf": "84a99b2d652ec07f93e67416ecb892bc55d9dd95e27c77cb85ad218512141a8e",
+    "submission_analysis_summary.svg": "fecd9572d4600b36e91ce3f07cdde7afc6bdfcd44256db8afccc326f7b63be7c"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

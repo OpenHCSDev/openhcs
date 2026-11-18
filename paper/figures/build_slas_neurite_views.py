@@ -10,6 +10,8 @@ import tifffile
 from matplotlib.colors import hsv_to_rgb
 from matplotlib.patheffects import withStroke
 from build_slas_agent import digest, nonempty_label_plane
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 
 BRIGHT_OBJECT_SOURCE = Path("paper/figures/slas/frozen_bright_object_views.json")
 NUCLEAR_SOURCE = Path("paper/figures/slas/frozen_nuclear_views.json")
@@ -29,6 +31,13 @@ class FrozenImageView(ABC):
     scale_unit = "px"
     pixel_aspect = 1
     labels = ()
+
+    @dataclass(frozen=True)
+    class Column:
+        """One image view, its plain heading and its optional publication letter."""
+        title: str
+        draw: Callable[[tuple[float, float, float, float]], None]
+        letter: str = ""
 
     @classmethod
     def read(cls, sheet, receipt, view_index=0):
@@ -156,20 +165,16 @@ class FrozenImageView(ABC):
         self.paint_overlay(self.axis(bounds), self.labels)
 
     def draw_row(self, bounds, heading_y):
-        self.draw_columns(bounds, heading_y, (
-            ("Raw", self.draw_raw), ("Labels", self.draw_result),
-            ("Overlay", self.draw_overlay),
-        ))
+        self.draw_columns(bounds, heading_y, (self.Column('Raw', self.draw_raw), self.Column('Labels', self.draw_result), self.Column('Overlay', self.draw_overlay)))
 
-    def draw_columns(self, bounds, heading_y, panels):
+    def draw_columns(self, bounds, heading_y, panels: Sequence["FrozenImageView.Column"]):
         x, y, width, height = bounds
-        gap = width * .02
+        gap = width * 0.02
         column_width = (width - (len(panels) - 1) * gap) / len(panels)
-        for column, (heading, draw) in enumerate(panels):
-            left = x + column * (column_width + gap)
-            self.sheet.text(left, heading_y, heading,
-                            size=self.sheet.plot_font_size, weight="bold")
-            draw((left, y, column_width, height))
+        for index, column in enumerate(panels):
+            left = x + index * (column_width + gap)
+            self.sheet.panel(column.letter, column.title, left, heading_y, title_size=self.sheet.plot_font_size)
+            column.draw((left, y, column_width, height))
 
 
 class LabelImageView(FrozenImageView):
@@ -224,10 +229,7 @@ class FrozenComparison(LabelImageView):
 
     @property
     def label_panels(self):
-        return (
-            ("Raw", self.draw_raw), ("First labels", self.draw_result),
-            ("Final labels", self.draw_final_result), ("Final + raw", self.draw_final),
-        )
+        return (self.Column('Raw', self.draw_raw), self.Column('First labels', self.draw_result), self.Column('Final labels', self.draw_final_result), self.Column('Final + raw', self.draw_final))
 
     def draw_final(self, bounds):
         self.paint_overlay(self.axis(bounds), self.final_labels)
@@ -236,16 +238,10 @@ class FrozenComparison(LabelImageView):
         self.paint_result(self.axis(bounds), self.final_labels, 1)
 
     def draw_row(self, bounds, heading_y):
-        self.draw_columns(bounds, heading_y, (
-            ("Raw", self.draw_raw), ("First result", self.draw_overlay),
-            ("Final result", self.draw_final),
-        ))
+        self.draw_columns(bounds, heading_y, (self.Column('Raw', self.draw_raw), self.Column('First result', self.draw_overlay), self.Column('Final result', self.draw_final)))
 
     def draw_final_row(self, bounds, heading_y):
-        self.draw_columns(bounds, heading_y, (
-            ("Raw", self.draw_raw), ("Final labels", self.draw_final_result),
-            ("Overlay", self.draw_final),
-        ))
+        self.draw_columns(bounds, heading_y, (self.Column('Raw', self.draw_raw), self.Column('Final labels', self.draw_final_result), self.Column('Overlay', self.draw_final)))
 
 
 class CroppedComparison(CroppedImageView, FrozenComparison):
