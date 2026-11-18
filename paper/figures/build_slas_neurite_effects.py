@@ -207,6 +207,8 @@ class NeuriteEffectFigure(FigureSheet):
         start_letter="A",
         metric_columns=1,
         label_width=20,
+        legend_offset=(0.0, 0.0),
+        legend_rows=1,
     ):
         """Draw measured panels directly into a standalone or composite sheet."""
         datasets = NeuriteEffectFigure.read_datasets(sheet, tables, metrics)
@@ -268,15 +270,11 @@ class NeuriteEffectFigure(FigureSheet):
                         (bottom + height + extent * 0.02) * 100,
                     )
                 else:
-                    axis.text(
-                        0.02,
-                        0.98,
+                    sheet.panel_letter(
                         letter,
-                        transform=axis.transAxes,
+                        (left + plot_width * 0.02) * 100,
+                        (bottom + height * 0.98) * 100,
                         va="top",
-                        fontsize=14,
-                        weight="bold",
-                        color=BLUE,
                     )
                 for series_index, (
                     label,
@@ -377,11 +375,11 @@ class NeuriteEffectFigure(FigureSheet):
             labels,
             fontsize=sheet.plot_font_size,
             frameon=False,
-            ncols=len(series),
+            ncols=(len(series) + legend_rows - 1) // legend_rows,
             loc="upper center",
             bbox_to_anchor=(
-                x + width / 2,
-                y + extent * (0.94 if len(metrics) > 1 else 0.85),
+                x + width * (0.5 + legend_offset[0]),
+                y + extent * ((0.94 if len(metrics) > 1 else 0.85) + legend_offset[1]),
             ),
         )
         return evidence["protocol_figure_label"]

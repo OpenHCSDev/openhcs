@@ -63,9 +63,17 @@ class FigureSheet:
             label.set(fontsize=self.plot_font_size, color=INK)
         return axis
 
+    def panel_letter(self, letter, x, y, *, va="baseline"):
+        """Use the same typeface and colour for every subpanel identifier."""
+        return self.figure.text(x / 100, y / 100, letter, fontsize=14,
+                                weight="bold", color="black", family="DejaVu Sans",
+                                va=va)
+
     def panel(self, letter, title, x, y):
-        self.text(x, y, letter, size=14, weight="bold", color=BLUE)
-        self.text(x + 3.1, y, title, size=12, weight="bold")
+        label = self.panel_letter(letter, x, y)
+        label_width = label.get_window_extent(self.figure.canvas.get_renderer()).width
+        title_x = x + max(3.1, label_width / self.figure.bbox.width * 100 + 1.5)
+        self.text(title_x, y, title, size=12, weight="bold")
 
     def box(self, x, y, width, height, title, detail="", *, color=BLUE, size=11):
         self.axis.add_patch(
