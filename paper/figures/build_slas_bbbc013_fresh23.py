@@ -7,7 +7,7 @@ from math import isclose, isfinite
 from pathlib import Path
 from statistics import mean, stdev
 
-from build_slas_visual_story import BLUE, TEAL, MUTED, ROOT, FigureSheet
+from build_slas_visual_story import BLUE, TEAL, MUTED, ROOT, FigureSheet, unit_label
 
 
 SOURCE = ROOT / "paper/supplementary/task_only_analysis/bbbc013-fresh23-plot-source.json"
@@ -64,6 +64,10 @@ class AssaySeries:
     doses: tuple[DoseGroup, ...]
     negative_control: DoseGroup
     positive_control: DoseGroup
+
+    @property
+    def unit_label(self) -> str:
+        return unit_label(self.unit)
 
     @property
     def control_zprime(self) -> float:
@@ -152,7 +156,7 @@ class WellMetric(ABC):
                         left * 100, panel_y)
             axis = sheet.plot_axes((left, bottom, 0.365, height))
             self.draw(axis, assay, color)
-            axis.set_xlabel(f"Concentration ({assay.unit})")
+            axis.set_xlabel(f"Concentration ({assay.unit_label})")
             axis.tick_params(axis="x", labelrotation=45)
 
 

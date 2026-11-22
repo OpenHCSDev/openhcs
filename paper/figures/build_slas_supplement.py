@@ -71,7 +71,9 @@ def translocation():
     score = load_score(SCORE_PATHS[2], "BBBC013")
     sheet.source(SCORE_PATHS[2])
     sheet.source(Path(plot_translocation.__code__.co_filename))
-    for column, (letter, treatment) in enumerate(zip(("C", "D"), score["metrics"]["treatments"], strict=True)):
+    # Same drug order as A–B and main Figure 5C, so columns compare one compound.
+    treatments = sorted(score["metrics"]["treatments"], key=lambda treatment: treatment["treatment"])
+    for column, (letter, treatment) in enumerate(zip(("C", "D"), treatments, strict=True)):
         left = .105 + column * .49
         sheet.panel(letter, treatment["treatment"], left * 100, 45.5)
         axis = sheet.plot_axes((left, .08, .365, .30))

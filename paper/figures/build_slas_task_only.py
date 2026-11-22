@@ -405,7 +405,7 @@ class AnalysisResultsFigure(SupplementFigure):
             means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
             deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
             axis.errorbar(range(9), means, yerr=deviations, marker='o', markersize=4, color=color, capsize=2)
-            axis.set_title(f'{assay.compound} ({assay.unit.replace('uM', 'µM')}) · Z′ = {assay.control_zprime:.3f}', loc='left', fontsize=sheet.plot_font_size, color=color)
+            axis.set_title(f'{assay.compound} ({assay.unit_label}) · Z′ = {assay.control_zprime:.3f}', loc='left', fontsize=sheet.plot_font_size, color=color)
             tick_doses = assay.doses[::2]
             axis.set(xticks=range(0, len(assay.doses), 2), xticklabels=[f'{dose.concentration:g}' for dose in tick_doses], ylim=(-0.5, 2.7))
             axis.spines[['top', 'right']].set_visible(False)

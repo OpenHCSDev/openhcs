@@ -33,6 +33,11 @@ ORANGE = "#b76a29"
 PALE = "#f3f6f9"
 
 
+def unit_label(unit: str) -> str:
+    """Source tables spell micromolar in ASCII; figures print the micro sign."""
+    return unit.replace("uM", "µM")
+
+
 class FigureSheet:
     """A single editable figure canvas with its actual source receipt."""
 

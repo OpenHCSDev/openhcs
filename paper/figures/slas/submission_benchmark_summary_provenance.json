@@ -1,7 +1,7 @@
 {
-  "generator_sha256": "5f33744865e31219444619b4159fca8b7960f3cc35928db9e42bcdade3e69a37",
+  "generator_sha256": "5ff9664b8699fb9e5aaca02cd708d4f110ed208756e243199286af1de797c3cb",
   "source_sha256": {
-    "paper/figures/build_slas_benchmark_reference.py": "d7657d66d61097f50c81db63c1c54ac270e90040c074dea15eb0dfb5edff1099",
+    "paper/figures/build_slas_benchmark_reference.py": "111b543e051a11858f957ee9ac42eb40b59dc5d0578d9cc4b31fc5005f4e29cc",
     "paper/figures/slas/benchmark-publication/figure2_provenance.json": "2072cf27f902791289bf794a49b3ac6cd28b7c3698cb6a2b91732731be89ccde",
     "paper/figures/slas/benchmark-publication/benchmark_claims.json": "9e4ee716dcd28fe620a553c80a6ac42bdb3c3362831fb95e87595ba191903270",
     "paper/figures/slas/benchmark-publication/may/execution/figure2_provenance.json": "ba393ed1ef141092ea748ec43bd904f37b614653fd9d3a4907762fe4bb0eddd7",
@@ -14,6 +14,7 @@
     "paper/figures/slas/benchmark-publication/fixed12/total/first_use_workflow_metrics.csv": "24c8db8558ceb6cc94a75620fea03b5ba4c38b4e3e0c6202022cc38867c84d65",
     "paper/figures/slas/benchmark-publication/reference-layout/retained_coverage_provenance.json": "bc182d6684944f44744575a42500497b8d6c7670ba3a33539380781c6e626899",
     "paper/figures/slas/benchmark-publication/reference-layout/reference_module_coverage.csv": "1c31291e487212d9ee97667f10c0edb371bfd2f853c26f5e3541f3c6987c8643",
+    "benchmark/results/official30_unified_value_comparison_20260916/observations.csv": "b09fa5fd6926afa093e7eef47b26950458eab8afc31b6e029246a61ec6a41677",
     "benchmark/reports/cppipe_figures.py": "e6698773fa549655bb29bef2e8c051ee1b41ec1f4712c8e435c5162fa526d790",
     "paper/figures/slas/submission_benchmark_summary_projection.csv": "4c24723dd0e0a3177cf95f61a6a4449c108243a44791b555df5ac8f1a07e4a20"
   },
@@ -53,9 +54,9 @@
     }
   ],
   "output_sha256": {
-    "submission_benchmark_summary.png": "8b38c7876a181c96bc43b5eab8b51f62f177f6ef40e186c6aa436536f5bfc29a",
-    "submission_benchmark_summary.pdf": "fd519245571ec9b991710e7531532730e4334e21e0cd0882cb572db4ee08b4dd",
-    "submission_benchmark_summary.svg": "76cfe84444b396cffbc0f04258824ccfd42766cfc39e89039bf3b2be6c9507c4"
+    "submission_benchmark_summary.png": "9b86fea865949cc41e6e8fcf8e05d264c599cf63f59baa9f80aa0e8b03f03416",
+    "submission_benchmark_summary.pdf": "f92a529b820bc08087b8656ff6de2a8caac05b27ff6ffd82d0eebb73fa9c964e",
+    "submission_benchmark_summary.svg": "9b7f64d146c3d80571d60fa674f09f1e02debb4cacd8302f37f090496cba7263"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
