@@ -33,8 +33,8 @@ from openhcs.core.callable.runtime_batch_contracts import (
     runtime_callable_defaults,
 )
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.measurements.measurement_declarations import MeasurementStatistic
 from openhcs.core.measurements.runtime_measurements import (
-    MeasurementStatistic,
     RuntimeMeasurementFeatureDeclaration,
     RuntimeMeasurementFeatureSemanticMarker,
 )

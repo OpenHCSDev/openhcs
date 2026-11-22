@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from functools import lru_cache
 from dataclasses import dataclass, field
 
 from openhcs.core.artifacts.payloads import NamedArtifactPayload
@@ -619,14 +618,6 @@ class RuntimeMeasurementFeature(str, Enum):
         return self._indexed_descriptor_declaration_types
 
 
-class MeasurementStatistic(str, Enum):
-    """Canonical runtime measurement statistic labels."""
-
-    VALUE = "value"
-    COUNT = "count"
-    MEAN = "mean"
-
-
 LOCATION_SPATIAL_DOMAIN = VolumeSourceSpatialDomain
 """The spatial domain object locations are reported in (its axis names)."""
 
@@ -793,38 +784,6 @@ class MeasurementRowAxisField(str, Enum):
             normalize_runtime_identifier(field_name)
             for field_name in cls.feature_name_field_names()
         )
-
-
-@lru_cache(maxsize=32768)
-def _is_sample_number_reference(
-    contract: RuntimeMeasurementRowIdentityContract,
-    field_name: str,
-) -> bool:
-    normalized = normalize_runtime_identifier(field_name)
-    if normalized in contract.sample_identity_fields:
-        return False
-    parts = tuple(part for part in normalized.split("_") if part)
-    number_parts = tuple(contract.sample_number_field.split("_"))
-    width = len(number_parts)
-    return any(
-        parts[index : index + width] == number_parts
-        for index in range(len(parts) - width + 1)
-    )
-
-
-@lru_cache(maxsize=32768)
-def _is_aggregate_sample_number_reference(
-    contract: RuntimeMeasurementRowIdentityContract,
-    field_name: str,
-) -> bool:
-    parts = tuple(
-        part for part in normalize_runtime_identifier(field_name).split("_") if part
-    )
-    return (
-        bool(parts)
-        and parts[0] == MeasurementStatistic.MEAN.value
-        and _is_sample_number_reference(contract, field_name)
-    )
 
 
 class MeasurementRowValueField(str, Enum):
