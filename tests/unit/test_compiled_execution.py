@@ -83,7 +83,7 @@ def test_compiled_execution_bundle_owns_transport_context_resolution(monkeypatch
         return {"A01": resolved_context}
 
     monkeypatch.setattr(
-        "openhcs.core.compiled_execution.resolve_lazy_configurations_for_serialization",
+        "openhcs.core.execution.compiled_execution.resolve_lazy_configurations_for_serialization",
         resolve_for_transport,
     )
 

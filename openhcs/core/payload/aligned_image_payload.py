@@ -1467,7 +1467,7 @@ class AlignedImageStack(ImagePayloadSliceStack):
         )
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, slots=True)
 class ProducedImageStack(ImagePayloadSliceStack):
     """Borrowed produced image slices, composed once into one dense buffer.
 

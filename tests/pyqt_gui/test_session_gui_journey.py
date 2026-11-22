@@ -115,4 +115,4 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
         manager.close()
         release_widgets(application, manager)
         session.close()
-        dispatcher.close()
+        dispatcher.close_dispatch()

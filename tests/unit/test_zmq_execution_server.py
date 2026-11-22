@@ -95,10 +95,7 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
 
     ZMQExecutionServer._ensure_request_global_config_context(context)
 
-    saved_global_config = get_live_global_config(
-        GlobalPipelineConfig,
-        use_live=False,
-    )
+    saved_global_config = get_saved_global_config(GlobalPipelineConfig)
     assert saved_global_config is global_config
     assert saved_global_config.processing_config.group_by is Microscopy.Channel
 
@@ -320,7 +317,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         output_dataset=SimpleNamespace(output_dataset_root=tmp_path),
     )
     monkeypatch.setattr(
-        "openhcs.core.runtime_execution_validation.runtime_output_roots",
+        "openhcs.core.artifact_store.runtime_execution_validation.runtime_output_roots",
         lambda contexts, root: (root,),
     )
 
