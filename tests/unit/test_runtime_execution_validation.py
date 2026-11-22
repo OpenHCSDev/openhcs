@@ -65,7 +65,7 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions
 from openhcs.core.materialization.core import MaterializationSpec, Output
-from openhcs.core.materialization.presets import roi_zip
+from openhcs.core.materialization.options import ROIOptions
 from openhcs.runtime.zmq.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
@@ -425,7 +425,7 @@ def test_empty_roi_materialization_does_not_invent_viewer_layer() -> None:
         name="EmptyLabels",
         path="/memory/EmptyLabels.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(),
+        materialization=MaterializationSpec(ROIOptions()),
         producer_step_index=0,
         producer_step_scope_id="scope-empty-labels",
         producer_step_name="Segment",

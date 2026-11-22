@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 from typing import ClassVar
 
 from openhcs.core.axes.alias_property import AliasProperty
@@ -234,6 +235,14 @@ _DEFAULT_OBJECT_IDENTITY_FIELDS: tuple[str, ...] = (
 _DEFAULT_OBJECT_IDENTITY_OUTPUT_FIELD: str = "object_label"
 
 
+class MeasurementStatistic(str, Enum):
+    """Canonical runtime measurement statistic labels."""
+
+    VALUE = "value"
+    COUNT = "count"
+    MEAN = "mean"
+
+
 @dataclass(frozen=True)
 class RuntimeMeasurementRowIdentityContract:
     """Declare row identity precedence, sample numbering and the object-ID field.
@@ -304,3 +313,29 @@ class RuntimeMeasurementRowIdentityContract:
         if primary_fields:
             return primary_fields
         return normalized_present_fields & self.fallback_sample_fields
+
+    @lru_cache(maxsize=32768)
+    def is_sample_number_reference(self, field_name: str) -> bool:
+        """Return whether ``field_name`` names the sample number of another row."""
+        normalized = normalize_runtime_identifier(field_name)
+        if normalized in self.sample_identity_fields:
+            return False
+        parts = tuple(part for part in normalized.split("_") if part)
+        number_parts = tuple(self.sample_number_field.split("_"))
+        width = len(number_parts)
+        return any(
+            parts[index : index + width] == number_parts
+            for index in range(len(parts) - width + 1)
+        )
+
+    @lru_cache(maxsize=32768)
+    def is_aggregate_sample_number_reference(self, field_name: str) -> bool:
+        """Return whether ``field_name`` is a mean over sample-number references."""
+        parts = tuple(
+            part for part in normalize_runtime_identifier(field_name).split("_") if part
+        )
+        return (
+            bool(parts)
+            and parts[0] == MeasurementStatistic.MEAN.value
+            and self.is_sample_number_reference(field_name)
+        )

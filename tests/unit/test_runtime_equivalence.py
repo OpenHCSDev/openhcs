@@ -77,6 +77,7 @@ from openhcs.core.artifact_store.runtime_execution_validation import (
 )
 from openhcs.core.artifact_store.runtime_exports import RuntimeExportObservation
 from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.measurements.measurement_declarations import MeasurementStatistic
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
@@ -97,7 +98,6 @@ from openhcs.core.payload.runtime_tabular_values import (
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
-    MeasurementStatistic,
     MeasurementSubject,
     ObjectCoreMeasurementFeature,
 )

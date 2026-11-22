@@ -29,9 +29,9 @@ from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     MostDerivedContextStrategyMixin,
 )
+from openhcs.core.measurements.measurement_declarations import MeasurementStatistic
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
-    MeasurementStatistic,
     ObjectCoreMeasurementFeature,
     object_location_features,
     ObjectShapeDescriptorFeatureMarker,
