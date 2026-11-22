@@ -153,7 +153,7 @@ from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
 from openhcs.core.materialization.options import CsvOptions, FileBundleOptions, JsonOptions, PointROIOptions, ROIOptions, TextOptions
-from openhcs.core.materialization.presets import csv_only, json_only, roi_zip, tiff_stack
+from openhcs.core.materialization.options import TiffStackOptions
 from openhcs.core.materialization.core import (
     MaterializationSpec,
     materialization_outputs,
@@ -527,7 +527,7 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(),
+        materialization=MaterializationSpec(ROIOptions()),
     )
     config = streaming_config_stub()
     plan = _plan(output_plan, streaming_configs={"napari_stream": config})
@@ -567,7 +567,7 @@ def test_declared_viewer_streaming_selects_automatic_viewer_surfaces(streaming):
         name="diagnostic_labels",
         path="/memory/diagnostic_labels.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(),
+        materialization=MaterializationSpec(ROIOptions()),
         viewer_streaming=streaming,
     )
     config = streaming_config_stub()
@@ -595,7 +595,7 @@ def test_viewer_output_expectation_omits_empty_stream_payload() -> None:
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(),
+        materialization=MaterializationSpec(ROIOptions()),
     )
     record = context.runtime_value_store.record(
         RuntimeValue.normalize(
@@ -630,7 +630,7 @@ def test_planned_materialization_preview_uses_declared_candidate_paths():
         name="cell_counts",
         path="/memory/A01_cell_counts_step7.pkl",
         artifact_type=SpecialArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     filemanager = FileManagerStub()
     context = _context(filemanager)
@@ -862,7 +862,7 @@ def test_materialize_artifact_outputs_uses_runtime_store_payload(
     output_plan = ArtifactOutputPlan(
         name="positions",
         path="/memory/positions.pkl",
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     filemanager = FileManagerStub()
     filemanager.memory[output_plan.path] = {"x": "from-vfs"}
@@ -891,7 +891,7 @@ def test_materialize_artifact_outputs_attaches_image_schema_provenance(monkeypat
         name="converted_image",
         path="/memory/converted_image.pkl",
         artifact_type=ImageArtifactType,
-        materialization=tiff_stack(),
+        materialization=MaterializationSpec(TiffStackOptions()),
     )
     filemanager = FileManagerStub()
     context = _context(filemanager)
@@ -1023,7 +1023,7 @@ def test_materialize_artifact_outputs_requires_runtime_store_record():
     output_plan = ArtifactOutputPlan(
         name="positions",
         path="/memory/positions.pkl",
-        materialization=json_only(),
+        materialization=MaterializationSpec(JsonOptions()),
     )
     filemanager = FileManagerStub()
     filemanager.memory[output_plan.path] = {"x": 1}
@@ -1039,7 +1039,7 @@ def test_materialize_artifact_outputs_does_not_require_vfs_payload_for_store_rec
     output_plan = ArtifactOutputPlan(
         name="positions",
         path="/memory/positions.pkl",
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     filemanager = FileManagerStub()
     context = _context(filemanager)
@@ -1067,7 +1067,7 @@ def test_materialize_artifact_outputs_uses_runtime_record_identity_not_final_pat
         name="measurements",
         path="/analysis/A01_measurements_step7.csv",
         artifact_type=MeasurementsArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
         group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/analysis/A01_measurements_step7.csv"},
     )
@@ -1114,7 +1114,7 @@ def test_materialize_artifact_outputs_uses_declared_measurement_csv_spec(
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     filemanager = FileManagerStub()
     filemanager.memory[output_plan.path] = [{"object_id": 1, "area": 42}]
@@ -1250,7 +1250,7 @@ def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
         name="cell_counts",
         path="/memory/A01_s001_w1_cell_counts_step7.pkl",
         artifact_type=MeasurementsArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
         variable_components=(
             Microscopy.Site,
             Microscopy.Channel,
@@ -1327,7 +1327,7 @@ def test_multi_plane_special_output_uses_aggregate_artifact_name(parser_type):
         name="cell_counts",
         path="/memory/cell_counts.pkl",
         artifact_type=SpecialArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
@@ -1378,7 +1378,7 @@ def test_scalar_special_output_preserves_complete_source_identity(parser_type):
         name="cell_counts",
         path="/memory/cell_counts.pkl",
         artifact_type=SpecialArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
@@ -1422,7 +1422,7 @@ def test_incomplete_scalar_special_output_keeps_strict_filename_failure(parser_t
         name="cell_counts",
         path="/memory/cell_counts.pkl",
         artifact_type=SpecialArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
@@ -1461,7 +1461,7 @@ def test_grouped_special_output_retains_group_coordinate_in_aggregate_name(parse
         path="/memory/cell_counts.pkl",
         artifact_type=SpecialArtifactType,
         group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
@@ -1515,7 +1515,7 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
             Microscopy.Site,
             Microscopy.Channel,
         ),
-        materialization=roi_zip(),
+        materialization=MaterializationSpec(ROIOptions()),
     )
     source_metadata = tuple(
         {
@@ -1619,7 +1619,7 @@ def test_multi_plane_measurement_aggregate_names_retain_runtime_group_coordinate
         name="neurite_outgrowth_summary",
         path="/memory/neurite_outgrowth_summary.pkl",
         artifact_type=MeasurementsArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
         variable_components=(Microscopy.Channel,),
     )
     context = _context(FileManagerStub())
@@ -1695,7 +1695,7 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
         name="cell_counts",
         path="/memory/cell_counts.pkl",
         artifact_type=MeasurementsArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
         variable_components=(Microscopy.Channel,),
     )
     context = _context(FileManagerStub())
@@ -1819,7 +1819,7 @@ def test_scalar_acquired_tables_keep_fixed_site_addresses_on_shared_runtime_path
         artifact_type=MeasurementsArtifactType,
         materialization=(
             AutomaticMeasurementsArtifactOutputMaterializationStrategy().materialization()
-            if automatic else csv_only()
+            if automatic else MaterializationSpec(CsvOptions())
         ),
         variable_components=(Microscopy.ZIndex,),
     )
@@ -2009,7 +2009,7 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     )
     table_plan = ArtifactOutputPlan(
         name="cell_counts", path="/memory/cell_counts.pkl",
-        artifact_type=MeasurementsArtifactType, materialization=csv_only(),
+        artifact_type=MeasurementsArtifactType, materialization=MaterializationSpec(CsvOptions()),
     )
     context = _context(FileManagerStub())
     image_step = replace(_plan(image_plan), step_index=5)
@@ -2096,7 +2096,7 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
         name="measurements",
         path="/memory/A01_measurements_step7.pkl",
         artifact_type=MeasurementsArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
         group_scope=ComponentGroupScope.of(("1",), component=Microscopy.Channel),
         paths_by_group={"1": "/memory/A01_w1_measurements_step7.pkl"},
     )
@@ -2164,7 +2164,7 @@ def test_fixed_component_scopes_materialize_distinct_measurement_paths() -> None
         artifact_type=MeasurementsArtifactType,
         group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/measurements.pkl"},
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     group_plan = output_plan.for_group("2")
     context = _context(FileManagerStub())
@@ -2293,7 +2293,7 @@ def test_fixed_scope_preserves_distinct_source_group_identity() -> None:
         artifact_type=MeasurementsArtifactType,
         group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/measurements.pkl"},
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     group_plan = output_plan.for_group("2")
     context = _context(FileManagerStub())
@@ -2347,7 +2347,7 @@ def test_fixed_component_scope_rejects_unresolved_filename_identity() -> None:
         artifact_type=MeasurementsArtifactType,
         group_scope=ComponentGroupScope.of(("2",), component=Microscopy.Channel),
         paths_by_group={"2": "/memory/measurements.pkl"},
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     group_plan = output_plan.for_group("2")
     context = _context(FileManagerStub())
@@ -2396,7 +2396,7 @@ def test_materialize_tabular_artifact_does_not_build_viewer_stream_kwargs(
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     filemanager = FileManagerStub()
     context = _context(filemanager)
@@ -2458,7 +2458,7 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
             "1": "/memory/A01_w1_measurements_step7.pkl",
             "2": "/memory/A01_w2_measurements_step7.pkl",
         },
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     group_plan = output_plan.for_group("1")
     filemanager = FileManagerStub()
@@ -2692,7 +2692,7 @@ def test_materialize_artifact_outputs_uses_group_measurement_artifact_identity(
             "1": "/memory/A01_s001_measurements_step7.pkl",
             "2": "/memory/A01_s002_measurements_step7.pkl",
         },
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     group_one = output_plan.for_group("1")
     group_two = output_plan.for_group("2")
@@ -2780,7 +2780,7 @@ def test_materialize_artifact_outputs_uses_grouped_scope_not_record_location(
         paths_by_group={
             "2": "/memory/A01_w2_measurements_step7.pkl",
         },
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
     group_plan = output_plan.for_group("2")
     filemanager = FileManagerStub()
@@ -2830,7 +2830,7 @@ def test_materialize_artifact_outputs_uses_null_component_group_identity_for_str
         paths_by_group={
             "2": "/memory/channel2_Nuclei.pkl",
         },
-        materialization=roi_zip(min_area=0),
+        materialization=MaterializationSpec(ROIOptions(min_area=0)),
     )
     group_plan = output_plan.for_group("2")
     labels = ObjectLabelPayload(
@@ -2892,7 +2892,7 @@ def test_materialize_artifact_outputs_streams_aggregate_artifact_with_incomplete
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(min_area=0),
+        materialization=MaterializationSpec(ROIOptions(min_area=0)),
     )
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 2), dtype=np.int32)),
@@ -2969,7 +2969,7 @@ def test_projected_artifact_uses_filename_identity_without_restoring_collapsed_s
         name="neurons",
         path="/memory/neurons.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(),
+        materialization=MaterializationSpec(ROIOptions()),
         variable_components=(Microscopy.Channel,),
     )
     labels = ObjectLabelPayload(
@@ -3053,7 +3053,7 @@ def test_materialize_artifact_outputs_uses_declared_metadata_json_spec(
         name="metadata",
         path="/memory/metadata.pkl",
         artifact_type=MetadataArtifactType,
-        materialization=json_only(),
+        materialization=MaterializationSpec(JsonOptions()),
     )
     filemanager = FileManagerStub()
     filemanager.memory[output_plan.path] = {"plate": "A"}
@@ -3188,7 +3188,7 @@ def test_materialize_artifact_outputs_uses_declared_object_labels_roi_spec(monke
         name="labels",
         path="/memory/labels.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(),
+        materialization=MaterializationSpec(ROIOptions()),
     )
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
@@ -3227,7 +3227,7 @@ def test_materialize_artifact_outputs_can_target_streaming_without_persistent_ba
         name="labels",
         path="/memory/labels.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(min_area=0),
+        materialization=MaterializationSpec(ROIOptions(min_area=0)),
     )
     streaming_config = streaming_config_stub()
     labels = ObjectLabelPayload(
@@ -3304,7 +3304,7 @@ def test_main_flow_artifact_persists_without_duplicate_viewer_stream(monkeypatch
         name="CorrectedImage",
         path="/memory/CorrectedImage.pkl",
         artifact_type=ImageArtifactType,
-        materialization=tiff_stack(),
+        materialization=MaterializationSpec(TiffStackOptions()),
     )
     payload = ImagePayloadMetadata(
         source_component_metadata={
@@ -3357,7 +3357,7 @@ def test_materialize_artifact_outputs_uses_artifact_source_metadata_for_streamin
         name="labels",
         path="/memory/labels.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(min_area=0),
+        materialization=MaterializationSpec(ROIOptions(min_area=0)),
     )
     streaming_config = streaming_config_stub()
     labels = ObjectLabelPayload(
@@ -3436,7 +3436,7 @@ def test_materialize_artifact_outputs_streams_payload_component_metadata(
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(min_area=0),
+        materialization=MaterializationSpec(ROIOptions(min_area=0)),
     )
     streaming_config = streaming_config_stub()
     labels = ObjectLabelPayload(
@@ -3488,7 +3488,7 @@ def test_materialize_artifact_outputs_uses_runtime_plane_group_identity(
         name="AdjacentImage",
         path="/memory/AdjacentImage.pkl",
         artifact_type=ImageArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
         group_scope=ComponentGroupScope.of(("11",), component=Microscopy.Timepoint),
         paths_by_group={
             "11": "/memory/A01_t11_AdjacentImage_step7.pkl",
@@ -3548,7 +3548,7 @@ def test_materialize_artifact_outputs_merges_parser_axes_into_source_metadata(
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(min_area=0),
+        materialization=MaterializationSpec(ROIOptions(min_area=0)),
     )
     streaming_config = streaming_config_stub()
     labels = ObjectLabelPayload(
@@ -3613,7 +3613,7 @@ def test_materialize_artifact_outputs_uses_variable_components_for_streaming_ide
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(min_area=0),
+        materialization=MaterializationSpec(ROIOptions(min_area=0)),
     )
     streaming_config = streaming_config_stub()
     labels = ObjectLabelPayload(
@@ -3717,7 +3717,7 @@ def test_materialize_artifact_outputs_streams_singleton_roi_plane_from_output_pl
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
         variable_components=(Microscopy.Site,),
-        materialization=roi_zip(),
+        materialization=MaterializationSpec(ROIOptions()),
     )
     labels_array = np.zeros((1, 8, 8), dtype=np.int32)
     labels_array[0, 2:6, 3:7] = 1
@@ -3779,7 +3779,7 @@ def test_materialize_artifact_outputs_streams_source_binding_roi_plane_metadata(
         name="segmentation_masks",
         path="/memory/segmentation_masks.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(min_area=0),
+        materialization=MaterializationSpec(ROIOptions(min_area=0)),
     )
     streaming_config = streaming_config_stub()
     labels = ObjectLabelPayload(
@@ -3869,7 +3869,7 @@ def test_materialize_rgb_artifact_streams_filename_channel_identity(
         name="RGBImage",
         path="/memory/RGBImage.pkl",
         artifact_type=ImageArtifactType,
-        materialization=tiff_stack(),
+        materialization=MaterializationSpec(TiffStackOptions()),
     )
     streaming_config = streaming_config_stub()
     rgb_payload = ImageMetadataPayload(
@@ -3963,7 +3963,7 @@ def test_materialize_image_uses_declared_filename_source_identity(monkeypatch):
         name="SavedRGB",
         path="/memory/SavedRGB.pkl",
         artifact_type=ImageArtifactType,
-        materialization=tiff_stack(),
+        materialization=MaterializationSpec(TiffStackOptions()),
         relations=(
             MaterializationSourceIdentityRelation(filename_source.ref()),
             GroupLineageSourceRelation(selected_image.ref()),
@@ -4191,7 +4191,7 @@ def test_materialize_rgb_artifact_keeps_scalar_filename_identity_for_mixed_prove
         name="OrigOverlay",
         path="/memory/OrigOverlay.pkl",
         artifact_type=ImageArtifactType,
-        materialization=tiff_stack(),
+        materialization=MaterializationSpec(TiffStackOptions()),
     )
     streaming_config = streaming_config_stub()
     rgb_payload = ImageMetadataPayload(

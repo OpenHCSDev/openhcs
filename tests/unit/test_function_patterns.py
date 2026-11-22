@@ -58,7 +58,8 @@ from openhcs.core.callable.runtime_adapters import runtime_adapter
 from openhcs.core.object_labels.runtime_object_labels import ObjectLabelValue
 from openhcs.core.object_labels.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.source.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.materialization.presets import csv_only
+from openhcs.core.materialization.options import CsvOptions
+from openhcs.core.materialization.core import MaterializationSpec
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -1536,7 +1537,7 @@ def test_ungrouped_compiled_function_pattern_preserves_grouped_source_patterns()
 
 
 def test_contract_decorators_declare_artifact_specs():
-    materialization = csv_only()
+    materialization = MaterializationSpec(CsvOptions())
 
     @artifact_inputs("positions")
     @artifact_outputs("metadata", ("measurements", materialization))
@@ -1678,7 +1679,7 @@ def test_artifact_spec_collection_unique_keys_by_full_ref():
     materialized_output = ArtifactSpec.output(
         "objects",
         ObjectLabelsArtifactType,
-        materialization=csv_only(),
+        materialization=MaterializationSpec(CsvOptions()),
     )
 
     assert ArtifactSpecCollection((source_input, source_output)).unique() == (

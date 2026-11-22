@@ -99,7 +99,7 @@ from openhcs.core.source.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.materialization.options import CsvOptions, ImageFileOptions, JsonOptions, NameByArtifactName, NameBySourceIdentity, PointROIOptions, ROIOptions, TiffStackOptions
 from openhcs.core.materialization.core import MaterializationSpec, materialize, materialization_outputs, tabular_field_names_from_materialization
-from openhcs.core.materialization.presets import csv_only, json_materializer, json_only, text_only, tiff_stack
+from openhcs.core.materialization.options import TextOptions
 from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     analysis_file_path_is_included,
 )
@@ -497,22 +497,22 @@ def _stream_materialize(spec, data, path, filemanager, context=None):
 
 @pytest.mark.unit
 def test_materialization_spec_candidate_paths_follow_registered_writers() -> None:
-    assert csv_only(suffix=".csv").candidate_paths("/tmp/A01_measurements.pkl") == (
+    assert MaterializationSpec(CsvOptions(filename_suffix=".csv")).candidate_paths("/tmp/A01_measurements.pkl") == (
         "/tmp/A01_measurements.csv",
     )
-    assert json_only().candidate_paths("/tmp/metadata.json") == ("/tmp/metadata.json",)
-    assert text_only().candidate_paths("/tmp/report.txt") == ("/tmp/report.txt",)
+    assert MaterializationSpec(JsonOptions()).candidate_paths("/tmp/metadata.json") == ("/tmp/metadata.json",)
+    assert MaterializationSpec(TextOptions()).candidate_paths("/tmp/report.txt") == ("/tmp/report.txt",)
     assert MaterializationSpec(ROIOptions()).candidate_paths(
         "/tmp/A01_s001_w1_z001_t001_Nuclei_step3.roi.zip"
     ) == (
         "/tmp/A01_s001_w1_z001_t001_Nuclei_step3_rois.roi.zip",
         "/tmp/A01_s001_w1_z001_t001_Nuclei_step3_segmentation_summary.txt",
     )
-    assert tiff_stack().candidate_paths("/tmp/Overlay.pkl") == (
+    assert MaterializationSpec(TiffStackOptions()).candidate_paths("/tmp/Overlay.pkl") == (
         "/tmp/Overlay_slice_000.tif",
         "/tmp/Overlay_summary.txt",
     )
-    assert tiff_stack().candidate_paths("/tmp/A01_s001_w1_z001_t001.tif") == (
+    assert MaterializationSpec(TiffStackOptions()).candidate_paths("/tmp/A01_s001_w1_z001_t001.tif") == (
         "/tmp/A01_s001_w1_z001_t001.tif",
         "/tmp/A01_s001_w1_z001_t001_summary.txt",
     )
@@ -520,9 +520,9 @@ def test_materialization_spec_candidate_paths_follow_registered_writers() -> Non
 
 @pytest.mark.unit
 def test_materialization_spec_declares_filename_identity() -> None:
-    assert tiff_stack().uses_source_identity_filename()
-    assert not tiff_stack(
-        TiffStackOptions(filename_identity=NameByArtifactName)
+    assert MaterializationSpec(TiffStackOptions()).uses_source_identity_filename()
+    assert not MaterializationSpec(TiffStackOptions(
+        TiffStackOptions(filename_identity=NameByArtifactName))
     ).uses_source_identity_filename()
 
 
@@ -707,7 +707,7 @@ def test_csv_materialization_preserves_declared_fields_for_empty_rows() -> None:
     fm = FileManager({"memory": MemoryStorageBackend()})
 
     out = materialize(
-        csv_only(fields=["object_label", "area"]),
+        MaterializationSpec(CsvOptions(fields=["object_label", "area"])),
         data=[],
         path="/tmp/A01_measurements",
         filemanager=fm,
@@ -1010,7 +1010,7 @@ def test_csv_materialization_preserves_declared_field_order_for_dict_rows() -> N
     fm = FileManager({"memory": MemoryStorageBackend()})
 
     out = materialize(
-        csv_only(fields=["object_label", "area"]),
+        MaterializationSpec(CsvOptions(fields=["object_label", "area"])),
         data=[{"area": 9, "object_label": 1, "ignored": 99}],
         path="/tmp/A01_measurements",
         filemanager=fm,
@@ -1027,7 +1027,7 @@ def test_csv_materialization_expands_columnar_rows() -> None:
     fm = FileManager({"memory": MemoryStorageBackend()})
 
     out = materialize(
-        csv_only(fields=["object_label", "area"]),
+        MaterializationSpec(CsvOptions(fields=["object_label", "area"])),
         data=MeasurementProjectedColumnarRows(
             {
                 "object_label": (1, 2),
@@ -1057,7 +1057,7 @@ def test_csv_materialization_expands_mapping_columns() -> None:
     fm = FileManager({"memory": MemoryStorageBackend()})
 
     out = materialize(
-        csv_only(
+        MaterializationSpec(CsvOptions(
             fields=[
                 "relationship_type",
                 "parent_id",
@@ -1065,7 +1065,7 @@ def test_csv_materialization_expands_mapping_columns() -> None:
                 "slice_index",
                 "slice_count",
             ]
-        ),
+        )),
         data={
             "relationship_type": "parent_child",
             "parent_id": (10, 11),
@@ -1092,7 +1092,7 @@ def test_json_materialization_filters_to_declared_fields() -> None:
     fm = FileManager({"memory": MemoryStorageBackend()})
 
     out = materialize(
-        json_materializer(fields=["object_label", "area"]),
+        MaterializationSpec(JsonOptions(fields=["object_label", "area"])),
         data=[{"object_label": 1, "area": 9, "ignored": 99}],
         path="/tmp/A01_measurements",
         filemanager=fm,
@@ -1107,7 +1107,7 @@ def test_json_materialization_filters_to_declared_fields() -> None:
 @pytest.mark.unit
 def test_tabular_field_names_from_materialization_reads_csv_and_json_options() -> None:
     assert tabular_field_names_from_materialization(
-        csv_only(fields=["object_label", "area"])
+        MaterializationSpec(CsvOptions(fields=["object_label", "area"]))
     ) == ("object_label", "area")
 
 
@@ -1122,7 +1122,7 @@ def test_empty_columnar_csv_retains_its_nominal_schema() -> None:
     )
 
     output_path = materialize(
-        csv_only(),
+        MaterializationSpec(CsvOptions()),
         data=rows,
         path="/tmp/A01_cells",
         filemanager=filemanager,
@@ -1132,7 +1132,7 @@ def test_empty_columnar_csv_retains_its_nominal_schema() -> None:
 
     assert filemanager.load(output_path, "memory") == "cell_id,area\r\n"
     assert tabular_field_names_from_materialization(
-        json_only(fields=["object_label", "area"])
+        MaterializationSpec(JsonOptions(fields=["object_label", "area"]))
     ) == ("object_label", "area")
 
 
@@ -1142,7 +1142,7 @@ def test_tiff_stack_preserves_channels_last_color_image_as_single_file() -> None
     image = np.zeros((5, 7, 3), dtype=np.uint8)
 
     out = materialize(
-        tiff_stack(),
+        MaterializationSpec(TiffStackOptions()),
         data=image,
         path="/tmp/A01_rgb",
         filemanager=fm,
@@ -1166,7 +1166,7 @@ def test_tiff_stack_splits_scalar_3d_stack_by_plane() -> None:
     )
 
     out = materialize(
-        tiff_stack(),
+        MaterializationSpec(TiffStackOptions()),
         data=stack,
         path="/tmp/A01_stack",
         filemanager=fm,
@@ -1200,7 +1200,7 @@ def test_tiff_stack_streaming_saves_per_slice_component_metadata() -> None:
     )
 
     materialize(
-        tiff_stack(),
+        MaterializationSpec(TiffStackOptions()),
         data=payload,
         path="/tmp/A01_s001_w1_z001_t001_NucleiObjects3D_step9",
         filemanager=fm,
@@ -1239,7 +1239,7 @@ def test_tiff_stack_streaming_projects_scalar_metadata_over_declared_stack_axis(
     )
 
     materialize(
-        tiff_stack(),
+        MaterializationSpec(TiffStackOptions()),
         data=payload,
         path="/tmp/A01_s001_w3_z001_t001_DerivedStack_step6",
         filemanager=fm,
@@ -1364,7 +1364,7 @@ def test_tiff_stack_streaming_preserves_runtime_source_plane_metadata() -> None:
     ).payload_with(np.zeros((2, 5, 7), dtype=np.float32), None)
 
     materialize(
-        tiff_stack(),
+        MaterializationSpec(TiffStackOptions()),
         data=payload,
         path="/tmp/A01_s001_w3_z001_t001_DerivedStack_step6",
         filemanager=fm,
@@ -1394,7 +1394,7 @@ def test_tiff_stack_streaming_projects_artifact_identity_over_declared_stack_axi
     fm = _RecordingFileManager()
 
     materialize(
-        tiff_stack(),
+        MaterializationSpec(TiffStackOptions()),
         data=ImageMetadataPayload(
             data=np.zeros((2, 5, 7), dtype=np.float32),
             metadata=ImagePayloadMetadata(
@@ -1449,7 +1449,7 @@ def test_tiff_stack_streaming_uses_single_plane_scalar_source_identity() -> None
     )
 
     materialize(
-        tiff_stack(),
+        MaterializationSpec(TiffStackOptions()),
         data=payload,
         path="/tmp/A01_s001_w3_z001_t001_SanityCheck_step6",
         filemanager=fm,
@@ -1484,7 +1484,7 @@ def test_materialized_tiff_output_uses_artifact_source_identity_as_fallback() ->
     )
 
     materialize(
-        tiff_stack(),
+        MaterializationSpec(TiffStackOptions()),
         data=payload,
         path="/tmp/A01_s001_w3_z001_t020_AdjacentImage_step6",
         filemanager=fm,
