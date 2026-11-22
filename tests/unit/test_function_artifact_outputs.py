@@ -57,7 +57,7 @@ from openhcs.core.callable.runtime_adapters import (
     RuntimeAdapterRequest,
     runtime_adapter,
 )
-from openhcs.core.memory import stack_runtime_slices, unstack_runtime_slices
+from openhcs.core.memory import stack_runtime_slices, unplanned_device, unstack_runtime_slices
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     artifact_outputs,
@@ -963,7 +963,7 @@ def test_execute_function_core_saves_named_artifacts():
     result = _execute_function_core(
         CoreExecutionRequest(
             func_callable=analyze,
-            main_data_arg=41,
+            main_data_arg=np.asarray(41),
             base_kwargs={},
             context=context,
             artifact_inputs={},
@@ -981,7 +981,7 @@ def test_execute_function_core_saves_named_artifacts():
         )
     )
 
-    assert result == 42
+    assert result.array_data == 42
     assert tuple(
         context.filemanager.saved[("/memory/measurements.pkl", "memory")].rows
     ) == ({"count": 2},)
@@ -2637,7 +2637,7 @@ def test_execute_function_core_loads_artifact_input_from_runtime_store_record():
     _execute_function_core(
         CoreExecutionRequest(
             func_callable=produce,
-            main_data_arg=41,
+            main_data_arg=np.asarray(41),
             base_kwargs={},
             context=context,
             artifact_inputs={},
@@ -2672,7 +2672,7 @@ def test_execute_function_core_loads_artifact_input_from_runtime_store_record():
     result = _execute_function_core(
         CoreExecutionRequest(
             func_callable=consume,
-            main_data_arg=41,
+            main_data_arg=np.asarray(41),
             base_kwargs={},
             context=context,
             artifact_inputs={
@@ -2689,7 +2689,7 @@ def test_execute_function_core_loads_artifact_input_from_runtime_store_record():
         )
     )
 
-    assert result == 41
+    assert result.array_data == 41
     assert loaded_inputs == [{"x": 1}]
 
 
@@ -2754,7 +2754,7 @@ def test_execute_function_core_requires_store_record_even_when_vfs_payload_exist
         _execute_function_core(
             CoreExecutionRequest(
                 func_callable=consume,
-                main_data_arg=41,
+                main_data_arg=np.asarray(41),
                 base_kwargs={},
                 context=context,
                 artifact_inputs={
@@ -2789,7 +2789,7 @@ def test_execute_function_core_requires_all_declared_artifact_values():
         _execute_function_core(
             CoreExecutionRequest(
                 func_callable=analyze,
-                main_data_arg=41,
+                main_data_arg=np.asarray(41),
                 base_kwargs={},
                 context=context,
                 artifact_inputs={},
@@ -2820,7 +2820,7 @@ def test_execute_function_core_validates_artifact_kind():
         _execute_function_core(
             CoreExecutionRequest(
                 func_callable=analyze,
-                main_data_arg=41,
+                main_data_arg=np.asarray(41),
                 base_kwargs={},
                 context=context,
                 artifact_inputs={},
@@ -2852,7 +2852,7 @@ def test_execute_function_core_validates_tuple_artifact_kind():
         _execute_function_core(
             CoreExecutionRequest(
                 func_callable=analyze,
-                main_data_arg=41,
+                main_data_arg=np.asarray(41),
                 base_kwargs={},
                 context=context,
                 artifact_inputs={},
@@ -2879,12 +2879,12 @@ def test_function_runtime_stacks_and_unstacks_explicit_runtime_slices():
     stack = stack_runtime_slices(
         slices,
         "numpy",
-        0,
+        unplanned_device("numpy"),
     )
     unstacked = unstack_runtime_slices(
         stack,
         "numpy",
-        0,
+        unplanned_device("numpy"),
         expected_count=2,
     )
 
