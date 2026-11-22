@@ -26,6 +26,7 @@ from openhcs.core.memory import (
     convert_memory,
     detect_memory_type,
     stack_runtime_slices,
+    unplanned_device,
     runtime_slice_stack_geometry,
 )
 from openhcs.core.payload.runtime_image_values import ImagePayload, ImagePayloadMetadata, ImagePayloadSliceProjector, ImagePayloadSourceSpatialDomainAdapter, project_image_mask_to_data_domain
@@ -1602,7 +1603,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
             return None
         shared = self._shared_image_mask(masks, self.geometry)
         return shared if shared is not None else stack_runtime_slices(
-            masks, self.memory_type, 0,
+            masks, self.memory_type, unplanned_device(self.memory_type),
         )
 
     def __getstate__(self) -> dict[str, Any]:
@@ -1678,7 +1679,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
             if self._composed_payload is None:
                 data = stack_runtime_slices(
                     tuple(payload.data for payload in self.slices),
-                    self.memory_type, MemoryType(self.memory_type).library.device_of(self.slices[0].data),
+                    self.memory_type, unplanned_device(self.memory_type),
                 )
                 self._composed_payload = self._metadata.payload_with(
                     data, self._materialized_image_mask(),

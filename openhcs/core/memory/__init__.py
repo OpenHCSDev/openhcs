@@ -8,7 +8,8 @@ from collections.abc import Sequence
 from typing import Any
 
 from arraybridge import ArrayGeometry
-from arraybridge.devices import Device
+from arraybridge.devices import HOST, AcceleratorDevice, Device
+from arraybridge.libraries import AcceleratorDevices
 
 # Re-export from arraybridge
 from arraybridge import (
@@ -36,6 +37,15 @@ for _memory_type in MemoryType:
 memory_types = decorators.memory_types
 for _memory_type in MemoryType:
     globals()[_memory_type.value] = getattr(decorators, _memory_type.value)
+
+
+def unplanned_device(memory_type: str) -> Device:
+    """Where a memory type's arrays go when no compiled plan placed them: main memory,
+    or the first accelerator of a library that has them."""
+
+    if isinstance(MemoryType(memory_type).library, AcceleratorDevices):
+        return AcceleratorDevice(0)
+    return HOST
 
 
 def stack_runtime_slices(
@@ -106,6 +116,7 @@ __all__ = [
     "stack_slices",
     "unstack_slices",
     "stack_runtime_slices",
+    "unplanned_device",
     "unstack_runtime_slices",
     # Slice processing
     "process_slices",

@@ -31,7 +31,7 @@ from openhcs.core.measurements.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementRowsAxisProjection,
 )
-from openhcs.core.memory import stack_runtime_slices, unstack_runtime_slices
+from openhcs.core.memory import stack_runtime_slices, unplanned_device, unstack_runtime_slices
 from openhcs.core.payload.runtime_array_values import RuntimeArrayPayload
 
 
@@ -413,7 +413,7 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
         slices = unstack_runtime_slices(
             data,
             memory_type,
-            0,
+            unplanned_device(memory_type),
             expected_count=metadata.source_provenance.source_plane_count or None,
         )
         return tuple(
@@ -626,7 +626,7 @@ class RuntimeArrayPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
     def stack_array_slices(self, values: list[Any], memory_type: str) -> Any:
         """Stack an explicitly collected dense runtime-slice sequence."""
 
-        return stack_runtime_slices(values, memory_type, 0)
+        return stack_runtime_slices(values, memory_type, unplanned_device(memory_type))
 
 
 class ImagePayloadPure2DAuxiliaryOutputAggregator(
