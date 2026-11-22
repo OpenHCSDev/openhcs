@@ -220,8 +220,7 @@ class OpenHCSPyQtApp(QApplication):
 
         # CRITICAL FIX: Establish global config context for lazy dataclass resolution
         # This was missing and caused placeholder resolution to fall back to static defaults
-        from objectstate.global_config import set_global_config_for_editing
-        from objectstate.lazy_factory import ensure_global_config_context
+        from objectstate import set_global_config
         from objectstate.object_state import (
             ObjectState,
             ObjectStateRegistry,
@@ -229,13 +228,8 @@ class OpenHCSPyQtApp(QApplication):
 
         from openhcs.core.config.pipeline_config import GlobalPipelineConfig
 
-        # Set for editing (UI placeholders) - this uses threading.local() storage
-        set_global_config_for_editing(
-            GlobalPipelineConfig, self.pipeline_runtime_config
-        )
-
-        # ALSO ensure context for orchestrator creation (required by orchestrator.__init__)
-        ensure_global_config_context(GlobalPipelineConfig, self.pipeline_runtime_config)
+        # The process's global config: UI placeholders and orchestrator creation both read it.
+        set_global_config(GlobalPipelineConfig, self.pipeline_runtime_config)
 
         # Register GlobalPipelineConfig ObjectState (singleton, persists for app lifetime)
         # This is the root of the ObjectState hierarchy
