@@ -10,6 +10,7 @@ from __future__ import annotations
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 from typing import ClassVar
 
 from python_introspect import JsonValue
@@ -100,7 +101,9 @@ class SessionJourney:
         self.results.append(result)
         return result
 
-    async def dataset_row(self, scope_id: str) -> DatasetRowState | None:
+    async def dataset_rows(self) -> tuple[DatasetRowState, ...]:
+        """The session's dataset rows, in the order they were added."""
+
         result = await call_mcp_tool(
             self.session,
             McpDevToolCall(agent_capabilities.session_datasets.name, {}),
@@ -108,8 +111,14 @@ class SessionJourney:
         )
         state = result.first_decoded_payload()
         if not isinstance(state, DatasetListState):
-            return None
-        return next((row for row in state.rows if row.scope_id == scope_id), None)
+            return ()
+        return tuple(state.rows)
+
+    async def dataset_row(self, scope_id: str) -> DatasetRowState | None:
+        return next(
+            (row for row in await self.dataset_rows() if row.scope_id == scope_id),
+            None,
+        )
 
     async def wait_for(
         self,
@@ -164,7 +173,13 @@ class SessionJourney:
         added = await self.call(agent_capabilities.add_datasets, {"roots": [root]})
         if _rejected(added):
             return
-        (scope_id, *_rest) = added.first_decoded_payload().target_scope_ids
+        # A resident session may already hold ``root``; adding it again adds nothing.
+        dataset_root = Path(root).resolve()
+        (scope_id, *_rest) = (
+            row.scope_id
+            for row in await self.dataset_rows()
+            if Path(row.root).resolve() == dataset_root
+        )
         piped = await self.call(
             agent_capabilities.set_dataset_pipeline,
             {"scope_id": scope_id, "pipeline_source": pipeline_source},

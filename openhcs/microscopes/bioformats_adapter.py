@@ -656,7 +656,6 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
     registry_key = "java"
 
     def discover_stores(self, root: Path) -> tuple[SourcePlaneDataset, ...]:
-        context = BioFormatsJavaContext.instance()
         datasets: list[SourcePlaneDataset] = []
         exclusions: list[BioFormatsPackedRgbSeriesExclusion] = []
         claimed_paths: set[Path] = set()
@@ -664,11 +663,11 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
         for source_path in candidate_source_paths(root):
             if absolute_source_path(source_path) in claimed_paths:
                 continue
-            if not self._declares_path(context, source_path):
+            if not self._declares_path(source_path):
                 continue
             if not self.source_bindings.discovery_path_matches(
                 root, source_path
-            ) and context.is_single_file(source_path):
+            ) and BioFormatsJavaContext.instance().is_single_file(source_path):
                 continue
             try:
                 dataset = self._discover_container(root, source_path)
@@ -704,13 +703,15 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
         return tuple(datasets)
 
     @staticmethod
-    def _declares_path(context: BioFormatsJavaContext, path: Path) -> bool:
+    def _declares_path(path: Path) -> bool:
+        """Whether Java claims ``path``; a plain image file never asks Java."""
+
         if ImageFileFormat.is_image_path(path):
             image_format = ImageFileFormat.require_path(path)
             if not image_format.requires_plane_store_decoder(path):
                 return False
         try:
-            return context.declares_path(path)
+            return BioFormatsJavaContext.instance().declares_path(path)
         except BioFormatsJavaUnavailableError as exc:
             raise PlaneStoreUnavailableError(str(exc)) from exc
 
