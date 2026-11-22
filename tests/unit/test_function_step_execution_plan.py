@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from arraybridge.devices import HOST, AcceleratorDevice
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import MemoryType
@@ -134,7 +135,7 @@ def test_compiled_step_plan_is_the_runtime_plan_owner():
     assert isinstance(plan.main_input_dependency, StepOutputInput)
     assert plan.main_input_dependency.source_step_scope_id == "plate::functionstep_1"
     assert plan.source_binding_plan == CompiledSourceBindingPlan()
-    assert plan.device_id_for(plan.input_memory_type) is None
+    assert plan.device_for(plan.input_memory_type) == HOST
     assert not plan.requires_gpu
     assert plan.gpu_memory_types == frozenset()
     assert plan.input_conversion is not None
@@ -155,10 +156,12 @@ def test_compiled_step_plan_owns_gpu_memory_classification() -> None:
 
     assert compiled_plan.requires_gpu
     assert compiled_plan.gpu_memory_types == frozenset({MemoryType.CUPY})
-    assert compiled_plan.device_id_for("cupy") == 2
+    assert compiled_plan.device_for("cupy") == AcceleratorDevice(2)
 
 
-def test_compiled_step_plan_includes_invocation_execution_memory(monkeypatch) -> None:
+def test_compiled_step_plan_includes_invocation_execution_memory(
+    monkeypatch, on_every_library,
+) -> None:
     def numpy_boundary_with_torch_execution(image):
         return image
 
@@ -175,7 +178,7 @@ def test_compiled_step_plan_includes_invocation_execution_memory(monkeypatch) ->
     )
 
     assert compiled_plan.gpu_memory_types == frozenset({MemoryType.TORCH})
-    assert compiled_plan.device_id_for("torch") == 4
+    assert compiled_plan.device_for("torch") == AcceleratorDevice(4)
     from contextlib import contextmanager
     from openhcs.core.pipeline.framework_device_assignment import (
         assign_framework_devices,
@@ -189,18 +192,18 @@ def test_compiled_step_plan_includes_invocation_execution_memory(monkeypatch) ->
     (placed_invocation,) = tuple(
         compiled_plan.compiled_function_pattern.iter_invocations()
     )
-    assert placed_invocation.input_device_id is None
-    assert placed_invocation.execution_device_id == 4
+    assert placed_invocation.input_device == HOST
+    assert placed_invocation.execution_device == AcceleratorDevice(4)
     entered = []
 
     @contextmanager
-    def recorded_scope(memory_type, device_id):
-        entered.append((memory_type, device_id))
+    def recorded_scope(library, device):
+        entered.append((MemoryType(library.name), device))
         yield
 
-    monkeypatch.setattr(MemoryType, "device_scope", recorded_scope)
+    on_every_library("device_scope", recorded_scope)
     with placed_invocation.execution_device_scope():
-        assert entered == [(MemoryType.TORCH, 4)]
+        assert entered == [(MemoryType.TORCH, AcceleratorDevice(4))]
 
 
 def test_compiled_step_plan_includes_intermediate_invocation_memory() -> None:

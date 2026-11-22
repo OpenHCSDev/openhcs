@@ -6,7 +6,7 @@ from queue import SimpleQueue
 from types import ModuleType, SimpleNamespace
 
 import pytest
-from objectstate import get_current_global_config
+from objectstate import get_live_global_config, get_saved_global_config
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import (
     ExecuteRequest,
@@ -95,7 +95,7 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
 
     ZMQExecutionServer._ensure_request_global_config_context(context)
 
-    saved_global_config = get_current_global_config(
+    saved_global_config = get_live_global_config(
         GlobalPipelineConfig,
         use_live=False,
     )
@@ -836,4 +836,4 @@ def test_compiled_request_keeps_config_scope_without_resolving_configuration(mon
     assert initialized[0]["resolved_config"] is None
     assert compilations[0]["resolved_config"] is None
     assert compilations[0]["partition_values"] == ["A01"]
-    assert get_current_global_config(GlobalPipelineConfig, use_live=False) is global_config
+    assert get_saved_global_config(GlobalPipelineConfig) is global_config

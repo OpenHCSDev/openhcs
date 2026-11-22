@@ -1,6 +1,7 @@
 import numpy as np
 
 from arraybridge import MemoryType
+from arraybridge.devices import AcceleratorDevice
 
 from openhcs.processing.backends.analysis.cell_counting_cupy import (
     _watershed_with_cpu_partition,
@@ -10,24 +11,14 @@ from openhcs.processing.backends.analysis.cell_counting_cupy import (
 def test_watershed_partition_roundtrips_through_declared_cupy_device(
     monkeypatch,
 ) -> None:
-    restored_device_ids = []
+    restored_devices = []
+    cupy = type(MemoryType.CUPY.library)
+    monkeypatch.setattr(cupy, "device_of", lambda _library, _value: AcceleratorDevice(3))
+    monkeypatch.setattr(cupy, "to_numpy", lambda _library, value: np.asarray(value))
     monkeypatch.setattr(
-        MemoryType,
-        "device_id_of",
-        lambda memory_type, _value: 3 if memory_type is MemoryType.CUPY else None,
-    )
-    monkeypatch.setattr(
-        MemoryType,
-        "to_numpy",
-        lambda _memory_type, value: np.asarray(value),
-    )
-    monkeypatch.setattr(
-        MemoryType,
+        cupy,
         "from_numpy",
-        lambda _memory_type, value, device_id: (
-            restored_device_ids.append(device_id),
-            value,
-        )[1],
+        lambda _library, value, device: (restored_devices.append(device), value)[1],
     )
     image = np.array([[0.0, 1.0, 0.0], [1.0, 2.0, 1.0], [0.0, 1.0, 0.0]])
     markers = np.array([[1, 0, 0], [0, 0, 0], [0, 0, 2]])
@@ -36,4 +27,4 @@ def test_watershed_partition_roundtrips_through_declared_cupy_device(
     labels = _watershed_with_cpu_partition(image, markers, mask=mask)
 
     assert labels.shape == image.shape
-    assert restored_device_ids == [3]
+    assert restored_devices == [AcceleratorDevice(3)]

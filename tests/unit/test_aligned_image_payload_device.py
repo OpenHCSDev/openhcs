@@ -1,3 +1,4 @@
+from arraybridge.devices import HOST, AcceleratorDevice
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
@@ -126,23 +127,24 @@ def test_mixed_intensity_composition_uses_declared_memory_conversion(
     inputs = (raw, normalized) if raw_first else (normalized, raw)
     context = composition(inputs, metadata_mode=mode)
     kwargs = {} if destination == 'implicit' else {
-        'memory_type': destination, 'device_id': 1 if destination == 'cupy' else None,
+        'memory_type': destination,
+        'device': AcceleratorDevice(1) if destination == 'cupy' else HOST,
     }
     result = context.compose(**kwargs)
     assert bool(state['downloads']) == (destination == 'numpy')
     output = result.data
     requested = 'cupy' if destination == 'implicit' else destination
-    owner = MemoryType(requested)
+    owner = MemoryType(requested).library
     np.testing.assert_array_equal(owner.to_numpy(output), 0.5)
-    assert owner.device_id_of(output) == (1 if requested == 'cupy' else None)
+    assert owner.device_of(output) == (AcceleratorDevice(1) if requested == 'cupy' else HOST)
     assert result.metadata.has_normalized_intensity
     mask = result.mask
-    mask_owner = MemoryType(aligned_image_payload.detect_memory_type(mask))
+    mask_owner = MemoryType(aligned_image_payload.detect_memory_type(mask)).library
     masks = mask_owner.to_numpy(mask)
     expected = raw.mask.values
     if composition is ImagePayloadStackContext or not declared_spatial_extent:
         expected = np.stack(tuple(value.mask.values for value in inputs))
-    assert mask_owner.device_id_of(mask) == owner.device_id_of(output)
+    assert mask_owner.device_of(mask) == owner.device_of(output)
     np.testing.assert_array_equal(masks, expected)
     assert state['downloads']
     assert all(device == 1 for device in state['downloads'])
@@ -163,17 +165,15 @@ def test_image_bundle_stacks_on_the_payload_framework_device(monkeypatch) -> Non
         lambda _payload: MemoryType.CUPY.value,
     )
     monkeypatch.setattr(
-        MemoryType,
-        "device_id_of",
-        lambda memory_type, _payload, _module=None: (
-            7 if memory_type is MemoryType.CUPY else None
-        ),
+        type(MemoryType.CUPY.library),
+        "device_of",
+        lambda _library, _payload: AcceleratorDevice(7),
     )
     monkeypatch.setattr(
         aligned_image_payload,
         "stack_runtime_slices",
-        lambda values, memory_type, device_id: observed.append(
-            (tuple(values), memory_type, device_id)
+        lambda values, memory_type, device: observed.append(
+            (tuple(values), memory_type, device)
         )
         or "stacked",
     )
@@ -181,7 +181,7 @@ def test_image_bundle_stacks_on_the_payload_framework_device(monkeypatch) -> Non
     context = ImagePayloadBundleContext(payloads)
 
     assert context.compose_unmasked(payloads) == "stacked"
-    assert observed == [(payloads, MemoryType.CUPY.value, 7)]
+    assert observed == [(payloads, MemoryType.CUPY.value, AcceleratorDevice(7))]
 
 
 @pytest.mark.parametrize('mask_kind', ('full', 'channel-free', 'absent'))
@@ -206,13 +206,14 @@ def test_mixed_channel_bundle_promotes_masks_in_the_output_domain(
         ImagePayloadMetadata().payload_with(DeviceArray(gray), DeviceArray(spatial)),
     )
     result = ImagePayloadBundleContext.from_payloads(inputs).compose(
-        memory_type=destination, device_id=1 if destination == 'cupy' else None,
+        memory_type=destination,
+        device=AcceleratorDevice(1) if destination == 'cupy' else HOST,
     )
     if destination == 'cupy':
         assert not state['downloads']
-    owner = MemoryType(destination)
+    owner = MemoryType(destination).library
     data, mask = result.data, result.mask
-    assert owner.device_id_of(mask) == owner.device_id_of(data)
+    assert owner.device_of(mask) == owner.device_of(data)
     np.testing.assert_array_equal(owner.to_numpy(data), np.stack((color, color)))
     expected = np.stack((np.ones_like(spatial) if mask_kind == 'absent' else spatial, spatial))
     if mask_kind == 'full':
@@ -233,7 +234,7 @@ def test_independent_cohort_copy_retains_nested_named_bundle_domains():
     context = AlignedImageSliceContext.main_flow("Canonical")
     named = ImageOutputBundle((payload,), (context,))
     nested = AlignedImageStack((named,))
-    copied = (nested).copied(memory_type="numpy", device_id=None,)
+    copied = (nested).copied(memory_type="numpy", device=HOST,)
     assert type(copied) is AlignedImageStack
     assert type(copied.slices[0]) is ImageOutputBundle
     assert copied.slices[0].slice_contexts == (context,)

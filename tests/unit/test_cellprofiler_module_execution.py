@@ -1,3 +1,4 @@
+from arraybridge.devices import HOST
 from openhcs.core.payload.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.object_labels.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.payload.runtime_plane_projection import RuntimeSlicePlaneAxis
@@ -9722,7 +9723,7 @@ def test_pattern_group_runtime_unstacks_aligned_image_stack_output():
 
     output = runtime._project_output_slices(aligned, matching_files)
     stack_payload = aligned.copy_projected_output_stack(
-        output, memory_type="numpy", device_id=None,
+        output, memory_type="numpy", device=HOST,
     )
     assert [payload for payload, _context in output] == [dna_payload, rna_payload]
     assert stack_payload.metadata.source_plane_intensity_scales == (65535, 65535)
@@ -9803,7 +9804,7 @@ def test_pattern_group_runtime_leaves_variable_shape_aligned_outputs_uncached():
         for (payload, _context), pixels in zip(output, (first, second), strict=True)
     )
     assert aligned.copy_projected_output_stack(
-        output, memory_type="numpy", device_id=None,
+        output, memory_type="numpy", device=HOST,
     ) is None
 
 
