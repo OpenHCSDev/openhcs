@@ -412,7 +412,20 @@ def test_processing_body_is_unchanged_except_same_run_evidence_capture():
             node.keywords = kept
             return node
 
-    before = DeclaredLabelVariants().visit(PayloadAttributes().visit(before))
+    class MovedModule(ast.NodeTransformer):
+        """The morphology backend moved into its family package."""
+
+        MOVED = {
+            "openhcs.processing.backends.cellprofiler.morphology":
+                "openhcs.processing.backends.cellprofiler.morphology_family.morphology",
+        }
+
+        def visit_ImportFrom(self, node):
+            node.module = self.MOVED.get(node.module, node.module)
+            return node
+
+    before = MovedModule().visit(
+        DeclaredLabelVariants().visit(PayloadAttributes().visit(before)))
     # Compare the original algorithm, not docstring, signature or output ABI.
     assert ast.dump(ast.Module(body=before.body[1:-1], type_ignores=[])) == ast.dump(
         ast.Module(body=after.body[1:-1], type_ignores=[]))
