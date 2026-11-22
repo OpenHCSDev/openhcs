@@ -149,7 +149,7 @@ With more OpenHCS workers, the median speedup over serial CellProfiler rose from
 
 ### Agents build working analyses from written briefs
 
-Matched image inspection exposed errors that overall scores could hide. Agents corrected a split bright object, merged nuclei, fragmented retinal outlines and an over-split three-dimensional body (Figure 4A–D). The bright-object correction raised F1 against reference labels from 0.929 to 0.944; the other three are local corrections without a whole-dataset reference. Wider views still show residual merges, unsupported cell-body growth and unresolved neurite crossings (Supp. Figure 3).
+Following the guide in Figure 4, agents compared their detections with matched raw images and corrected a split bright object, merged nuclei, fragmented retinal outlines and an over-split three-dimensional body (Figure 4A–D). The bright-object correction raised F1 against reference labels from 0.929 to 0.944; the other three are local corrections without a whole-dataset reference. Wider views still show residual merges, unsupported cell-body growth and unresolved neurite crossings (Supp. Figure 3).
 
 ![Agent analysis procedure followed by matched raw, first and final outputs from four separate repair examples.](figures/slas/submission_analysis_repairs.png){width=6.5in}
 
@@ -165,13 +165,13 @@ Following the procedure in Figure 4, each agent built a classical nuclear-detect
 
 On the 175 fields no agent had viewed, the three analyses agreed closely, with pooled F1 at IoU ≥ 0.5 of 0.906–0.910. All three, however, scored below 0.80 on the same six fields, mostly by missing nuclei, so consistent overall scores can still hide shared local failures (Supp. Figure 4).
 
-#### Agent-developed translocation analyses separate assay controls
+#### Cell borders, assay controls and three-dimensional positions
+
+On 16 BBBC007 DNA/actin fields, cell-boundary analyses 2 and 3 placed 74% of their predicted borders between touching cells within two pixels of a manual outline (Figure 5B).
 
 Both translocation analyses separated positive and negative controls above Z′ = 0.5, the conventional threshold for an excellent screening assay [@Zhang1999]. Z′ compares the separation of control means with the variation among four positive and four negative control wells per drug. On 92 BBBC013 wells withheld before development, analysis 1 reached Z′ of 0.554 for LY294002 and 0.751 for Wortmannin; across all 96 wells, with three of its development wells among the controls, analysis 2 reached 0.849 and 0.726 (Figure 5C; Supp. Figure 5).
 
-#### Cell borders and three-dimensional nuclear positions
-
-On 16 BBBC007 DNA/actin fields, cell-boundary analyses 2 and 3 placed 74% of their predicted borders between touching cells within two pixels of a manual outline (Figure 5B). Nuclear localization analysis 1 found all 15 manually marked centres within 30 voxels; the annotations cover only part of the volume, so its 11 unmatched predictions cannot be scored as false detections (Figure 5D).
+Nuclear localization analysis 1 found all 15 manually marked centres within 30 voxels; the annotations cover only part of the volume, so its 11 unmatched predictions cannot be scored as false detections (Figure 5D).
 
 ![Official-test nuclear segmentation compared with expert pipelines and learned methods, cell-boundary and translocation measurements, and final three-dimensional nuclear localization.](figures/slas/submission_analysis_summary.png){width=6.5in}
 
@@ -181,7 +181,7 @@ On 16 BBBC007 DNA/actin fields, cell-boundary analyses 2 and 3 placed 74% of the
 
 ### Three blind agents recover drug responses in a laboratory neurite assay
 
-All three analyses found larger outgrowth per cell at every nonzero dose of FC-A and Y27632, and more branches per cell with increasing dose (Figure 6A–D). Their outgrowth measurements tracked MetaXpress across wells (Pearson r 0.950–0.997 within each treatment; Figure 6E), but their fold changes were smaller: at 40 µM, 1.33–1.63 for FC-A and 1.49–1.69 for Y27632, against 1.98 and 2.05 for MetaXpress (Supp. Figure 6). Figure 6F–H shows one field with its detected cell bodies and traced paths.
+All three analyses found larger outgrowth per cell at every nonzero dose of FC-A and Y27632, and more branches per cell with increasing dose (Figure 6A–D). Their outgrowth measurements tracked MetaXpress across wells (Pearson r 0.950–0.997 within each treatment; Figure 6E), but their fold changes were smaller: at 40 µM, 1.33–1.63 for FC-A and 1.49–1.69 for Y27632, against 1.98 and 2.05 for MetaXpress (Supp. Figure 6). Branches per cell diverged further: 1.26–1.64-fold for FC-A and 1.51–1.74-fold for Y27632, against 3.00 and 3.26 (Figure 6C–D), an absolute gain of 1.4–2.6 branches per cell against 2.9. Figure 6F–H shows one field with its detected cell bodies and traced paths.
 
 ![Primary drug responses, one grouped correlation panel and matched raw, detection and overlay views from the blind neurite cohort.](figures/slas/submission_neurite_results.png){width=6.5in}
 
