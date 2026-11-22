@@ -139,7 +139,7 @@ CellProfiler 4.2.8.1 pins SciPy 1.9.0 and scikit-image 0.18.3 [@CellProfiler4281
 
 Every workflow ran faster than CellProfiler on one core, for processing alone and with pipeline setup included (Figure 3B). In batches, the median per-sample speedup was [pending]{.benchmark-claim key=amortized_execution_median}-fold for processing (minimum [pending]{.benchmark-claim key=amortized_execution_min}-fold) and [pending]{.benchmark-claim key=amortized_total_median}-fold with setup included (minimum [pending]{.benchmark-claim key=amortized_total_min}-fold; Supp. Data 4).
 
-With more OpenHCS workers, the median speedup over serial CellProfiler rose from 4.4-fold with one worker to 12.7-fold with four (11.1-fold including setup), and every workflow ran faster with two, three or four workers than with one (Figure 3C; Supp. Figure 3).
+With more OpenHCS workers, the median speedup over serial CellProfiler rose from 4.4-fold with one worker to 12.7-fold with four (11.1-fold including setup), and every workflow ran faster with two, three or four workers than with one (Figure 3C; Supp. Figure 2).
 
 ![Graded module coverage, measured one-worker comparisons and a fixed serial CellProfiler estimate compared with measured OpenHCS worker counts on twelve samples.](figures/slas/submission_benchmark_summary.png){width=6.5in}
 
@@ -149,33 +149,21 @@ With more OpenHCS workers, the median speedup over serial CellProfiler rose from
 
 ### Agents build working analyses from written briefs
 
+Matched image inspection exposed errors that overall scores could hide. Agents corrected a split bright object, merged nuclei, fragmented retinal outlines and an over-split three-dimensional body (Figure 4A–D). The bright-object correction raised F1 against reference labels from 0.929 to 0.944; the other three are local corrections without a whole-dataset reference. Wider views still show residual merges, unsupported cell-body growth and unresolved neurite crossings (Supp. Figure 3).
+
 ![Agent analysis procedure followed by matched raw, first and final outputs from four separate repair examples.](figures/slas/submission_analysis_repairs.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
 **Figure 4. Image inspection guides repairs to agent-developed analyses.** Six stages turn a biological brief into an editable analysis, with images and measurements available for scientist inspection. **(A–D)** Separate recorded analyses, each showing the same input region before and after revision: bright objects (H001), nuclei (BBBC007 DNA), retinal cell bodies (R0010) and a three-dimensional body (H002). **(A)** A split bright object is joined; F1 against computational reference labels increased from 0.929 to 0.944 on the same development image. **(B–D)** Local, image-supported corrections rather than whole-dataset accuracy estimates. B shows the DNA channel only. D shows slice Z = 36, rotated 90° for display. Scale bars: A/B, 10 pixels; C, 20 µm; D, 10 voxels (physical spacing unverified). Instructions, pipelines and repair records: Supp. Data 5.
 :::
 
+### Agent-developed analyses perform quantitatively across microscopy tasks
+
 #### Without labels or training, agents match expert-built pipelines
 
 Following the procedure in Figure 4, each agent built a classical nuclear-detection pipeline from intensity thresholding, shape-based separation of touching nuclei and size filtering, without annotated examples or a trained model. On BBBC039's official test split (50 fields, 5,720 nuclei), scored with Caicedo et al.'s released evaluator, the three pipelines reached F1 of 0.792–0.823. All three scored above the expert-configured basic CellProfiler 3.0 pipeline (0.790), analysis 4 also scored above the advanced pipeline (0.811), and all scored below the learned methods (0.840–0.898; Figure 5A) [@Caicedo2019].
 
 On the 175 fields no agent had viewed, the three analyses agreed closely, with pooled F1 at IoU ≥ 0.5 of 0.906–0.910. All three, however, scored below 0.80 on the same six fields, mostly by missing nuclei, so consistent overall scores can still hide shared local failures (Supp. Figure 4).
-
-![Official-test nuclear segmentation compared with expert pipelines and learned methods, cell-boundary and translocation measurements, and final three-dimensional nuclear localization.](figures/slas/submission_analysis_summary.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-**Figure 5. Quantitative validation of agent-developed microscopy analyses.** **(A)** Caicedo F1 on the official 50-image BBBC039 test split; the x-axis is truncated. Agent analyses 2–4 use the released evaluator; the two expert-configured CellProfiler pipelines, Random Forest, DeepCell and U-Net are published values [@Caicedo2019]. F1 is averaged across images and nine strict intersection-over-union (IoU) thresholds from 0.50 to 0.90. Development access differs: agents received no reference labels or score feedback, whereas published methods used training images for configuration or supervised learning (Supp. Table 6). **(B)** Predicted borders within two pixels of manual outlines, 16 fields; dots are individual fields; lines show the value pooled across all fields. **(C)** Well-median log2 nuclear/cytoplasmic GFP across 96 wells, including four development wells; mean ± SD, four wells per dose. Concentration units are given in the plot headings. **(D)** Final three-dimensional nuclear localization analysis 1 (H002), shown in XY, XZ and YZ. All 15 manually annotated centres had a prediction within the predeclared 30-voxel radius; 11 predictions lacked matching annotations. Partial annotation coverage prevents classifying unmatched predictions as false detections. Label colours distinguish nuclei; yellow outlines and magenta in-plane centres locate detections in the orthogonal views. Distances and scale bars are in voxel-index units; physical spacing is unverified. Matching-radius diagnostic: Supp. Figure 4E.
-:::
-
-#### Three blind agents recover drug responses in a laboratory neurite assay
-
-All three analyses found larger outgrowth per cell at every nonzero dose of FC-A and Y27632, and more branches per cell with increasing dose (Figure 6A–D). Their outgrowth measurements tracked MetaXpress across wells (Pearson r 0.950–0.997 within each treatment; Figure 6E), but their fold changes were smaller: at 40 µM, 1.33–1.63 for FC-A and 1.49–1.69 for Y27632, against 1.98 and 2.05 for MetaXpress (Supp. Figure 2).
-
-![Primary drug responses, one grouped correlation panel and matched raw, detection and overlay views from the blind neurite cohort.](figures/slas/submission_neurite_results.png){width=6.5in}
-
-::: {custom-style="ImageCaption"}
-**Figure 6. Three independent agents recover neurite drug responses.** **(A–D)** Mean outgrowth per cell (A–B) and branches per cell (C–D) for fusicoccin-A (FC-A) and Y27632. Three blind analyses of 180 fields in 20 wells, compared with MetaXpress; OpenHCS values average nine fields per well. Each curve is divided by its own two zero-dose DMSO wells' mean; 1 means no change. Dots: two technical wells per dose per method. Whiskers: SD after normalization. **(E)** Pearson r against MetaXpress, grouped by treatment and endpoint; colours match A–D. Each bar uses ten absolute well measurements across doses within one treatment; drugs are not pooled. **(F–H)** One field from the earlier analysis-1 run: raw calcein, detected cell bodies and paths, and overlay. Scale bars, 200 µm. Other endpoints: Supp. Figure 2.
-:::
 
 #### Agent-developed translocation analyses separate assay controls
 
@@ -185,9 +173,21 @@ Both translocation analyses separated positive and negative controls above Z′ 
 
 On 16 BBBC007 DNA/actin fields, cell-boundary analyses 2 and 3 placed 74% of their predicted borders between touching cells within two pixels of a manual outline (Figure 5B). Nuclear localization analysis 1 found all 15 manually marked centres within 30 voxels; the annotations cover only part of the volume, so its 11 unmatched predictions cannot be scored as false detections (Figure 5D).
 
-### Image review identifies repairs and remaining errors
+![Official-test nuclear segmentation compared with expert pipelines and learned methods, cell-boundary and translocation measurements, and final three-dimensional nuclear localization.](figures/slas/submission_analysis_summary.png){width=6.5in}
 
-Matched image inspection exposed errors that overall scores could hide. Agents corrected a split bright object, merged nuclei, fragmented retinal outlines and an over-split three-dimensional body (Figure 4A–D). The bright-object correction raised F1 against reference labels from 0.929 to 0.944; the other three are local corrections without a whole-dataset reference. Wider views still show residual merges, unsupported cell-body growth and unresolved neurite crossings (Supp. Figure 6).
+::: {custom-style="ImageCaption"}
+**Figure 5. Quantitative validation of agent-developed microscopy analyses.** **(A)** Caicedo F1 on the official 50-image BBBC039 test split; the x-axis is truncated. Agent analyses 2–4 use the released evaluator; the two expert-configured CellProfiler pipelines, Random Forest, DeepCell and U-Net are published values [@Caicedo2019]. F1 is averaged across images and nine strict intersection-over-union (IoU) thresholds from 0.50 to 0.90. Development access differs: agents received no reference labels or score feedback, whereas published methods used training images for configuration or supervised learning (Supp. Table 6). **(B)** Predicted borders within two pixels of manual outlines, 16 fields; dots are individual fields; lines show the value pooled across all fields. **(C)** Well-median log2 nuclear/cytoplasmic GFP across 96 wells, including four development wells; mean ± SD, four wells per dose. Concentration units are given in the plot headings. **(D)** Final three-dimensional nuclear localization analysis 1 (H002), shown in XY, XZ and YZ. All 15 manually annotated centres had a prediction within the predeclared 30-voxel radius; 11 predictions lacked matching annotations. Partial annotation coverage prevents classifying unmatched predictions as false detections. Label colours distinguish nuclei; yellow outlines and magenta in-plane centres locate detections in the orthogonal views. Distances and scale bars are in voxel-index units; physical spacing is unverified. Matching-radius diagnostic: Supp. Figure 4E.
+:::
+
+### Three blind agents recover drug responses in a laboratory neurite assay
+
+All three analyses found larger outgrowth per cell at every nonzero dose of FC-A and Y27632, and more branches per cell with increasing dose (Figure 6A–D). Their outgrowth measurements tracked MetaXpress across wells (Pearson r 0.950–0.997 within each treatment; Figure 6E), but their fold changes were smaller: at 40 µM, 1.33–1.63 for FC-A and 1.49–1.69 for Y27632, against 1.98 and 2.05 for MetaXpress (Supp. Figure 6).
+
+![Primary drug responses, one grouped correlation panel and matched raw, detection and overlay views from the blind neurite cohort.](figures/slas/submission_neurite_results.png){width=6.5in}
+
+::: {custom-style="ImageCaption"}
+**Figure 6. Three independent agents recover neurite drug responses.** **(A–D)** Mean outgrowth per cell (A–B) and branches per cell (C–D) for fusicoccin-A (FC-A) and Y27632. Three blind analyses of 180 fields in 20 wells, compared with MetaXpress; OpenHCS values average nine fields per well. Each curve is divided by its own two zero-dose DMSO wells' mean; 1 means no change. Dots: two technical wells per dose per method. Whiskers: SD after normalization. **(E)** Pearson r against MetaXpress, grouped by treatment and endpoint; colours match A–D. Each bar uses ten absolute well measurements across doses within one treatment; drugs are not pooled. **(F–H)** One field from the earlier analysis-1 run: raw calcein, detected cell bodies and paths, and overlay. Scale bars, 200 µm. Other endpoints: Supp. Figure 6.
+:::
 
 ## Discussion
 

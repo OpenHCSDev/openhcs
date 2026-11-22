@@ -36,10 +36,10 @@ class VolumeResultsFigure(SupplementFigure):
     """Matched retinal and volume repairs, separate from final-only views."""
 
     def draw_panels(self):
-        self.panel('C', 'Retinal repair', 2, 45.5, title_size=14)
+        self.panel('C', 'Retinal repair', 2, 44.4, title_size=14)
         for column, (heading, left) in enumerate((('Raw', 3), ('First result', 34.96), ('Final result', 66.92))):
             x = 2 + column * 32
-            self.text(x, 42, heading, size=self.plot_font_size, weight='bold')
+            self.text(x, 40.9, heading, size=self.plot_font_size, weight='bold')
             self.artwork('retina_fresh16_repair', (x, 26, 30.7, 14.5), crop=(left, 22.2, left + 30.08, 45.8))
         self.panel('D', '3D body separation', 2, 23.5, title_size=14)
         self.text(98, 23.5, 'Z = 36 voxels', size=self.plot_font_size, ha='right')

@@ -777,12 +777,12 @@ def personal_stitched_development():
 def submission_neurite_results(*, input_root: Path = FigureSheet.default_input_root):
     'Pair primary responses and grouped correlations with retained microscopy.'
     from build_slas_neurite_effects import NeuriteEffectFigure
-    sheet = FigureSheet('submission_neurite_results', '', 10.3, input_root=input_root)
-    field_bounds = (3, 1, 94, 26.5)
+    sheet = FigureSheet('submission_neurite_results', '', 10.9, input_root=input_root)
+    field_bounds = (3, 1, 94, 25.04)
     blind_neurite_example(sheet, field_bounds, input_root=input_root)
     tables = NeuriteEffectFigure.cohort_tables(sheet)
-    NeuriteEffectFigure.draw_panels(sheet, tables, metrics=NeuriteEffectFigure.primary_metrics, bounds=(3, 50, 94, 49), start_letter='A')
-    NeuriteEffectFigure.draw_correlation_bars(sheet, tables, metrics=NeuriteEffectFigure.primary_metrics)
+    NeuriteEffectFigure.draw_panels(sheet, tables, metrics=NeuriteEffectFigure.primary_metrics, bounds=(3, 52, 94, 47), start_letter='A')
+    NeuriteEffectFigure.draw_correlation_bars(sheet, tables, metrics=NeuriteEffectFigure.primary_metrics, bounds=(.14, .335, .80, .115))
     sheet.source(OUTPUT / 'blind_neurite_example_provenance.json')
     sheet.source_image(OUTPUT / 'blind_neurite_example.png', field_bounds)
     sheet.save(dpi=600)
@@ -838,53 +838,53 @@ def submission_autonomous_loop():
     icons = ROOT / "paper/figures/assets/lucide"
     sheet.source(icons / "SOURCE.txt")
     sheet.source(icons / "LICENSE")
+    columns, rows, width, height = (1.5, 34.75, 68), (64, 45), 30.5, 15
     stages = (
-        (2, 64, "1  Biological brief", "clipboard-list",
+        (0, 0, "1  Biological brief", "clipboard-list",
          "Question\nMeasurements\nImage acquisition", BLUE),
-        (35, 64, "2  Inspect inputs", "microscope",
+        (1, 0, "2  Inspect inputs", "microscope",
          "Channels and scale\nBright/dim regions\nCentres / borders", BLUE),
-        (68, 64, "3  Build and run", "workflow",
+        (2, 0, "3  Build and run", "list-tree",
          "Choose methods\nSet parameters\nRun the analysis", BLUE),
-        (68, 47, "4  Check the result", "scan-eye",
+        (2, 1, "4  Check the result", "clipboard-check",
          "Raw and overlay\nMatched regions\nObjects and values", TEAL),
-        (35, 47, "5  Repair and recheck", "wrench",
+        (1, 1, "5  Repair and recheck", "wrench",
          "Find faulty step\nRevise and rerun\nInspect regions", ORANGE),
-        (2, 47, "6  Finalize and deliver", "files",
+        (0, 1, "6  Finalize and deliver", "circle-check-big",
          "Analysis settings\nImages and tables\nChecks and limits", TEAL),
     )
-    for x, y, title, icon, detail, color in stages:
+    for column, row, title, icon, detail, color in stages:
+        x, y = columns[column], rows[row]
         sheet.axis.add_patch(FancyBboxPatch(
-            (x, y), 29, 13, boxstyle="round,pad=0.2,rounding_size=0.65",
+            (x, y), width, height, boxstyle="round,pad=0.2,rounding_size=0.65",
             facecolor=PALE, edgecolor=color, linewidth=1.2, zorder=2,
         ))
-        sheet.text(x + 14.5, y + 10.8, title, size=11, weight="bold",
+        sheet.text(x + width / 2, y + 12.4, title, size=11, weight="bold",
                    color=color, ha="center", va="center")
         if icon == "clipboard-list":
-            sheet.asset(icons / "user-round.svg", (x+1, y+1, 5.5, 8))
-            sheet.asset(icons / "circle-question-mark.svg", (x+6.5, y+6, 2, 3))
-            sheet.asset(icons / "clipboard-list.svg", (x+6.5, y+0.5, 2, 4.5))
+            sheet.asset(icons / "user-round.svg", (x+.8, y+1.5, 5.5, 8))
+            sheet.asset(icons / "circle-question-mark.svg", (x+6.1, y+6.9, 2, 3))
+            sheet.asset(icons / "clipboard-list.svg", (x+6.1, y+1.1, 2, 4.5))
         elif icon == "microscope":
             sheet.source(ROOT / "website/assets/logos/README.md")
-            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+1, y+4.8, 7, 4.6))
-            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+1, y+0.4, 7, 4.6))
-        elif icon == "workflow":
-            sheet.asset(icons / "list-tree.svg", (x+1.3, y+0.5, 7, 9))
-        elif icon == "scan-eye":
-            sheet.asset(icons / "clipboard-check.svg", (x+1.3, y+0.5, 7, 9))
-        elif icon == "files":
-            sheet.asset(icons / "circle-check-big.svg", (x+1.3, y+0.5, 7, 9))
+            sheet.asset(ROOT / "website/assets/logos/fiji.svg", (x+.8, y+5.6, 6.6, 4.6))
+            sheet.asset(ROOT / "website/assets/logos/napari.svg", (x+.8, y+.8, 6.6, 4.6))
         else:
-            sheet.asset(icons / f"{icon}.svg", (x + 1.3, y + 0.5, 7, 9))
-        sheet.text(x + 8.8, y + 4.7, detail, size=10.5, va="center",
-                   linespacing=1.4, zorder=4)
-    for start, end in (((31,70.5),(35,70.5)), ((64,70.5),(68,70.5)),
-                       ((82.5,64),(82.5,60)), ((68,53.5),(64,53.5)),
-                       ((35,53.5),(31,53.5))):
+            sheet.asset(icons / f"{icon}.svg", (x + .9, y + 1, 6.6, 9))
+        sheet.text(x + 8.6, y + 5.5, detail, size=10.5, va="center",
+                   linespacing=1.45, zorder=4)
+    upper, lower = (y + height / 2 for y in rows)
+    for start, end in (((columns[0] + width, upper), (columns[1], upper)),
+                       ((columns[1] + width, upper), (columns[2], upper)),
+                       ((columns[2] + width / 2, rows[0]), (columns[2] + width / 2, rows[1] + height)),
+                       ((columns[2], lower), (columns[1] + width, lower)),
+                       ((columns[1], lower), (columns[0] + width, lower))):
         sheet.arrow(start, end)
-    sheet.route(((49.5,60),(49.5,62),(70,62),(70,64)), color=ORANGE, dashed=True)
-    sheet.text(48, 61.0, "Return to 3: build and run", size=9, ha="right", color=ORANGE,
-               bbox={"facecolor": "white", "edgecolor": "none", "pad": 0})
-    sheet.crop_vertical(.45, .815)
+    sheet.route(((columns[1] + width / 2, rows[1] + height), (columns[1] + width / 2, 62),
+                 (columns[2] + 2.5, 62), (columns[2] + 2.5, rows[0])), color=ORANGE, dashed=True)
+    sheet.text(columns[1] + width / 2 - 1.5, 62, "Return to 3: build and run", size=9, ha="right",
+               va="center", color=ORANGE, bbox={"facecolor": "white", "edgecolor": "none", "pad": 0})
+    sheet.crop_vertical(.435, .805)
     sheet.save()
 
 
@@ -909,7 +909,7 @@ def submission_shared_workflow():
     sheet.native_image(str(capture.relative_to(OUTPUT).with_suffix('')), (2, 67, 52, 28), response_path=(), provenance_path=folder / evidence['selected_capture'])
     overview = sheet.figure.axes[-1]
     overview.apply_aspect()
-    details = (('analysis_cells', 'B', 'Expanded analysis steps', (58, 67, 40, 28), (58, 98), BLUE, 1, 56), ('dataset_cell', 'C', 'Complete dataset cell', (2, 53, 96, 10), (2, 65), TEAL, 0, 0.5))
+    details = (('analysis_cells', 'B', 'Expanded analysis steps', (58, 67, 40, 28), (58, 98), BLUE, 1, 56), ('dataset_cell', 'C', 'Complete dataset cell', (2, 51.5, 96, 10), (2, 63.2), TEAL, 0, 0.5))
     for region, label, title, bounds, heading, color, edge_fraction, corridor in details:
         x, y, width, height = evidence['row_boxes_xywh'][region]
         if not (0 <= x < x + width <= logical_width and 0 <= y < y + height <= logical_height):
@@ -925,8 +925,8 @@ def submission_shared_workflow():
         start = sheet.axis.transData.inverted().transform(overview.transData.transform((source_edge, (crop[1] + crop[3]) / 2)))
         end = sheet.axis.transData.inverted().transform(detail.transData.transform((0, (crop[3] - crop[1]) / 2)))
         sheet.route((start, (corridor, start[1]), (corridor, end[1]), end), color=color)
-    sheet.panel('D', 'Add a function; edit the same settings in a form or Python', 2, 50.5)
-    sheet.artwork('submission_custom_function', (0, 0, 100, 48), crop=(2, 8, 98, 98))
+    sheet.panel('D', 'Add a function; edit the same settings in a form or Python', 2, 47.6)
+    sheet.artwork('submission_custom_function', (0, 0, 100, 45.5), crop=(2, 8, 98, 98))
     sheet.save(dpi=600)
 
 

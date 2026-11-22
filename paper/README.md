@@ -215,7 +215,7 @@ through `RepeatedSourceNativeBatchReport.projected_fresh_batch`; the painter
 contains no timing model. Its CSV distinguishes estimated serial CellProfiler
 seconds, measured OpenHCS seconds and their ratio. The CellProfiler estimate
 stays identical across worker counts; workers are not matched core allocations.
-Supplementary Figure 3 separately shows measured OpenHCS-only worker scaling.
+Supplementary Figure 2 separately shows measured OpenHCS-only worker scaling.
 
 The per-module CSV names the credited behavior and test. Shared-path coverage
 does not claim validation of all module-specific algorithms or settings.
@@ -331,7 +331,7 @@ PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
 This historical command reads saved measurements. That checkpoint uses
 the logarithmic thirty-workflow view. Its linear counterpart, individual runtime
 panels, sample-count trends and selected worker comparisons remain historical
-outputs; current Supplementary Figure 3 uses the new complete sweep. Worker comparisons retain their own cohorts and revisions; repeated
+outputs; current Supplementary Figure 2 uses the new complete sweep. Worker comparisons retain their own cohorts and revisions; repeated
 source assignments are not independent biological wells.
 
 The generic measured-median input mode below supports earlier records with that
