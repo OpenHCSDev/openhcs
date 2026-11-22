@@ -21,7 +21,9 @@ from openhcs.core.axes.component_group_scope import (
     UngroupedScope,
 )
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
+from openhcs.core.debug.debug_views import runtime_inspection_view
 from openhcs.core.debug.debug_runtime import (
+    ReportsOutputArtifactsDebugBoundary,
     NoOpDebugExecutionPolicy,
     DebugArtifactRef,
     DebugArtifactRefProjection,
@@ -404,11 +406,11 @@ class DebugRuntimeFixture:
 
 def test_debug_boundaries_own_progress_status_and_artifact_policy():
     assert BeforeInvocationDebugBoundary.progress_status is StartedProgressStatus
-    assert not BeforeInvocationDebugBoundary.reports_output_artifacts
+    assert not issubclass(BeforeInvocationDebugBoundary, ReportsOutputArtifactsDebugBoundary)
     assert AfterInvocationDebugBoundary.progress_status is SuccessProgressStatus
-    assert AfterInvocationDebugBoundary.reports_output_artifacts
+    assert issubclass(AfterInvocationDebugBoundary, ReportsOutputArtifactsDebugBoundary)
     assert ExceptionDebugBoundary.progress_status is ErrorProgressStatus
-    assert ExceptionDebugBoundary.reports_output_artifacts
+    assert issubclass(ExceptionDebugBoundary, ReportsOutputArtifactsDebugBoundary)
 
 
 class DebugSnapshotFileManagerStub:
@@ -559,7 +561,7 @@ def test_debug_artifact_boundary_has_no_name_key_reconstruction():
     repository_root = Path(__file__).resolve().parents[2]
     targets = (
         (
-            repository_root / "openhcs/core/debug.py",
+            repository_root / "openhcs/core/debug/debug_runtime.py",
             "DebugArtifactRefProjection",
             {"from_artifact_plans"},
         ),
@@ -1089,7 +1091,7 @@ def test_projection_exception_contains_complete_invocation_context_without_debug
         assert "module='CorrectIlluminationCalculate'" in message
         assert "callable='correct_illumination_calculate'" in message
         assert "kwarg_names=('runtime_adapter', 'threshold')" in message
-        assert "openhcs.core.runtime_image_values.ImageMetadataPayload" in message
+        assert "openhcs.core.payload.runtime_image_values.ImageMetadataPayload" in message
         assert "plane_axis='runtime_slice'" in message
         assert "declared_plane_axis='runtime_slice'" in message
         assert "plane_index=preserved" in message
@@ -1560,7 +1562,7 @@ def test_paused_worker_runtime_inspection_projects_runtime_value_store():
     controller.bind_context(context)
     controller.apply_command(ChooseSourceGroupDebugCommand)
 
-    view_model = controller.runtime_inspection_view()
+    view_model = runtime_inspection_view(controller)
 
     table = view_model.sections[0].table
     assert table is not None
@@ -1593,7 +1595,7 @@ def test_runtime_inspection_control_payload_round_trips_view_model():
     controller.bind_context(context)
     controller.apply_command(ChooseSourceGroupDebugCommand)
     response = DebugRuntimeInspectionResponse(
-        view_model=controller.runtime_inspection_view()
+        view_model=runtime_inspection_view(controller)
     )
 
     restored_response = DebugRuntimeInspectionResponse.from_control_response(

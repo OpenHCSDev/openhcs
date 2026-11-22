@@ -132,33 +132,39 @@ class DebugBoundary(ABC, metaclass=AutoRegisterMeta):
 
     name: ClassVar[str | None] = None
     progress_status: ClassVar[type[ProgressStatus]]
+
+    @classmethod
     def reported_output_refs(
-        self, output_artifacts: DebugArtifactRefProjection,
+        cls, output_artifacts: DebugArtifactRefProjection,
     ) -> tuple[DebugArtifactRef, ...]:
         return ()
 
+    @classmethod
     def event_artifact_projection(
-        self,
+        cls,
         output_artifacts: DebugArtifactRefProjection,
         input_artifacts: DebugArtifactRefProjection,
     ) -> DebugArtifactRefProjection:
         return input_artifacts
 
-    def validate_exception(self, exception: BaseException | None) -> None:
+    @classmethod
+    def validate_exception(cls, exception: BaseException | None) -> None:
         if exception is not None:
-            raise ValueError(f"{self.name!r} debug events cannot carry an exception.")
+            raise ValueError(f"{cls.name!r} debug events cannot carry an exception.")
 
 
 class ReportsOutputArtifactsDebugBoundary:
     """Trait for boundaries that report the artifacts the invocation produced."""
 
+    @classmethod
     def reported_output_refs(
-        self, output_artifacts: DebugArtifactRefProjection,
+        cls, output_artifacts: DebugArtifactRefProjection,
     ) -> tuple[DebugArtifactRef, ...]:
         return output_artifacts.refs
 
+    @classmethod
     def event_artifact_projection(
-        self,
+        cls,
         output_artifacts: DebugArtifactRefProjection,
         input_artifacts: DebugArtifactRefProjection,
     ) -> DebugArtifactRefProjection:
@@ -179,9 +185,10 @@ class ExceptionDebugBoundary(ReportsOutputArtifactsDebugBoundary, DebugBoundary)
     name = "exception"
     progress_status = ErrorProgressStatus
 
-    def validate_exception(self, exception: BaseException | None) -> None:
+    @classmethod
+    def validate_exception(cls, exception: BaseException | None) -> None:
         if exception is None:
-            raise ValueError(f"{self.name!r} debug events require an exception.")
+            raise ValueError(f"{cls.name!r} debug events require an exception.")
 
 
 class DebugWorkerState(ABC, metaclass=AutoRegisterMeta):
