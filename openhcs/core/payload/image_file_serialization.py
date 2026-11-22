@@ -293,7 +293,7 @@ class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegister
         """Project runtime pixels onto the host before format-specific encoding."""
         payload = ImagePayload.of(payload)
         pixels = payload.data
-        host_pixels = MemoryType(detect_memory_type(pixels)).to_numpy(pixels)
+        host_pixels = MemoryType(detect_memory_type(pixels)).library.to_numpy(pixels)
         host_payload = payload.metadata.payload_with(host_pixels)
         return self.prepare_host_payload(host_payload)
 

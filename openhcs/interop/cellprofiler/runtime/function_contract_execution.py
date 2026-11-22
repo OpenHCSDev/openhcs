@@ -9,7 +9,7 @@ from collections.abc import Callable, Mapping
 from openhcs.core.payload.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.measurements.measurement_dialect import executing_measurement_dialect
-from openhcs.core.memory import detect_memory_type, stack_slices
+from openhcs.core.memory import MemoryType, detect_memory_type, stack_slices
 from openhcs.core.callable.processing_contracts import (
     ContractCall,
     PlaneSplit,
@@ -129,8 +129,10 @@ class CellProfilerContractCall(ContractCall):
 
     def stack_reduction_output(self, result):
         result_2d = ImagePayload.of(result)
+        memory_type = detect_memory_type(result_2d.data)
         stacked = stack_slices(
-            [result_2d.data], detect_memory_type(result_2d.data), 0,
+            [result_2d.data], memory_type,
+            MemoryType(memory_type).library.device_of(result_2d.data),
         )
         return result_2d.metadata.payload_with(stacked, mask=result_2d.mask)
 

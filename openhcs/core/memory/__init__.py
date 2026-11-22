@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from arraybridge import ArrayGeometry
+from arraybridge.devices import Device
 
 # Re-export from arraybridge
 from arraybridge import (
@@ -22,15 +23,7 @@ from arraybridge import (
     # Exceptions
     MemoryConversionError,
 )
-from arraybridge.types import (
-    MEMORY_TYPE_CUPY,
-    MEMORY_TYPE_JAX,
-    MEMORY_TYPE_NUMPY,
-    MEMORY_TYPE_PYCLESPERANTO,
-    MEMORY_TYPE_TENSORFLOW,
-    MEMORY_TYPE_TORCH,
-    MemoryType,
-)
+from arraybridge.types import MemoryType
 
 # OpenHCS wraps ArrayBridge decorators to preserve compiler metadata while
 # leaving conversion semantics in ArrayBridge.
@@ -38,7 +31,7 @@ from openhcs.core.memory import decorators as decorators
 from openhcs.core.payload.runtime_array_values import array_geometry
 
 for _memory_type in MemoryType:
-    _memory_type.prepare_import()
+    _memory_type.library.prepare_import()
 
 memory_types = decorators.memory_types
 for _memory_type in MemoryType:
@@ -48,7 +41,7 @@ for _memory_type in MemoryType:
 def stack_runtime_slices(
     slices: Sequence[Any],
     memory_type: str,
-    gpu_id: int | None,
+    device: Device,
 ) -> Any:
     """Stack an explicitly declared runtime-slice sequence along axis zero."""
 
@@ -57,11 +50,11 @@ def stack_runtime_slices(
         raise ValueError("Runtime-slice stacking requires at least one slice.")
     target = MemoryType(memory_type)
     prepared_slices = [
-        MemoryType(detect_memory_type(value)).convert_to(value, target, gpu_id)
+        MemoryType(detect_memory_type(value)).library.convert_to(value, target.library, device)
         for value in slice_values
     ]
     runtime_slice_stack_geometry(prepared_slices)
-    return target.stack_arrays(prepared_slices, gpu_id)
+    return target.library.stack_arrays(prepared_slices, device)
 
 
 def runtime_slice_stack_geometry(slices: Sequence[Any]) -> ArrayGeometry:
@@ -81,14 +74,14 @@ def runtime_slice_stack_geometry(slices: Sequence[Any]) -> ArrayGeometry:
 def unstack_runtime_slices(
     stack: Any,
     memory_type: str,
-    gpu_id: int | None,
+    device: Device,
     *,
     expected_count: int | None = None,
 ) -> tuple[Any, ...]:
     """Split an explicitly declared leading runtime-slice axis."""
 
-    converted = MemoryType(detect_memory_type(stack)).convert_to(
-        stack, MemoryType(memory_type), gpu_id
+    converted = MemoryType(detect_memory_type(stack)).library.convert_to(
+        stack, MemoryType(memory_type).library, device
     )
     shape = tuple(int(value) for value in converted.shape)
     if not shape:
@@ -105,13 +98,6 @@ __all__ = [
     # Converters
     "convert_memory",
     "detect_memory_type",
-    # Memory type constants
-    "MEMORY_TYPE_NUMPY",
-    "MEMORY_TYPE_CUPY",
-    "MEMORY_TYPE_TORCH",
-    "MEMORY_TYPE_TENSORFLOW",
-    "MEMORY_TYPE_JAX",
-    "MEMORY_TYPE_PYCLESPERANTO",
     # Decorators
     "memory_types",
     *(memory_type.value for memory_type in MemoryType),

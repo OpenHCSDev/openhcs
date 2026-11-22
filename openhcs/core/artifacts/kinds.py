@@ -861,8 +861,6 @@ class ImageArtifactType(ImagePayloadArtifactKind):
 
         return stack_image_payloads(
             payloads,
-            memory_type=detect_memory_type(payloads[0].data),
-            device_id=0,
             metadata_mode=metadata_mode,
         )
 

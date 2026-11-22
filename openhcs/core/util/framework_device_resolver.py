@@ -34,13 +34,15 @@ class FrameworkDeviceResolver:
         missing_packages: list[str] = []
         unavailable_devices: list[str] = []
         for memory_type in sorted(memory_types, key=lambda item: item.value):
-            framework = memory_type.import_if_installed()
+            framework = memory_type.library.import_if_installed()
             if framework is None:
-                missing_packages.append(memory_type.import_name)
+                missing_packages.append(memory_type.library.import_name)
                 continue
-            available = memory_type.available_device_ids(framework)
+            available = tuple(
+                device.index for device in memory_type.library.accelerator_devices()
+            )
             if not available:
-                unavailable_devices.append(memory_type.display_name)
+                unavailable_devices.append(memory_type.library.display_name)
                 continue
             assignments[memory_type] = (
                 self.preferred_device_id

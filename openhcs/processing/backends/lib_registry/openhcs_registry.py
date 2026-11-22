@@ -29,7 +29,7 @@ from openhcs.core.callable.callable_declarations import FunctionStepExecutionSco
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
+from openhcs.constants import MemoryType
 from openhcs.core.util.stated_types import require_stated_parameter_types
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.function_contract_metadata import FunctionContractAttribute
@@ -277,7 +277,7 @@ def _allowed_openhcs_memory_types() -> frozenset[str]:
     part of this installation's catalog; CPU-only mode further admits NumPy only.
     """
     installed = frozenset(
-        memory_type.value for memory_type in MemoryType if memory_type.is_installed()
+        memory_type.value for memory_type in MemoryType if memory_type.library.is_installed()
     )
     if OpenHCSProcessEnvironment.cpu_only_mode():
         return installed & {MemoryType.NUMPY.value}
@@ -836,9 +836,10 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         ):
             return None
 
+        memory_type_names = {memory_type.value for memory_type in MemoryType}
         if not plate_scoped and (
-            callable_contract.input_memory_type not in VALID_MEMORY_TYPES
-            or callable_contract.output_memory_type not in VALID_MEMORY_TYPES
+            callable_contract.input_memory_type not in memory_type_names
+            or callable_contract.output_memory_type not in memory_type_names
         ):
             logger.debug(
                 "Skipping %s - invalid input/output memory declarations",
