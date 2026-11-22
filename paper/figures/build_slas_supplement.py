@@ -192,7 +192,7 @@ def autonomous_treatment_endpoints():
     autonomous.panel("O–P", "Correlations with MetaXpress", 3, 28)
     counts = NeuriteEffectFigure.draw_correlations(
         autonomous, tables, bounds=(.36, .015, .54, .195),
-        heading_y=28, font_size=13, label_rotation=0, label_alignment="center",
+        heading_y=28, font_size=11, label_rotation=0, label_alignment="center",
         column_label_width=8,
     )
     if len(counts) != 1:
