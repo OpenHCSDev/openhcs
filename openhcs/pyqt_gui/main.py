@@ -1167,7 +1167,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             return
 
         try:
-            from objectstate.global_config import get_current_global_config
+            from objectstate import get_live_global_config
 
             from openhcs.core.config.pipeline_config import GlobalPipelineConfig
             from openhcs.processing.backends.analysis.consolidate_analysis_results import (
@@ -1175,7 +1175,7 @@ class OpenHCSMainWindow(QMainWindow, UiBridgeHostWindow):
             )
 
             # Get global config
-            global_config = get_current_global_config(GlobalPipelineConfig)
+            global_config = get_live_global_config(GlobalPipelineConfig)
 
             # Run consolidation
             summary_df = consolidate_analysis_results(

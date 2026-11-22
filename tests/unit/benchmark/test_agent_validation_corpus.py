@@ -325,7 +325,7 @@ def _reference_result(task_id: str, case) -> object:
             inputs["label_image"], distance=parameters["radius"]
         )
     if task_id.endswith("maximum_intensity_projection"):
-        return inputs["image"].max(axis=0)
+        return inputs["image"].max(axis=0, keepdims=True)
     if task_id.endswith("measure_properties_of_regions"):
         return pd.DataFrame(
             measure.regionprops_table(
@@ -336,3 +336,43 @@ def _reference_result(task_id: str, case) -> object:
         )
     image = inputs["image"]
     return np.asarray(measure.label(image > image.mean()).max())
+
+
+def test_a_task_is_checked_from_the_plate_a_run_wrote_beside_its_inputs(tmp_path: Path) -> None:
+    import tifffile
+
+    from openhcs.core.source.source_projection import OpenHCSPlaneAddress
+
+    # One task is built alone, by its id, and only one whose result is planes.
+    with pytest.raises(ValueError, match="not a task whose result is checked as a plate"):
+        AgentValidationCorpus.build_task(tmp_path / "scalar",
+                                         "human_eval_bia.otsu_positive_pixel_count")
+    task_root = tmp_path / "closing"
+    assert AgentValidationCorpus.build_task(
+        task_root, "human_eval_bia.binary_closing").task_id == "human_eval_bia.binary_closing"
+    (case,) = ValidationTaskDeclaration.get("human_eval_bia.binary_closing").scoring_cases()
+
+    # Nothing has run: there is no plate to read, and the check says so rather than fail a case.
+    with pytest.raises(ValueError, match="0 output plates"):
+        AgentValidationCorpus.check_output_plate(task_root)
+
+    (source,) = (task_root / "inputs").glob("*.tif")
+    plane = OpenHCSPlaneAddress.from_filename(source.name).address.filename()
+    written = task_root / "inputs_openhcs" / "images" / plane
+    written.parent.mkdir(parents=True)
+    (task_root / "inputs_openhcs" / "openhcs_metadata.json").write_text("{}", encoding="utf-8")
+
+    tifffile.imwrite(written, np.asarray(case.expected))
+    assert [(result.name, result.passed)
+            for result in AgentValidationCorpus.check_output_plate(task_root)] \
+        == [("case-1.array_equal", True)]
+
+    wrong = np.asarray(case.expected).copy()
+    wrong[3, 3] = 0
+    tifffile.imwrite(written, wrong)
+    (result,) = AgentValidationCorpus.check_output_plate(task_root)
+    assert not result.passed and "mismatch_count=1" in result.detail
+
+    written.unlink()
+    (result,) = AgentValidationCorpus.check_output_plate(task_root)
+    assert (result.name, result.passed) == ("case-1.output", False)

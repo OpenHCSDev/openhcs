@@ -64,6 +64,7 @@ from openhcs.core.payload.runtime_output_matching import split_runtime_output
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.config.pipeline_config import runtime_config_parameter
 from openhcs.core.pipeline.annotation_checks import special_input_parameter_accepts_sequence
+from openhcs.core.artifacts.plans import ArtifactSpecRef
 
 
 CallableNamespace = Mapping[str, Any]

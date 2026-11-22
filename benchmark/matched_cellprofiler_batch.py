@@ -26,10 +26,7 @@ from pathlib import Path
 from typing import Any
 
 import openhcs
-from objectstate.lazy_factory import (
-    ensure_global_config_context,
-    rebuild_lazy_config_with_new_global_reference,
-)
+from objectstate import set_global_config
 from zmqruntime.messages import ExecutionStatusSnapshot
 
 from benchmark.adapters.cellprofiler import (
@@ -1135,9 +1132,8 @@ def _candidate_pipeline_config(
             output_dir_suffix="_matched_pilot",
         ),
     )
-    return rebuild_lazy_config_with_new_global_reference(
-        pipeline_config, global_config, GlobalPipelineConfig
-    )
+    set_global_config(GlobalPipelineConfig, global_config)
+    return pipeline_config
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1660,7 +1656,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
             worker_count=args.openhcs_workers,
             start_method=start_method,
         )
-        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        set_global_config(GlobalPipelineConfig, global_config)
         pipeline_config = _candidate_pipeline_config(
             prepared.pipeline_config, global_config, output_dir, wells
         )

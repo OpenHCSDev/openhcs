@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from benchmark.agent_validation.corpus import AgentValidationCorpus
@@ -28,6 +29,18 @@ def _parser() -> argparse.ArgumentParser:
         help="Verify a pinned human-eval-bia checkout without executing it.",
     )
     verify.add_argument("checkout", type=Path)
+    one = subparsers.add_parser(
+        "build-task",
+        help="Write one blind task that `check` can read the result of.",
+    )
+    one.add_argument("task_root", type=Path)
+    one.add_argument("task_id", help="the task's id, as `list` prints it")
+    check = subparsers.add_parser(
+        "check",
+        help="Check the plate an OpenHCS run wrote beside one task's inputs against "
+        "the task's held-out cases.",
+    )
+    check.add_argument("task_root", type=Path)
     return parser
 
 
@@ -45,6 +58,15 @@ def main(argv: list[str] | None = None) -> int:
         probe_ids = AgentValidationCorpus.build_diagnostic_bundle(args.output_root)
         print(f"Wrote {len(probe_ids)} diagnostic probes to {args.output_root}")
         return 0
+    if args.command == "build-task":
+        print(AgentValidationCorpus.build_task(args.task_root, args.task_id).task_id)
+        return 0
+    if args.command == "check":
+        assertions = AgentValidationCorpus.check_output_plate(args.task_root)
+        for assertion in assertions:
+            print(json.dumps({"name": assertion.name, "passed": assertion.passed,
+                              "detail": assertion.detail}, sort_keys=True))
+        return 0 if assertions and all(assertion.passed for assertion in assertions) else 1
     results = verify_upstream_checkout(args.checkout)
     for result in results:
         print(

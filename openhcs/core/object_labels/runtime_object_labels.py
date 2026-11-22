@@ -63,8 +63,10 @@ from openhcs.core.source.source_spatial_domain import (
     SourceSpatialDomainFields,
 )
 
-from openhcs.core.memory import MemoryType, runtime_slice_stack_geometry, stack_runtime_slices
+from openhcs.core.memory import MemoryType, runtime_slice_stack_geometry, stack_runtime_slices, unplanned_device
 from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDeclarationError
+from openhcs.core.artifacts.payloads import PayloadShape
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 
 _PRESERVE_PLANE_AXIS = object()
 
@@ -1760,7 +1762,7 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
         return stack_runtime_slices(
             tuple(cast(np.ndarray, value) for value in labels),
             memory_type,
-            0,
+            unplanned_device(memory_type),
         )
 
     def validate_plane_count(

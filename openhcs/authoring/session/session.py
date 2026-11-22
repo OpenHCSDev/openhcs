@@ -23,7 +23,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
-from objectstate.lazy_factory import ensure_global_config_context
+from objectstate import set_global_config
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from polystore.base import _create_storage_registry
 from formbridge.services.async_operation_executor import AsyncOperationExecutor
@@ -451,7 +451,7 @@ class Session(CompileBatch, ExecutionSubmission, ExecutionControl, DebugRuns, Ex
         """A saved global config: every dataset now resolves against it."""
 
         self.global_config = config
-        ensure_global_config_context(GlobalPipelineConfig, config)
+        set_global_config(GlobalPipelineConfig, config)
         for scope_id in dataset_scope_ids():
             orchestrator = ObjectStateRegistry.get_object(scope_id)
             if orchestrator is not None:
@@ -1013,7 +1013,7 @@ class Session(CompileBatch, ExecutionSubmission, ExecutionControl, DebugRuns, Ex
         )
 
     async def initialize_datasets(self, scope_ids: tuple[str, ...]) -> None:
-        ensure_global_config_context(GlobalPipelineConfig, self.global_config)
+        set_global_config(GlobalPipelineConfig, self.global_config)
         for scope_id in scope_ids:
             self.require_work_allowed(scope_id)
         self.init_pending.update(scope_ids)
@@ -1038,7 +1038,7 @@ class Session(CompileBatch, ExecutionSubmission, ExecutionControl, DebugRuns, Ex
                 self.publish(DatasetsChanged())
 
                 def run() -> InputWorkspacePreparationResult | None:
-                    ensure_global_config_context(GlobalPipelineConfig, self.global_config)
+                    set_global_config(GlobalPipelineConfig, self.global_config)
                     workspace = scope.prepare_input_workspace()
                     if workspace is None and not self.dataset_access.initializes_in_place(
                         scope.root

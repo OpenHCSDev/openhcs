@@ -16,6 +16,7 @@ from openhcs.core.payload.runtime_identifier import (
     runtime_source_name_tokens,
 )
 from openhcs.core.measurements.runtime_measurements import MeasurementScope, MeasurementStatistic, ObjectCoreMeasurementFeature
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 
 
 @dataclass(frozen=True)

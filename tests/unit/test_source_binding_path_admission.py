@@ -202,14 +202,14 @@ def test_preparation_consumers_cannot_reauthor_binding_or_java_lifetime():
     root = Path(__file__).resolve().parents[2]
     for path, class_name, method_name, owner_call, forbidden in (
         (
-            "openhcs/core/config.py",
+            "openhcs/core/config/pipeline_config.py",
             "SourceBindingsConfig",
             "discovery_path_matches",
             "physical_path_matches",
             {"explicit_source", "selector"},
         ),
         (
-            "openhcs/core/source_binding_workspace.py",
+            "openhcs/core/source/source_binding_workspace.py",
             "SourceBindingWorkspaceProjector",
             "candidate_matches_binding",
             "physical_path_matches",

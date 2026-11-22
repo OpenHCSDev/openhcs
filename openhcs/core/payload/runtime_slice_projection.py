@@ -21,6 +21,7 @@ from openhcs.core.payload.runtime_image_values import RuntimeSliceProjectionDecl
 
 from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxisValueProjection, RuntimeSliceProjectableValue
 from openhcs.core.payload.runtime_image_values import as_runtime_value
+from openhcs.core.axes.axis_declarations import Axis
 
 
 def preserved_image_plane_projection(

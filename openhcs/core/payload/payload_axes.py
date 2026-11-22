@@ -21,6 +21,7 @@ from metaclass_registry import AutoRegisterMeta
 from python_introspect import to_jsonable
 
 from openhcs.core.axes.axis_declarations import AxisFamily, AxisRole, ColourAxis
+from openhcs.core.axes.axis_declarations import Axis
 
 
 class SpatialAxis(AxisRole):

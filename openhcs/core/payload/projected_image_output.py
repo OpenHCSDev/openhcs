@@ -11,6 +11,7 @@ from openhcs.core.payload.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimeSliceInvariantValue,
 )
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
 
 
 class SourceProjectedImageOutput(

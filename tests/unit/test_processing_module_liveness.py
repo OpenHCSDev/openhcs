@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 
-from arraybridge.types import VALID_MEMORY_TYPES
+from arraybridge import MemoryType
 
 import openhcs
 from openhcs.processing.backends.lib_registry.openhcs_registry import (
@@ -23,7 +23,7 @@ from openhcs.processing.backends.lib_registry.openhcs_registry import (
 
 _OPENHCS_ROOT = Path(openhcs.__file__).parent
 _PROCESSING_PACKAGE = "openhcs.processing"
-_ALL_MEMORY_TYPES = frozenset(VALID_MEMORY_TYPES)
+_ALL_MEMORY_TYPES = frozenset(memory_type.value for memory_type in MemoryType)
 
 
 @dataclass(frozen=True)

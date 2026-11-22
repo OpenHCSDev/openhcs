@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import ClassVar, TypeGuard
 
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import to_jsonable
 
 
 class AxisDeclarationMeta(AutoRegisterMeta):
@@ -309,6 +310,13 @@ class GroupingDeclaration(ABC, metaclass=AxisDeclarationMeta):
     @abstractmethod
     def grouping_axes(cls) -> tuple[type[Axis], ...]:
         """The axes whose values partition an assembled value (empty: none)."""
+
+
+@to_jsonable.register(AxisDeclarationMeta)
+def _boundary_name(declaration: type[GroupingDeclaration]) -> str:
+    """A grouping declaration's JSON spelling is its boundary ``name``."""
+
+    return declaration.name
 
 
 class Axis(GroupingDeclaration):

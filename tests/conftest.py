@@ -190,21 +190,29 @@ def restored_global_configs() -> Iterator[None]:
     """The saved and live global config of every config type is, after a test, what it was before it."""
     from objectstate import global_config
 
-    def config_types() -> set[type]:
-        return {
-            *global_config._saved_global_config_contexts,
-            *global_config._live_global_config_contexts,
-        }
-
-    before = {
-        config_type: global_config.GlobalContextValues.capture(config_type)
-        for config_type in config_types()
-    }
+    before = dict(global_config._stored_global_configs)
     yield
-    for config_type in config_types():
-        before.get(
-            config_type, global_config.GlobalContextValues(config_type, None, None)
-        ).apply()
+    for config_type in {*before, *global_config._stored_global_configs}:
+        if config_type in before:
+            global_config.set_global_config(config_type, before[config_type])
+        else:
+            global_config.forget_stored_global_config(config_type)
+
+
+@pytest.fixture
+def on_every_library(monkeypatch) -> Callable[[str, object], None]:
+    """Replace one method on every array library's own class, for a test.
+
+    A library may state the method itself (CuPy and torch clean up their own way), so
+    replacing it on the family's base would leave those untouched.
+    """
+    from arraybridge import MemoryType
+
+    def replace(name: str, replacement: object) -> None:
+        for memory_type in MemoryType:
+            monkeypatch.setattr(type(memory_type.library), name, replacement)
+
+    return replace
 
 
 @pytest.fixture

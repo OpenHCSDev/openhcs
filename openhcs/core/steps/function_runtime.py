@@ -112,6 +112,9 @@ from openhcs.core.debug.debug_runtime import (
     BeforeInvocationDebugBoundary,
     ExceptionDebugBoundary,
 )
+from openhcs.core.axes.component_group_scope import RuntimeFixedComponentValues
+from openhcs.core.callable.function_patterns import CompiledFunctionGroup, CompiledFunctionInvocation
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 
 logger = logging.getLogger(__name__)
 
@@ -717,7 +720,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             )
             if not producer_records:
                 metadata = main_data_stack.metadata
-                domain = request.source_binding_plan.source_spatial_domain.with_source_cohort(
+                domain = self.source_binding_plan.source_spatial_domain.with_source_cohort(
                     metadata.source_spatial_domain,
                     depth=len(matching_files),
                 )
@@ -1057,7 +1060,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             return unstack_runtime_slices(
                 processed_data,
                 self.execution_plan.output_memory_type,
-                self.execution_plan.device_id_for(
+                self.execution_plan.device_for(
                     self.execution_plan.output_memory_type
                 ),
                 expected_count=expected_count,
@@ -1154,7 +1157,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         stack_payload = processed_stack.output_stack_copy(
             projected_outputs,
             memory_type=plan.output_memory_type,
-            device_id=plan.device_id_for(plan.output_memory_type),
+            device=plan.device_for(plan.output_memory_type),
         )
         RuntimeProfileLogger.log(
             logger,
@@ -1378,7 +1381,7 @@ class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
             payloads.append(
                 source_payload.copied(
                     memory_type=self.execution_plan.input_memory_type,
-                    device_id=self.execution_plan.device_id_for(
+                    device=self.execution_plan.device_for(
                         self.execution_plan.input_memory_type,
                     ),
                 )

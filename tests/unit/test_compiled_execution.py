@@ -83,7 +83,7 @@ def test_compiled_execution_bundle_owns_transport_context_resolution(monkeypatch
         return {"A01": resolved_context}
 
     monkeypatch.setattr(
-        "openhcs.core.compiled_execution.resolve_lazy_configurations_for_serialization",
+        "openhcs.core.execution.compiled_execution.resolve_lazy_configurations_for_serialization",
         resolve_for_transport,
     )
 
@@ -410,6 +410,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
 
 def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
     monkeypatch,
+    on_every_library,
 ) -> None:
     cleaned = []
 
@@ -445,10 +446,9 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
         "polystore.base.reset_memory_backend",
         fail_reset,
     )
-    monkeypatch.setattr(
-        MemoryType,
+    on_every_library(
         "cleanup_loaded",
-        lambda memory_type, device_id=None: cleaned.append((memory_type, device_id)),
+        lambda library, device=None: cleaned.append((MemoryType(library.name), device.index)),
     )
 
     with pytest.raises(RuntimeError, match="step failure"):

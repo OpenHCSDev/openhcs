@@ -25,13 +25,13 @@ class LazyFrameworkModule:
     def is_installed(self) -> bool:
         """Check package presence without importing the framework."""
 
-        return self._memory_type.is_installed()
+        return self._memory_type.library.is_installed()
 
     def _ensure_imported(self) -> Any | None:
         if not self._resolved:
             with self._lock:
                 if not self._resolved:
-                    module = self._memory_type.import_if_installed()
+                    module = self._memory_type.library.import_if_installed()
                     for attribute in self._attribute_path:
                         if module is None:
                             break
@@ -44,7 +44,7 @@ class LazyFrameworkModule:
         module = self._ensure_imported()
         if module is None:
             raise ImportError(
-                f"Module {self._memory_type.import_name!r} is not installed."
+                f"Module {self._memory_type.library.import_name!r} is not installed."
             )
         return getattr(module, name)
 

@@ -296,7 +296,7 @@ source-binding semantics; do not pass that concrete class to this lazy field.
 
 .. code-block:: python
 
-   from openhcs.constants.input_source import InputSource
+   from openhcs.constants.input_source import ReadPipelineStart
    from openhcs.core.config.pipeline_config import (
        LazyProcessingConfig,
        LazySourceBindingsConfig,
@@ -305,10 +305,10 @@ source-binding semantics; do not pass that concrete class to this lazy field.
    )
    from openhcs.core.source.source_bindings import (
        NamedSourceBinding,
+       SourceFileName,
        SourceFilterClause,
-       SourceFilterMatchType,
-       SourceFilterSubject,
        SourceSelector,
+       TextEquals,
    )
    from openhcs.core.steps.function_step import FunctionStep
    from openhcs.processing.backends.processors.numpy_processor import (
@@ -322,8 +322,8 @@ source-binding semantics; do not pass that concrete class to this lazy field.
            selector=SourceSelector(
                filters=(
                    SourceFilterClause(
-                       subject=SourceFilterSubject.FILE,
-                       match_type=SourceFilterMatchType.EQUALS,
+                       subject=SourceFileName,
+                       match_type=TextEquals,
                        value=filename,
                    ),
                ),
@@ -375,7 +375,7 @@ source-binding semantics; do not pass that concrete class to this lazy field.
            name="Normalize DNA",
            func=stack_percentile_normalize,
            processing_config=LazyProcessingConfig(
-               input_source=InputSource.PIPELINE_START,
+               input_source=ReadPipelineStart,
            ),
            source_bindings=LazyStepSourceBindingsConfig(
                enabled=True,

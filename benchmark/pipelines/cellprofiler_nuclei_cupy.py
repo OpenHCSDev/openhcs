@@ -22,10 +22,8 @@ try:
 
     from openhcs.core.memory.decorators import cupy as cupy_func
     from openhcs.core.pipeline.function_contracts import artifact_outputs
-    from openhcs.core.materialization.presets import csv_materializer
-    from openhcs.processing.backends.analysis.cell_counting_cpu import (
-        materialize_segmentation_masks,
-    )
+    from openhcs.core.materialization.core import MaterializationSpec
+    from openhcs.core.materialization.options import CsvOptions, ROIOptions
 
     @dataclass
     class NucleiMeasurement:
@@ -41,7 +39,7 @@ try:
     @artifact_outputs(
         (
             "nuclei_measurements",
-            csv_materializer(
+            MaterializationSpec(CsvOptions(
                 fields=[
                     "slice_index",
                     "nuclei_count",
@@ -49,10 +47,9 @@ try:
                     "mean_area",
                     "mean_intensity",
                 ],
-                analysis_type="nuclei_counts",
-            ),
+            )),
         ),
-        ("segmentation_masks", materialize_segmentation_masks),
+        ("segmentation_masks", MaterializationSpec(ROIOptions())),
     )
     def identify_primary_objects_cupy(
         image: np.ndarray,

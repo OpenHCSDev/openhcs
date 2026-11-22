@@ -894,11 +894,9 @@ class ZMQExecutionServer(ImportRootEndpoint, FunctionCatalogExecutionServer):
     def _ensure_request_global_config_context(
         request_context: ZMQExecutionContext,
     ) -> None:
-        from objectstate.lazy_factory import (
-            ensure_global_config_context,
-        )
+        from objectstate import set_global_config
 
-        ensure_global_config_context(
+        set_global_config(
             GlobalPipelineConfig,
             request_context.configs.global_pipeline,
         )

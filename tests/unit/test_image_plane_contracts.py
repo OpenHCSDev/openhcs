@@ -13,8 +13,10 @@ from openhcs.core.payload.aligned_image_payload import (
     pack_aligned_image_outputs,
     stack_image_payloads,
 )
+from arraybridge.devices import HOST
+
 from openhcs.core.memory import (
-    MEMORY_TYPE_NUMPY,
+    MemoryType,
     stack_runtime_slices,
     unstack_runtime_slices,
 )
@@ -45,11 +47,11 @@ def test_explicit_runtime_slice_stack_round_trips_any_slice_shape(
         np.ones(slice_shape, dtype=np.uint16),
     )
 
-    stack = stack_runtime_slices(slices, MEMORY_TYPE_NUMPY, 0)
+    stack = stack_runtime_slices(slices, MemoryType.NUMPY.value, HOST)
     unstacked = unstack_runtime_slices(
         stack,
-        MEMORY_TYPE_NUMPY,
-        0,
+        MemoryType.NUMPY.value,
+        HOST,
         expected_count=2,
     )
 
@@ -62,8 +64,8 @@ def test_explicit_runtime_slice_stack_rejects_mismatched_slice_shapes() -> None:
     with pytest.raises(ValueError, match="one exact shape"):
         stack_runtime_slices(
             (np.zeros((4, 5)), np.zeros((4, 6))),
-            MEMORY_TYPE_NUMPY,
-            0,
+            MemoryType.NUMPY.value,
+            HOST,
         )
 
 

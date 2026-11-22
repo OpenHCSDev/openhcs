@@ -593,6 +593,7 @@ def _batch_aligns_with_segment(
     )
 
 
+@dataclass(frozen=True, slots=True)
 class MeasurementSparseColumnarRows(ColumnarRows):
     """Columnar measurement rows whose missing cells are structural, not values."""
 

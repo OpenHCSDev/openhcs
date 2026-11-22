@@ -5234,7 +5234,7 @@ class CombineObjectsStats:
 
 
 class CombineObjectsStrategy(
-    EnumKeyedStrategyMixin[CombineObjectsMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[CombineObjectsMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal object-label combination strategy."""
 
@@ -5557,7 +5557,7 @@ class MergeObjectsStrategy(SplitOrMergeOperationStrategy):
 
 
 class SplitOrMergeMergeMethodStrategy(
-    EnumKeyedStrategyMixin[SplitOrMergeMergeMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[SplitOrMergeMergeMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal implementation for one SplitOrMergeObjects merge method."""
 

@@ -12,6 +12,7 @@ from typing import Any
 import cloudpickle
 import numpy as np
 import pytest
+from arraybridge.devices import HOST
 from arraybridge import ArrayPayload
 
 import openhcs.core.callable.callable_contract as contract_module
@@ -448,7 +449,7 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
     placed.data
     placed.mask
 
-    assert calls == [{"memory_type": "numpy", "device_id": None}]
+    assert calls == [{"memory_type": "numpy", "device": HOST}]
     np.testing.assert_array_equal(placed.data, np.stack(pixels))
     assert placed.data.shape == (2, 3, 4)
     assert placed.mask.shape == (2, 3, 4)

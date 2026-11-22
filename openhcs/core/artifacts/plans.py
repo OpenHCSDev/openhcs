@@ -22,6 +22,10 @@ from openhcs.core.artifacts.streaming import AutomaticStreaming
 from openhcs.core.axes.component_group_scope import ComponentGroupScope, UngroupedScope
 from openhcs.core.axes.component_set import ComponentSet
 from openhcs.core.payload.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
+from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
+from openhcs.core.artifacts.streaming import ViewerStreaming
+from openhcs.core.axes.axis_declarations import Axis
 
 
 AnswerT = TypeVar("AnswerT")

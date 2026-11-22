@@ -13,6 +13,8 @@ from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
     build_execution_runtime_projection,
 )
+from openhcs.core.debug.debug_runtime import DebugSession, DebugSnapshot, DebugTerminalSummary
+from openhcs.core.progress.types import ProgressEvent
 
 
 @dataclass(frozen=True)

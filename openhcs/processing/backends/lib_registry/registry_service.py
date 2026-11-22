@@ -19,7 +19,7 @@ from collections.abc import Callable
 from concurrent.futures import CancelledError
 from typing import TYPE_CHECKING, Dict, Optional
 
-from arraybridge import MemoryType
+from arraybridge.libraries import ArrayLibrary
 from objectstate import LazyDataclassFactory
 from python_introspect import SignatureAnalyzer
 from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
@@ -329,7 +329,7 @@ class RegistryService:
                 stdout=output,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=MemoryType.subprocess_environment(),
+                env=ArrayLibrary.child_environment(),
                 **policy.popen_arguments(),
             )
             owned_process = endpoint_process(process)

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from collections.abc import Mapping
 from typing import TypeAlias
+from openhcs.core.config.pipeline_config import PartitionFilterConfig, PartitionFilterMode
 
 
 PartitionFilterValue: TypeAlias = list[str] | str | int | None

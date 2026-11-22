@@ -72,9 +72,9 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
     subprocess_environment = {"FRAMEWORK_IMPORTS": "prepared"}
     monkeypatch.setattr(
         zmq_execution_client,
-        "MemoryType",
+        "ArrayLibrary",
         SimpleNamespace(
-            subprocess_environment=lambda: subprocess_environment,
+            child_environment=lambda: subprocess_environment,
         ),
     )
 

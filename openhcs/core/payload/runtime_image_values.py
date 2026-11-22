@@ -17,6 +17,7 @@ from typing import Any, TypeVar
 
 import numpy as np
 from arraybridge import ArrayGeometry, MemoryType, detect_memory_type
+from arraybridge.devices import Device
 from python_introspect import dataclass_from_mapping, to_jsonable
 from zmqruntime.viewer_protocol import (
     ViewerWireField,
@@ -50,7 +51,9 @@ from openhcs.core.source.source_spatial_domain import (
     _spatial_shape_pair as _source_spatial_shape_pair,
 )
 from openhcs.core.axes.axis_declarations import AxisFamily, ColourAxis
-from openhcs.core.memory import MEMORY_TYPE_NUMPY, stack_runtime_slices
+from openhcs.core.memory import stack_runtime_slices
+from openhcs.core.payload.runtime_array_values import RuntimeArrayData
+from typing import ClassVar
 
 
 
@@ -239,13 +242,13 @@ class ImagePayloadIntensityFields(ABC):
         array = payload.data
         memory_type = MemoryType(detect_memory_type(array))
         target_dtype = self.normalization_dtype(
-            memory_type.canonical_dtype_name(array.dtype), dtype,
+            memory_type.library.dtype_name(array.dtype), dtype,
         )
         if target_dtype is None:
             return payload
         if self.has_normalized_intensity:
             return self.payload_with(
-                memory_type.astype(array, target_dtype), payload.mask,
+                memory_type.library.astype(array, target_dtype), payload.mask,
             )
         if self.has_leading_intensity_axis and self.source_plane_intensity_scales:
             if len(self.source_plane_intensity_scales) != len(array):
@@ -253,7 +256,7 @@ class ImagePayloadIntensityFields(ABC):
                     "Image intensity scales must match the declared leading plane axis."
                 )
             self.require_leading_intensity_axis()
-            source_dtype = np.dtype(memory_type.canonical_dtype_name(array.dtype))
+            source_dtype = np.dtype(memory_type.library.dtype_name(array.dtype))
             scale_proofs = tuple(
                 self.normalization_scale(
                     source_dtype, self.intensity_scale_for_source_plane(index),
@@ -266,7 +269,7 @@ class ImagePayloadIntensityFields(ABC):
                 ),
             )
             return metadata.payload_with(
-                memory_type.normalize_planes(
+                memory_type.library.normalize_planes(
                     array, target_dtype, tuple(scale for scale, _ in scale_proofs),
                 ),
                 payload.mask,
@@ -304,11 +307,11 @@ class ImagePayloadIntensityFields(ABC):
     ) -> tuple[Any, int | None]:
         """Apply one numerical recipe without projecting image source identity."""
         memory_type = MemoryType(detect_memory_type(array))
-        source_dtype = np.dtype(memory_type.canonical_dtype_name(array.dtype))
+        source_dtype = np.dtype(memory_type.library.dtype_name(array.dtype))
         scale, proof_scale = ImagePayloadIntensityFields.normalization_scale(
             source_dtype, scale,
         )
-        normalized = memory_type.astype(array, target_dtype)
+        normalized = memory_type.library.astype(array, target_dtype)
         if scale is not None:
             normalized = normalized / float(scale)
         return normalized, proof_scale
@@ -581,7 +584,7 @@ class ImagePayloadMetadata(
         """Build source metadata from an arraybridge-detectable payload."""
         memory_type = detect_memory_type(array)
         dtype = array.dtype
-        if memory_type == MEMORY_TYPE_NUMPY:
+        if memory_type == MemoryType.NUMPY.value:
             intensity_scale = image_intensity_scale_for_dtype(dtype)
         else:
             intensity_scale = None
@@ -1416,13 +1419,13 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         )
         return facts, projection
 
-    def copied(self, *, memory_type: str, device_id: int | None) -> ImagePayload:
+    def copied(self, *, memory_type: str, device: Device) -> ImagePayload:
         """Copy pixels, mask and metadata into an independent buffer."""
-        copied_data = stack_runtime_slices((self.data,), memory_type, device_id)[0]
+        copied_data = stack_runtime_slices((self.data,), memory_type, device)[0]
         mask = self.mask
         copied_mask = (
             None if mask is None
-            else stack_runtime_slices((mask,), memory_type, device_id)[0]
+            else stack_runtime_slices((mask,), memory_type, device)[0]
         )
         return self.metadata.replace_fields().payload_with(copied_data, copied_mask)
 
@@ -1588,12 +1591,12 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         projected_outputs: Sequence[tuple[Any, Any]],
         *,
         memory_type: str,
-        device_id: int | None,
+        device: Device,
     ) -> ImagePayload | None:
         """Return an independent buffer for the published output stack."""
         del projected_outputs
         if self.declares_whole_image_output:
-            return self.copied(memory_type=memory_type, device_id=device_id)
+            return self.copied(memory_type=memory_type, device=device)
         return self
 
     # -- derived image outputs ------------------------------------------------
@@ -1903,6 +1906,8 @@ class BareArraySourceSpatialDomainAdapter(
 ):
     """Source-domain adapter for bare pixels, which declare no placement."""
 
+    adapts_bare_arrays = True
+
     @classmethod
     def for_array(
         cls,
@@ -1975,7 +1980,7 @@ def as_runtime_value(value: Any) -> RuntimeSliceProjectableValue:
     return UnownedRuntimeValue(value)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Pixels that carry no metadata and no mask."""
 
@@ -2024,7 +2029,7 @@ class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
         return self
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ImageMetadataPayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Image data plus metadata, without requiring a validity mask."""
 
@@ -2059,7 +2064,7 @@ class ImageMetadataPayload(DataBackedRuntimeArrayPayload, ImagePayload):
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class MaskedImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
     """Image data plus an authoritative per-pixel validity mask."""
 
@@ -2119,10 +2124,10 @@ def project_image_mask_to_data_domain(
     data_array = runtime_array_operand(data)
     candidate = mask_array(mask)
     target = MemoryType(detect_memory_type(data_array))
-    candidate = MemoryType(detect_memory_type(candidate)).convert_to(
-        candidate, target, target.device_id_of(data_array),
+    candidate = MemoryType(detect_memory_type(candidate)).library.convert_to(
+        candidate, target.library, target.library.device_of(data_array),
     )
-    candidate = target.astype(candidate, bool)
+    candidate = target.library.astype(candidate, bool)
     mask_shape = tuple(candidate.shape)
     mask_domain = metadata.mask_domain(data)
     if mask_domain.accepts(mask_shape):
@@ -2557,7 +2562,7 @@ class ImageMaskDomain:
         channel_axis: int,
     ) -> Any:
         candidate = mask_array(mask)
-        candidate = MemoryType(detect_memory_type(candidate)).astype(candidate, bool)
+        candidate = MemoryType(detect_memory_type(candidate)).library.astype(candidate, bool)
         if candidate.shape != array_geometry(source_data).shape:
             return candidate
         channel_mask = cls.channel_axis_slice(
@@ -2567,7 +2572,7 @@ class ImageMaskDomain:
         )
         if array_geometry(channel_mask).shape == array_geometry(channel_data).shape:
             return channel_mask
-        squeezed_mask = MemoryType(detect_memory_type(channel_mask)).reshape(
+        squeezed_mask = MemoryType(detect_memory_type(channel_mask)).library.reshape(
             channel_mask,
             tuple(
                 size for axis, size in enumerate(channel_mask.shape)
@@ -2622,7 +2627,7 @@ class ImageMaskDomain:
         """Broadcast a valid mask across its declared non-spatial axes."""
         candidate = mask_array(mask)
         memory_type = MemoryType(detect_memory_type(candidate))
-        candidate = memory_type.astype(candidate, bool)
+        candidate = memory_type.library.astype(candidate, bool)
         mask_shape = tuple(candidate.shape)
         if mask_shape == self.data_shape:
             return candidate
@@ -2632,8 +2637,8 @@ class ImageMaskDomain:
             broadcast_shape = [1] * len(self.data_shape)
             for mask_axis, data_axis in enumerate(self.placement_axes):
                 broadcast_shape[data_axis] = mask_shape[mask_axis]
-            return memory_type.broadcast_to(
-                memory_type.reshape(candidate, tuple(broadcast_shape)),
+            return memory_type.library.broadcast_to(
+                memory_type.library.reshape(candidate, tuple(broadcast_shape)),
                 self.data_shape,
             )
         if self.undeclared_shape is None or mask_shape != self.undeclared_shape:
@@ -2644,8 +2649,8 @@ class ImageMaskDomain:
         broadcast_shape = list(mask_shape)
         for axis in self.declared_axes:
             broadcast_shape.insert(axis, 1)
-        return memory_type.broadcast_to(
-            memory_type.reshape(candidate, tuple(broadcast_shape)),
+        return memory_type.library.broadcast_to(
+            memory_type.library.reshape(candidate, tuple(broadcast_shape)),
             self.data_shape,
         )
 

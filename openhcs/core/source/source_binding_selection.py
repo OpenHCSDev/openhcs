@@ -34,6 +34,12 @@ from openhcs.core.payload.runtime_image_loading import ImagePayloadSourceMetadat
 from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 from openhcs.core.payload.runtime_image_values import ImagePayload
 from openhcs.core.payload.runtime_image_values import as_runtime_value
+from openhcs.core.dataset_sources.interfaces import FilenameParser
+from openhcs.core.source.source_bindings import NamedSourceBinding, SourceBindingOrigin, SourceSetPairing
+from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source.source_metadata import MetadataExtractionRule, SourceMetadataMapping
+from openhcs.core.source.source_projection import SourceProjection
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
 SourceCandidatePath = str

@@ -6,11 +6,9 @@ import hashlib
 
 import numpy as np
 
-from openhcs.core.memory import (
-    MEMORY_TYPE_NUMPY,
-    convert_memory,
-    detect_memory_type,
-)
+from arraybridge.devices import HOST
+
+from openhcs.core.memory import MemoryType, convert_memory, detect_memory_type
 
 
 def array_memory_type(value: object) -> str | None:
@@ -28,8 +26,8 @@ def canonical_numpy_array(value: object) -> np.ndarray | None:
         return None
     array = (
         value
-        if source_type == MEMORY_TYPE_NUMPY
-        else convert_memory(value, source_type, MEMORY_TYPE_NUMPY, 0)
+        if source_type == MemoryType.NUMPY.value
+        else convert_memory(value, source_type, MemoryType.NUMPY.value, HOST)
     )
     return np.ascontiguousarray(array)
 

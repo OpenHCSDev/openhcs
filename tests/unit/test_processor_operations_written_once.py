@@ -1,4 +1,4 @@
-"""Processor operations are written once against arraybridge ``ArrayOperations``.
+"""Processor operations are written once against arraybridge ``ArrayLibrary``.
 
 The six backend processor modules register shared operations from
 ``image_stack_operations``; a backend keeps its own body only where its
@@ -15,7 +15,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 from arraybridge import MemoryType
-from arraybridge.array_operations import ArrayOperations
 
 from openhcs.core.callable.callable_contract import CallableContract
 from openhcs.core.callable.processing_contracts import VolumetricToSliceContract
@@ -72,7 +71,7 @@ def _calls_shared_operation(function: ast.FunctionDef) -> bool:
 def test_each_backend_module_registers_with_its_own_leaf() -> None:
     for backend in BACKENDS:
         leaf = _processor_module(backend).OPERATIONS
-        assert leaf is ArrayOperations.for_memory(MemoryType(backend))
+        assert leaf is MemoryType(backend).library
 
 
 def test_operations_shared_by_two_backends_are_written_once() -> None:

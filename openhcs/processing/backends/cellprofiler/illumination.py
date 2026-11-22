@@ -610,8 +610,8 @@ def illumination_gaussian_filter(
 IlluminationCalculationResult = RuntimeArrayData | AlignedImageStack
 
 class IlluminationCorrectionStrategy(
-    EnumKeyedStrategyMixin[IlluminationCorrectionMethod],
-    MethodKeyedStrategy, ABC,
+    MethodKeyedStrategy,
+    EnumKeyedStrategyMixin[IlluminationCorrectionMethod], ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Nominal correction implementation for one CellProfiler method."""
@@ -1069,7 +1069,7 @@ def correct_illumination_apply(
     )
 
 class SmoothingFilterSizeStrategy(
-    EnumKeyedStrategyMixin[FilterSizeMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[FilterSizeMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal filter-size derivation for one closed CellProfiler mode."""
 
@@ -1096,7 +1096,7 @@ class AutomaticSmoothingFilterSizeStrategy(SmoothingFilterSizeStrategy):
         return min(30.0, float(np.max(request.spatial_image_shape)) / 40.0)
 
 class SmoothingPlaneStrategy(
-    EnumKeyedStrategyMixin[SmoothingMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[SmoothingMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Nominal smoothing implementation for one closed CellProfiler mode."""
 

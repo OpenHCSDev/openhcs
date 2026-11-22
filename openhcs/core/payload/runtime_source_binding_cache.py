@@ -12,6 +12,10 @@ from openhcs.core.source.source_metadata import ResolvedSourceMetadataRecord
 from openhcs.core.source.source_matching import source_component_metadata_items
 from openhcs.core.source.source_path_identity import source_path_identity_key
 from openhcs.core.source.source_binding_selection import DeclaredSourceMetadataRecord, SourceIdentityResolutionContext
+from openhcs.core.axes.axis_declarations import Axis
+from openhcs.core.source.source_binding_selection import SourceCandidatePathResolution, SourcePatternResolutionContext, SourceUniverseRuntimeState
+from openhcs.core.source.source_metadata import MetadataExtractionRule, SourceMetadataMapping
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
 @dataclass(frozen=True)

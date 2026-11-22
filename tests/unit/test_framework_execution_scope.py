@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from arraybridge import MemoryType
+from arraybridge.devices import AcceleratorDevice
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.execution.compiled_step_plan import FrameworkDeviceAssignment
 from openhcs.core.callable.function_patterns import compile_function_pattern
@@ -32,13 +33,13 @@ def test_function_invocation_enters_declared_execution_memory_scope(
     )
 
     @contextmanager
-    def memory_device_scope(memory_type, device_id):
-        assert device_id == 4
-        events.append(("enter", memory_type.value))
+    def memory_device_scope(library, device):
+        assert device == AcceleratorDevice(4)
+        events.append(("enter", library.name))
         yield
-        events.append(("exit", memory_type.value))
+        events.append(("exit", library.name))
 
-    monkeypatch.setattr(MemoryType, "device_scope", memory_device_scope)
+    monkeypatch.setattr(type(MemoryType.TORCH.library), "device_scope", memory_device_scope)
 
     executor = FunctionCoreExecutor(
         group_data=SimpleNamespace(),

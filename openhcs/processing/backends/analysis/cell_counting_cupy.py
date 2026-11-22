@@ -74,15 +74,13 @@ def _watershed_with_cpu_partition(image, markers, *, mask):
 
     from openhcs.constants.constants import MemoryType
 
-    device_id = MemoryType.CUPY.device_id_of(image)
-    if device_id is None:
-        raise ValueError("CuPy watershed input does not declare a GPU device.")
+    device = MemoryType.CUPY.library.device_of(image)
     labels = skimage_watershed(
-        MemoryType.CUPY.to_numpy(image),
-        MemoryType.CUPY.to_numpy(markers),
-        mask=MemoryType.CUPY.to_numpy(mask),
+        MemoryType.CUPY.library.to_numpy(image),
+        MemoryType.CUPY.library.to_numpy(markers),
+        mask=MemoryType.CUPY.library.to_numpy(mask),
     )
-    return MemoryType.CUPY.from_numpy(labels, device_id)
+    return MemoryType.CUPY.library.from_numpy(labels, device)
 
 
 def count_cells_single_channel(

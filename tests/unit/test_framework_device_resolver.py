@@ -1,17 +1,17 @@
 import pytest
 
 from arraybridge import MemoryType
+from arraybridge.devices import AcceleratorDevice
 
 from openhcs.core.execution.compiled_step_plan import FrameworkDeviceAssignment
 from openhcs.core.util.framework_device_resolver import FrameworkDeviceResolver
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 
-def test_empty_footprint_does_not_import_frameworks(monkeypatch) -> None:
-    monkeypatch.setattr(
-        MemoryType,
+def test_empty_footprint_does_not_import_frameworks(on_every_library) -> None:
+    on_every_library(
         "import_if_installed",
-        lambda _memory_type: (_ for _ in ()).throw(
+        lambda _library: (_ for _ in ()).throw(
             AssertionError("empty footprint imported a GPU runtime")
         ),
     )
@@ -19,12 +19,13 @@ def test_empty_footprint_does_not_import_frameworks(monkeypatch) -> None:
     assert FrameworkDeviceResolver().resolve(frozenset()).bindings == ()
 
 
-def test_cpu_only_authority_rejects_gpu_footprint_before_import(monkeypatch) -> None:
+def test_cpu_only_authority_rejects_gpu_footprint_before_import(
+    monkeypatch, on_every_library,
+) -> None:
     monkeypatch.setenv(OpenHCSProcessEnvironment.cpu_only_key, "true")
-    monkeypatch.setattr(
-        MemoryType,
+    on_every_library(
         "import_if_installed",
-        lambda _memory_type: (_ for _ in ()).throw(
+        lambda _library: (_ for _ in ()).throw(
             AssertionError("CPU-only resolution imported a GPU runtime")
         ),
     )
@@ -33,7 +34,9 @@ def test_cpu_only_authority_rejects_gpu_footprint_before_import(monkeypatch) -> 
         FrameworkDeviceResolver().resolve(frozenset({MemoryType.TORCH}))
 
 
-def test_framework_namespaces_receive_independent_local_devices(monkeypatch) -> None:
+def test_framework_namespaces_receive_independent_local_devices(
+    monkeypatch, on_every_library,
+) -> None:
     modules = {
         MemoryType.CUPY: object(),
         MemoryType.TORCH: object(),
@@ -51,31 +54,30 @@ def test_framework_namespaces_receive_independent_local_devices(monkeypatch) -> 
         OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key,
         raising=False,
     )
-    monkeypatch.setattr(
-        MemoryType,
+    on_every_library(
         "import_if_installed",
-        lambda memory_type: modules[memory_type],
+        lambda library: modules[MemoryType(library.name)],
     )
-    monkeypatch.setattr(
-        MemoryType,
-        "available_device_ids",
-        lambda memory_type, _module=None: available[memory_type],
+    on_every_library(
+        "accelerator_devices",
+        lambda library: tuple(
+            AcceleratorDevice(index) for index in available[MemoryType(library.name)]
+        ),
     )
 
     assignment = FrameworkDeviceResolver(preferred_device_id=3).resolve(
         frozenset(modules)
     )
 
-    assert assignment.device_id_for(MemoryType.CUPY) == 3
-    assert assignment.device_id_for(MemoryType.TORCH) == 5
+    assert assignment.device_for(MemoryType.CUPY) == AcceleratorDevice(3)
+    assert assignment.device_for(MemoryType.TORCH) == AcceleratorDevice(5)
 
 
-def test_compiled_cleanup_visits_only_assigned_framework_devices(monkeypatch) -> None:
+def test_compiled_cleanup_visits_only_assigned_framework_devices(on_every_library) -> None:
     cleaned = []
-    monkeypatch.setattr(
-        MemoryType,
+    on_every_library(
         "cleanup_loaded",
-        lambda memory_type, device_id=None: cleaned.append((memory_type, device_id)),
+        lambda library, device=None: cleaned.append((MemoryType(library.name), device.index)),
     )
     assignment = FrameworkDeviceAssignment.from_mapping(
         {
@@ -93,16 +95,16 @@ def test_compiled_cleanup_visits_only_assigned_framework_devices(monkeypatch) ->
 
 
 def test_compiled_cleanup_attempts_every_binding_before_reporting_failures(
-    monkeypatch,
+    on_every_library,
 ) -> None:
     cleaned = []
 
-    def cleanup(memory_type, device_id=None):
-        cleaned.append((memory_type, device_id))
-        if memory_type is MemoryType.CUPY:
+    def cleanup(library, device=None):
+        cleaned.append((MemoryType(library.name), device.index))
+        if library is MemoryType.CUPY.library:
             raise RuntimeError("cupy cleanup failed")
 
-    monkeypatch.setattr(MemoryType, "cleanup_loaded", cleanup)
+    on_every_library("cleanup_loaded", cleanup)
     assignment = FrameworkDeviceAssignment.from_mapping(
         {
             MemoryType.CUPY: 2,

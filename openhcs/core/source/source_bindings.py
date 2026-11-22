@@ -35,6 +35,7 @@ from openhcs.core.source.source_matching import source_filters_match, semantic_s
 from openhcs.core.axes.axis_declarations import ColourAxis
 from openhcs.core.payload.payload_axes import PayloadAxes
 from openhcs.core.payload.runtime_image_values import ImagePayload, ImageUnitIntervalIntensityMetadata
+from openhcs.core.source.source_metadata import SourceMetadataMapping, SourceMetadataScalar
 
 
 SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"
@@ -168,10 +169,11 @@ class SourceExtension(SourceFilterSubject):
 class TextMatchType(SourceFilterMatchType):
     """Compares the subject text with the clause's value."""
 
-    def normalize_clause_value(self, clause: SourceFilterClause) -> None:
+    @classmethod
+    def normalize_clause_value(cls, clause: SourceFilterClause) -> None:
         if clause.value is None:
             raise ValueError(
-                f"SourceFilterClause.value is required for {self.name}."
+                f"SourceFilterClause.value is required for {cls.name}."
             )
         object.__setattr__(clause, "value", str(clause.value))
 

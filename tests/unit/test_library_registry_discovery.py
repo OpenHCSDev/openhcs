@@ -621,9 +621,9 @@ def test_registry_preparation_uses_background_process_policy(monkeypatch) -> Non
     subprocess_environment = {"FRAMEWORK_IMPORTS": "prepared"}
     monkeypatch.setattr(
         registry_service,
-        "MemoryType",
+        "ArrayLibrary",
         SimpleNamespace(
-            subprocess_environment=lambda: subprocess_environment,
+            child_environment=lambda: subprocess_environment,
         ),
     )
 

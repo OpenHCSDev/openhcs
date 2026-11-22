@@ -23,6 +23,9 @@ from openhcs.core.source.source_metadata import SourceMetadataFields, ResolvedSo
 from python_introspect import to_jsonable
 from openhcs.core.source.source_path_identity import absolute_source_path, source_path_posix
 from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis, StackAxis, TileAxis
+from openhcs.core.axes.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.source.source_bindings import SourceProjectionRole
+from openhcs.core.source.source_metadata import SourceMetadataMapping
 
 
 class SourceDatasetConflictError(ValueError):

@@ -11,7 +11,7 @@ from enum import Enum
 from typing import Annotated, List, Optional, Tuple
 
 from arraybridge import MemoryType
-from arraybridge.array_operations import ArrayOperations
+from arraybridge.libraries import ArrayLibrary
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 from numba import njit
@@ -34,7 +34,7 @@ from openhcs.core.callable.processing_contracts import (
     VolumetricToSliceContract,
 )
 
-OPERATIONS = ArrayOperations.for_memory(MemoryType.NUMPY)
+OPERATIONS = MemoryType.NUMPY.library
 
 
 @numpy_func(contract=Pure2DContract)

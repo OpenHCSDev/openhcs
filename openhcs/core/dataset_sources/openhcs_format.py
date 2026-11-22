@@ -1293,6 +1293,7 @@ from openhcs.core.source.source_workspace_projection import WorkspaceSourceProje
 from dataclasses import replace
 from pathlib import PurePosixPath
 from openhcs.core.source.source_projection import SourceProjectionMetadataSerializer, SourceProjectionSet
+from openhcs.core.context.processing_context import ExecutingContext
 
 
 class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):

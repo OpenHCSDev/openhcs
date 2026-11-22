@@ -102,15 +102,15 @@ dependencies = [
     "psutil>=5.9.0",
 
     # External dependencies (PyPI versions for production builds)
-    "zmqruntime>=0.6.4",
+    "zmqruntime>=0.6.6",
     "pycodify>=0.2.1",
-    "objectstate>=3.0.4",
-    "python-introspect>=0.2.8",
-    "metaclass-registry>=0.4.0",
-    "arraybridge>=0.4.1",
-    "polystore>=0.6.2",
-    "formbridge>=0.1.3",
-    "pyqt-reactive>=0.7.2",
+    "objectstate>=5.0.1",
+    "python-introspect>=0.4.0",
+    "metaclass-registry>=0.5.0",
+    "arraybridge>=0.5.2",
+    "polystore>=0.6.3",
+    "formbridge>=0.2.1",
+    "pyqt-reactive>=0.10.0",
 ]
 
 [project.optional-dependencies]
@@ -311,6 +311,7 @@ openhcs-mcp-http = "openhcs.mcp.http:main"
 openhcs-mcp-dev = "openhcs.mcp.dev_client:main"
 openhcs-mcp-demo = "openhcs.mcp.installed_demo:main"
 openhcs-benchmark = "benchmark.cellprofiler_benchmark_cli:main"
+openhcs-agent-validation = "benchmark.agent_validation.__main__:main"
 
 [project.gui-scripts]
 openhcs-gui = "openhcs.pyqt_gui.__main__:main"
