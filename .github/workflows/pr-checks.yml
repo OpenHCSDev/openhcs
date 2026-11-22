@@ -59,6 +59,7 @@ jobs:
           python -m scripts.install_ci_candidate \
             --dependency-source submodules \
             --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
+            --requirement "ui-theme @ git+https://github.com/OpenHCSDev/ui-theme@a041f11cb1c39a2792220c2a42b5b4a4b7986001" \
             --extras dev,dev-gui,gui,cellprofiler-compat,fiji,mcp-http,napari
 
       - name: Materialize tracked Official30 unit fixture
@@ -140,6 +141,7 @@ jobs:
           python -m scripts.install_ci_candidate \
             --dependency-source submodules \
             --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
+            --requirement "ui-theme @ git+https://github.com/OpenHCSDev/ui-theme@a041f11cb1c39a2792220c2a42b5b4a4b7986001" \
             --extras dev,dev-gui,gui,cellprofiler-compat,fiji,mcp-http,napari
 
       - name: Run the smoke tests
