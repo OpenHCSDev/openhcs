@@ -343,13 +343,13 @@ def test_a_task_is_checked_from_the_plate_a_run_wrote_beside_its_inputs(tmp_path
 
     from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 
-    # One task is built alone, and only a task whose result is planes is ever picked.
-    picked = {AgentValidationCorpus.build_task(tmp_path / str(pick), pick).task_id
-              for pick in range(8)}
-    assert picked == {declaration.task_id for declaration in AgentValidationCorpus.task_declarations()
-                      if declaration.output_kind.written_as_planes}
-    task_root = next(tmp_path / str(pick) for pick in range(8)
-                     if "binary_closing" in (tmp_path / str(pick) / "task.json").read_text())
+    # One task is built alone, by its id, and only one whose result is planes.
+    with pytest.raises(ValueError, match="not a task whose result is checked as a plate"):
+        AgentValidationCorpus.build_task(tmp_path / "scalar",
+                                         "human_eval_bia.otsu_positive_pixel_count")
+    task_root = tmp_path / "closing"
+    assert AgentValidationCorpus.build_task(
+        task_root, "human_eval_bia.binary_closing").task_id == "human_eval_bia.binary_closing"
     (case,) = ValidationTaskDeclaration.get("human_eval_bia.binary_closing").scoring_cases()
 
     # Nothing has run: there is no plate to read, and the check says so rather than fail a case.

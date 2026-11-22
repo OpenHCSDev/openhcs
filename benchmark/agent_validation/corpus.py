@@ -81,13 +81,16 @@ class AgentValidationCorpus:
         return tuple(specs)
 
     @classmethod
-    def build_task(cls, task_root: Path, pick: int) -> TaskAuthoringSpec:
-        """Write one blind task whose result `check_output_plate` reads: of those, in
-        declaration order, the one `pick` lands on."""
+    def build_task(cls, task_root: Path, task_id: str) -> TaskAuthoringSpec:
+        """Write the blind task named `task_id`, one whose result `check_output_plate`
+        reads."""
 
-        checked = tuple(declaration for declaration in cls.task_declarations()
-                        if declaration.output_kind.written_as_planes)
-        return cls._write_task(checked[pick % len(checked)], task_root)
+        checked = {declaration.task_id: declaration for declaration in cls.task_declarations()
+                   if declaration.output_kind.written_as_planes}
+        if task_id not in checked:
+            raise ValueError(f"{task_id} is not a task whose result is checked as a plate: "
+                             f"{', '.join(checked)}")
+        return cls._write_task(checked[task_id], task_root)
 
     @classmethod
     def _write_task(

@@ -311,6 +311,7 @@ openhcs-mcp-http = "openhcs.mcp.http:main"
 openhcs-mcp-dev = "openhcs.mcp.dev_client:main"
 openhcs-mcp-demo = "openhcs.mcp.installed_demo:main"
 openhcs-benchmark = "benchmark.cellprofiler_benchmark_cli:main"
+openhcs-agent-validation = "benchmark.agent_validation.__main__:main"
 
 [project.gui-scripts]
 openhcs-gui = "openhcs.pyqt_gui.__main__:main"

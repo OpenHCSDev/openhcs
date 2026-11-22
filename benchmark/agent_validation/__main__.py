@@ -34,8 +34,7 @@ def _parser() -> argparse.ArgumentParser:
         help="Write one blind task that `check` can read the result of.",
     )
     one.add_argument("task_root", type=Path)
-    one.add_argument("--pick", type=int, required=True,
-                     help="which of those tasks, counted around in declaration order")
+    one.add_argument("task_id", help="the task's id, as `list` prints it")
     check = subparsers.add_parser(
         "check",
         help="Check the plate an OpenHCS run wrote beside one task's inputs against "
@@ -60,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Wrote {len(probe_ids)} diagnostic probes to {args.output_root}")
         return 0
     if args.command == "build-task":
-        print(AgentValidationCorpus.build_task(args.task_root, args.pick).task_id)
+        print(AgentValidationCorpus.build_task(args.task_root, args.task_id).task_id)
         return 0
     if args.command == "check":
         assertions = AgentValidationCorpus.check_output_plate(args.task_root)
