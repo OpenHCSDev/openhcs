@@ -31,6 +31,7 @@ from benchmark.agent_validation.declarations import ValidationTaskDeclaration
 from benchmark.agent_validation.perturbations import DiagnosticPerturbationDeclaration
 from benchmark.agent_validation.scoring import AttemptJournalScorer
 from openhcs.core.io.pipeline_document import PipelineDocumentCodec
+from openhcs.core.source.source_projection import OpenHCSPlaneAddress
 from python_introspect import to_jsonable
 
 
@@ -189,13 +190,73 @@ class AgentValidationCorpus:
             lifecycle_passed=journal.lifecycle_passed,
         )
 
+    @classmethod
+    def check_output_plate(cls, task_root: Path) -> tuple[AssertionResult, ...]:
+        """Check the plate an OpenHCS run wrote beside one blind task's inputs.
+
+        A case is a site of the input plate, so its result is the planes the run wrote for
+        that site: one plane as written, several as a stack in z order. Every held-out
+        assertion of the task is made on it. A case with no plane fails by name; this reads
+        image planes, so a task whose result is a table or a number fails here until its
+        result has a plane to be read from.
+        """
+
+        bundle = json.loads((task_root / "task.json").read_text(encoding="utf-8"))
+        declaration = ValidationTaskDeclaration.get(bundle["spec"]["task_id"])
+        planes = cls._output_planes(task_root, task_root / bundle["spec"]["input_root"])
+        results: list[AssertionResult] = []
+        for site, case in cls._sited_cases(declaration):
+            written = [path for _, path in sorted(planes.get(site, ()))]
+            if not written:
+                results.append(AssertionResult(
+                    f"{case.case_id}.output", False,
+                    f"no output plane for site {site} in a plate beside the inputs"))
+                continue
+            stack = [tifffile.imread(path) for path in written]
+            actual = stack[0] if len(stack) == 1 else np.stack(stack)
+            results.extend(
+                AssertionResult(f"{case.case_id}.{assertion.name}", assertion.passed,
+                                assertion.detail)
+                for assertion in declaration.assert_case(case, actual))
+        return tuple(results)
+
     @staticmethod
+    def _output_planes(task_root: Path, input_root: Path) -> dict[int, list[tuple[int, Path]]]:
+        """Each site's planes, as (z, file), in the one plate a run wrote beside the inputs:
+        a directory OpenHCS left its metadata in that is not the inputs."""
+
+        plates = sorted(
+            metadata.parent for metadata in task_root.glob("*/openhcs_metadata.json")
+            if metadata.parent.resolve() != input_root.resolve())
+        if len(plates) != 1:
+            raise ValueError(
+                f"{task_root} holds {len(plates)} output plates beside its inputs; "
+                "a check reads exactly one.")
+        planes: dict[int, list[tuple[int, Path]]] = {}
+        for path in sorted(plates[0].rglob("*.tif")):
+            parsed = OpenHCSPlaneAddress.from_filename(path.name)
+            if parsed is None:
+                continue
+            address = parsed.address.as_component_metadata()
+            planes.setdefault(int(address["site"]), []).append((int(address["z_index"]), path))
+        return planes
+
+    @staticmethod
+    def _sited_cases(
+        declaration: type[ValidationTaskDeclaration],
+    ) -> tuple[tuple[int, ScoringCase], ...]:
+        """Each scoring case and the site of the plate it is written to and read from."""
+
+        return tuple(enumerate(declaration.scoring_cases(), start=1))
+
+    @classmethod
     def _write_inputs(
+        cls,
         declaration: type[ValidationTaskDeclaration],
         input_root: Path,
     ) -> tuple[TaskCaseRecord, ...]:
         rows = []
-        for site, case in enumerate(declaration.scoring_cases(), start=1):
+        for site, case in cls._sited_cases(declaration):
             files: list[InputFileRecord] = []
             for input_value in case.inputs:
                 array = np.asarray(input_value.array)

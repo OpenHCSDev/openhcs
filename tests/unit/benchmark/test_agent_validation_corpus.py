@@ -336,3 +336,38 @@ def _reference_result(task_id: str, case) -> object:
         )
     image = inputs["image"]
     return np.asarray(measure.label(image > image.mean()).max())
+
+
+def test_a_task_is_checked_from_the_plate_a_run_wrote_beside_its_inputs(tmp_path: Path) -> None:
+    import tifffile
+
+    from openhcs.core.source.source_projection import OpenHCSPlaneAddress
+
+    AgentValidationCorpus.build_authoring_bundle(tmp_path / "bundle")
+    task_root = tmp_path / "bundle" / "human_eval_bia.binary_closing"
+    (case,) = ValidationTaskDeclaration.get("human_eval_bia.binary_closing").scoring_cases()
+
+    # Nothing has run: there is no plate to read, and the check says so rather than fail a case.
+    with pytest.raises(ValueError, match="0 output plates"):
+        AgentValidationCorpus.check_output_plate(task_root)
+
+    (source,) = (task_root / "inputs").glob("*.tif")
+    plane = OpenHCSPlaneAddress.from_filename(source.name).address.filename()
+    written = task_root / "inputs_openhcs" / "images" / plane
+    written.parent.mkdir(parents=True)
+    (task_root / "inputs_openhcs" / "openhcs_metadata.json").write_text("{}", encoding="utf-8")
+
+    tifffile.imwrite(written, np.asarray(case.expected))
+    assert [(result.name, result.passed)
+            for result in AgentValidationCorpus.check_output_plate(task_root)] \
+        == [("case-1.array_equal", True)]
+
+    wrong = np.asarray(case.expected).copy()
+    wrong[3, 3] = 0
+    tifffile.imwrite(written, wrong)
+    (result,) = AgentValidationCorpus.check_output_plate(task_root)
+    assert not result.passed and "mismatch_count=1" in result.detail
+
+    written.unlink()
+    (result,) = AgentValidationCorpus.check_output_plate(task_root)
+    assert (result.name, result.passed) == ("case-1.output", False)
