@@ -43,6 +43,15 @@ class DatasetStage(ABC):
     @abstractmethod
     def succeeded(cls, row: DatasetRowState) -> bool: ...
 
+    @classmethod
+    async def explain_failure(cls, journey: SessionJourney, started_sequence: int) -> None:
+        """Put why the stage failed into the journey: the session publishes it as an event."""
+
+        await journey.call(
+            agent_capabilities.session_events,
+            {"after_sequence": started_sequence, "timeout_seconds": 0.0},
+        )
+
 
 class InitializeStage(DatasetStage):
     capability = agent_capabilities.initialize_datasets
@@ -82,6 +91,10 @@ class RunStage(DatasetStage):
     @classmethod
     def succeeded(cls, row: DatasetRowState) -> bool:
         return row.terminal_status == "complete"
+
+    @classmethod
+    async def explain_failure(cls, journey: SessionJourney, started_sequence: int) -> None:
+        """A finished run's error is on its dataset row."""
 
 
 @dataclass(slots=True)
@@ -192,13 +205,15 @@ class SessionJourney:
                 return
             if stage is RunStage and not wait_for_run:
                 return
+            started_sequence = started.first_decoded_payload().event_sequence
             row = await self.wait_for(
                 stage,
                 scope_id,
-                after_sequence=started.first_decoded_payload().event_sequence,
+                after_sequence=started_sequence,
                 timeout_seconds=stage_timeout_seconds,
             )
             if row is None or not stage.succeeded(row):
+                await stage.explain_failure(self, started_sequence)
                 break
         await self.call(agent_capabilities.session_datasets, {})
 

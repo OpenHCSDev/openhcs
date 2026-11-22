@@ -406,6 +406,11 @@ class DatasetListRenderer(McpDevOutputRenderer):
             f"initialized={row.initialized} compiled={row.compiled} "
             f"terminal={McpDevOutputRenderer.text(row.terminal_status)} "
             f"scope={row.scope_id}"
+            + (
+                f"\n    error: {row.finished_execution_error}"
+                if row.finished_execution_error
+                else ""
+            )
             for row in payload.rows
         )
         return "\n".join(lines)
