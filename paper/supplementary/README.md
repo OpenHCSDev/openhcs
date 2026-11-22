@@ -31,7 +31,7 @@ Execution times for twelve copies of one source sample processed by 1, 2, 3 or 4
 ![Orthogonal nuclear localization, retinal borders and unsupported cell-body growth.](../figures/slas/supp_morphology_checks.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-Additional image regions show remaining errors alongside independent analyses. **(A–C)** Nuclear centres from an independent volume analysis (H002_FRESH10_89), shown in the XY, XZ and YZ planes. **(D–F)** A different region from the retinal repair run in main Figure 4C (R0010_FRESH16_88): raw image and first and final outlines show a possible split remaining at an acquisition border. This run continued after an interruption. **(G–I)** A different region from the nuclear-separation repair in main Figure 4B (BBBC007 DNA/actin, H003_POSTPAUSE_88): raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** Paired DNA/actin inspection (H003_FRESH19_96): a nuclear seed lacks actin-supported cell-body growth. This run is separate from the paired-channel analysis in Supp. Table 5 (Fresh26). Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. The source images and reports are available in Supp. Data 5.
+Additional image regions show remaining errors alongside independent analyses. **(A–C)** Nuclear centres from an independent volume analysis (H002_FRESH10_89), shown in the XY, XZ and YZ planes. **(D–F)** A different region from the retinal repair run in main Figure 4C (R0010_FRESH16_88): raw image and first and final outlines show a possible split remaining at an acquisition border. This run continued after an interruption. **(G–I)** A different region from the nuclear-separation repair in main Figure 4B (BBBC007 DNA/actin, H003_POSTPAUSE_88): raw DNA, final labels and their overlay show a faint pair that remains merged. **(J–L)** Paired DNA/actin inspection (H003_FRESH19_96): a nuclear seed lacks actin-supported cell-body growth. This run is separate from the paired-channel analysis in Supp. Table 6 (Fresh26). Display windows are 0–42 for D–F, 0–151 for G–I and 0–104 for J–L; gamma is 1. Scale bars in A–C are marked in voxel-index units; physical spacing is unverified. Bars are 20 µm in D–F and 10 pixels in G–L. These are separate analyses. Colours identify objects within each view. The source images and reports are available in Supp. Data 5.
 :::
 
 ## Supp. Figure 4. Nuclear and cell-boundary measurements {#supplementary-figure-4.-nuclear-detection-and-cell-boundary-measurements}
@@ -149,13 +149,9 @@ Table: Main Methods: Performance measurement defines repetitions, exclusions and
 
 The complete table, including every row and its source links, is provided as [Supplementary Data 8: downloadable table](software_check_coverage.md).
 
-## Supp. Table 5. Tasks, models and evaluation protocols {#supplementary-table-5.-tasks-models-and-evaluation-protocols}
+## Supp. Table 5. Evaluation design {#supplementary-table-5.-evaluation-design}
 
-The complete table, including every row and its source links, is provided as [Supplementary Data 5: downloadable table](analysis_protocols.md).
-
-## Supp. Table 6. Evaluation design {#supplementary-table-6.-evaluation-design}
-
-Table: Supp. Table 6. Evaluation design. Pipelines were finalized before reference comparisons, without reference labels or score feedback during development. The quantitative rows used gpt-6.1-sol; repair-continuation model identities, where recorded, are listed in Supp. Table 5. IoU is intersection over union; F1 combines precision and recall. Caicedo F1 averages per-image F1 over nine thresholds from 0.50 to 0.90, requiring IoU strictly greater than each; pooled F1 combines object counts across fields. Original instructions, freeze records and scores: Supp. Data 5–6.
+Table: Pipelines were finalized before reference comparisons, without reference labels or score feedback during development. The quantitative rows used gpt-6.1-sol; repair-continuation model identities, where recorded, are listed in Supp. Table 6. IoU is intersection over union; F1 combines precision and recall. Caicedo F1 averages per-image F1 over nine thresholds from 0.50 to 0.90, requiring IoU strictly greater than each; pooled F1 combines object counts across fields. Original instructions, freeze records and scores: Supp. Data 5–6.
 
 | Analysis and images | Development access | Comparison population | Reference | Measure and scope |
 |:-----------------|:--------------------|:----------------------|:------------------|:------------------|
@@ -165,6 +161,10 @@ Table: Supp. Table 6. Evaluation design. Pipelines were finalized before referen
 | Cell-boundary analyses 2–3; BBBC007, 16 fields | Analysis 2: 12 development fields, four held out by the agent. Analysis 3: all 16 available | All 16 fields | Manual outlines | Predicted borders between cells within two pixels of reference; not the fraction of reference borders recovered |
 | 3D nuclear localization 1; H002 volume | Whole volume | Whole volume after finalization | 15 manual centres in part of the volume | Matches within 30 voxels; matched-centre error. No false-detection rate from this partial reference |
 | Repairs: H001, BBBC007 DNA, R0010, H002 | Same development image/volume for each first/final pair | Fixed first/final outputs; no held-out population | Computational labels (H001); image inspection (others) | Local before/after repair, not whole-dataset accuracy. H002 repair and localization are separate |
+
+## Supp. Table 6. Tasks, models and evaluation protocols {#supplementary-table-6.-tasks-models-and-evaluation-protocols}
+
+The complete table, including every row and its source links, is provided as [Supplementary Data 5: downloadable table](analysis_protocols.md).
 
 ## Supp. Data {#supplementary-data}
 

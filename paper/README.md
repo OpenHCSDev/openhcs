@@ -95,7 +95,7 @@ three-dimensional nuclear localization (Figure 5); and treatment responses from
 three independent blind agents with one grouped treatment-specific correlation
 axis and matched raw/detection/overlay views (Figure 6). Full-resolution microscopy
 and the detailed scientist-assisted neurite comparison remain linked data.
-Supp. Table 6 retains the complete evaluation design: development access,
+Supp. Table 5 retains the complete evaluation design: development access,
 comparison populations, references and metrics for the main agent results. Supp. Table 3 defines timing boundaries.
 The complete [27-row task/model/protocol mapping](supplementary/analysis_protocols.md)
 and [seven-row software-check table](supplementary/software_check_coverage.md)
