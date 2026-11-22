@@ -19,6 +19,8 @@ from typing import TypeAlias
 
 
 from arraybridge import MemoryType
+from arraybridge.devices import HOST, Device
+from arraybridge.libraries import AcceleratorDevices
 from formbridge.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
 
@@ -481,8 +483,8 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     artifact_output_plans: tuple[ArtifactOutputPlan, ...] = ()
     artifact_input_edges: tuple[InvocationArtifactInputEdgePlan, ...] = ()
     runtime_parameter_bindings: tuple[RuntimeParameterBinding, ...] = ()
-    input_device_id: int | None = None
-    execution_device_id: int | None = None
+    input_device: Device = HOST
+    execution_device: Device | None = None
     runtime_callable: Callable = field(
         init=False,
         repr=False,
@@ -621,17 +623,17 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     ) -> CompiledFunctionInvocation:
         """Bind this immutable invocation at the compiler's placement boundary."""
         if self.contract.execution_scope is FunctionStepExecutionScope.PLATE:
-            input_device_id = None
+            input_device = HOST
         else:
             input_memory_type, _ = self.contract.require_memory_types()
-            input_device_id = assignment.device_id_for(MemoryType(input_memory_type))
+            input_device = assignment.device_for(MemoryType(input_memory_type))
         return replace(
             self,
-            input_device_id=input_device_id,
-            execution_device_id=(
+            input_device=input_device,
+            execution_device=(
                 None
                 if self._execution_memory_type is None
-                else assignment.device_id_for(self._execution_memory_type)
+                else assignment.device_for(self._execution_memory_type)
             ),
         )
 
@@ -648,17 +650,17 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         if isinstance(payload, ImagePayloadStackComposition):
             return payload.compose(
                 memory_type=self._input_memory_type.value,
-                device_id=self.input_device_id,
+                device=self.input_device,
             )
         source = MemoryType(source_memory_type)
-        if source is self._input_memory_type and not source.is_gpu:
+        if source is self._input_memory_type and not isinstance(source.library, AcceleratorDevices):
             mask = payload.mask
             if project_image_mask_to_data_domain(
                 mask, payload, metadata=payload.metadata
             ) is mask:
                 return payload
-        return payload.with_pixels(source.convert_to(
-                payload.data, self._input_memory_type, self.input_device_id
+        return payload.with_pixels(source.library.convert_to(
+                payload.data, self._input_memory_type.library, self.input_device
             ),)
 
     def main_flow_call_argument(self, source_payload: object) -> object:
@@ -676,13 +678,13 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def execution_device_scope(self) -> AbstractContextManager[None]:
         """Enter the fixed device while retaining a fresh per-call scope lifetime."""
         memory_type = self._execution_memory_type
-        if memory_type is None or not memory_type.is_gpu:
+        if memory_type is None or not isinstance(memory_type.library, AcceleratorDevices):
             return nullcontext()
-        if self.execution_device_id is None:
+        if self.execution_device is None:
             raise ValueError(
                 f"No compiled device assignment exists for {memory_type.value!r}."
             )
-        return memory_type.device_scope(self.execution_device_id)
+        return memory_type.library.device_scope(self.execution_device)
 
     @property
     def input_memory_type(self) -> str | None:

@@ -10,7 +10,10 @@ from typing import Any, ClassVar, Mapping, Sequence
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants.constants import Backend, GPU_MEMORY_TYPES, MemoryType
+from arraybridge.devices import HOST, AcceleratorDevice, Device
+from arraybridge.libraries import AcceleratorDevices
+
+from openhcs.constants.constants import Backend, MemoryType
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -37,7 +40,7 @@ class FrameworkDeviceBinding:
     device_id: int
 
     def __post_init__(self) -> None:
-        if self.memory_type not in GPU_MEMORY_TYPES:
+        if not isinstance(self.memory_type.library, AcceleratorDevices):
             raise ValueError(
                 "FrameworkDeviceBinding requires a GPU memory declaration, got "
                 f"{self.memory_type.value!r}."
@@ -46,6 +49,12 @@ class FrameworkDeviceBinding:
             raise ValueError(
                 "FrameworkDeviceBinding.device_id must be a non-negative integer."
             )
+
+    @property
+    def device(self) -> AcceleratorDevice:
+        """The accelerator this binding names, as its library counts them."""
+
+        return AcceleratorDevice(self.device_id)
 
 
 @dataclass(frozen=True)
@@ -114,14 +123,14 @@ class FrameworkDeviceAssignment:
             )
         return type(self)(selected)
 
-    def device_id_for(self, memory_type: MemoryType) -> int | None:
-        """Return the declared local device, or ``None`` for CPU memory."""
+    def device_for(self, memory_type: MemoryType) -> Device:
+        """Return the declared local device; main memory for a library with no accelerators."""
 
-        if memory_type not in GPU_MEMORY_TYPES:
-            return None
+        if not isinstance(memory_type.library, AcceleratorDevices):
+            return HOST
         for binding in self.bindings:
             if binding.memory_type is memory_type:
-                return binding.device_id
+                return binding.device
         raise ValueError(
             f"No compiled device assignment exists for {memory_type.value!r}."
         )
@@ -135,10 +144,10 @@ class FrameworkDeviceAssignment:
         if declaration is None:
             return nullcontext()
         memory_type = MemoryType(declaration)
-        device_id = self.device_id_for(memory_type)
-        if device_id is None:
+        device = self.device_for(memory_type)
+        if device == HOST:
             return nullcontext()
-        return memory_type.device_scope(device_id)
+        return memory_type.library.device_scope(device)
 
     def cleanup_loaded(self) -> None:
         """Release loaded allocators in this exact compiled footprint."""
@@ -146,7 +155,7 @@ class FrameworkDeviceAssignment:
         failures: list[Exception] = []
         for binding in self.bindings:
             try:
-                binding.memory_type.cleanup_loaded(binding.device_id)
+                binding.memory_type.library.cleanup_loaded(binding.device)
             except Exception as error:
                 error.add_note(
                     f"Cleanup failed for {binding.memory_type.value!r} "
@@ -517,7 +526,7 @@ class CompiledStepPlan:
         return frozenset(
             memory_type
             for memory_type in memory_types
-            if memory_type in GPU_MEMORY_TYPES
+            if isinstance(memory_type.library, AcceleratorDevices)
         )
 
     @property
@@ -526,12 +535,12 @@ class CompiledStepPlan:
 
         return bool(self.gpu_memory_types)
 
-    def device_id_for(self, declaration: str | None) -> int | None:
+    def device_for(self, declaration: str | None) -> Device:
         """Return the compiled framework-local device for one declaration."""
 
         if declaration is None:
-            return None
-        return self.device_assignment.device_id_for(MemoryType(declaration))
+            return HOST
+        return self.device_assignment.device_for(MemoryType(declaration))
 
     def memory_device_scope(
         self,
