@@ -36,6 +36,11 @@ class OutputKind(Enum):
     SCALAR = "scalar"
     TABLE = "table"
 
+    @property
+    def written_as_planes(self) -> bool:
+        """Whether a run's result of this kind is image planes in its output plate."""
+        return self in (OutputKind.ARRAY, OutputKind.LABEL_IMAGE)
+
 
 class FunctionAvailabilityExpectation(Enum):
     """Expected catalogue decision before a pipeline is authored."""

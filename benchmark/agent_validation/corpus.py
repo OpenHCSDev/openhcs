@@ -73,18 +73,34 @@ class AgentValidationCorpus:
         output_root.mkdir(parents=True, exist_ok=False)
         specs = []
         for declaration in cls.task_declarations():
-            task_root = output_root / declaration.task_id
-            input_root = task_root / "inputs"
-            input_root.mkdir(parents=True)
-            case_rows = cls._write_inputs(declaration, input_root)
-            spec = declaration.authoring_spec(Path("inputs"))
-            specs.append(spec)
-            _write_json(task_root / "task.json", TaskBundleRecord(spec, case_rows))
+            specs.append(cls._write_task(declaration, output_root / declaration.task_id))
         _write_json(
             output_root / "corpus.json",
             CorpusBundleRecord(tuple(spec.task_id for spec in specs)),
         )
         return tuple(specs)
+
+    @classmethod
+    def build_task(cls, task_root: Path, pick: int) -> TaskAuthoringSpec:
+        """Write one blind task whose result `check_output_plate` reads: of those, in
+        declaration order, the one `pick` lands on."""
+
+        checked = tuple(declaration for declaration in cls.task_declarations()
+                        if declaration.output_kind.written_as_planes)
+        return cls._write_task(checked[pick % len(checked)], task_root)
+
+    @classmethod
+    def _write_task(
+        cls, declaration: type[ValidationTaskDeclaration], task_root: Path,
+    ) -> TaskAuthoringSpec:
+        """One task's answer-free prompt, provenance and source images."""
+
+        input_root = task_root / "inputs"
+        input_root.mkdir(parents=True)
+        spec = declaration.authoring_spec(Path("inputs"))
+        _write_json(task_root / "task.json",
+                    TaskBundleRecord(spec, cls._write_inputs(declaration, input_root)))
+        return spec
 
     @classmethod
     def build_diagnostic_bundle(cls, output_root: Path) -> tuple[str, ...]:
