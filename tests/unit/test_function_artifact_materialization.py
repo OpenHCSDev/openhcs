@@ -1879,7 +1879,12 @@ def test_scalar_acquired_tables_keep_fixed_site_addresses_on_shared_runtime_path
         record = item.materialization.record
         observation = item.observation(plan, context)
         site = record.key.scope.value_text_for_component(Microscopy.Site)
-        paths = observation.paths_for(record)
+        paths = tuple(
+            Path(location.path)
+            for location in observation.materialized_locations_by_address[
+                RuntimeArtifactAddress.from_record(record)
+            ]
+        )
         expected_stem = (
             f"A01_site-{site}_channel-1_timepoint-1"
             if automatic else f"A01_s{int(site):03d}_w1_z001_t001"
