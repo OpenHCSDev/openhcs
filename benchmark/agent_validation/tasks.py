@@ -407,7 +407,7 @@ class MaximumIntensityProjectionTask(ValidationTaskDeclaration):
             ScoringCase(
                 "case-1",
                 (TaskInput("image", image, stack_axis=0),),
-                np.asarray([0, 4, 0, 0, 3, 0]),
+                np.asarray([[0, 4, 0, 0, 3, 0]]),
             ),
         )
 

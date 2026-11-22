@@ -325,7 +325,7 @@ def _reference_result(task_id: str, case) -> object:
             inputs["label_image"], distance=parameters["radius"]
         )
     if task_id.endswith("maximum_intensity_projection"):
-        return inputs["image"].max(axis=0)
+        return inputs["image"].max(axis=0, keepdims=True)
     if task_id.endswith("measure_properties_of_regions"):
         return pd.DataFrame(
             measure.regionprops_table(

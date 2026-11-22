@@ -292,7 +292,7 @@ class AgentValidationCorpus:
                         f"z{z_index:03d}_t001.tif"
                     )
                     path = input_root / filename
-                    tifffile.imwrite(path, np.asarray(plane))
+                    tifffile.imwrite(path, np.atleast_2d(plane))
                     files.append(
                         InputFileRecord(
                             input_name=input_value.name,
