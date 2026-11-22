@@ -511,7 +511,7 @@ runtime axis, not biological object counts or an inferred well identity:
        artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters,
    )
    from openhcs.core.measurements.runtime_measurements import MeasurementTable
-   from openhcs.core.runtime_store.runtime_stores import RuntimeArtifactBatch
+   from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactBatch
    from openhcs.core.materialization.core import MaterializationSpec
    from openhcs.core.materialization.options import CsvOptions
 
