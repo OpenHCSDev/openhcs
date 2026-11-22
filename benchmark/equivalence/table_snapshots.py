@@ -24,13 +24,15 @@ from openhcs.core.measurements.measurement_row_materialization import (
     MEASUREMENT_SPARSE_CELL,
     MeasurementSparseColumnarRows,
 )
+from openhcs.core.measurements.measurement_declarations import (
+    RuntimeMeasurementRowIdentityContract,
+)
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScalarLiteral,
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
-    RuntimeMeasurementRowIdentityContract,
 )
 from openhcs.core.payload.runtime_tabular_values import (
     FieldSpec,

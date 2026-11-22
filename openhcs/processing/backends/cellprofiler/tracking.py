@@ -1164,7 +1164,7 @@ class NumbaNumpyObjectTrackingBackendStrategy(NumbaNumpyDefaultBackend, ObjectTr
 
 
 class TrackObjectsMethodStrategy(
-    EnumKeyedStrategyMixin[TrackingMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[TrackingMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Registered CellProfiler TrackObjects method behavior."""
 

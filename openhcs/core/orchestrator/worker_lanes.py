@@ -11,6 +11,8 @@ from python_introspect import project_dataclass
 from openhcs.core.context.processing_context import CompiledContext
 from openhcs.core.debug.debug_runtime import DebugSinkInstallRequest
 from openhcs.core.progress.types import ProgressExecutionContext
+from openhcs.core.debug.debug_runtime import DebugExecutionPolicy
+from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 
 TransportAxisContexts: TypeAlias = List[tuple[str, CompiledContext]]
 ForkAxisContextKeys: TypeAlias = List[str]

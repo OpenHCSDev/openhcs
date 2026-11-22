@@ -112,6 +112,9 @@ from openhcs.core.debug.debug_runtime import (
     BeforeInvocationDebugBoundary,
     ExceptionDebugBoundary,
 )
+from openhcs.core.axes.component_group_scope import RuntimeFixedComponentValues
+from openhcs.core.callable.function_patterns import CompiledFunctionGroup, CompiledFunctionInvocation
+from openhcs.core.execution.compiled_step_plan import CompiledStepPlan
 
 logger = logging.getLogger(__name__)
 
@@ -717,7 +720,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             )
             if not producer_records:
                 metadata = main_data_stack.metadata
-                domain = request.source_binding_plan.source_spatial_domain.with_source_cohort(
+                domain = self.source_binding_plan.source_spatial_domain.with_source_cohort(
                     metadata.source_spatial_domain,
                     depth=len(matching_files),
                 )

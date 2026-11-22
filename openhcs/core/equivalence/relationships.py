@@ -12,6 +12,8 @@ from openhcs.core.equivalence.keys import RuntimeAggregateFeatureIdentity
 from openhcs.core.payload.runtime_identifier import normalize_runtime_identifier
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.measurements.runtime_measurements import MeasurementStatistic
+from openhcs.core.equivalence.keys import RuntimeMeasurementFeatureKey
+from openhcs.core.measurements.measurement_dialect import MeasurementDialect
 
 @dataclass(frozen=True)
 class RelationshipAggregateFeatureContext:

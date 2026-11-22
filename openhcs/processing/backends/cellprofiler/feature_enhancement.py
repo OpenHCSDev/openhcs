@@ -212,7 +212,7 @@ class FeatureEnhancementRequest:
     dic_decay: float
 
 class FeatureOperationStrategy(
-    EnumKeyedStrategyMixin[OperationMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[OperationMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Top-level CP enhance/suppress operation semantics."""
 
@@ -245,7 +245,7 @@ class SuppressFeatureOperationStrategy(FeatureOperationStrategy):
         return request.mask_context.restore_background(opened)
 
 class FeatureEnhanceMethodStrategy(
-    EnumKeyedStrategyMixin[EnhanceMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[EnhanceMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """CP feature enhancement method semantics."""
 

@@ -132,7 +132,7 @@ def run_pipeline(work_dir: Path, fields: int, tile: int, runs: int) -> dict:
     from contextlib import redirect_stderr, redirect_stdout
 
     import openhcs  # noqa: F401
-    from objectstate.lazy_factory import ensure_global_config_context
+    from objectstate import set_global_config
     from openhcs.core.config.pipeline_config import (
         GlobalPipelineConfig, LazyPathPlanningConfig, LazyVFSConfig, MaterializeToDisk,
         PathPlanningConfig, PipelineConfig, VFSConfig,
@@ -197,7 +197,7 @@ def run_pipeline(work_dir: Path, fields: int, tile: int, runs: int) -> dict:
         path_planning_config=LazyPathPlanningConfig(output_dir_suffix=suffix),
         vfs_config=LazyVFSConfig.from_config(vfs),
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    set_global_config(GlobalPipelineConfig, global_config)
 
     def submission(**extra):
         return OpenHCSExecutionSubmission(

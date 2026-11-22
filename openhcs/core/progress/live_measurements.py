@@ -22,6 +22,7 @@ from openhcs.core.payload.runtime_tabular_values import (
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementTable,
 )
+from openhcs.core.artifact_store.runtime_stores import RuntimeArtifactLocation
 
 DEFAULT_LIVE_MEASUREMENT_ROW_LIMIT = 50
 DEFAULT_LIVE_MEASUREMENT_COLUMN_LIMIT = 64

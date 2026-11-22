@@ -13,6 +13,7 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.core.source.source_metadata import DECLARED_SOURCE_METADATA_FIELD, SOURCE_FILTER_PATHS_METADATA_FIELD, DeclaredSourceMetadata, SourceFilterPathMetadata, SourceMetadataFields, SourceMetadataMapping, SourceMetadataScalar, normalized_path_metadata_value, source_metadata_component, source_metadata_dict, source_metadata_field_identity, source_metadata_scalar
 from openhcs.core.source.source_path_identity import source_path_identity_key
 from openhcs.core.axes.axis_declarations import AxisFamily
+from openhcs.core.axes.axis_declarations import Axis
 
 
 def metadata_from_rules(

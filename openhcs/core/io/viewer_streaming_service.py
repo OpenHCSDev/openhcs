@@ -47,6 +47,10 @@ from openhcs.runtime.viewer.viewer_protocol import (
     ViewerLaunchContext,
 )
 from openhcs.runtime.zmq.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.core.config.pipeline_config import StreamingConfig
+from openhcs.core.config.streaming_config_declarations import ViewerType
+from openhcs.core.dataset_sources.source import DatasetSource
+from openhcs.core.source.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 logger = logging.getLogger(__name__)
 

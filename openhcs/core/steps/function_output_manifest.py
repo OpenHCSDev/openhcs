@@ -30,6 +30,8 @@ from openhcs.core.source.source_binding_selection import (
 )
 from openhcs.core.axes.axis_declarations import AxisFamily, PartitionAxis
 from openhcs.core.payload.runtime_image_values import ImagePayload
+from openhcs.core.payload.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.payload.runtime_plane_projection import RuntimePlaneAxis
 
 
 @dataclass(frozen=True)

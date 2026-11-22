@@ -158,7 +158,7 @@ class NeighborDistancePlan:
 
 
 class NeighborDistancePlanner(
-    EnumKeyedStrategyMixin[DistanceMethod], MethodKeyedStrategy, ABC, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[DistanceMethod], ABC, metaclass=AutoRegisterMeta
 ):
     """Prepare neighbor-distance state for one closed distance method."""
 

@@ -45,7 +45,7 @@ from openhcs.core.artifacts.kinds import (
     MeasurementBearingArtifactType,
     RelationshipsArtifactType,
 )
-from openhcs.core.axes.axis_declarations.component_group_scope import ComponentGroupScope
+from openhcs.core.axes.component_group_scope import ComponentGroupScope
 from openhcs.core.measurements.measurement_row_materialization import (
     iter_measurement_rows,
     measurement_row_source_image_name,
@@ -54,13 +54,15 @@ from openhcs.core.artifact_store.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.core.source.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.measurements.measurement_declarations import (
+    ObjectGroupInvariantFeatureMarker,
+    ObjectIdentifierFeatureMarker,
+    ObjectLocationFeatureMarker,
+)
 from openhcs.core.measurements.runtime_measurements import (
     MeasurementScope,
     MeasurementStatistic,
     ObjectCoreMeasurementFeature,
-    ObjectGroupInvariantFeatureMarker,
-    ObjectIdentifierFeatureMarker,
-    ObjectLocationFeatureMarker,
 )
 from openhcs.core.payload.runtime_tabular_values import measurement_row_mapping
 from openhcs.core.artifact_store.runtime_stores import StoredRuntimeValue
@@ -152,7 +154,9 @@ from benchmark.equivalence.object_label_measurements import (
 from openhcs.core.equivalence.relationships import (
     RelationshipAggregateFeatureSemantics,
 )
-from openhcs.core.measurements.runtime_measurements import RuntimeScopedMeasurementTable
+from openhcs.core.measurements.runtime_measurements import (
+    RuntimeScopedMeasurementTable,
+)
 from benchmark.equivalence.exported_relationships import (
     RelationshipMeasurementSemantics,
 )

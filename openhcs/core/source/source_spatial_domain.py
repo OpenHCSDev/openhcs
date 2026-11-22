@@ -647,6 +647,9 @@ class SpatiallyPlacedValue(ABC):
 class SourceSpatialDomainAdapter(ABC):
     """Adapter for dense XY payloads that carry source-domain coordinates."""
 
+    adapts_bare_arrays: ClassVar[bool] = False
+    """True on the one member that places bare NumPy pixels at the origin."""
+
     @classmethod
     def for_value(
         cls,
@@ -654,10 +657,27 @@ class SourceSpatialDomainAdapter(ABC):
         *,
         source_shape_override_yx: tuple[int, int] | None = None,
     ) -> SourceSpatialDomainAdapter | None:
-        """Return the placement adapter of a spatially placed value."""
+        """Return the placement adapter of a placed value or a bare NumPy array."""
+        if isinstance(value, np.ndarray):
+            return cls.bare_array_member().for_array(
+                value, source_shape_override_yx=source_shape_override_yx
+            )
         if not isinstance(value, SpatiallyPlacedValue):
             return None
         return value.spatial_adapter(source_shape_override_yx=source_shape_override_yx)
+
+    @classmethod
+    def bare_array_member(cls) -> type[SourceSpatialDomainAdapter]:
+        """Return the family member declaring ``adapts_bare_arrays``."""
+        pending = list(SourceSpatialDomainAdapter.__subclasses__())
+        members = []
+        while pending:
+            member = pending.pop()
+            pending.extend(member.__subclasses__())
+            if vars(member).get("adapts_bare_arrays"):
+                members.append(member)
+        (member,) = members
+        return member
 
     @property
     @abstractmethod

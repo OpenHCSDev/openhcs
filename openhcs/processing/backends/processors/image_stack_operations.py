@@ -129,7 +129,7 @@ def min_projection(ops: ArrayLibrary, stack: Any) -> Any:
 
 
 class StackProjection(
-    EnumKeyedStrategyMixin[StackProjectionMethod], MethodKeyedStrategy, metaclass=AutoRegisterMeta
+    MethodKeyedStrategy, EnumKeyedStrategyMixin[StackProjectionMethod], metaclass=AutoRegisterMeta
 ):
     """One leading-axis projection, keyed by its method value."""
 
@@ -172,7 +172,7 @@ def create_projection(ops: ArrayLibrary, stack: Any, method: Any) -> Any:
 # ----- spatial binning (NumPy-compatible libraries) -----
 
 
-class SpatialBin(EnumKeyedStrategyMixin[SpatialBinMethod], MethodKeyedStrategy, metaclass=AutoRegisterMeta):
+class SpatialBin(MethodKeyedStrategy, EnumKeyedStrategyMixin[SpatialBinMethod], metaclass=AutoRegisterMeta):
     """Reduction applied within each spatial bin."""
 
     @abstractmethod
