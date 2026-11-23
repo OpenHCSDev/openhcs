@@ -361,9 +361,9 @@ class AnalysisResultsFigure(SupplementFigure):
         sheet.source(ROOT / 'paper/figures/build_slas_bbbc013_fresh23.py')
         for path in sources:
             sheet.source(ROOT / path)
-        axes = [sheet.plot_axes(bounds) for bounds in ((0.30, 0.735, 0.29, 0.225), (0.75, 0.735, 0.22, 0.2))]
+        axes = [sheet.plot_axes(bounds) for bounds in ((0.245, 0.735, 0.285, 0.225), (0.68, 0.735, 0.24, 0.2))]
         sheet.panel('A', 'Nuclear segmentation · official test', 3, 99, title_size=sheet.plot_font_size, va='top')
-        sheet.panel('B', 'Cell boundaries', 69, 99, title_size=sheet.plot_font_size, va='top')
+        sheet.panel('B', 'Cell boundaries', 59, 99, title_size=sheet.plot_font_size, va='top')
         for axis in axes:
             axis.spines[['top', 'right']].set_visible(False)
             axis.set_axisbelow(True)
