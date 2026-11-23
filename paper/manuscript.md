@@ -112,7 +112,7 @@ Three-dimensional nuclear localization used the H002 nuclei volume from the *Bio
 
 Bright-object detection used the blobs.tif example (H001) from the same collection, whose reference labels come from a documented Otsu-threshold workflow rather than manual annotation.
 
-Retinal cell-body detection used R0010, a whole-mount retina [species to be confirmed] prepared and imaged in the laboratory, immunostained for RNA-binding protein with multiple splicing (RBPMS), which marks retinal ganglion cells, and counterstained with Hoechst. It was acquired on a Zeiss LSM 800 confocal microscope with a 20× Plan-Apochromat objective (NA 0.8; metadata in Supp. Data 5). The editing example in Results used NeuronCyto II image 1 [@NeuronCytoII].
+Retinal cell-body detection used R0010, a whole-mount C57BL/6 mouse retina prepared and imaged in the laboratory, immunostained for RNA-binding protein with multiple splicing (RBPMS), which marks retinal ganglion cells, and counterstained with Hoechst. It was acquired on a Zeiss LSM 800 confocal microscope with a 20× Plan-Apochromat objective (NA 0.8; metadata in Supp. Data 5). The editing example in Results used NeuronCyto II image 1 [@NeuronCytoII].
 
 ### Autonomous analysis design
 
