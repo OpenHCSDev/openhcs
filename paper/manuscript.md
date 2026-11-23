@@ -118,7 +118,7 @@ Retinal cell-body detection used R0010, a whole-mount C57BL/6 mouse retina prepa
 
 To test whether agents could turn biological requests into useful measurements, we asked fresh agents to develop and inspect analyses of nuclei, cells, neurites and protein redistribution, with separate runs of the same task developed independently. Each agent received a task brief, acquisition information, MCP access and a written guide to using OpenHCS. The guide asks agents to inspect images, read function documentation and compare results with matched raw images and overlays, to direct repairs to the earliest faulty step, and to recheck examples that previously worked (Figure 4). Agents received no reference labels, accepted settings or score feedback, and finalized their pipelines before any comparison with reference data.
 
-Three agents independently analysed the same 20 coded neurite-assay wells (180 fields) with the same brief, guide and software, and finalized their pipelines before treatment identities and MetaXpress measurements were revealed. All neurite measurements reported here come from these finalized pipelines run with the current neurite-tracing function (Supp. Data 5).
+Three agents independently analysed the same 20 coded neurite-assay wells (180 fields) with the same brief, guide and software, and finalized their pipelines before treatment identities and MetaXpress measurements were revealed. All neurite measurements reported here come from these finalized pipelines executed with the released neurite-tracing implementation (Supp. Data 5).
 
 Analyses are numbered within each task. For nuclear detection, cell boundaries and protein translocation, analysis 1 was an earlier trial (gpt-5.6-sol) scored on images withheld before development; all other analyses used gpt-6.1-sol. Supp. Table 5 summarizes the evaluation design, and Supp. Table 6 lists every task, model and protocol.
 
@@ -135,7 +135,7 @@ Adding a laboratory’s own Python function required no separate plugin package.
 
 All 30 imported workflows reproduced native CellProfiler 4.2.8.1 outputs, across assays including morphology, protein translocation, tracking and multi-stage 3D analysis. Object labels matched exactly, and measurements, calculated images, tables and the measurement databases CellProfiler writes for CellProfiler Analyst agreed within 1e-6 (Figure 3A; Supp. Data 2). Of 85 processing modules, 54 were tested in complete workflows, 29 individually and two through shared code (Figure 3A).
 
-CellProfiler 4.2.8.1 pins SciPy 1.9.0 and scikit-image 0.18.3 [@CellProfiler4281Dependencies], whose prebuilt packages cover only Python 3.8 and 3.9 among the versions CellProfiler admits; both are now end of life [@ScikitImage0183Files; @Python38Release; @Python39Release]. OpenHCS reproduces the same outputs on Python 3.12 and [3.14](https://github.com/OpenHCSDev/openhcs/actions/runs/41624904501/job/125881555931).
+CellProfiler 4.2.8.1 pins SciPy 1.9.0 and scikit-image 0.18.3 [@CellProfiler4281Dependencies], whose prebuilt packages cover only Python 3.8 and 3.9 among the versions CellProfiler admits; both are now end of life [@ScikitImage0183Files; @Python38Release; @Python39Release]. OpenHCS reproduces the same outputs on Python 3.12 and 3.14 (Supp. Table 4).
 
 Every workflow ran faster than CellProfiler on one core, for processing alone and with pipeline setup included (Figure 3B). In batches, the median per-sample speedup was [pending]{.benchmark-claim key=amortized_execution_median}-fold for processing (minimum [pending]{.benchmark-claim key=amortized_execution_min}-fold) and [pending]{.benchmark-claim key=amortized_total_median}-fold with setup included (minimum [pending]{.benchmark-claim key=amortized_total_min}-fold; Supp. Data 4).
 
@@ -186,7 +186,7 @@ All three analyses found larger outgrowth per cell at every nonzero dose of FC-A
 ![Primary drug responses, one grouped correlation panel and matched raw, detection and overlay views from the blind neurite cohort.](figures/slas/submission_neurite_results.png){width=6.5in}
 
 ::: {custom-style="ImageCaption"}
-**Figure 6. Three independent agents recover neurite drug responses.** **(A–D)** Mean outgrowth per cell (A–B) and branches per cell (C–D) for fusicoccin-A (FC-A) and Y27632. Three blind analyses of 180 fields in 20 wells, compared with MetaXpress; OpenHCS values average nine fields per well. Each curve is divided by its own two zero-dose DMSO wells' mean; 1 means no change. Dots: two technical wells per dose per method. Whiskers: SD after normalization. **(E)** Pearson r against MetaXpress, grouped by treatment and endpoint; colours match A–D. Each bar uses ten absolute well measurements across doses within one treatment; drugs are not pooled. **(F–H)** One field from the earlier analysis-1 run: raw calcein, detected cell bodies and paths, and overlay. Scale bars, 200 µm. Other endpoints: Supp. Figure 6.
+**Figure 6. Three independent agents recover neurite drug responses.** **(A–D)** Mean outgrowth per cell (A–B) and branches per cell (C–D) for fusicoccin-A (FC-A) and Y27632. Three blind analyses of 180 fields in 20 wells, compared with MetaXpress; OpenHCS values average nine fields per well. Each curve is divided by its own two zero-dose DMSO wells' mean; 1 means no change. Dots: two technical wells per dose per method. Whiskers: SD after normalization. **(E)** Pearson r against MetaXpress, grouped by treatment and endpoint; colours match A–D. Each bar uses ten absolute well measurements across doses within one treatment; drugs are not pooled. **(F–H)** Representative field from analysis 1: raw calcein, detected cell bodies and traced paths, and overlay. Scale bars, 200 µm. Other endpoints: Supp. Figure 6.
 :::
 
 ## Discussion
@@ -217,7 +217,7 @@ OpenHCS source code: <https://github.com/OpenHCSDev/OpenHCS>.
 
 OpenHCS documentation: <https://openhcs.readthedocs.io/>.
 
-We provide figure inputs and generation scripts, final pipelines, scores and benchmark measurements as supplementary files. Versioned repository copies are available at <https://github.com/OpenHCSDev/openhcs/tree/563dd84dd7cbfe586c4a7288b70e56795925c1e1/paper/supplementary> and <https://github.com/OpenHCSDev/openhcs/tree/192500f312c25d7d8f406516e1b7f1cec908334f/benchmark/results>.
+We provide figure inputs and generation scripts, final pipelines, scores and benchmark measurements as supplementary files in the OpenHCS repository (<https://github.com/OpenHCSDev/openhcs/tree/main/paper/supplementary> and <https://github.com/OpenHCSDev/openhcs/tree/main/benchmark/results>); a versioned release archive will be deposited upon publication.
 
 The benchmark uses biological images and pipelines distributed by the CellProfiler project. Original sources:
 
