@@ -7,7 +7,7 @@ reference-section-title: References
 ---
 
 
-## Supp. Table 5. Tasks, models and evaluation protocols {#supplementary-table-5.-tasks-models-and-evaluation-protocols}
+## Supp. Table 6. Tasks, models and evaluation protocols {#supplementary-table-6.-tasks-models-and-evaluation-protocols}
 
 Table: Development images could inform method selection; references were used only after finalization. “Prospectively withheld” means evaluation images were unavailable during development, whereas “retrospective” describes a subset identified from viewing records afterwards. Earlier gpt-5.6 model identities come from the [independent-agent validation report](independent_agent_validation.md) and the [earlier supplement's NeuronCyto demonstration](README_before_readability_20261015.md#supplementary-data-4.-method-directed-neuroncyto-demonstration); their original guide versions were not retained. Missing model cells are not inferred from neighbouring runs.
 

@@ -13,13 +13,13 @@ def processes(*, stem="process_architecture", with_logos=False):
     # the existing type hierarchy readable without enlarging every label by hand.
     sheet.figure.set_size_inches(7, 5.1)
     for source in (
-        "openhcs/runtime/zmq_execution_client.py",
-        "openhcs/runtime/zmq_execution_server.py",
-        "openhcs/runtime/zmq_worker_execution.py",
+        "openhcs/runtime/zmq/zmq_execution_client.py",
+        "openhcs/runtime/zmq/zmq_execution_server.py",
+        "openhcs/runtime/zmq/zmq_worker_execution.py",
         "openhcs/core/orchestrator/worker_execution.py",
         "openhcs/core/steps/function_artifact_materialization.py",
-        "openhcs/runtime/napari_viewer_server.py",
-        "openhcs/runtime/fiji_viewer_server.py",
+        "openhcs/runtime/napari/napari_viewer_server.py",
+        "openhcs/runtime/fiji/fiji_viewer_server.py",
         "docs/source/architecture/zmq_execution_service_extracted.rst",
         "docs/source/architecture/streaming_boundary_and_wrappers.rst",
     ):
@@ -63,22 +63,22 @@ def processes(*, stem="process_architecture", with_logos=False):
         # These marks identify the six array libraries used by ArrayBridge;
         # the runtime declarations, not the diagram, determine CPU/GPU support.
         for name, label, x in (
-            ("numpy.svg", "NumPy", 4),
-            ("cupy.svg", "CuPy", 13.5),
-            ("pytorch.svg", "PyTorch", 23),
-            ("tensorflow.svg", "TensorFlow", 32.5),
-            ("jax.png", "JAX", 42),
-            ("pyclesperanto.png", "pyclesperanto", 49.8),
+            ("numpy.svg", "NumPy", 3.2),
+            ("cupy.svg", "CuPy", 11.8),
+            ("pytorch.svg", "PyTorch", 20.4),
+            ("tensorflow.svg", "TensorFlow", 29.5),
+            ("jax.png", "JAX", 39.0),
+            ("pyclesperanto.png", "pyclesperanto", 48.8),
         ):
-            sheet.asset(logos / name, (x, 34.5, 7, 7))
-            sheet.text(x + 3.5, 32.5, label, size=8.5, ha="center")
+            sheet.asset(logos / name, (x, 34.5, 6.8, 6.8))
+            sheet.text(x + 3.4, 32.5, label, size=8.2, ha="center")
         # The retained TensorFlow asset is the official white-on-dark variant.
-        sheet.axis.add_patch(Rectangle((32.5, 34.5), 7, 7,
+        sheet.axis.add_patch(Rectangle((29.5, 34.5), 6.8, 6.8,
                                       facecolor=INK, edgecolor="none", zorder=2))
     sheet.arrow((71, 66), (60, 57), both=True, color=BLUE)
-    sheet.text(49, 62, "Work / results", size=9, ha="center", color=BLUE)
+    sheet.text(62.5, 62.3, "Work / results", size=9, ha="right", color=BLUE)
 
-    sheet.text(74, 60, "Viewer processes", size=10, weight="bold", color=TEAL)
+    sheet.text(74, 59.3, "Viewer processes", size=9.5, weight="bold", color=TEAL)
     sheet.axis.add_patch(Rectangle((74, 27), 22, 30, linewidth=1.15,
                                   edgecolor=TEAL, facecolor="white", zorder=2))
     sheet.text(82, 51.5, "napari", size=12, weight="bold", color=TEAL, va="center")
@@ -87,7 +87,7 @@ def processes(*, stem="process_architecture", with_logos=False):
     if with_logos:
         sheet.asset(logos / "napari.svg", (75.5, 49, 4.5, 5.5))
         sheet.asset(logos / "fiji.svg", (75.5, 39.5, 4.5, 5.5))
-    sheet.arrow((94, 66), (94, 57), both=True, color=BLUE)
+    sheet.arrow((95.5, 66), (95.5, 57), both=True, color=BLUE)
     sheet.arrow((60, 44), (74, 44), color=TEAL)
     sheet.text(66.5, 48, "Images\nROIs", size=9, ha="center", color=TEAL)
     sheet.arrow((58, 14), (80, 27), both=True, color=TEAL)

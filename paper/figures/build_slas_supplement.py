@@ -36,10 +36,10 @@ class VolumeResultsFigure(SupplementFigure):
     """Matched retinal and volume repairs, separate from final-only views."""
 
     def draw_panels(self):
-        self.panel('C', 'Retinal repair', 2, 45.5, title_size=14)
+        self.panel('C', 'Retinal repair', 2, 44.4, title_size=14)
         for column, (heading, left) in enumerate((('Raw', 3), ('First result', 34.96), ('Final result', 66.92))):
             x = 2 + column * 32
-            self.text(x, 42, heading, size=self.plot_font_size, weight='bold')
+            self.text(x, 40.9, heading, size=self.plot_font_size, weight='bold')
             self.artwork('retina_fresh16_repair', (x, 26, 30.7, 14.5), crop=(left, 22.2, left + 30.08, 45.8))
         self.panel('D', '3D body separation', 2, 23.5, title_size=14)
         self.text(98, 23.5, 'Z = 36 voxels', size=self.plot_font_size, ha='right')
@@ -71,7 +71,9 @@ def translocation():
     score = load_score(SCORE_PATHS[2], "BBBC013")
     sheet.source(SCORE_PATHS[2])
     sheet.source(Path(plot_translocation.__code__.co_filename))
-    for column, (letter, treatment) in enumerate(zip(("C", "D"), score["metrics"]["treatments"], strict=True)):
+    # Same drug order as A–B and main Figure 5C, so columns compare one compound.
+    treatments = sorted(score["metrics"]["treatments"], key=lambda treatment: treatment["treatment"])
+    for column, (letter, treatment) in enumerate(zip(("C", "D"), treatments, strict=True)):
         left = .105 + column * .49
         sheet.panel(letter, treatment["treatment"], left * 100, 45.5)
         axis = sheet.plot_axes((left, .08, .365, .30))
@@ -127,14 +129,14 @@ def morphology_checks(*, input_root=FigureSheet.default_input_root):
     sheet.source(layout_path)
     layout = json.loads(layout_path.read_text())
     artwork = layout["source_artwork"]
-    sheet.panel("A–C", "Independent volume analysis: centres in XY, XZ and YZ", 3, 99, va="top")
+    sheet.panel("A–C", "Independent volume analysis: centres in XY, XZ and YZ", 2, 99, va="top")
     for column, field in enumerate(layout["upper_full_fields"][:3]):
-        sheet.artwork(artwork, (2 + column * 33, 68, 30, 27), crop=field["crop_percent"])
-    sheet.panel("D–F", "Retinal acquisition border: raw, first and final", 3, 65, va="top")
+        sheet.artwork(artwork, (2 + column * 33, 69, 30, 26), crop=field["crop_percent"])
+    sheet.panel("D–F", "Retinal acquisition border: raw, first and final", 2, 66.5, va="top")
     for column, field in enumerate(layout["upper_full_fields"][3:]):
         x = 2 + column * 33
-        sheet.text(x, 60, field["label"], size=12, weight="bold")
-        sheet.artwork(artwork, (x, 37, 30, 21), crop=field["crop_percent"])
+        sheet.text(x, 60.5, field["label"], size=12, weight="bold")
+        sheet.artwork(artwork, (x, 37, 30, 21.5), crop=field["crop_percent"])
     sheet.panel("G–I", "DNA: a faint pair\nremains merged", 2, 33, va="top")
     sheet.panel("J–L", "Actin: a seed without\nsupported body growth", 52, 33, va="top")
     for column, field in enumerate(layout["lower_full_fields"]):
@@ -165,11 +167,12 @@ def localisation_diagnostic(sheet, *, bounds=(0.17, 0.23, 0.73, 0.55)):
     axis.plot(thresholds, errors, "o-", color=TEAL)
     for threshold, error in zip(thresholds, errors, strict=True):
         axis.annotate(f"{scores[str(threshold)]['true_positives']} matches", (threshold, error),
-                      xytext=(10, -10), textcoords="offset points", ha="center", va="top",
-                      fontsize=sheet.plot_font_size)
+                      xytext=(0, -10), textcoords="offset points", ha="center", va="top",
+                      fontsize=sheet.plot_font_size,
+                      bbox={"facecolor": "white", "edgecolor": "none", "pad": 1.2})
     axis.axvline(evaluation["primary_threshold_voxels"], color=MUTED, linestyle="--", linewidth=0.8)
     axis.set(xlabel="Matching distance (voxels)", ylabel="Mean centre\nerror\n(voxels)",
-             ylim=(0, 6.1), xticks=thresholds)
+             xlim=(6.0, 44.0), ylim=(0, 6.1), xticks=thresholds)
     axis.spines[["top", "right"]].set_visible(False)
     axis.grid(axis="y", color="#e7ebef", linewidth=0.6)
     axis.set_axisbelow(True)
@@ -185,14 +188,14 @@ def autonomous_treatment_endpoints():
     metrics = tuple(metric for metric in endpoint_declarations()
                     if metric not in NeuriteEffectFigure.primary_metrics)
     NeuriteEffectFigure.draw_panels(
-        autonomous, tables, metrics=metrics, bounds=(0, 28, 100, 72),
+        autonomous, tables, metrics=metrics, bounds=(0, 30, 100, 77),
         metric_columns=2, label_width=15,
-        legend_offset=(.25, -.725), legend_rows=2,
+        legend_offset=(.25, -.74), legend_rows=2,
     )
     autonomous.panel("O–P", "Correlations with MetaXpress", 3, 28)
     counts = NeuriteEffectFigure.draw_correlations(
         autonomous, tables, bounds=(.36, .015, .54, .195),
-        heading_y=28, font_size=13, label_rotation=0, label_alignment="center",
+        heading_y=28, font_size=11, label_rotation=0, label_alignment="center",
         column_label_width=8,
     )
     if len(counts) != 1:

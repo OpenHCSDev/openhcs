@@ -349,11 +349,12 @@ class NeuriteEffectFigure(FigureSheet):
                         zorder=1,
                     )
                 axis.axhline(1, color=MUTED, linewidth=0.8, linestyle="--", zorder=0)
+                is_bottom_row = row + metric_columns >= len(metrics)
                 axis.set(
                     xlim=(-0.5, 4.5),
                     ylim=limits[metric],
-                    ylabel=fill(declarations[metric].label, width=label_width) if column == 0 or metric_columns == 1 else "",
-                    xlabel="Concentration (µM)",
+                    ylabel=fill(declarations[metric].label, width=label_width) if column == 0 else "",
+                    xlabel="Concentration (µM)" if is_bottom_row else "",
                 )
                 axis.set_xticks(range(5), [item["dose_uM"] for item in selected])
                 axis.spines[["top", "right"]].set_visible(False)

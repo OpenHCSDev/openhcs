@@ -208,6 +208,16 @@ def submission_benchmark_summary() -> None:
         y = 68.5 - row * 4.1
         sheet.axis.plot(4, y, marker='s', color=coverage_colors[i], markersize=8)
         sheet.text(6, y, f'{coverage_labels[i]}: {counts[i]}', size=sheet.plot_font_size, va='center')
+    # Output agreement comes from the retained 30-workflow comparison, not a typed count.
+    comparison = ROOT / 'benchmark/results/official30_unified_value_comparison_20260916/observations.csv'
+    sheet.source(comparison)
+    with comparison.open(newline='') as stream:
+        observations = tuple(csv.DictReader(stream))
+    if {row['case_name'] for row in observations} != set(names):
+        raise ValueError('Output comparison and timing cohort name different workflows')
+    matched = sum((row['equivalent'] == 'True' and row['difference_count'] == '0' for row in observations))
+    sheet.text(3.5, 54.6, f'{matched} / {len(observations)}', size=20, weight='bold', va='center')
+    sheet.text(19.5, 54.6, 'workflows match\nCellProfiler outputs', size=sheet.plot_font_size, va='center', linespacing=1.15)
     sheet.panel_letter('B', 35, 91)
     single = tuple((ratios('singlewell', scope) for scope in ('execution', 'total')))
     amortized = []

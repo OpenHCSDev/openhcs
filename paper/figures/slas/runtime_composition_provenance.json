@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "5f33744865e31219444619b4159fca8b7960f3cc35928db9e42bcdade3e69a37",
+  "generator_sha256": "11506880b163a35e3b0f81a6992adf607d5392879c0eb940273cc6678e53fa2b",
   "source_sha256": {
     "paper/figures/slas/retained_runtime/runtime_composition_provenance.json": "22bad25646bafb454f53945c5edbf54366ad29ab48daebcb6fb77503b433878c",
     "paper/figures/build_slas_runtime.py": "d77940b2f88f1a25f7bc481550a17d0c173a0078575ae084775d2c27f8856f63"
@@ -8,9 +8,9 @@
   "ui_crops": [],
   "display_transforms": [],
   "output_sha256": {
-    "runtime_composition.png": "db6891303fe253981812b214aa0e0b2dcae84ee6becda33e945c6ba98d0b27a3",
-    "runtime_composition.pdf": "1ae426bcc6da2a7928b1e5e5b7981b6ec907eb40b7db61cc6c72268df3565db0",
-    "runtime_composition.svg": "4f55af7e2dc59a06c31893b1233527810b9f498b66eea73096f0204f5cd01c79"
+    "runtime_composition.png": "dd0240b59e37b318334fb9fbbc311953da04e4886db88455dbb765ff183ffe40",
+    "runtime_composition.pdf": "79f97f882ff0a2feac9c9e70047cfddbed357c4c17e7149c716b337166293091",
+    "runtime_composition.svg": "fcbdbfc8b014b40455229cd5545cbf9a74b54ba378a4c39f2cd5af91355db9f5"
   },
   "interpretation": "Illustrative configuration and callable roles, not an executed biological workflow. Panel A contrasts a site stack supplied with tile positions for stitching and a Z stack forming a volume. Other acquisition coordinates stay fixed within each stack; processing groups do not define its stack axis. Panels B and C show separate composition examples: group-specific chains and an artifact routed between steps within a compatible execution group. Sequential timepoints run the entire pipeline; wells can execute in parallel. Backend compatibility belongs to each callable contract."
 }

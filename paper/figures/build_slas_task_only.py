@@ -361,7 +361,7 @@ class AnalysisResultsFigure(SupplementFigure):
         sheet.source(ROOT / 'paper/figures/build_slas_bbbc013_fresh23.py')
         for path in sources:
             sheet.source(ROOT / path)
-        axes = [sheet.plot_axes(bounds) for bounds in ((0.33, 0.77, 0.24, 0.195), (0.75, 0.77, 0.22, 0.16))]
+        axes = [sheet.plot_axes(bounds) for bounds in ((0.30, 0.735, 0.29, 0.225), (0.75, 0.735, 0.22, 0.2))]
         sheet.panel('A', 'Nuclear segmentation · official test', 3, 99, title_size=sheet.plot_font_size, va='top')
         sheet.panel('B', 'Cell boundaries', 69, 99, title_size=sheet.plot_font_size, va='top')
         for axis in axes:
@@ -398,14 +398,14 @@ class AnalysisResultsFigure(SupplementFigure):
             axes[1].plot((index - 0.22, index + 0.22), (pooled, pooled), color=TEAL, linewidth=3)
             axes[1].text(index, 0.86, f'{pooled:.3f}', ha='center', fontsize=sheet.plot_font_size)
         axes[1].set(xticks=(0, 1), xticklabels=('2', '3'), xlabel='Analysis', ylim=(0.55, 0.9), ylabel='Border support\n(2-pixel fraction)')
-        sheet.panel('C', 'Nuclear-to-cytoplasmic GFP', 3, 68, title_size=sheet.plot_font_size)
+        sheet.panel('C', 'Nuclear-to-cytoplasmic GFP', 3, 63.5, title_size=sheet.plot_font_size)
         series = AssaySeries.load(SOURCE)
         for column, (assay, color) in enumerate(zip(series, (BLUE, TEAL), strict=True)):
-            axis = sheet.plot_axes((0.12 + column * 0.49, 0.545, 0.34, 0.09))
+            axis = sheet.plot_axes((0.12 + column * 0.49, 0.494, 0.34, 0.095))
             means = [np.mean([MedianLog2Ratio().value(well) for well in dose.wells]) for dose in assay.doses]
             deviations = [np.std([MedianLog2Ratio().value(well) for well in dose.wells], ddof=1) for dose in assay.doses]
             axis.errorbar(range(9), means, yerr=deviations, marker='o', markersize=4, color=color, capsize=2)
-            axis.set_title(f'{assay.compound} ({assay.unit.replace('uM', 'µM')}) · Z′ = {assay.control_zprime:.3f}', loc='left', fontsize=sheet.plot_font_size, color=color)
+            axis.set_title(f'{assay.compound} ({assay.unit_label}) · Z′ = {assay.control_zprime:.3f}', loc='left', fontsize=sheet.plot_font_size, color=color)
             tick_doses = assay.doses[::2]
             axis.set(xticks=range(0, len(assay.doses), 2), xticklabels=[f'{dose.concentration:g}' for dose in tick_doses], ylim=(-0.5, 2.7))
             axis.spines[['top', 'right']].set_visible(False)
@@ -417,8 +417,10 @@ class AnalysisResultsFigure(SupplementFigure):
     def draw_localization(self):
         evaluation_path = ROOT / SOURCE_DIRECTORY / 'h002-fresh15-postfreeze-evaluation.json'
         self.source(evaluation_path)
-        self.panel('D', '3D nuclear localization', 3, 48, title_size=14)
-        self.artwork('h002_measurement_first', (3, 0.8, 94, 45.5), crop=(1, 7.5, 99, 58))
+        self.panel('D', '3D nuclear localization', 3, 43.5, title_size=14)
+        self.text(9.8, 39.3, 'XY', size=11.5, weight='bold', va='bottom')
+        self.artwork('h002_measurement_first', (9.8, 1.0, 36.2, 37.5), crop=(8.0, 11.8, 45.0, 57.2))
+        self.artwork('h002_measurement_first', (52.0, 1.0, 45.0, 40.2), crop=(53.0, 9.0, 99.0, 57.2))
 
 
 class RepairResultsFigure(VolumeResultsFigure):
@@ -443,7 +445,7 @@ class RepairResultsFigure(VolumeResultsFigure):
 
 def submission_summary() -> None:
     """Render Figure 5 without rerunning an analysis or changing its scores."""
-    sheet = AnalysisResultsFigure("submission_analysis_summary", 7.6)
+    sheet = AnalysisResultsFigure("submission_analysis_summary", 8.4)
     sheet.draw_panels()
     sheet.save(dpi=400)
 

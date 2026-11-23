@@ -95,7 +95,7 @@ three-dimensional nuclear localization (Figure 5); and treatment responses from
 three independent blind agents with one grouped treatment-specific correlation
 axis and matched raw/detection/overlay views (Figure 6). Full-resolution microscopy
 and the detailed scientist-assisted neurite comparison remain linked data.
-Supp. Table 6 retains the complete evaluation design: development access,
+Supp. Table 5 retains the complete evaluation design: development access,
 comparison populations, references and metrics for the main agent results. Supp. Table 3 defines timing boundaries.
 The complete [27-row task/model/protocol mapping](supplementary/analysis_protocols.md)
 and [seven-row software-check table](supplementary/software_check_coverage.md)
@@ -215,7 +215,7 @@ through `RepeatedSourceNativeBatchReport.projected_fresh_batch`; the painter
 contains no timing model. Its CSV distinguishes estimated serial CellProfiler
 seconds, measured OpenHCS seconds and their ratio. The CellProfiler estimate
 stays identical across worker counts; workers are not matched core allocations.
-Supplementary Figure 3 separately shows measured OpenHCS-only worker scaling.
+Supplementary Figure 2 separately shows measured OpenHCS-only worker scaling.
 
 The per-module CSV names the credited behavior and test. Shared-path coverage
 does not claim validation of all module-specific algorithms or settings.
@@ -331,7 +331,7 @@ PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
 This historical command reads saved measurements. That checkpoint uses
 the logarithmic thirty-workflow view. Its linear counterpart, individual runtime
 panels, sample-count trends and selected worker comparisons remain historical
-outputs; current Supplementary Figure 3 uses the new complete sweep. Worker comparisons retain their own cohorts and revisions; repeated
+outputs; current Supplementary Figure 2 uses the new complete sweep. Worker comparisons retain their own cohorts and revisions; repeated
 source assignments are not independent biological wells.
 
 The generic measured-median input mode below supports earlier records with that

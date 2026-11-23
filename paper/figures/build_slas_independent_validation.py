@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from build_slas_agent import normalize_generated_svg
+from build_slas_visual_story import unit_label
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "paper/supplementary/independent_validation"
@@ -158,7 +159,7 @@ def plot_translocation(
         marker="o",
         linewidth=1.7,
         capsize=2.5,
-        label="Held-out wells, mean +/- SD",
+        label="Held-out wells, mean ± SD",
         zorder=3,
     )
     axis.axhline(
@@ -179,7 +180,7 @@ def plot_translocation(
     axis.text(
         0.03,
         0.94,
-        f"Z' = {treatment['z_prime']:.3f}",
+        f"Z′ = {treatment['z_prime']:.3f}",
         transform=axis.transAxes,
         fontsize=9.5,
         va="top",
@@ -187,7 +188,7 @@ def plot_translocation(
     axis.set(
         title=f"{panel}  BBBC013 {treatment['treatment']}",
         xscale="log",
-        xlabel=f"Dose ({unit})",
+        xlabel=f"Concentration ({unit_label(unit)})",
         ylabel="Mean nuclear / cytoplasmic GFP",
         ylim=(0, None),
     )
