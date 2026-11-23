@@ -188,7 +188,7 @@ def plot_translocation(
     axis.set(
         title=f"{panel}  BBBC013 {treatment['treatment']}",
         xscale="log",
-        xlabel=f"Dose ({unit_label(unit)})",
+        xlabel=f"Concentration ({unit_label(unit)})",
         ylabel="Mean nuclear / cytoplasmic GFP",
         ylim=(0, None),
     )

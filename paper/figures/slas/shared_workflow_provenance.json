@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "bf1e5b47d013fcabd99bcb8140c78b1ddd41ff79159dab25be4c00dd4f0f9ddb",
+  "generator_sha256": "11506880b163a35e3b0f81a6992adf607d5392879c0eb940273cc6678e53fa2b",
   "source_sha256": {
     "openhcs/runtime/zmq/zmq_execution_client.py": "43b9c9ce8dedce6ccc6facc6a394e5c0e6b254379d2f8705870aa5390e4176ea",
     "openhcs/runtime/zmq/zmq_execution_server.py": "3bddd14aa360258eb9b694fbaea42cc0698a30d156d2bb32bc013e129f6906fd",
@@ -10,7 +10,7 @@
     "openhcs/runtime/fiji/fiji_viewer_server.py": "8c651f8388932b065b8a8f234048e842a8beb16d9f1886baac947bcab6a57a24",
     "docs/source/architecture/zmq_execution_service_extracted.rst": "dcaf4e63eb604312edadcb3442479ac6e369842231bb5caeb3e5404ecf693155",
     "docs/source/architecture/streaming_boundary_and_wrappers.rst": "d71fe34d7bfcc7e74ffbd04b5c1f84a10636a9369f4f6857d7b19020ea1df7b1",
-    "paper/figures/build_slas_processes.py": "13c1bf9f93c2c4a4a9213ea608acef3e7733cc73563ccd567eaec878e0e937d5",
+    "paper/figures/build_slas_processes.py": "57823819d55ca6080aa5481587bb4aa1f5a1ebc91edc898e788e5bfb558f43b4",
     "website/assets/logos/README.md": "b86c8373cf38552b6140e36af8db18859548ed8e5f25578df5936897ba5804df",
     "website/assets/logos/python.svg": "adca85e1d0bd6d796abea422d983fd131a432fe78efeac58af18461eb1548780",
     "website/assets/logos/mcp.svg": "05f47fb3ffb7323bdbf6b397330229a7f32a3a1f2d17365e748f8777a82dd6c0",
@@ -41,9 +41,9 @@
     }
   ],
   "output_sha256": {
-    "shared_workflow.png": "d653ce830748b591fa479866229d601402737a486e351b260301db8d3f0b4f69",
-    "shared_workflow.pdf": "522a2a80c18928930a04d33a8172a23d918d92c553bb5891af3851b584d4f6fa",
-    "shared_workflow.svg": "c0a63a313ffc368d67654b4bf5e8d18ee82fea74c0dff6c49ca0461ea52982a0"
+    "shared_workflow.png": "fbada2d8ac1fd3b1f62abc03628410e6fed0d9ba50d96980b3a1d471923042c0",
+    "shared_workflow.pdf": "bc71ca1089c702602c28af4ee1a82da910569c8c7ef29b58837f26bb1dc64dbc",
+    "shared_workflow.svg": "b7fe8dcd9b236252db5bbc4235d40c68c7bd2676d6005f26bb8be852f166ab44"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "5ff9664b8699fb9e5aaca02cd708d4f110ed208756e243199286af1de797c3cb",
+  "generator_sha256": "11506880b163a35e3b0f81a6992adf607d5392879c0eb940273cc6678e53fa2b",
   "source_sha256": {
     "paper/figures/slas/blind_neurite_sources/source-receipt.json": "0ef0e23a541094da1a3be7f272fdcdd13edbc39d055571a3e6b68f796429e82b",
     "paper/figures/slas/blind_neurite_sources/final-freeze.json": "8ed17b17b182b86a32714c28d2d2488dc002888906f66525fcb46035ab641b28",
@@ -55,8 +55,8 @@
   ],
   "output_sha256": {
     "blind_neurite_example.png": "8acc24ac62373c54fc82d834f76661aea81128d5749cb1ad56aba35c3d1c72b8",
-    "blind_neurite_example.pdf": "29018e88bd3148b05b128397ee470e31098e2f6a99fde5ee84208c002d77939b",
-    "blind_neurite_example.svg": "cf2ddb03cc2fab0b22dc11f35ab68c06bb9bf98e07833b70ce9f2ff7bd8613fd"
+    "blind_neurite_example.pdf": "56a3cb91995602a5bcf3298d4793761698c831f97d63d16625dbb61360defd0f",
+    "blind_neurite_example.svg": "e9f463ab2863d5a250f7fc5880218be76ea046b0854bde8ba47e4f3602c572b7"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

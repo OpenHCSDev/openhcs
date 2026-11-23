@@ -418,7 +418,9 @@ class AnalysisResultsFigure(SupplementFigure):
         evaluation_path = ROOT / SOURCE_DIRECTORY / 'h002-fresh15-postfreeze-evaluation.json'
         self.source(evaluation_path)
         self.panel('D', '3D nuclear localization', 3, 43.5, title_size=14)
-        self.artwork('h002_measurement_first', (3, 0.7, 94, 41.2), crop=(1, 7.5, 99, 58))
+        self.text(9.8, 39.3, 'XY', size=11.5, weight='bold', va='bottom')
+        self.artwork('h002_measurement_first', (9.8, 1.0, 36.2, 37.5), crop=(8.0, 11.8, 45.0, 57.2))
+        self.artwork('h002_measurement_first', (52.0, 1.0, 45.0, 40.2), crop=(53.0, 9.0, 99.0, 57.2))
 
 
 class RepairResultsFigure(VolumeResultsFigure):

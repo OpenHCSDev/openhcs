@@ -1,8 +1,8 @@
 {
   "generator_sha256": "11506880b163a35e3b0f81a6992adf607d5392879c0eb940273cc6678e53fa2b",
   "source_sha256": {
-    "paper/figures/build_slas_supplement.py": "f3ff4a36b92915abb7c1c8cf6fd7a89401bf89ee204e5fb916de383854d81690",
-    "paper/figures/build_slas_task_only.py": "fecc7314aa457e2ae4fcd792368b1a1c9dfb55b83219f6877c977d02d9e887b2",
+    "paper/figures/build_slas_supplement.py": "b3422b013d2437a6ec2d6ae51b4b2fe9f7c6e36c53f21a3e3ca3d74baeb32a83",
+    "paper/figures/build_slas_task_only.py": "9782b584699cc0690605b3733bcb2292b69103ddf1f4d7b4c05bf8cc4731d89d",
     "paper/figures/build_slas_bbbc013_fresh23.py": "2509fe936d1c7c79181c3d0bb70b74a681ecab17408c93594248ffdd07b2e4f3",
     "paper/supplementary/task_only_analysis/bbbc039-caicedo-retained-results.json": "6556d68e6c65f7a2b97b4bb495635853e38e48d8add755b10e30aa2bea7d206c",
     "paper/supplementary/task_only_analysis/bbbc039-caicedo-published-test50.csv": "a8b8f7dda5dc99e3406332b125ea9a23ede4766c33abd8856d6fd3a3a9e69f3f",
@@ -18,10 +18,23 @@
     {
       "source": "paper/figures/slas/h002_measurement_first.png",
       "xyxy_pixels": [
-        27,
-        164,
+        216,
+        258,
+        1215,
+        1253
+      ],
+      "source_size": [
+        2700,
+        2190
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h002_measurement_first.png",
+      "xyxy_pixels": [
+        1431,
+        197,
         2673,
-        1270
+        1253
       ],
       "source_size": [
         2700,
@@ -31,9 +44,9 @@
   ],
   "display_transforms": [],
   "output_sha256": {
-    "submission_analysis_summary.png": "d4f1241ac970ed3043cb66428c4c1ed3af4ce02569c06a24db715936d415cf4d",
-    "submission_analysis_summary.pdf": "0cac13e1f6cd241ecea7d1d70aaf0323c0323b16a353a7b96675189b94413e87",
-    "submission_analysis_summary.svg": "f219cbe3d65dada5befd31b34e6cf50f8e434ebb21a5c2e471e2e6cff8b3c12e"
+    "submission_analysis_summary.png": "3f4896589fe070d562cf84aeea574115e3cd69af579dcd04bc5bd328aa20aecc",
+    "submission_analysis_summary.pdf": "16d24a2708cae9d726990343528fcf6cb8d2a3eaa869f9c95ee8ba076ba6751c",
+    "submission_analysis_summary.svg": "790a21bdba3db0aa04419207c3c6fb5e39715f7a0f59f8bed98f48aa6fbff2d8"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
